@@ -702,6 +702,257 @@ export function GameResultCardExamples() {
             </div>
           </div>
         </div>
+
+        {/* Same Layout with Q-by-Q Between Team Name and Final Score */}
+        <div>
+          <h4 className="text-md font-medium mb-3 text-gray-700">Style 8: Quarters Between Team Name and Score</h4>
+          <div className="max-w-4xl space-y-3">
+            
+            {/* Classic Layout with centered quarters */}
+            <div className="border-l-4 border-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-base mb-2">
+                    WNC Dingoes vs Cobras
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-gray-600">2024-06-16</span>
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 6</span>
+                  </div>
+                  
+                  {/* Quarter scores between name and final */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs text-gray-600 font-medium">Quarters:</span>
+                    <div className="flex gap-1">
+                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 border border-green-300 rounded">15-12</span>
+                      <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 border border-red-300 rounded">12-16</span>
+                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 border border-green-300 rounded">16-11</span>
+                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 border border-green-300 rounded">17-12</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6 px-4 py-2 text-lg font-bold text-white bg-green-600 rounded">
+                  60-51
+                </div>
+              </div>
+            </div>
+
+            {/* Vertical Stack Layout */}
+            <div className="border-l-4 border-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-base mb-2">
+                    Sharks vs WNC Dingoes
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-gray-600">2024-06-17</span>
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 7</span>
+                  </div>
+                  
+                  {/* Quarter breakdown in grid */}
+                  <div className="grid grid-cols-4 gap-1 max-w-xs">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 mb-1">Q1</div>
+                      <div className="bg-red-100 border border-red-300 rounded px-1 py-1">
+                        <div className="text-xs font-medium text-red-800">6-12</div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 mb-1">Q2</div>
+                      <div className="bg-red-100 border border-red-300 rounded px-1 py-1">
+                        <div className="text-xs font-medium text-red-800">8-10</div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 mb-1">Q3</div>
+                      <div className="bg-green-100 border border-green-300 rounded px-1 py-1">
+                        <div className="text-xs font-medium text-green-800">9-7</div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 mb-1">Q4</div>
+                      <div className="bg-red-100 border border-red-300 rounded px-1 py-1">
+                        <div className="text-xs font-medium text-red-800">7-16</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6 px-4 py-2 text-lg font-bold text-white bg-red-600 rounded">
+                  30-45
+                </div>
+              </div>
+            </div>
+
+            {/* Table-style quarters */}
+            <div className="border-l-4 border-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-base mb-2">
+                    WNC Dingoes vs Lions
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-gray-600">2024-06-18</span>
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 8</span>
+                  </div>
+                  
+                  {/* Horizontal table-style quarters */}
+                  <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                    <div className="grid grid-cols-5 divide-x divide-gray-200">
+                      <div className="px-2 py-1 bg-gray-50 text-xs font-medium text-gray-600 text-center">Quarters</div>
+                      <div className="px-2 py-1 text-center text-xs">
+                        <div className="font-medium text-gray-700">Q1</div>
+                        <div className="font-bold text-amber-700">11-10</div>
+                      </div>
+                      <div className="px-2 py-1 text-center text-xs">
+                        <div className="font-medium text-gray-700">Q2</div>
+                        <div className="font-bold text-red-700">9-11</div>
+                      </div>
+                      <div className="px-2 py-1 text-center text-xs">
+                        <div className="font-medium text-gray-700">Q3</div>
+                        <div className="font-bold text-green-700">12-8</div>
+                      </div>
+                      <div className="px-2 py-1 text-center text-xs">
+                        <div className="font-medium text-gray-700">Q4</div>
+                        <div className="font-bold text-green-700">13-11</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6 px-4 py-2 text-lg font-bold text-white bg-amber-600 rounded">
+                  45-40
+                </div>
+              </div>
+            </div>
+
+            {/* Minimal Dot Indicators */}
+            <div className="border-l-4 border-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-base mb-2">
+                    WNC Dingoes vs Eagles
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-gray-600">2024-06-19</span>
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 9</span>
+                  </div>
+                  
+                  {/* Dot-style minimal quarters */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 font-medium">Q-by-Q:</span>
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-green-700">14-11</span>
+                      </div>
+                      <div className="w-1 h-0.5 bg-gray-300 mx-1"></div>
+                      <div className="flex items-center gap-0.5">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-green-700">13-9</span>
+                      </div>
+                      <div className="w-1 h-0.5 bg-gray-300 mx-1"></div>
+                      <div className="flex items-center gap-0.5">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-red-700">8-12</span>
+                      </div>
+                      <div className="w-1 h-0.5 bg-gray-300 mx-1"></div>
+                      <div className="flex items-center gap-0.5">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-green-700">15-10</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6 px-4 py-2 text-lg font-bold text-white bg-green-600 rounded">
+                  50-42
+                </div>
+              </div>
+            </div>
+
+            {/* Compact Single Row */}
+            <div className="border-l-4 border-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-base mb-3">
+                    WNC Dingoes vs Thunder
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">2024-06-20</span>
+                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 10</span>
+                    </div>
+                    
+                    {/* Single line quarters */}
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="text-gray-600">Q1-4:</span>
+                      <span className="font-medium text-purple-700">12-10</span>
+                      <span className="text-gray-400">•</span>
+                      <span className="font-medium text-purple-700">14-8</span>
+                      <span className="text-gray-400">•</span>
+                      <span className="font-medium text-red-700">7-13</span>
+                      <span className="text-gray-400">•</span>
+                      <span className="font-medium text-purple-700">16-9</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6 px-4 py-2 text-lg font-bold text-white bg-purple-600 rounded">
+                  49-40
+                </div>
+              </div>
+            </div>
+
+            {/* Progressive Scoring */}
+            <div className="border-l-4 border-indigo-500 bg-indigo-50 rounded transition-colors cursor-pointer hover:bg-indigo-100 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-base mb-2">
+                    WNC Dingoes vs Panthers
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-gray-600">2024-06-21</span>
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 11</span>
+                  </div>
+                  
+                  {/* Progressive quarter scores showing cumulative */}
+                  <div className="space-y-1">
+                    <div className="text-xs text-gray-600 font-medium mb-1">Progressive Score:</div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className="flex items-center gap-1">
+                        <span className="w-5 text-gray-500">Q1:</span>
+                        <span className="font-medium text-indigo-700">13</span>
+                        <span className="text-gray-400">-</span>
+                        <span className="font-medium text-gray-700">11</span>
+                      </div>
+                      <span className="text-gray-300">→</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-5 text-gray-500">Q2:</span>
+                        <span className="font-medium text-indigo-700">25</span>
+                        <span className="text-gray-400">-</span>
+                        <span className="font-medium text-gray-700">20</span>
+                      </div>
+                      <span className="text-gray-300">→</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-5 text-gray-500">Q3:</span>
+                        <span className="font-medium text-indigo-700">34</span>
+                        <span className="text-gray-400">-</span>
+                        <span className="font-medium text-gray-700">33</span>
+                      </div>
+                      <span className="text-gray-300">→</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-5 text-gray-500">Q4:</span>
+                        <span className="font-medium text-indigo-700">47</span>
+                        <span className="text-gray-400">-</span>
+                        <span className="font-medium text-gray-700">42</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6 px-4 py-2 text-lg font-bold text-white bg-indigo-600 rounded">
+                  47-42
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">
