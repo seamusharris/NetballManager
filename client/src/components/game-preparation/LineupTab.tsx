@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/apiClient';
 import CourtDisplay from '@/components/ui/court-display';
 import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
-import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
+import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import type { Game, Player, Roster, Position } from '@shared/schema';
 
 interface LineupTabProps {
@@ -47,8 +46,11 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   const [activeStep, setActiveStep] = useState<'availability' | 'recommendations' | 'builder' | 'assignments'>('availability');
   const [playerAvailability, setPlayerAvailability] = useState<PlayerAvailabilityData>({});
   const [recommendations, setRecommendations] = useState<LineupRecommendation[]>([]);
-  const [selectedLineup, setSelectedLineup] = useState<Record<Position, Player | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+  const [selectedRoster, setSelectedRoster] = useState<Record<number, Record<string, number | null>>>({
+    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const { toast } = useToast();
@@ -225,18 +227,24 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   };
 
   const handleApplyRecommendation = (recommendation: LineupRecommendation) => {
-    const newLineup: Record<Position, Player | null> = {} as Record<Position, Player | null>;
+    const newRoster: Record<number, Record<string, number | null>> = {
+      1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+    };
+
+    // Apply the recommendation to all quarters
     POSITIONS.forEach(position => {
       const playerId = recommendation.formation[position];
-      const player = playerId ? players.find(p => p.id === playerId) : null;
-      newLineup[position as Position] = player || null;
+      if (playerId) {
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          newRoster[quarter][position] = playerId;
+        }
+      }
     });
-    setSelectedLineup(newLineup);
+    setSelectedRoster(newRoster);
     setActiveStep('builder');
-    toast({
-      title: "Lineup applied",
-      description: `${recommendation.id} lineup has been applied to the builder.`,
-    });
   };
 
   // Filter recommendations
@@ -281,7 +289,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
         </Badge>
       </div>
 
-      
+
 
       <Tabs value={activeStep} onValueChange={(value) => setActiveStep(value as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -311,7 +319,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
               </Alert>
             )}
           </div>
-          
+
           <SharedPlayerAvailability
             players={players}
             availabilityData={playerAvailability}
@@ -383,11 +391,14 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
               </p>
             </CardHeader>
             <CardContent>
-              <DragDropLineupEditor
+              <DragDropRosterManager
                 availablePlayers={players.filter(p => playerAvailability[p.id] === 'available')}
-                currentLineup={selectedLineup}
-                onLineupChange={setSelectedLineup}
-                onApplyRecommendation={(lineup) => setSelectedLineup(lineup)}
+                gameInfo={{
+                  opponent: game.awayTeamName || game.homeTeamName || "Unknown",
+                  date: game.date,
+                  time: game.time
+                }}
+                onRosterChange={setSelectedRoster}
               />
             </CardContent>
           </Card>
