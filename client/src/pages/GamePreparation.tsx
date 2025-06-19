@@ -454,47 +454,7 @@ export default function GamePreparation() {
                     </Card>
                   )}
 
-                  {/* Third copy - First section duplicate for comparison */}
-                  {historicalGames.length > 0 && (
-                    <Card>
-                      <CardHeader className="pb-6">
-                        <CardTitle className="flex items-center gap-2">
-                          <Trophy className="h-5 w-5" />
-                          Previous Games vs {opponent} - Copy for Comparison
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <GamesContainer spacing="normal">
-                          {historicalGames.slice(0, 5).map((game, index) => {
-                            // Transform batch scores to the format expected by GameResultCard
-                            const gameScores = batchScores?.[game.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
-                            })) : [];
-
-                            return (
-                              <GameResultCard
-                                key={game.id}
-                                game={game}
-                                currentTeamId={currentTeamId}
-                                centralizedScores={transformedScores}
-                                showLink={true}
-                                className="w-full"
-                              />
-                            );
-                          })}
-                        </GamesContainer>
-                      </CardContent>
-                    </Card>
-                  )}
+                  
 
                   {/* Historical Games with Quarter-by-Quarter Breakdown */}
                   {historicalGames.length > 0 && (
@@ -577,7 +537,7 @@ export default function GamePreparation() {
 
                                 {/* Overlay quarter breakdown data on top */}
                                 {quarterData && (
-                                  <div className="absolute right-28 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                  <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
                                     <div className="text-xs space-y-1">
                                       {/* Quarter-by-quarter scores on top (lighter) */}
                                       <div className="grid grid-cols-4 gap-2">
