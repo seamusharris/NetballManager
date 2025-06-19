@@ -626,12 +626,12 @@ export default function GamePreparation() {
                               if (isDraw) return 'bg-amber-100 border-amber-300';
                               if (isWinning) {
                                 if (intensity > 0.7) return 'bg-green-200 border-green-400';
-                                if (intensity > 0.4) return 'bg-green-150 border-green-350';
-                                return 'bg-green-100 border-green-300';
+                                if (intensity > 0.4) return 'bg-green-100 border-green-300';
+                                return 'bg-green-50 border-green-200';
                               } else {
                                 if (intensity > 0.7) return 'bg-red-200 border-red-400';
-                                if (intensity > 0.4) return 'bg-red-150 border-red-350';
-                                return 'bg-red-100 border-red-300';
+                                if (intensity > 0.4) return 'bg-red-100 border-red-300';
+                                return 'bg-red-50 border-red-200';
                               }
                             };
 
@@ -673,7 +673,7 @@ export default function GamePreparation() {
                                     {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
                                   </div>
                                   {/* Progress bar shows our percentage of total scoring */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2" title="Our share of total quarter scoring">
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-3" title="Our share of total quarter scoring">
                                     <div 
                                       className={`h-2 rounded-full ${
                                         isWinning ? 'bg-green-500' : 
@@ -682,12 +682,6 @@ export default function GamePreparation() {
                                       style={{ width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%` }}
                                     ></div>
                                   </div>
-                                  <Badge 
-                                    variant={isWinning ? 'default' : isLosing ? 'destructive' : 'secondary'}
-                                    className="text-xs"
-                                  >
-                                    {getPerformanceLabel()}
-                                  </Badge>
                                 </div>
                               </div>
                             );
