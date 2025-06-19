@@ -432,13 +432,22 @@ export default function GamePreparation() {
 
 
             {(() => {
-              // Calculate actual statistics based on historical games
+              // Calculate actual statistics based on historical games using proper win rate calculator
               const recentGames = historicalGames.slice(0, Math.min(5, historicalGames.length));
-              const winCount = historicalGames.filter(g => {
-                // Simple win calculation - would need actual scores for accurate determination
-                return Math.random() > 0.5; // Placeholder - replace with actual win logic
-              }).length;
-              const winRate = historicalGames.length > 0 ? (winCount / historicalGames.length * 100) : 0;
+              
+              // Import and use the proper win rate calculation
+              const { calculateTeamWinRate } = require('@/lib/winRateCalculator');
+              
+              // Calculate win rate using official scores
+              const winRateResult = calculateTeamWinRate(
+                historicalGames,
+                currentTeamId,
+                currentClubId,
+                batchScores || {}
+              );
+              
+              const winCount = winRateResult.wins;
+              const winRate = winRateResult.winRate;
 
               return (
                 <>
@@ -485,7 +494,7 @@ export default function GamePreparation() {
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Record:</span>
                           <span className="font-medium">
-                            {historicalGames.length > 0 ? `${winCount}W-${historicalGames.length - winCount}L` : 'No history'}
+                            {historicalGames.length > 0 ? `${winRateResult.wins}W-${winRateResult.losses}L${winRateResult.draws > 0 ? `-${winRateResult.draws}D` : ''}` : 'No history'}
                           </span>
                         </div>
                         {(() => {
