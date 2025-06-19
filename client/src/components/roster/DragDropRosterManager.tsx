@@ -280,18 +280,17 @@ export default function DragDropRosterManager({
 
   // Load existing roster data when gameId changes or component mounts
   useEffect(() => {
-    if (initialRoster) {
-      console.log('DragDropRosterManager: Using provided initialRoster:', initialRoster);
-      setAssignments(initialRoster);
-      return;
-    }
-
     if (!gameId) {
       console.log('DragDropRosterManager: No gameId provided, using empty assignments');
+      // Use initialRoster if provided and no gameId
+      if (initialRoster) {
+        console.log('DragDropRosterManager: Using provided initialRoster (no gameId):', initialRoster);
+        setAssignments(initialRoster);
+      }
       return;
     }
 
-    // Fetch existing roster from API
+    // Always fetch fresh roster data from API when gameId is provided
     const loadExistingRoster = async () => {
       try {
         console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
@@ -344,10 +343,10 @@ export default function DragDropRosterManager({
 
   // Separate effect to handle onRosterChange when assignments change
   useEffect(() => {
-    if (onRosterChange && !initialRoster) {
+    if (onRosterChange) {
       onRosterChange(assignments);
     }
-  }, [assignments, onRosterChange, initialRoster]);
+  }, [assignments, onRosterChange]);
 
   // Save roster function
   const handleSaveRoster = async () => {
