@@ -454,7 +454,7 @@ export default function GamePreparation() {
                     </Card>
                   )}
 
-                  
+
 
                   {/* Historical Games with Quarter-by-Quarter Breakdown */}
                   {historicalGames.length > 0 && (
@@ -537,7 +537,7 @@ export default function GamePreparation() {
 
                                 {/* Overlay quarter breakdown data on top */}
                                 {quarterData && (
-                                  <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                  <div className="absolute right-16 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
                                     <div className="text-xs space-y-1">
                                       {/* Quarter-by-quarter scores on top (lighter) */}
                                       <div className="grid grid-cols-4 gap-2">
@@ -600,7 +600,7 @@ export default function GamePreparation() {
                               if (gameScores.length > 0) {
                                 const quarterTeamScore = gameScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
                                 const quarterOpponentScore = gameScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
-                                
+
                                 if (quarterTeamScore > 0 || quarterOpponentScore > 0) {
                                   totalTeamScore += quarterTeamScore;
                                   totalOpponentScore += quarterOpponentScore;
@@ -612,16 +612,16 @@ export default function GamePreparation() {
                             const avgTeamScore = gamesWithData > 0 ? (totalTeamScore / gamesWithData) : 0;
                             const avgOpponentScore = gamesWithData > 0 ? (totalOpponentScore / gamesWithData) : 0;
                             const scoreDiff = avgTeamScore - avgOpponentScore;
-                            
+
                             // Determine performance and background shade
                             const isWinning = avgTeamScore > avgOpponentScore;
                             const isLosing = avgTeamScore < avgOpponentScore;
                             const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
-                            
+
                             // Calculate background shade intensity based on score difference
                             const maxDiff = 5; // Max expected quarter score difference for scaling
                             const intensity = Math.min(Math.abs(scoreDiff) / maxDiff, 1);
-                            
+
                             const getBackgroundClass = () => {
                               if (isDraw) return 'bg-amber-100 border-amber-300';
                               if (isWinning) {
@@ -662,7 +662,7 @@ export default function GamePreparation() {
                                     Q{quarter}
                                   </Badge>
                                 </div>
-                                
+
                                 <div className="space-y-2 mt-4">
                                   {/* Score on same line with matching colors */}
                                   <div className={`text-xl font-bold ${getDiffTextColorClass()}`}>
