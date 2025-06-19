@@ -439,10 +439,9 @@ export default function GamePreparation() {
                               <GameResultCard
                                 key={game.id}
                                 game={game}
-                                players={players}
                                 currentTeamId={currentTeamId}
                                 centralizedScores={transformedScores}
-                                showQuickActions={false}
+                                showLink={true}
                                 className="w-full"
                               />
                             );
