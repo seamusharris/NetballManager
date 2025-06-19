@@ -635,9 +635,9 @@ export default function GamePreparation() {
                               }
                             };
 
-                            const getTextColorClass = () => {
-                              if (isDraw) return 'text-amber-800';
-                              return isWinning ? 'text-green-800' : 'text-red-800';
+                            const getDiffTextColorClass = () => {
+                              if (isDraw) return 'text-amber-700 font-bold';
+                              return isWinning ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
                             };
 
                             const getPerformanceLabel = () => {
@@ -651,14 +651,16 @@ export default function GamePreparation() {
                               <div key={quarter} className={`text-center p-4 rounded-lg border-2 ${getBackgroundClass()} transition-colors`}>
                                 <div className="text-lg font-bold text-gray-600 mb-2">Q{quarter}</div>
                                 <div className="space-y-2">
-                                  <div className={`text-2xl font-bold ${getTextColorClass()}`}>
-                                    {avgTeamScore.toFixed(1)}
+                                  {/* Score on same line in prominent format */}
+                                  <div className="text-xl font-bold text-gray-800">
+                                    {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
                                   </div>
-                                  <div className="text-sm text-gray-500">vs {avgOpponentScore.toFixed(1)}</div>
-                                  <div className="text-xs text-gray-600">
+                                  {/* Prominent score differential */}
+                                  <div className={`text-lg ${getDiffTextColorClass()}`}>
                                     {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
                                   </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                  {/* Progress bar shows our percentage of total scoring */}
+                                  <div className="w-full bg-gray-200 rounded-full h-2" title="Our share of total quarter scoring">
                                     <div 
                                       className={`h-2 rounded-full ${
                                         isWinning ? 'bg-green-500' : 
