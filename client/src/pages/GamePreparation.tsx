@@ -763,66 +763,47 @@ export default function GamePreparation() {
                               };
 
                               return (
-                                <QuarterBoxDiagnostic key={quarter} quarter={quarter}>
-                                  <div className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`} style={{ backgroundColor: 'rgba(255, 255, 0, 0.05)' }}>
-                                    {/* Quarter badge in top-left corner */}
-                                    <DiagnosticWrapper label="Badge Container" color="cyan">
-                                      <div className="absolute top-1 left-2">
-                                        <Badge 
-                                          variant="outline" 
-                                          className={`text-xs font-bold ${
-                                            isDraw ? 'border-amber-400 text-amber-700' :
-                                            isWinning ? 'border-green-400 text-green-700' : 
-                                            'border-red-400 text-red-700'
-                                          }`}
-                                        >
-                                          Q{quarter}
-                                        </Badge>
-                                      </div>
-                                    </DiagnosticWrapper>
-
-                                    <DiagnosticWrapper label="Content Container" color="magenta">
-                                      <div className="space-y-1 mt-1" style={{ backgroundColor: 'rgba(255, 0, 255, 0.05)' }}>
-                                        {/* Score on same line with matching colors, aligned with Q badge */}
-                                        <DiagnosticWrapper label="Score Display" color="teal">
-                                          <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
-                                            {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
-                                          </div>
-                                        </DiagnosticWrapper>
-                                        {/* Prominent score differential */}
-                                        <DiagnosticWrapper label="Score Diff" color="brown">
-                                          <div className={`text-base ${getDiffTextColorClass()}`}>
-                                            {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
-                                          </div>
-                                        </DiagnosticWrapper>
-                                        {/* Progress bar shows our percentage of total scoring */}
-                                        <ProgressElementDiagnostic>
-                                          <div 
-                                            className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
-                                            title="Our share of total quarter scoring"
-                                            style={{ 
-                                              backgroundColor: 'yellow',
-                                              border: '1px solid red',
-                                              marginTop: '24px',
-                                              marginBottom: '16px'
-                                            }}
-                                          >
-                                            <div 
-                                              className={`h-2 rounded-full ${
-                                                isWinning ? 'bg-green-500' : 
-                                                isLosing ? 'bg-red-500' : 'bg-amber-500'
-                                              }`}
-                                              style={{ 
-                                                width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`,
-                                                border: '1px solid black'
-                                              }}
-                                            ></div>
-                                          </div>
-                                        </ProgressElementDiagnostic>
-                                      </div>
-                                    </DiagnosticWrapper>
+                                <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                  {/* Quarter badge in top-left corner */}
+                                  <div className="absolute top-1 left-2">
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs font-bold ${
+                                        isDraw ? 'border-amber-400 text-amber-700' :
+                                        isWinning ? 'border-green-400 text-green-700' : 
+                                        'border-red-400 text-red-700'
+                                      }`}
+                                    >
+                                      Q{quarter}
+                                    </Badge>
                                   </div>
-                                </QuarterBoxDiagnostic>
+
+                                  <div className="space-y-1 mt-1">
+                                    {/* Score on same line with matching colors, aligned with Q badge */}
+                                    <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                      {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
+                                    </div>
+                                    {/* Prominent score differential */}
+                                    <div className={`text-base ${getDiffTextColorClass()}`}>
+                                      {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
+                                    </div>
+                                    {/* Progress bar shows our percentage of total scoring */}
+                                    <div 
+                                      className="w-full bg-gray-200 rounded-full h-2 mt-12 mb-8" 
+                                      title="Our share of total quarter scoring"
+                                    >
+                                      <div 
+                                        className={`h-2 rounded-full ${
+                                          isWinning ? 'bg-green-500' : 
+                                          isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                        }`}
+                                        style={{ 
+                                          width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`
+                                        }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                </div>
                               );
                             })}
                             </div>
@@ -836,7 +817,7 @@ export default function GamePreparation() {
                   {historicalGames.length > 0 && (
                     <QuarterPerformanceWidget 
                       games={historicalGames}
-                      currentTeamId={currentTeamId}
+currentTeamId={currentTeamId}
                       className="mb-6"
                     />
                   )}
