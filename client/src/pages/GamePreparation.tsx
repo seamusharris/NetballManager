@@ -665,7 +665,7 @@ export default function GamePreparation() {
 
                                 <div className="space-y-1 mt-1">
                                   {/* Score on same line with matching colors, aligned with Q badge */}
-                                  <div className={`text-lg font-bold ${getDiffTextColorClass()} mt-4`}>
+                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
                                     {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
                                   </div>
                                   {/* Prominent score differential */}
