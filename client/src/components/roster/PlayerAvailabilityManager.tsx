@@ -351,16 +351,6 @@ export default function PlayerAvailabilityManager({
 
                 return (
                   <div key={player.id} className="relative">
-                    <div 
-                      className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                      style={{ 
-                        backgroundColor: isSelected ? darkerTextColor : 'transparent', 
-                        border: isSelected ? 'none' : `2px solid ${darkerTextColor}80` 
-                      }}
-                      onClick={handlePlayerClick}
-                    >
-                      {isSelected && '✓'}
-                    </div>
                     <PlayerBox 
                       player={player}
                       size="md"
@@ -374,6 +364,17 @@ export default function PlayerAvailabilityManager({
                       }}
                       onClick={handlePlayerClick}
                     />
+                    <div 
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer text-white z-20 transition-all duration-200 shadow-lg"
+                      style={{ 
+                        backgroundColor: isSelected ? darkerTextColor : 'rgba(255, 255, 255, 0.9)', 
+                        border: isSelected ? 'none' : `2px solid ${darkerTextColor}`,
+                        color: isSelected ? 'white' : darkerTextColor
+                      }}
+                      onClick={handlePlayerClick}
+                    >
+                      {isSelected && '✓'}
+                    </div>
                   </div>
                 );
               })}
