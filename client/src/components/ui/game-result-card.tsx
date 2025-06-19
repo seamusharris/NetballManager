@@ -271,7 +271,7 @@ export default function GameResultCard({
 
           {config.showRound && game.round && (
             <span className="text-xs text-gray-600">
-              {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
+              {customRoundDisplay || (layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`)}
             </span>
           )}
         </div>

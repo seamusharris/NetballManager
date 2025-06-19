@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +31,8 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
         className
       )}
     >
-      {teamScore}-{opponentScore}
+      {teamScore}—{opponentScore}
     </div>
   );
 }
+```
