@@ -959,7 +959,7 @@ export function GameResultCardExamples() {
             <div className="max-w-4xl space-y-3">
               
               {/* Win Example with Q-by-Q and Cumulative */}
-              <div className="border border-gray-200 border-l-4 border-l-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3">
+              <div className="border border-green-200 border-l-4 border-l-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3"></div>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Cobras</div>
@@ -970,16 +970,16 @@ export function GameResultCardExamples() {
                   
                   {/* Quarter scores positioned closer to final score */}
                   <div className="flex items-center gap-4">
-                    <div className="text-xs space-y-1">
+                    <div className="text-xs space-y-2">
                       {/* Quarter-by-quarter scores on top (lighter) */}
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-4 gap-3"></div>
                         <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">15-12</span>
                         <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">12-16</span>
                         <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">16-11</span>
                         <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">17-12</span>
                       </div>
                       {/* Cumulative scores underneath (darker) */}
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-4 gap-3"></div>
                         <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">15-12</span>
                         <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">27-28</span>
                         <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">43-39</span>
@@ -992,7 +992,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Loss Example */}
-              <div className="border border-gray-200 border-l-4 border-l-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3">
+              <div className="border border-red-200 border-l-4 border-l-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3"></div>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">Sharks vs WNC Dingoes</div>
@@ -1022,7 +1022,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Draw Example */}
-              <div className="border border-gray-200 border-l-4 border-l-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3">
+              <div className="border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3"></div>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Lions</div>
@@ -1052,7 +1052,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Tighter spacing version */}
-              <div className="border border-gray-200 border-l-4 border-l-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3">
+              <div className="border border-purple-200 border-l-4 border-l-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3"></div>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-1">WNC Dingoes vs Thunder</div>
