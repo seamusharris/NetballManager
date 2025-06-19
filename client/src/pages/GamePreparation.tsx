@@ -127,6 +127,23 @@ export default function GamePreparation() {
     enabled: !!game && !!currentTeamId
   });
 
+  // Strategy data will be handled by StrategyTab component internally
+  const strategyData = null;
+  const isLoadingStrategy = false;
+  const strategyError = null;
+
+  // Use existing batch scores data from the unified data fetcher
+  const gameIdsArray = historicalGames?.map(g => g.id) || [];
+  const { data: batchScores, isLoading: isLoadingBatchScores } = useQuery({
+    queryKey: ['games', 'scores', 'batch', gameIdsArray.join(',')],
+    queryFn: async () => {
+      if (gameIdsArray.length === 0) return {};
+      return apiClient.post('/api/games/scores/batch', { gameIds: gameIdsArray });
+    },
+    enabled: gameIdsArray.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Initialize default tactical notes and objectives
   useEffect(() => {
     if (game && tacticalNotes.length === 0) {
