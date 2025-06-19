@@ -660,10 +660,10 @@ export default function GamePreparation() {
                                           const quarterLoss = teamScore < opponentScore;
 
                                           const quarterClass = quarterWin 
-                                            ? 'bg-green-100 text-green-700 border border-green-400' 
+                                            ? 'bg-green-100 text-green-800 border border-green-400' 
                                             : quarterLoss 
-                                              ? 'bg-red-100 text-red-700 border border-red-400'
-                                              : 'bg-amber-100 text-amber-700 border border-amber-400';
+                                              ? 'bg-red-100 text-red-800 border border-red-400'
+                                              : 'bg-amber-100 text-amber-800 border border-amber-400';
 
                                           return (
                                             <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
@@ -747,8 +747,8 @@ export default function GamePreparation() {
                             };
 
                             const getDiffTextColorClass = () => {
-                              if (isDraw) return 'text-amber-700 font-bold';
-                              return isWinning ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
+                              if (isDraw) return 'text-amber-600 font-bold';
+                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
                             };
 
                             return (
