@@ -678,7 +678,7 @@ export default function GamePreparation() {
 
                                                 return (
                                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
-                                                    {teamCum}—{opponentCum}
+                                                    {teamCum}–{opponentCum}
                                                   </span>
                                                 );
                                               })}
