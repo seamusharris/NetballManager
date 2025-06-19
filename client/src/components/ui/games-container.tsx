@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -22,15 +23,8 @@ export function GamesContainer({
   className 
 }: GamesContainerProps) {
   return (
-    <div className={cn(
-      spacingClasses[spacing],
-      className
-    )}>
-      {React.Children.map(children, (child, index) => (
-        <div key={index} className={index > 0 ? spacingClasses[spacing].replace('space-y-', 'mt-') : ''}>
-          {child}
-        </div>
-      ))}
+    <div className={cn(spacingClasses[spacing], className)}>
+      {children}
     </div>
   );
 }
