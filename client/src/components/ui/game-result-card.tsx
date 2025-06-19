@@ -253,7 +253,7 @@ export default function GameResultCard({
     >
       {/* Left side - Opponent and details */}
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-gray-800 truncate text-lg">
+        <div className="font-semibold text-gray-800 truncate text-base">
           {isByeGame ? "Bye" : `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`}
         </div>
 
