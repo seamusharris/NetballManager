@@ -2,8 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import PlayerAvatar from '@/components/ui/player-avatar';
+
+import { PlayerBox } from '@/components/ui/player-box';
 import CourtDisplay from '@/components/ui/court-display';
 import { RotateCcw, Users, Target } from 'lucide-react';
 import { Player, Position } from '@/shared/api-types';
@@ -217,10 +217,16 @@ export default function DragDropLineupEditor({
                         onDragEnd={handleDragEnd}
                         className="cursor-move hover:scale-105 transition-transform"
                       >
-                        <PlayerAvatar player={player} size="md" />
-                        <div className="text-xs text-center mt-2 font-medium">
-                          {player.displayName}
-                        </div>
+                        <PlayerBox 
+                          player={player} 
+                          size="sm" 
+                          showPositions={false}
+                          className="shadow-sm"
+                          style={{
+                            backgroundColor: '#f8fafc',
+                            borderColor: '#e2e8f0'
+                          }}
+                        />
                       </div>
                     ) : (
                       <div className="text-sm text-gray-400 text-center px-2">
@@ -267,7 +273,7 @@ export default function DragDropLineupEditor({
                     <p className="text-sm">All available players are assigned</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     {benchPlayers.map((player) => (
                       <div
                         key={player.id}
@@ -275,24 +281,20 @@ export default function DragDropLineupEditor({
                         onDragStart={(e) => handleDragStart(e, player)}
                         onDragEnd={handleDragEnd}
                         className={cn(
-                          "flex flex-col items-center gap-2 p-3 bg-white rounded-lg border cursor-move transition-all",
-                          "hover:shadow-md hover:scale-105",
+                          "cursor-move transition-all hover:scale-[1.02]",
                           draggedPlayer?.id === player.id && "opacity-50"
                         )}
                       >
-                        <PlayerAvatar player={player} size="sm" />
-                        <div className="text-center min-w-0">
-                          <div className="font-medium text-sm truncate">{player.displayName}</div>
-                          {player.positionPreferences && (
-                            <div className="flex gap-1 mt-1 justify-center flex-wrap">
-                              {player.positionPreferences.slice(0, 3).map(pos => (
-                                <Badge key={pos} variant="outline" className="text-xs">
-                                  {pos}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                        <PlayerBox 
+                          player={player} 
+                          size="sm" 
+                          showPositions={true}
+                          className="shadow-sm transition-shadow duration-200 hover:shadow-md"
+                          style={{
+                            backgroundColor: '#f8fafc',
+                            borderColor: '#e2e8f0'
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
