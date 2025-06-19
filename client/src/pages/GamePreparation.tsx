@@ -28,7 +28,7 @@ import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
-import { GameStatusBadge } from '@/components/games/GameStatusBadge';
+import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 
 
@@ -386,33 +386,31 @@ export default function GamePreparation() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <Calendar className="h-6 w-6 mx-auto mb-1 text-blue-600" />
-                    <p className="text-sm font-medium">{formatShortDate(game.date)}</p>
-                  </div>
-                  <div className="text-center">
-                    <Clock className="h-6 w-6 mx-auto mb-1 text-blue-600" />
-                    <p className="text-sm font-medium">{game.time}</p>
-                  </div>
-                  <Separator orientation="vertical" className="h-8" />
-                  <div>
-                    <h1 className="text-2xl font-bold">{game.homeTeamName} vs {game.awayTeamName}</h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {isHomeGame ? 'Home Game' : 'Away Game'}
-                      </span>
-                      <Badge variant="outline">Round {game.round}</Badge>
-                    </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <Calendar className="h-6 w-6 mx-auto mb-1 text-blue-600" />
+                  <p className="text-sm font-medium">{formatShortDate(game.date)}</p>
+                </div>
+                <div className="text-center">
+                  <Clock className="h-6 w-6 mx-auto mb-1 text-blue-600" />
+                  <p className="text-sm font-medium">{game.time}</p>
+                </div>
+                <Separator orientation="vertical" className="h-8" />
+                <div>
+                  <h1 className="text-2xl font-bold">{game.homeTeamName} vs {game.awayTeamName}</h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      {isHomeGame ? 'Home Game' : 'Away Game'}
+                    </span>
+                    <Badge variant="outline">Round {game.round}</Badge>
                   </div>
                 </div>
-                <GameStatusBadge 
-                  status={game.statusName}
-                  displayName={game.statusDisplayName}
-                  className="text-lg px-4 py-2"
-                />
               </div>
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                {game.statusDisplayName}
+              </Badge>
+            </div>
           </CardHeader>
         </Card>
 
@@ -553,90 +551,106 @@ export default function GamePreparation() {
                               notes: score.notes
                             })) : [];
 
-                            // Check if this is a game that should show status instead of quarters
-                            const isSpecialStatus = ['forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(game.statusName);
-                            const hasQuarterData = transformedScores.length > 0;
+                            // Calculate quarter scores for display
+                            const calculateQuarterScores = () => {
+                              if (!transformedScores.length) return null;
+
+                              const teamScores = [0, 0, 0, 0];
+                              const opponentScores = [0, 0, 0, 0];
+
+                              transformedScores.forEach(score => {
+                                const quarterIndex = score.quarter - 1;
+                                if (quarterIndex >= 0 && quarterIndex < 4) {
+                                  if (score.teamId === currentTeamId) {
+                                    teamScores[quarterIndex] = score.score;
+                                  } else {
+                                    opponentScores[quarterIndex] = score.score;
+                                  }
+                                }
+                              });
+
+                              // Calculate cumulative scores
+                              const teamCumulative = [];
+                              const opponentCumulative = [];
+                              let teamTotal = 0;
+                              let opponentTotal = 0;
+
+                              for (let i = 0; i < 4; i++) {
+                                teamTotal += teamScores[i];
+                                opponentTotal += opponentScores[i];
+                                teamCumulative.push(teamTotal);
+                                opponentCumulative.push(opponentTotal);
+                              }
+
+                              return {
+                                quarter: teamScores,
+                                cumulative: teamCumulative,
+                                opponentQuarter: opponentScores,
+                                opponentCumulative: opponentCumulative,
+                                finalScore: { team: teamTotal, opponent: opponentTotal }
+                              };
+                            };
+
+                            const quarterData = calculateQuarterScores();
 
                             return (
-                              <div key={game.id} className="flex items-center justify-between">
-                                {/* Game result card */}
-                                <div className="flex-1">
-                                  <GameResultCard
-                                    game={game}
-                                    currentTeamId={currentTeamId}
-                                    centralizedScores={transformedScores}
-                                    showLink={true}
-                                    className="w-full"
-                                  />
-                                </div>
+                              <div key={game.id} className="relative">
+                                {/* Use the standard GameResultCard for consistent styling and scoring */}
+                                <GameResultCard
+                                  game={game}
+                                  currentTeamId={currentTeamId}
+                                  centralizedScores={transformedScores}
+                                  showLink={true}
+                                  className="w-full"
+                                />
 
-                                {/* Right side - either quarter breakdown or status badge */}
-                                <div className="ml-4 flex-shrink-0">
-                                  {isSpecialStatus ? (
-                                    <div className="text-center">
-                                      <GameStatusBadge 
-                                        status={game.statusName}
-                                        displayName={game.statusDisplayName}
-                                        className="text-sm px-3 py-1"
-                                      />
-                                      <div className="text-xs text-gray-500 mt-1">
-                                        {game.statusName === 'forfeit-win' ? 'Won by forfeit' :
-                                         game.statusName === 'forfeit-loss' ? 'Lost by forfeit' :
-                                         game.statusName === 'bye' ? 'BYE round' :
-                                         'Game abandoned'}
+                                {/* Overlay quarter breakdown data on top */}
+                                {quarterData && (
+                                  <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                    <div className="text-xs space-y-1">
+                                      {/* Quarter-by-quarter scores on top (lighter) */}
+                                      <div className="grid grid-cols-4 gap-1">
+                                        {quarterData.quarter.map((teamScore, qIndex) => {
+                                          const opponentScore = quarterData.opponentQuarter[qIndex];
+                                          const quarterWin = teamScore > opponentScore;
+                                          const quarterLoss = teamScore < opponentScore;
+
+                                          const quarterClass = quarterWin 
+                                            ? 'bg-green-100 text-green-800 border border-green-400' 
+                                            : quarterLoss 
+                                              ? 'bg-red-100 text-red-800 border border-red-400'
+                                              : 'bg-amber-100 text-amber-800 border border-amber-400';
+
+                                          return (
+                                            <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
+                                              {teamScore}-{opponentScore}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                      {/* Cumulative scores underneath (darker) */}
+                                      <div className="grid grid-cols-4 gap-1">
+                                        {quarterData.cumulative.map((teamCum, qIndex) => {
+                                          const opponentCum = quarterData.opponentCumulative[qIndex];
+                                          const cumulativeWin = teamCum > opponentCum;
+                                          const cumulativeLoss = teamCum < opponentCum;
+
+                                          const cumulativeClass = cumulativeWin 
+                                            ? 'bg-green-200 text-green-800 border border-green-500' 
+                                            : cumulativeLoss 
+                                              ? 'bg-red-200 text-red-800 border border-red-500'
+                                              : 'bg-amber-200 text-amber-800 border border-amber-500';
+
+                                          return (
+                                            <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
+                                              {teamCum}-{opponentCum}
+                                            </span>
+                                          );
+                                        })}
                                       </div>
                                     </div>
-                                  ) : hasQuarterData ? (
-                                    (() => {
-                                      // Calculate quarter scores for display
-                                      const teamScores = [0, 0, 0, 0];
-                                      const opponentScores = [0, 0, 0, 0];
-
-                                      transformedScores.forEach(score => {
-                                        const quarterIndex = score.quarter - 1;
-                                        if (quarterIndex >= 0 && quarterIndex < 4) {
-                                          if (score.teamId === currentTeamId) {
-                                            teamScores[quarterIndex] = score.score;
-                                          } else {
-                                            opponentScores[quarterIndex] = score.score;
-                                          }
-                                        }
-                                      });
-
-                                      return (
-                                        <div className="text-xs space-y-1">
-                                          {/* Quarter-by-quarter scores */}
-                                          <div className="grid grid-cols-4 gap-1">
-                                            {teamScores.map((teamScore, qIndex) => {
-                                              const opponentScore = opponentScores[qIndex];
-                                              const quarterWin = teamScore > opponentScore;
-                                              const quarterLoss = teamScore < opponentScore;
-
-                                              const quarterClass = quarterWin 
-                                                ? 'bg-green-100 text-green-800 border border-green-400' 
-                                                : quarterLoss 
-                                                  ? 'bg-red-100 text-red-800 border border-red-400'
-                                                  : 'bg-amber-100 text-amber-800 border border-amber-400';
-
-                                              return (
-                                                <span key={qIndex} className={`w-12 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block text-xs`}>
-                                                  {teamScore}-{opponentScore}
-                                                </span>
-                                              );
-                                            })}
-                                          </div>
-                                          <div className="text-center text-gray-500 text-xs">
-                                            Quarter breakdown
-                                          </div>
-                                        </div>
-                                      );
-                                    })()
-                                  ) : (
-                                    <div className="text-center text-gray-400 text-xs">
-                                      No quarter data
-                                    </div>
-                                  )}
-                                </div>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
@@ -663,7 +677,7 @@ export default function GamePreparation() {
                                 updatedAt: score.updatedAt,
                                 notes: score.notes
                               })) : [];
-
+                              
                               const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
                               const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
@@ -787,7 +801,7 @@ export default function GamePreparation() {
                                   <Badge 
                                     variant={performance === 'good' ? 'default' : performance === 'poor' ? 'destructive' : 'secondary'}
                                     className="text-xs"
-                                  >```text
+                                  >
                                     {performance === 'good' ? 'Strong' : performance === 'poor' ? 'Weak' : 'Even'}
                                   </Badge>
                                 </div>

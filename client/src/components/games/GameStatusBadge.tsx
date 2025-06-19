@@ -66,15 +66,13 @@ interface GameStatusBadgeProps {
   onClick?: () => void;
   className?: string;
   size?: 'default' | 'sm';
-  withDialog?: boolean;
 }
 
 export function GameStatusBadge({ 
   status, 
   onClick, 
   className,
-  size = 'default',
-  withDialog = false
+  size = 'default'
 }: GameStatusBadgeProps) {
   const badgeSize = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1';
 
@@ -181,7 +179,7 @@ export function GameStatusButton({
 
   // Simple badge without dialog
   if (!withDialog) {
-    return <GameStatusBadge status={game.gameStatus?.name as GameStatus || 'upcoming'} size={size} className={className} withDialog={false} />;
+    return <GameStatusBadge status={game.gameStatus?.name as GameStatus || 'upcoming'} size={size} className={className} />;
   }
 
   // Badge with status change dialog

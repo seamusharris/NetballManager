@@ -11,7 +11,6 @@ import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
-import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
 
@@ -275,8 +274,6 @@ export default function GameResultCard({
               {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
             </span>
           )}
-
-          
         </div>
       </div>
 
