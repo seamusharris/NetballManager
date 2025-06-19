@@ -24,11 +24,7 @@ export function GamesContainer({
 }: GamesContainerProps) {
   return (
     <div className={cn(spacingClasses[spacing], className)}>
-      {React.Children.map(children, (child, index) => (
-        <div key={index} className={index > 0 ? 'mt-4' : ''}>
-          {child}
-        </div>
-      ))}
+      {children}
     </div>
   );
 }
