@@ -35,4 +35,3 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
     </div>
   );
 }
-```
