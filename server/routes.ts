@@ -769,7 +769,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log("Valid season IDs:", validSeasonIds);
 
-        // Delete existing relationships
         await client.query(
           'DELETE FROM player_seasons WHERE player_id = $1',
           [playerId]
@@ -885,15 +884,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate that clubIds is an array
       if (!Array.isArray(clubIds)) {
-        return res.status(400).json({ message: "clubIds must be an array" });      }
+        return res.status(400).json({ message: "clubIds must be an array" });
+      }
 
       const client = await pool.connect();
 
       try {
-                await client.query('BEGIN');
+        await client.query('BEGIN');
 
-        // Check if player exists
-        const playerCheck = await client.query`
+        // Check if playerexists
+        const playerCheck = await client.query(
           'SELECT id FROM players WHERE id = $1',
           [playerId]
         );
@@ -2455,7 +2455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register user management routes
   registerUserManagementRoutes(app);
 
-  // Register player borrowing routes
+  //// Register player borrowing routes
   registerPlayerBorrowingRoutes(app);
 
   // Register game permissions routes
