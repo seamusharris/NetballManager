@@ -31,6 +31,7 @@ import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 
+
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
 
 interface GamePreparationProps {
@@ -54,7 +55,118 @@ interface GameObjective {
   completed: boolean;
 }
 
+// Enhanced diagnostic component with comprehensive visual debugging
+const DiagnosticWrapper = ({ children, label, color = 'red' }: { children: React.ReactNode; label: string; color?: string }) => {
+  return (
+    <div style={{ 
+      border: `2px dashed ${color}`, 
+      backgroundColor: `rgba(255, 0, 0, 0.1)`, 
+      padding: '8px',
+      margin: '4px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-12px', 
+        left: '8px', 
+        fontSize: '12px', 
+        color: color,
+        backgroundColor: 'white',
+        padding: '2px 6px',
+        fontWeight: 'bold',
+        border: `1px solid ${color}`,
+        borderRadius: '3px'
+      }}>
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+};
 
+// Progress bar specific diagnostic with margin/padding visualization
+const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode; label: string }) => {
+  return (
+    <div style={{ 
+      border: '3px solid purple', 
+      backgroundColor: 'rgba(128, 0, 128, 0.1)', 
+      padding: '12px',
+      margin: '8px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-15px', 
+        left: '12px', 
+        fontSize: '14px', 
+        color: 'purple',
+        backgroundColor: 'white',
+        padding: '4px 8px',
+        fontWeight: 'bold',
+        border: '2px solid purple',
+        borderRadius: '4px'
+      }}>
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+};
+
+// Individual quarter box diagnostic
+const QuarterBoxDiagnostic = ({ children, quarter }: { children: React.ReactNode; quarter: number }) => {
+  return (
+    <div style={{ 
+      border: '2px solid blue', 
+      backgroundColor: 'rgba(0, 0, 255, 0.05)', 
+      padding: '4px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-10px', 
+        right: '4px', 
+        fontSize: '10px', 
+        color: 'blue',
+        backgroundColor: 'white',
+        padding: '1px 4px',
+        border: '1px solid blue',
+        borderRadius: '2px'
+      }}>
+        Q{quarter} Box
+      </div>
+      {children}
+    </div>
+  );
+};
+
+// Progress bar element diagnostic
+const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div style={{ 
+      border: '2px solid orange', 
+      backgroundColor: 'rgba(255, 165, 0, 0.1)', 
+      padding: '6px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-12px', 
+        left: '4px', 
+        fontSize: '11px', 
+        color: 'orange',
+        backgroundColor: 'white',
+        padding: '2px 4px',
+        fontWeight: 'bold',
+        border: '1px solid orange',
+        borderRadius: '2px'
+      }}>
+        PROGRESS BAR
+      </div>
+      {children}
+    </div>
+  );
+};
 
 export default function GamePreparation() {
   const params = useParams();
@@ -413,22 +525,412 @@ export default function GamePreparation() {
                     </Card>
                   </div>
 
-                  
+                  {/* Historical Games */}
+                  {historicalGames.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-6">
+                        <CardTitle className="flex items-center gap-2">
+                          <Trophy className="h-5 w-5" />
+                          Previous Games vs {opponent}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <GamesContainer spacing="normal">
+                          {historicalGames.slice(0, 5).map((game, index) => {
+                            // Transform batch scores to the format expected by GameResultCard
+                            const gameScores = batchScores?.[game.id] || [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                              id: score.id,
+                              gameId: score.gameId,
+                              teamId: score.teamId,
+                              quarter: score.quarter,
+                              score: score.score,
+                              enteredBy: score.enteredBy,
+                              enteredAt: score.enteredAt,
+                              updatedAt: score.updatedAt,
+                              notes: score.notes
+                            })) : [];
+
+                            return (
+                              <GameResultCard
+                                key={game.id}
+                                game={game}
+                                currentTeamId={currentTeamId}
+                                centralizedScores={transformedScores}
+                                showLink={true}
+                                className="w-full"
+                              />
+                            );
+                          })}
+                        </GamesContainer>
+                      </CardContent>
+                    </Card>
+                  )}
 
 
 
-                  
+                  {/* Historical Games with Quarter-by-Quarter Breakdown */}
+                  {historicalGames.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-6">
+                        <CardTitle className="flex items-center gap-2">
+                          <Trophy className="h-5 w-5" />
+                          Previous Games vs {opponent} - Quarter Breakdown
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {historicalGames.slice(0, 5).map((game, index) => {
+                            // Transform batch scores to calculate quarter breakdown
+                            const gameScores = batchScores?.[game.id] || [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                              id: score.id,
+                              gameId: score.gameId,
+                              teamId: score.teamId,
+                              quarter: score.quarter,
+                              score: score.score,
+                              enteredBy: score.enteredBy,
+                              enteredAt: score.enteredAt,
+                              updatedAt: score.updatedAt,
+                              notes: score.notes
+                            })) : [];
+
+                            // Calculate quarter scores for display
+                            const calculateQuarterScores = () => {
+                              if (!transformedScores.length) return null;
+
+                              const teamScores = [0, 0, 0, 0];
+                              const opponentScores = [0, 0, 0, 0];
+
+                              transformedScores.forEach(score => {
+                                const quarterIndex = score.quarter - 1;
+                                if (quarterIndex >= 0 && quarterIndex < 4) {
+                                  if (score.teamId === currentTeamId) {
+                                    teamScores[quarterIndex] = score.score;
+                                  } else {
+                                    opponentScores[quarterIndex] = score.score;
+                                  }
+                                }
+                              });
+
+                              // Calculate cumulative scores
+                              const teamCumulative = [];
+                              const opponentCumulative = [];
+                              let teamTotal = 0;
+                              let opponentTotal = 0;
+
+                              for (let i = 0; i < 4; i++) {
+                                teamTotal += teamScores[i];
+                                opponentTotal += opponentScores[i];
+                                teamCumulative.push(teamTotal);
+                                opponentCumulative.push(opponentTotal);
+                              }
+
+                              return {
+                                quarter: teamScores,
+                                cumulative: teamCumulative,
+                                opponentQuarter: opponentScores,
+                                opponentCumulative: opponentCumulative,
+                                finalScore: { team: teamTotal, opponent: opponentTotal }
+                              };
+                            };
+
+                            const quarterData = calculateQuarterScores();
+
+                            return (
+                              <div key={game.id} className="relative">
+                                {/* Use the standard GameResultCard for consistent styling and scoring */}
+                                <GameResultCard
+                                  game={game}
+                                  currentTeamId={currentTeamId}
+                                  centralizedScores={transformedScores}
+                                  showLink={true}
+                                  className="w-full"
+                                />
+
+                                {/* Overlay quarter breakdown data on top */}
+                                {quarterData && (
+                                  <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                    <div className="text-xs space-y-1">
+                                      {/* Quarter-by-quarter scores on top (lighter) */}
+                                      <div className="grid grid-cols-4 gap-2">
+                                        {quarterData.quarter.map((teamScore, qIndex) => {
+                                          const opponentScore = quarterData.opponentQuarter[qIndex];
+                                          const quarterWin = teamScore > opponentScore;
+                                          const quarterLoss = teamScore < opponentScore;
+
+                                          const quarterClass = quarterWin 
+                                            ? 'bg-green-100 text-green-700 border border-green-400' 
+                                            : quarterLoss 
+                                              ? 'bg-red-100 text-red-700 border border-red-400'
+                                              : 'bg-amber-100 text-amber-700 border border-amber-400';
+
+                                          return (
+                                            <span key={qIndex} className={`px-1 py-0.5 ${quarterClass} rounded font-medium text-center`}>
+                                              {teamScore}-{opponentScore}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                      {/* Cumulative scores underneath (darker) */}
+                                      <div className="grid grid-cols-4 gap-2">
+                                        {quarterData.cumulative.map((teamCum, qIndex) => {
+                                          const opponentCum = quarterData.opponentCumulative[qIndex];
+                                          const cumulativeWin = teamCum > opponentCum;
+                                          const cumulativeLoss = teamCum < opponentCum;
+
+                                          const cumulativeClass = cumulativeWin 
+                                            ? 'bg-green-200 text-green-800 border border-green-500' 
+                                            : cumulativeLoss 
+                                              ? 'bg-red-200 text-red-800 border border-red-500'
+                                              : 'bg-amber-200 text-amber-800 border border-amber-500';
+
+                                          return (
+                                            <span key={qIndex} className={`px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center`}>
+                                              {teamCum}-{opponentCum}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Quarter Average Performance Boxes */}
+                        <ProgressBarDiagnostic label="QUARTER AVERAGES CONTAINER">
+                          <DiagnosticWrapper label="Grid Container" color="green">
+                            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4" style={{ backgroundColor: 'rgba(0, 255, 0, 0.05)' }}>
+                              {[1, 2, 3, 4].map(quarter => {
+                              // Calculate average scores for this quarter across all historical games
+                              let totalTeamScore = 0;
+                              let totalOpponentScore = 0;
+                              let gamesWithData = 0;
+
+                              historicalGames.forEach(game => {
+                                const gameScores = batchScores?.[game.id] || [];
+                                if (gameScores.length > 0) {
+                                  const quarterTeamScore = gameScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                                  const quarterOpponentScore = gameScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+
+                                  if (quarterTeamScore > 0 || quarterOpponentScore > 0) {
+                                    totalTeamScore += quarterTeamScore;
+                                    totalOpponentScore += quarterOpponentScore;
+                                    gamesWithData++;
+                                  }
+                                }
+                              });
+
+                              const avgTeamScore = gamesWithData > 0 ? (totalTeamScore / gamesWithData) : 0;
+                              const avgOpponentScore = gamesWithData > 0 ? (totalOpponentScore / gamesWithData) : 0;
+                              const scoreDiff = avgTeamScore - avgOpponentScore;
+
+                              // Determine performance and background shade
+                              const isWinning = avgTeamScore > avgOpponentScore;
+                              const isLosing = avgTeamScore < avgOpponentScore;
+                              const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
+
+                              // Calculate background shade intensity based on score difference
+                              const maxDiff = 5; // Max expected quarter score difference for scaling
+                              const intensity = Math.min(Math.abs(scoreDiff) / maxDiff, 1);
+
+                              const getBackgroundClass = () => {
+                                if (isDraw) return 'bg-amber-100 border-amber-300';
+                                if (isWinning) {
+                                  if (intensity > 0.7) return 'bg-green-200 border-green-400';
+                                  if (intensity > 0.4) return 'bg-green-100 border-green-300';
+                                  return 'bg-green-50 border-green-200';
+                                } else {
+                                  if (intensity > 0.7) return 'bg-red-200 border-red-400';
+                                  if (intensity > 0.4) return 'bg-red-100 border-red-300';
+                                  return 'bg-red-50 border-red-200';
+                                }
+                              };
+
+                              const getDiffTextColorClass = () => {
+                                if (isDraw) return 'text-amber-700 font-bold';
+                                return isWinning ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
+                              };
+
+                              const getPerformanceLabel = () => {
+                                if (isDraw) return 'Even';
+                                if (intensity > 0.7) return isWinning ? 'Dominant' : 'Weak';
+                                if (intensity > 0.4) return isWinning ? 'Strong' : 'Poor';
+                                return isWinning ? 'Good' : 'Slight Loss';
+                              };
+
+                              return (
+                                <QuarterBoxDiagnostic key={quarter} quarter={quarter}>
+                                  <div className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`} style={{ backgroundColor: 'rgba(255, 255, 0, 0.05)' }}>
+                                    {/* Quarter badge in top-left corner */}
+                                    <DiagnosticWrapper label="Badge Container" color="cyan">
+                                      <div className="absolute top-1 left-2">
+                                        <Badge 
+                                          variant="outline" 
+                                          className={`text-xs font-bold ${
+                                            isDraw ? 'border-amber-400 text-amber-700' :
+                                            isWinning ? 'border-green-400 text-green-700' : 
+                                            'border-red-400 text-red-700'
+                                          }`}
+                                        >
+                                          Q{quarter}
+                                        </Badge>
+                                      </div>
+                                    </DiagnosticWrapper>
+
+                                    <DiagnosticWrapper label="Content Container" color="magenta">
+                                      <div className="space-y-1 mt-1" style={{ backgroundColor: 'rgba(255, 0, 255, 0.05)' }}>
+                                        {/* Score on same line with matching colors, aligned with Q badge */}
+                                        <DiagnosticWrapper label="Score Display" color="teal">
+                                          <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                            {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
+                                          </div>
+                                        </DiagnosticWrapper>
+                                        {/* Prominent score differential */}
+                                        <DiagnosticWrapper label="Score Diff" color="brown">
+                                          <div className={`text-base ${getDiffTextColorClass()}`}>
+                                            {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
+                                          </div>
+                                        </DiagnosticWrapper>
+                                        {/* Progress bar shows our percentage of total scoring */}
+                                        <ProgressElementDiagnostic>
+                                          <div 
+                                            className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
+                                            title="Our share of total quarter scoring"
+                                            style={{ 
+                                              backgroundColor: 'yellow',
+                                              border: '1px solid red',
+                                              marginTop: '24px',
+                                              marginBottom: '16px'
+                                            }}
+                                          >
+                                            <div 
+                                              className={`h-2 rounded-full ${
+                                                isWinning ? 'bg-green-500' : 
+                                                isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                              }`}
+                                              style={{ 
+                                                width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`,
+                                                border: '1px solid black'
+                                              }}
+                                            ></div>
+                                          </div>
+                                        </ProgressElementDiagnostic>
+                                      </div>
+                                    </DiagnosticWrapper>
+                                  </div>
+                                </QuarterBoxDiagnostic>
+                              );
+                            })}
+                            </div>
+                          </DiagnosticWrapper>
+                        </ProgressBarDiagnostic>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Quarter Performance Analysis */}
                   {historicalGames.length > 0 && (
                     <QuarterPerformanceWidget 
                       games={historicalGames}
-currentTeamId={currentTeamId}
+                      currentTeamId={currentTeamId}
                       className="mb-6"
                     />
                   )}
 
-                  
+                  {/* Legacy Quarter Performance Analysis - can be removed once widget is confirmed working */}
+                  {historicalGames.length > 0 && false && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5" />
+                          Quarter Performance vs {opponent} (Legacy)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                          {[1, 2, 3, 4].map(quarter => {
+                            const avgScore = Math.floor(Math.random() * 15) + 8; // Mock data
+                            const opponentAvg = Math.floor(Math.random() * 15) + 8;
+                            const performance = avgScore > opponentAvg ? 'good' : avgScore === opponentAvg ? 'neutral' : 'poor';
+
+                            return (
+                              <div key={quarter} className="text-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 transition-colors">
+                                <div className="text-lg font-bold text-gray-600 mb-2">Q{quarter}</div>
+                                <div className="space-y-2">
+                                  <div className={`text-2xl font-bold ${
+                                    performance === 'good' ? 'text-green-600' : 
+                                    performance === 'poor' ? 'text-red-600' : 'text-yellow-600'
+                                  }`}>
+                                    {avgScore}
+                                  </div>
+                                  <div className="text-sm text-gray-500">vs {opponentAvg}</div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        performance === 'good' ? 'bg-green-500' : 
+                                        performance === 'poor' ? 'bg-red-500' : 'bg-yellow-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, (avgScore / (avgScore + opponentAvg)) * 100)}%` }}
+                                    ></div>
+                                  </div>
+                                  <Badge 
+                                    variant={performance === 'good' ? 'default' : performance === 'poor' ? 'destructive' : 'secondary'}
+                                    className="text-xs"
+                                  >
+                                    {performance === 'good' ? 'Strong' : performance === 'poor' ? 'Weak' : 'Even'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Performance Trend Chart */}
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                          <h4 className="font-semibold mb-3 text-gray-800">Performance Trend</h4>
+                          <div className="flex items-end justify-between h-24 px-2">
+                            {[1, 2, 3, 4].map(quarter => {
+                              const height = Math.random() * 80 + 20;
+                              return (
+                                <div key={quarter} className="flex flex-col items-center gap-2">
+                                  <div 
+                                    className="bg-gradient-to-t from-blue-500 to-purple-500 rounded-t w-8 transition-all duration-500 hover:scale-110"
+                                    style={{ height: `${height}%` }}
+                                  ></div>
+                                  <span className="text-xs font-medium text-gray-600">Q{quarter}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingUp className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium text-green-800">Strongest Quarter</span>
+                            </div>
+                            <p className="text-sm text-green-700">
+                              Quarter 3 shows best performance with consistent scoring advantage
+                            </p>
+                          </div>
+                          <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div className="flex items-center gap-2 mb-1">
+                              <AlertCircle className="h-4 w-4 text-orange-600" />
+                              <span className="text-sm font-medium text-orange-800">Focus Area</span>
+                            </div>
+                            <p className="text-sm text-orange-700">
+                              Quarter 1 performance needs attention - consider tactical adjustments
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
 
 
