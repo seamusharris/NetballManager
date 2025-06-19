@@ -608,18 +608,9 @@ export default function GamePreparation() {
                                   className="w-full"
                                 />
 
-                                {/* Right side - either quarter breakdown or status badge */}
+                                {/* Right side - quarter breakdown for non-special games */}
                                 <div className="ml-4 flex-shrink-0">
-                                  {isSpecialStatus ? (
-                                    <div className="text-center">
-                                      <Badge 
-                                        variant="secondary"
-                                        className="text-sm px-3 py-1"
-                                      >
-                                        {game.statusDisplayName}
-                                      </Badge>
-                                    </div>
-                                  ) : hasQuarterData ? (
+                                  {!isSpecialStatus && hasQuarterData ? (
                                     (() => {
                                       // Calculate quarter scores for display
                                       const teamScores = [0, 0, 0, 0];
