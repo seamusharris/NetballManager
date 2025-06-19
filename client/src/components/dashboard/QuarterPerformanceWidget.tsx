@@ -12,13 +12,15 @@ interface QuarterPerformanceWidgetProps {
   className?: string;
   activeSeason?: any;
   selectedSeason?: any;
+  currentTeamId?: number;
 }
 
 export default function QuarterPerformanceWidget({ 
   games, 
   className, 
   activeSeason, 
-  selectedSeason 
+  selectedSeason,
+  currentTeamId 
 }: QuarterPerformanceWidgetProps) {
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
@@ -110,10 +112,20 @@ export default function QuarterPerformanceWidget({
       const game = games.find(g => g.id === gameId);
       if (!game) return;
 
-      // Determine which team is "our" team - use homeTeamId and awayTeamId to figure this out
-      // We need to identify our team from the context
-      const ourTeamId = game.homeTeamId; // This might need adjustment based on your team context
-      const opponentTeamId = game.awayTeamId;
+      // Determine which team is "our" team based on the current team context
+      let ourTeamId;
+      let opponentTeamId;
+      
+      if (currentTeamId) {
+        // Use the provided current team ID to determine our team vs opponent
+        ourTeamId = currentTeamId;
+        opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
+      } else {
+        // Fallback: try to determine from game structure
+        console.warn('QuarterPerformanceWidget: No currentTeamId provided, using fallback logic');
+        ourTeamId = game.homeTeamId;
+        opponentTeamId = game.awayTeamId;
+      }
 
       // Group scores by quarter for this game
       const gameQuarterScores: Record<number, { team: number, opponent: number }> = {

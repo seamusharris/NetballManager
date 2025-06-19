@@ -29,6 +29,7 @@ import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
+import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
@@ -453,11 +454,20 @@ export default function GamePreparation() {
 
                   {/* Quarter Performance Analysis */}
                   {historicalGames.length > 0 && (
+                    <QuarterPerformanceWidget 
+                      games={historicalGames}
+                      currentTeamId={currentTeamId}
+                      className="mb-6"
+                    />
+                  )}
+
+                  {/* Legacy Quarter Performance Analysis - can be removed once widget is confirmed working */}
+                  {historicalGames.length > 0 && false && (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <BarChart3 className="h-5 w-5" />
-                          Quarter Performance vs {opponent}
+                          Quarter Performance vs {opponent} (Legacy)
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
