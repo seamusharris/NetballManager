@@ -330,7 +330,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                         }
                       }}
                     >
-                      <SelectTrigger className="text-xs w-16 h-7">
+                      <SelectTrigger className="text-xs w-12 h-7 px-2">
                         <SelectValue placeholder="→" />
                       </SelectTrigger>
                       <SelectContent>
