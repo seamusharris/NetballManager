@@ -417,7 +417,7 @@ export default function GamePreparation() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                           {historicalGames.slice(0, 5).map((game, index) => {
                             // Transform batch scores to the format expected by GameResultCard
                             const gameScores = batchScores?.[game.id] || [];
