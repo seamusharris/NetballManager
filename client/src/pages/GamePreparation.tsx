@@ -1084,6 +1084,3 @@ export default function GamePreparation() {
     </PageTemplate>
   );
 }
-```
-
-The code has been modified to remove the GameStatusBadge positioning and redundant text, and the closing bracket structure has been fixed.
