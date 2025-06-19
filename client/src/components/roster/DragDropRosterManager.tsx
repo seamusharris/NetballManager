@@ -94,6 +94,7 @@ const PositionSlot = ({
       {player ? (
         <div 
           className="cursor-move" 
+          style={{ textAlign: 'left' }}
           draggable
           onDragStart={() => onDragStart(player.id)}
         >
