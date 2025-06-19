@@ -169,16 +169,25 @@ export default function DragDropRosterManager({
         [currentQuarter]: { ...assignments[currentQuarter] }
       };
 
-      // Clear the player from any previous position in this quarter
+      // Find where the dragged player is currently positioned
+      let draggedPlayerCurrentPosition = null;
       Object.keys(newAssignments[currentQuarter]).forEach(pos => {
         if (newAssignments[currentQuarter][pos] === draggedPlayer) {
-          newAssignments[currentQuarter][pos] = null;
+          draggedPlayerCurrentPosition = pos;
         }
       });
 
-      // If there's already a player in the target position, remove them
-      if (newAssignments[currentQuarter][position] !== null) {
-        newAssignments[currentQuarter][position] = null;
+      // Get the player currently in the target position (if any)
+      const existingPlayerInTarget = newAssignments[currentQuarter][position];
+
+      // Clear the dragged player from their current position
+      if (draggedPlayerCurrentPosition) {
+        newAssignments[currentQuarter][draggedPlayerCurrentPosition] = null;
+      }
+
+      // If there's a player in the target position, move them to the dragged player's old position
+      if (existingPlayerInTarget !== null && draggedPlayerCurrentPosition) {
+        newAssignments[currentQuarter][draggedPlayerCurrentPosition] = existingPlayerInTarget;
       }
 
       // Assign the dragged player to the new position
