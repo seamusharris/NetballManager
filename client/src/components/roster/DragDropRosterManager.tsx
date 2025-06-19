@@ -277,65 +277,76 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
         </div>
       </div>
 
-      {/* Quarter Selection and Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="1">Quarter 1</TabsTrigger>
-            <TabsTrigger value="2">Quarter 2</TabsTrigger>
-            <TabsTrigger value="3">Quarter 3</TabsTrigger>
-            <TabsTrigger value="4">Quarter 4</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        {/* Quarter Management Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Primary Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetQuarter}
-            >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Reset Quarter
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetAll}
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Reset All
-            </Button>
+      {/* Quarter Selection */}
+      <div className="bg-white rounded-lg border shadow-sm p-4">
+        <div className="flex flex-col space-y-4">
+          {/* Quarter Tabs */}
+          <div className="flex justify-center">
+            <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+              <TabsList className="grid grid-cols-4">
+                <TabsTrigger value="1">Quarter 1</TabsTrigger>
+                <TabsTrigger value="2">Quarter 2</TabsTrigger>
+                <TabsTrigger value="3">Quarter 3</TabsTrigger>
+                <TabsTrigger value="4">Quarter 4</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
-          {/* Copy Quarter Controls */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-600 font-medium">Copy Quarter:</span>
-            {[1, 2, 3, 4].map(sourceQuarter => (
-              <Select
-                key={sourceQuarter}
-                onValueChange={(value) => {
-                  if (value) {
-                    handleCopyQuarter(sourceQuarter, parseInt(value));
-                  }
-                }}
+          {/* Controls Section */}
+          <div className="flex flex-col space-y-3">
+            {/* Reset Actions */}
+            <div className="flex justify-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetQuarter}
+                className="flex items-center gap-2"
               >
-                <SelectTrigger className="w-[120px] text-xs">
-                  <SelectValue placeholder={`Q${sourceQuarter} →`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4]
-                    .filter(q => q !== sourceQuarter)
-                    .map(targetQuarter => (
-                      <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
-                        Quarter {targetQuarter}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            ))}
+                <RotateCcw className="h-4 w-4" />
+                Reset Quarter {currentQuarter}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetAll}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Reset All
+              </Button>
+            </div>
+
+            {/* Copy Quarter Section */}
+            <div className="border-t pt-3">
+              <div className="text-center mb-3">
+                <span className="text-sm font-medium text-gray-700">Copy Quarter Lineup</span>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                {[1, 2, 3, 4].map(sourceQuarter => (
+                  <Select
+                    key={sourceQuarter}
+                    onValueChange={(value) => {
+                      if (value) {
+                        handleCopyQuarter(sourceQuarter, parseInt(value));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder={`Copy Q${sourceQuarter}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4]
+                        .filter(q => q !== sourceQuarter)
+                        .map(targetQuarter => (
+                          <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                            to Quarter {targetQuarter}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
