@@ -92,6 +92,11 @@ export const SPACING_STANDARDS = {
   gridGap: 'gap-6',        // Main grid layouts
   smallGridGap: 'gap-4',   // Compact grids
   tightGridGap: 'gap-2',   // Very compact layouts
+
+  // Games container spacing
+  gamesSpacing: 'space-y-4',     // Standard spacing between game cards
+  compactGamesSpacing: 'space-y-3', // Compact spacing for dashboard widgets
+  denseGamesSpacing: 'space-y-2',   // Dense spacing for lists
 } as const;
 
 // Helper function to get action button class

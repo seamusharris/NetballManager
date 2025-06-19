@@ -28,6 +28,8 @@ import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
+import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { HistoricalGamesContainer } from '@/components/ui/games-container';
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
 
@@ -416,36 +418,15 @@ export default function GamePreparation() {
                           Previous Games vs {opponent}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {historicalGames.slice(0, 5).map((game, index) => {
-                            // Transform batch scores to the format expected by GameResultCard
-                            const gameScores = batchScores?.[game.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
-                            })) : [];
-
-                            return (
-                              <GameResultCard
-                                key={game.id}
-                                game={game}
-                                players={players}
-                                currentTeamId={currentTeamId}
-                                centralizedScores={transformedScores}
-                                showQuickActions={false}
-                                className="w-full"
-                              />
-                            );
-                          })}
-                        </div>
+                      <CardContent className="p-0">
+                        <HistoricalGamesContainer
+                          games={historicalGames}
+                          centralizedScores={batchScores}
+                          currentTeamId={currentTeamId}
+                          players={players}
+                          maxGames={5}
+                          className="border-0"
+                        />
                       </CardContent>
                     </Card>
                   )}

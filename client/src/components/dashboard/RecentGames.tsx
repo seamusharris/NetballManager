@@ -1,15 +1,7 @@
 import { useState, useEffect } from 'react';
-import { BaseWidget } from '@/components/ui/base-widget';
-import { Link } from 'wouter';
-import { Game, GameStat } from '@shared/schema';
-import { formatShortDate } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import GameResultCard from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
-import { useClub } from '@/contexts/ClubContext';
-import { apiClient } from '@/lib/apiClient';
-import { statisticsService } from '@/lib/statisticsService';
+import { RecentGamesContainer } from '@/components/ui/games-container';
 
 interface RecentGamesProps {
   games: Game[];
