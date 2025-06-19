@@ -475,11 +475,11 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
               return (
                 <div key={player.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className={`${player.avatarColor || 'bg-gray-400'} text-white text-xs`}>
-                        {player.displayName.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
+                    {player && <PlayerAvatar 
+                      player={player} 
+                      size="sm" 
+                      className="mr-2"
+                    />}
                     <div>
                       <div className="font-medium text-sm">{player.displayName}</div>
                       <div className="text-xs text-gray-600">
@@ -549,4 +549,49 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
       </div>
     </div>
   );
+}
+
+interface PlayerAvatarProps {
+  player: Player;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, size = 'md', className }) => {
+  const avatarSizes = {
+    sm: 'h-6 w-6',
+    md: 'h-8 w-8',
+    lg: 'h-10 w-10',
+  };
+
+  const avatarStyle = avatarSizes[size] || avatarSizes['md'];
+
+  return (
+    <Avatar className={`${avatarStyle} ${className}`}>
+      <AvatarFallback 
+        className={`${player?.avatarColor || 'bg-gray-400'} text-white text-xs`}
+      >
+        {player?.displayName?.split(' ').map(n => n[0]).join('')}
+      </AvatarFallback>
+    </Avatar>
+  );
+};
+
+function getPlayerColorForBackground(avatarColor: string | undefined) {
+  if (!avatarColor) {
+    console.warn("Missing color mapping");
+    return "bg-gray-400";
+  }
+
+  return avatarColor;
+}
+
+function getPlayerColorForBorder(avatarColor: string | undefined) {
+   if (!avatarColor) {
+    console.warn("Missing color mapping");
+    return "border-gray-500";
+  }
+
+  const darkerColor = getDarkerColorHex(avatarColor);
+  return `border-[${darkerColor}]`;
 }
