@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Player {
   id: number;
@@ -278,7 +279,16 @@ export default function DragDropRosterManager({
     return acc;
   }, {} as Record<string, any>);
 
-  // Load existing roster data when gameId changes or component mounts
+  // Use React Query to fetch roster data with caching
+  const { data: rosterData } = useQuery({
+    queryKey: ['roster', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
+    enabled: !!gameId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - rosters change infrequently
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
+  });
+
+  // Load existing roster data when rosterData changes
   useEffect(() => {
     if (!gameId) {
       console.log('DragDropRosterManager: No gameId provided, using empty assignments');
@@ -290,63 +300,35 @@ export default function DragDropRosterManager({
       return;
     }
 
-    // Always fetch fresh roster data from API when gameId is provided
-    const loadExistingRoster = async () => {
-      try {
-        console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
-        const response = await apiClient.get(`/api/games/${gameId}/rosters`);
-        const rosters = response;
-        
-        console.log(`DragDropRosterManager: Received ${rosters?.length || 0} roster entries:`, rosters);
-        
-        // Always start with empty assignments
-        const loadedAssignments = {
-          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-        };
+    if (rosterData && rosterData.length > 0) {
+      console.log(`DragDropRosterManager: Loading cached roster for game ${gameId}`, rosterData);
 
-        if (rosters && rosters.length > 0) {
-          rosters.forEach((roster: any) => {
-            if (roster.quarter && roster.position && roster.playerId) {
-              const quarter = roster.quarter as number;
-              const position = roster.position as string;
-              if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
-                loadedAssignments[quarter][position] = roster.playerId;
-                console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
-              }
-            }
-          });
-        }
+      // Convert roster data to assignments format
+      const loadedAssignments = {
+        1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+      };
 
-        console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
-        setAssignments(loadedAssignments);
-        if (onRosterChange) {
-          onRosterChange(loadedAssignments);
+      rosterData.forEach((roster: any) => {
+        if (roster.quarter && roster.position && roster.playerId) {
+          const quarter = roster.quarter as number;
+          const position = roster.position as string;
+          if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
+            loadedAssignments[quarter][position] = roster.playerId;
+          }
         }
-      } catch (error) {
-        console.error('DragDropRosterManager: Error loading existing roster:', error);
-        // Initialize empty assignments on error
-        const emptyAssignments = {
-          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-        };
-        setAssignments(emptyAssignments);
+      });
+
+      setAssignments(loadedAssignments);
+      if (onRosterChange) {
+        onRosterChange(loadedAssignments);
       }
-    };
-
-    loadExistingRoster();
-  }, [gameId]);
-
-  // Separate effect to handle onRosterChange when assignments change
-  useEffect(() => {
-    if (onRosterChange) {
-      onRosterChange(assignments);
+    } else {
+      console.log(`DragDropRosterManager: No roster data found for game ${gameId}`);
     }
-  }, [assignments, onRosterChange]);
+  }, [rosterData, gameId, onRosterChange, initialRoster]);
 
   // Save roster function
   const handleSaveRoster = async () => {
@@ -363,7 +345,7 @@ export default function DragDropRosterManager({
     try {
       // Convert assignments to roster format expected by API
       const rosterData = [];
-      
+
       for (const [quarter, positions] of Object.entries(assignments)) {
         for (const [position, playerId] of Object.entries(positions)) {
           if (playerId !== null) {
@@ -385,6 +367,10 @@ export default function DragDropRosterManager({
       });
 
       console.log('DragDropRosterManager: All roster entries saved successfully via batch');
+
+      // Invalidate roster cache to ensure fresh data is fetched
+      const queryClient = useQueryClient();
+      queryClient.invalidateQueries({ queryKey: ['roster', gameId] });
 
       toast({
         title: "Success",
