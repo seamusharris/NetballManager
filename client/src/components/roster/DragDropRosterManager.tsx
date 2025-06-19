@@ -293,9 +293,9 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
           </div>
 
           {/* Controls Section */}
-          <div className="flex flex-col space-y-3">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
             {/* Reset Actions */}
-            <div className="flex justify-center gap-3">
+            <div className="flex gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -316,37 +316,35 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
               </Button>
             </div>
 
-            {/* Copy Quarter Section */}
-            <div className="border-t pt-3">
-              <div className="flex items-center justify-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Copy:</span>
-                <div className="flex items-center gap-3">
-                  {[1, 2, 3, 4].map(sourceQuarter => (
-                    <div key={sourceQuarter} className="flex items-center gap-1">
-                      <span className="text-xs font-medium text-gray-600 min-w-[16px]">Q{sourceQuarter}</span>
-                      <Select
-                        onValueChange={(value) => {
-                          if (value) {
-                            handleCopyQuarter(sourceQuarter, parseInt(value));
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="text-xs w-16 h-7">
-                          <SelectValue placeholder="→" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4]
-                            .filter(q => q !== sourceQuarter)
-                            .map(targetQuarter => (
-                              <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
-                                Q{targetQuarter}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
+            {/* Copy Quarter Controls */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Copy:</span>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4].map(sourceQuarter => (
+                  <div key={sourceQuarter} className="flex items-center gap-1">
+                    <span className="text-xs font-medium text-gray-600 min-w-[16px]">Q{sourceQuarter}</span>
+                    <Select
+                      onValueChange={(value) => {
+                        if (value) {
+                          handleCopyQuarter(sourceQuarter, parseInt(value));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="text-xs w-16 h-7">
+                        <SelectValue placeholder="→" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4]
+                          .filter(q => q !== sourceQuarter)
+                          .map(targetQuarter => (
+                            <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                              Q{targetQuarter}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
