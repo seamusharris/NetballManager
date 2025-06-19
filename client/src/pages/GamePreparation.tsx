@@ -648,11 +648,24 @@ export default function GamePreparation() {
                             };
 
                             return (
-                              <div key={quarter} className={`text-center p-4 rounded-lg border-2 ${getBackgroundClass()} transition-colors`}>
-                                <div className="text-lg font-bold text-gray-600 mb-2">Q{quarter}</div>
-                                <div className="space-y-2">
-                                  {/* Score on same line in prominent format */}
-                                  <div className="text-xl font-bold text-gray-800">
+                              <div key={quarter} className={`text-center p-4 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                {/* Quarter badge in top-left corner */}
+                                <div className="absolute top-2 left-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs font-bold ${
+                                      isDraw ? 'border-amber-400 text-amber-700' :
+                                      isWinning ? 'border-green-400 text-green-700' : 
+                                      'border-red-400 text-red-700'
+                                    }`}
+                                  >
+                                    Q{quarter}
+                                  </Badge>
+                                </div>
+                                
+                                <div className="space-y-2 mt-4">
+                                  {/* Score on same line with matching colors */}
+                                  <div className={`text-xl font-bold ${getDiffTextColorClass()}`}>
                                     {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
                                   </div>
                                   {/* Prominent score differential */}
@@ -675,11 +688,6 @@ export default function GamePreparation() {
                                   >
                                     {getPerformanceLabel()}
                                   </Badge>
-                                  {gamesWithData > 0 && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      {gamesWithData} game{gamesWithData !== 1 ? 's' : ''}
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             );
