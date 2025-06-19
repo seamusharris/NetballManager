@@ -963,10 +963,61 @@ export default function GamePreparation() {
                               const goalsAgainstPercentage = (avgGoalsAgainst / maxGoals) * 100;
                               const goalDifference = avgGoalsFor - avgGoalsAgainst;
 
+                              // Calculate position-based statistics from batch stats (copied from below)
+                              const positionTotals = {
+                                'GS': { goalsFor: 0, games: 0 },
+                                'GA': { goalsFor: 0, games: 0 },
+                                'GD': { goalsAgainst: 0, games: 0 },
+                                'GK': { goalsAgainst: 0, games: 0 }
+                              };
+
+                              let gamesWithPositionStats = 0;
+
+                              // Aggregate actual position stats from historical games
+                              historicalGames.forEach(game => {
+                                const gameStats = batchStats?.[game.id] || [];
+                                if (gameStats.length > 0) {
+                                  gamesWithPositionStats++;
+
+                                  // Group stats by position and sum across quarters
+                                  const positionSums = {};
+                                  gameStats.forEach(stat => {
+                                    if (!positionSums[stat.position]) {
+                                      positionSums[stat.position] = { goalsFor: 0, goalsAgainst: 0 };
+                                    }
+                                    positionSums[stat.position].goalsFor += stat.goalsFor || 0;
+                                    positionSums[stat.position].goalsAgainst += stat.goalsAgainst || 0;
+                                  });
+
+                                  // Add to position totals
+                                  ['GS', 'GA', 'GD', 'GK'].forEach(position => {
+                                    if (positionSums[position]) {
+                                      if (position === 'GS' || position === 'GA') {
+                                        positionTotals[position].goalsFor += positionSums[position].goalsFor;
+                                      }
+                                      if (position === 'GD' || position === 'GK') {
+                                        positionTotals[position].goalsAgainst += positionSums[position].goalsAgainst;
+                                      }
+                                      positionTotals[position].games++;
+                                    }
+                                  });
+                                }
+                              });
+
+                              // Calculate position averages
+                              const gsAvgGoalsFor = positionTotals.GS.games > 0 ? positionTotals.GS.goalsFor / positionTotals.GS.games : 0;
+                              const gaAvgGoalsFor = positionTotals.GA.games > 0 ? positionTotals.GA.goalsFor / positionTotals.GA.games : 0;
+                              const gdAvgGoalsAgainst = positionTotals.GD.games > 0 ? positionTotals.GD.goalsAgainst / positionTotals.GD.games : 0;
+                              const gkAvgGoalsAgainst = positionTotals.GK.games > 0 ? positionTotals.GK.goalsAgainst / positionTotals.GK.games : 0;
+
+                              const attackingPositionsTotal = gsAvgGoalsFor + gaAvgGoalsFor;
+                              const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
+
                               return (
                                 <div className="space-y-6">
+                                  {/* Goals For Row */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Goals For */}
+                                    {/* Average Goals For */}
                                     <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Average Goals For</span>
@@ -983,7 +1034,45 @@ export default function GamePreparation() {
                                       </div>
                                     </div>
 
-                                    {/* Goals Against */}
+                                    {/* Position Goals For (GA/GS) */}
+                                    <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">Attacking Positions</span>
+                                        <span className="text-lg font-bold text-green-600">{attackingPositionsTotal.toFixed(1)}</span>
+                                      </div>
+                                      {gamesWithPositionStats > 0 ? (
+                                        <>
+                                          <div className="space-y-2">
+                                            <div className="flex justify-between text-xs">
+                                              <span>GS: {gsAvgGoalsFor.toFixed(1)}</span>
+                                              <span>GA: {gaAvgGoalsFor.toFixed(1)}</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-3 flex">
+                                              <div
+                                                className="bg-green-600 h-3 rounded-l-full"
+                                                style={{ width: attackingPositionsTotal > 0 ? `${(gsAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
+                                              ></div>
+                                              <div
+                                                className="bg-green-400 h-3 rounded-r-full"
+                                                style={{ width: attackingPositionsTotal > 0 ? `${(gaAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
+                                              ></div>
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-gray-500">
+                                            Based on position stats from {gamesWithPositionStats} games
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className="text-xs text-gray-500">
+                                          No position statistics available
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Goals Against Row */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Average Goals Against */}
                                     <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Average Goals Against</span>
@@ -1000,10 +1089,41 @@ export default function GamePreparation() {
                                       </div>
                                     </div>
 
-                                    
+                                    {/* Position Goals Against (GD/GK) */}
+                                    <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">Defending Positions</span>
+                                        <span className="text-lg font-bold text-red-600">{defendingPositionsTotal.toFixed(1)}</span>
+                                      </div>
+                                      {gamesWithPositionStats > 0 ? (
+                                        <>
+                                          <div className="space-y-2">
+                                            <div className="flex justify-between text-xs">
+                                              <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
+                                              <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-3 flex">
+                                              <div
+                                                className="bg-red-600 h-3 rounded-l-full"
+                                                style={{ width: defendingPositionsTotal > 0 ? `${(gdAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
+                                              ></div>
+                                              <div
+                                                className="bg-red-400 h-3 rounded-r-full"
+                                                style={{ width: defendingPositionsTotal > 0 ? `${(gkAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
+                                              ></div>
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-gray-500">
+                                            Based on position stats from {gamesWithPositionStats} games
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className="text-xs text-gray-500">
+                                          No position statistics available
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-
-                                  
                                 </div>
                               );
                             })()}
