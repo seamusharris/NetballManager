@@ -754,13 +754,12 @@ export default function GamePreparation() {
                             return (
                               <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
                                 {/* Quarter badge in top-left corner */}
-                                <div className="absolute top-1 left-2">
+                                <div className="absolute -top-2 -left-2">
                                   <Badge 
-                                    variant="outline" 
-                                    className={`text-xs font-bold ${
-                                      isDraw ? 'border-amber-400 text-amber-700' :
-                                      isWinning ? 'border-green-400 text-green-700' : 
-                                      'border-red-400 text-red-700'
+                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
+                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
+                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
+                                      'bg-red-500 text-white border-red-600'
                                     }`}
                                   >
                                     Q{quarter}
