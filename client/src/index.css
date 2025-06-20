@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -38,19 +39,19 @@ input[type=number] {
     --netball-court-blue: 214 84% 56%;      /* #4f8ff7 - Court blue primary */
     --netball-court-blue-dark: 214 76% 48%; /* #3b7ae0 - Darker court blue */
     --netball-court-blue-light: 214 90% 68%; /* #7db0ff - Lighter court blue */
-
+    
     --netball-orange: 25 95% 53%;           /* #f97316 - Netball orange */
     --netball-orange-dark: 25 85% 45%;      /* #e56307 - Darker orange */
     --netball-orange-light: 25 100% 70%;    /* #ffa366 - Lighter orange */
-
+    
     --netball-green: 142 76% 36%;           /* #059669 - Success/win green */
     --netball-green-dark: 142 72% 29%;      /* #047857 - Darker green */
     --netball-green-light: 142 82% 50%;     /* #10b981 - Lighter green */
-
+    
     --netball-red: 0 84% 60%;               /* #ef4444 - Loss/error red */
     --netball-red-dark: 0 76% 52%;          /* #dc2626 - Darker red */
     --netball-red-light: 0 90% 71%;         /* #f87171 - Lighter red */
-
+    
     /* Neutral grays with better contrast */
     --neutral-50: 210 20% 98%;              /* #fafafa */
     --neutral-100: 210 15% 94%;             /* #f4f4f5 */
@@ -62,43 +63,43 @@ input[type=number] {
     --neutral-700: 210 6% 30%;              /* #3f3f46 */
     --neutral-800: 210 7% 20%;              /* #27272a */
     --neutral-900: 210 10% 12%;             /* #18181b */
-
+    
     /* Shadcn UI variables with netball theme */
     --background: var(--neutral-50);
     --foreground: var(--neutral-800);
-
+    
     --card: 0 0% 100%;
     --card-foreground: var(--neutral-800);
-
+    
     --popover: 0 0% 100%;
     --popover-foreground: var(--neutral-800);
-
+    
     --primary: var(--netball-court-blue);
     --primary-foreground: 0 0% 100%;
-
+    
     --secondary: var(--netball-orange);
     --secondary-foreground: 0 0% 100%;
-
+    
     --muted: var(--neutral-100);
     --muted-foreground: var(--neutral-500);
-
+    
     --accent: var(--netball-green);
     --accent-foreground: 0 0% 100%;
-
+    
     --destructive: var(--netball-red);
     --destructive-foreground: 0 0% 100%;
-
+    
     --border: var(--neutral-200);
     --input: var(--neutral-200);
     --ring: var(--netball-court-blue);
-
+    
     /* Chart colors */
     --chart-1: var(--netball-court-blue);
     --chart-2: var(--netball-orange);
     --chart-3: var(--netball-green);
     --chart-4: var(--netball-red);
     --chart-5: 262 83% 58%;                 /* Purple accent */
-
+    
     /* Sidebar colors */
     --sidebar-background: var(--netball-court-blue-dark);
     --sidebar-foreground: 0 0% 100%;
@@ -108,53 +109,53 @@ input[type=number] {
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: var(--netball-court-blue-dark);
     --sidebar-ring: 0 0% 100%;
-
+    
     /* Action colors for consistent UI */
     --action-create: var(--netball-green);      /* Green for create/add */
     --action-edit: var(--netball-court-blue);   /* Blue for edit/modify */
     --action-delete: var(--netball-red);        /* Red for delete/remove */
     --action-manage: var(--netball-orange);     /* Orange for manage/settings */
     --action-view: var(--neutral-600);          /* Gray for view/details */
-
+    
     /* Status colors for wins/losses */
     --status-win: var(--netball-green);
     --status-loss: var(--netball-red);
     --status-draw: var(--neutral-400);
     --status-upcoming: var(--netball-court-blue);
     --status-in-progress: var(--netball-orange);
-
+    
     --radius: 0.5rem;
   }
-
+ 
   .dark {
     --background: var(--neutral-900);
     --foreground: var(--neutral-100);
-
+    
     --card: var(--neutral-800);
     --card-foreground: var(--neutral-100);
-
+    
     --popover: var(--neutral-800);
     --popover-foreground: var(--neutral-100);
-
+    
     --primary: var(--netball-court-blue-light);
     --primary-foreground: var(--neutral-900);
-
+    
     --secondary: var(--netball-orange-light);
     --secondary-foreground: var(--neutral-900);
-
+    
     --muted: var(--neutral-800);
     --muted-foreground: var(--neutral-400);
-
+    
     --accent: var(--netball-green-light);
     --accent-foreground: var(--neutral-900);
-
+    
     --destructive: var(--netball-red-light);
     --destructive-foreground: var(--neutral-900);
-
+    
     --border: var(--neutral-700);
     --input: var(--neutral-700);
     --ring: var(--netball-court-blue-light);
-
+    
     --sidebar-background: var(--neutral-800);
     --sidebar-foreground: var(--neutral-100);
     --sidebar-primary: var(--netball-court-blue-light);
@@ -171,13 +172,13 @@ input[type=number] {
     @apply border-border;
     box-sizing: border-box;
   }
-
+  
   html {
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
   }
-
+  
   body {
     @apply font-sans antialiased bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -187,44 +188,44 @@ input[type=number] {
     max-width: 100vw;
     position: relative;
   }
-
+  
   /* Typography hierarchy */
   h1 {
     @apply text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4;
     line-height: 1.2;
   }
-
+  
   h2 {
     @apply text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-3;
     line-height: 1.3;
   }
-
+  
   h3 {
     @apply text-xl md:text-2xl font-semibold text-foreground mb-2;
     line-height: 1.4;
   }
-
+  
   h4 {
     @apply text-lg md:text-xl font-medium text-foreground mb-2;
     line-height: 1.4;
   }
-
+  
   h5 {
     @apply text-base md:text-lg font-medium text-foreground mb-1;
     line-height: 1.5;
   }
-
+  
   h6 {
     @apply text-sm md:text-base font-medium text-foreground mb-1;
     line-height: 1.5;
   }
-
+  
   /* Better number display */
   .stat-number {
     @apply font-mono font-bold tabular-nums;
     font-feature-settings: "tnum" 1;
   }
-
+  
   /* Improved readability */
   p {
     @apply text-muted-foreground leading-relaxed;
@@ -239,7 +240,7 @@ input[type=number] {
     max-width: 100vw;
     overflow-x: hidden;
   }
-
+  
   /* iPad-specific responsive container */
   @media (min-width: 768px) and (max-width: 1024px) {
     .page-container {
@@ -247,50 +248,50 @@ input[type=number] {
       max-width: 100%;
     }
   }
-
+  
   .content-section {
     @apply mb-8; /* 32px between major sections */
   }
-
+  
   .page-header-section {
     @apply mb-8 pb-4 border-b border-border;
   }
-
+  
   /* Typography hierarchy - enhanced */
   .page-header {
     @apply text-3xl md:text-4xl font-bold text-foreground tracking-tight;
     line-height: 1.2;
   }
-
+  
   .page-subtitle {
     @apply text-lg text-muted-foreground mt-2;
   }
-
+  
   .section-header {
     @apply text-xl md:text-2xl font-semibold text-foreground mb-4 tracking-tight;
   }
-
+  
   .widget-header {
     @apply text-lg font-semibold text-foreground mb-3;
   }
-
+  
   /* Content box standards */
   .content-box {
     @apply bg-card rounded-lg border border-border shadow-sm p-6;
   }
-
+  
   .content-box-sm {
     @apply bg-card rounded-lg border border-border shadow-sm p-4;
   }
-
+  
   .widget-container {
     @apply bg-card rounded-lg border border-border shadow-sm p-4;
   }
-
+  
   .data-box {
     @apply bg-muted/30 rounded-md border border-border p-3;
   }
-
+  
   /* Action button color utilities */
   .btn-create {
     @apply bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
@@ -298,101 +299,101 @@ input[type=number] {
            font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
            focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2;
   }
-
+  
   .btn-edit {
     @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
            text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
            font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
            focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2;
   }
-
+  
   .btn-delete {
     @apply bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
            text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
            font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
            focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2;
   }
-
+  
   .btn-manage {
     @apply bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
            text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
            font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:ring-offset-2;
   }
-
+  
   .btn-view {
     @apply bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 
            text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
            font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
            focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2;
   }
-
+  
   /* Breadcrumb navigation */
   .breadcrumb-nav {
     @apply flex items-center space-x-2 text-sm text-muted-foreground mb-4;
   }
-
+  
   .breadcrumb-item {
     @apply hover:text-foreground transition-colors duration-200 cursor-pointer;
   }
-
+  
   .breadcrumb-separator {
     @apply text-muted-foreground/50;
   }
-
+  
   .breadcrumb-current {
     @apply text-foreground font-medium;
   }
-
+  
   /* Sidebar styling */
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 font-medium;
   }
-
+  
   .sidebar-link.active {
     @apply bg-sidebar-accent text-sidebar-accent-foreground shadow-sm;
   }
-
+  
   /* Enhanced input styling */
   .stats-input {
     @apply w-16 h-10 text-center border-2 rounded-lg px-2 text-sm font-mono font-semibold 
            focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary 
            transition-all duration-200 bg-background;
   }
-
+  
   /* Card components */
   .page-card {
     @apply bg-card rounded-xl shadow-sm border border-border p-6 
            hover:shadow-md transition-all duration-200 backdrop-blur-sm;
   }
-
+  
   .metric-card {
     @apply bg-gradient-to-br from-card to-card/80 rounded-lg border border-border p-4 
            hover:shadow-md transition-all duration-200 backdrop-blur-sm;
   }
-
+  
   .stat-card {
     @apply bg-card rounded-lg border border-border p-4 text-center 
            hover:bg-muted/50 transition-all duration-200;
   }
-
+  
   /* Section headers */
   .section-header {
     @apply flex items-center justify-between mb-6 pb-4 border-b border-border;
   }
-
+  
   .page-title {
     @apply text-3xl font-bold text-foreground tracking-tight;
   }
-
+  
   .page-subtitle {
     @apply text-muted-foreground mt-1 text-lg;
   }
-
+  
   .section-title {
     @apply text-xl font-semibold text-foreground;
   }
-
+  
   /* Enhanced button styles */
   .btn-primary {
     @apply bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary 
@@ -400,26 +401,26 @@ input[type=number] {
            transition-all duration-200 hover:shadow-md hover:scale-[1.02] 
            focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
   }
-
+  
   .btn-secondary {
     @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground font-medium 
            px-6 py-2.5 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md 
            hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2;
   }
-
+  
   .btn-outline {
     @apply border-2 border-border hover:border-primary hover:bg-primary/5 
            text-foreground hover:text-primary font-medium px-6 py-2.5 rounded-lg 
            transition-all duration-200 hover:shadow-sm focus:outline-none 
            focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
   }
-
+  
   .btn-ghost {
     @apply hover:bg-muted text-foreground font-medium px-4 py-2 rounded-lg 
            transition-all duration-200 focus:outline-none focus:ring-2 
            focus:ring-primary/50 focus:ring-offset-2;
   }
-
+  
   /* Form inputs */
   .form-input {
     @apply w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm 
@@ -428,79 +429,79 @@ input[type=number] {
            focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
            disabled:opacity-50 transition-all duration-200;
   }
-
+  
   /* Badge styles for status */
   .badge-win {
     @apply inline-flex items-center rounded-full border-0 bg-green-500/10 px-3 py-1 
            text-xs font-semibold text-green-700 ring-1 ring-green-500/20;
   }
-
+  
   .badge-loss {
     @apply inline-flex items-center rounded-full border-0 bg-red-500/10 px-3 py-1 
            text-xs font-semibold text-red-700 ring-1 ring-red-500/20;
   }
-
+  
   .badge-draw {
     @apply inline-flex items-center rounded-full border-0 bg-amber-500/10 px-3 py-1 
            text-xs font-semibold text-amber-700 ring-1 ring-amber-500/20;
   }
-
+  
   .badge-upcoming {
     @apply inline-flex items-center rounded-full border-0 bg-blue-500/10 px-3 py-1 
            text-xs font-semibold text-blue-700 ring-1 ring-blue-500/20;
   }
-
+  
   .badge-in-progress {
     @apply inline-flex items-center rounded-full border-0 bg-orange-500/10 px-3 py-1 
            text-xs font-semibold text-orange-700 ring-1 ring-orange-500/20 animate-pulse;
   }
-
+  
   /* Score display styling */
   .score-large {
     @apply text-4xl md:text-5xl font-bold font-mono tabular-nums tracking-tight;
   }
-
+  
   .score-medium {
     @apply text-2xl md:text-3xl font-bold font-mono tabular-nums;
   }
-
+  
   .score-small {
     @apply text-lg md:text-xl font-semibold font-mono tabular-nums;
   }
-
+  
   /* Data tables */
   .data-table {
     @apply w-full border-collapse bg-card rounded-lg overflow-hidden shadow-sm;
   }
-
+  
   .data-table th {
     @apply bg-muted/50 px-4 py-3 text-left text-sm font-semibold text-muted-foreground 
            border-b border-border;
   }
-
+  
   .data-table td {
     @apply px-4 py-3 text-sm border-b border-border;
   }
-
+  
   .data-table tr:hover {
     @apply bg-muted/30;
   }
-
+  
   /* Loading states */
   .loading-shimmer {
     @apply animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted;
   }
-
+  
   /* Chart containers */
   .chart-container {
     @apply bg-card rounded-lg border border-border p-6 shadow-sm;
   }
-
+  
   /* Navigation breadcrumbs */
   .breadcrumb-item {
     @apply text-muted-foreground hover:text-foreground transition-colors duration-200;
   }
-
+  
   .breadcrumb-current {
     @apply text-foreground font-medium;
   }
@@ -716,8 +717,7 @@ button.touch-manipulation.bg-amber-100 .absolute[class*="rounded-full"] {
 }
 
 .touch-manipulation.bg-pink-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg<previous_generation>```python
--100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-pink-100 .absolute.inline-flex.rounded-full,
 .touch-manipulation.bg-pink-100 > div > .absolute[class*="inline-flex"],
 button.touch-manipulation.bg-pink-100 .absolute[class*="rounded-full"] {
   background-color: #db2777 !important;
@@ -847,10 +847,43 @@ button.touch-manipulation .absolute[class*="rounded-full"] {
   @apply outline-none ring-2 ring-primary/50 ring-offset-2;
 }
 
-/* Essential print color adjustments */
+/* Print styles */
 @media print {
-  body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  .no-print {
+    display: none !important;
+  }
+  
+  .page-card, .metric-card, .stat-card {
+    box-shadow: none !important;
+    border: 1px solid #e5e5e5 !important;
+  }
+  
+  /* Component example specific print styles */
+  .grid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  /* Reduce margins for print */
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mb-6 {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .mb-4 {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Ensure good contrast for print */
+  .border-gray-200 {
+    border-color: #d1d5db !important;
+  }
+  
+  /* Optimize spacing for print density */
+  .space-y-12 > * + * {
+    margin-top: 1.5rem !important;
   }
 }

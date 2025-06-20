@@ -80,20 +80,8 @@ function TeamPositionAnalysis({
   // Calculate position lineup effectiveness
   useEffect(() => {
     if (!centralizedStats || !centralizedRosters || Object.keys(centralizedStats).length === 0) {
-      console.log('TeamPositionAnalysis: Missing required data', {
-        hasStats: !!centralizedStats,
-        hasRosters: !!centralizedRosters,
-        statsKeys: Object.keys(centralizedStats || {}),
-        rostersKeys: Object.keys(centralizedRosters || {})
-      });
       return;
     }
-
-    console.log('TeamPositionAnalysis: Starting calculation with data:', {
-      gamesCount: games?.length || 0,
-      statsGamesCount: Object.keys(centralizedStats).length,
-      rostersGamesCount: Object.keys(centralizedRosters).length
-    });
 
     calculatePositionLineups();
   }, [centralizedStats, centralizedRosters, selectedQuarter, currentClubId]);
@@ -106,21 +94,12 @@ function TeamPositionAnalysis({
       return;
     }
 
-    const completedGames = games.filter(game => {
-      const hasStats = centralizedStats[game.id] && centralizedStats[game.id].length > 0;
-      const hasRosters = centralizedRosters[game.id] && centralizedRosters[game.id].length > 0;
-      const isCompleted = game.statusIsCompleted;
-      const allowsStats = game.statusAllowsStatistics;
-      
-      console.log(`Game ${game.id} (${game.awayTeamName || game.homeTeamName}):`, {
-        isCompleted,
-        allowsStats,
-        hasStats: hasStats ? centralizedStats[game.id].length : 0,
-        hasRosters: hasRosters ? centralizedRosters[game.id].length : 0
-      });
-      
-      return isCompleted && allowsStats && hasStats && hasRosters;
-    });
+    const completedGames = games.filter(game => 
+      game.statusIsCompleted && 
+      game.statusAllowsStatistics &&
+      centralizedStats[game.id] &&
+      centralizedRosters[game.id]
+    );
 
     // Map to track different position lineups and their performance
     const lineupMap = new Map<string, {
@@ -183,14 +162,11 @@ function TeamPositionAnalysis({
 
         console.log(`Game ${game.id}, Quarter ${quarter}: Found ${Object.keys(positionLineup).length}/7 positions`, positionLineup);
 
-        // Check if we have at least 5 of 7 positions filled (more realistic for lineup analysis)
-        const filledPositions = Object.keys(positionLineup).length;
-        console.log(`Game ${game.id}, Quarter ${quarter}: Found ${filledPositions}/7 positions filled`, positionLineup);
-        
-        if (filledPositions >= 5) {
-          // Create a consistent key for this lineup - include position names for empty spots
+        // Only analyze complete lineups (all 7 positions filled)
+        if (Object.keys(positionLineup).length === 7) {
+          // Create a consistent key for this lineup
           const lineupKey = positions
-            .map(pos => `${pos}:${positionLineup[pos] || 'EMPTY'}`)
+            .map(pos => `${pos}:${positionLineup[pos]}`)
             .join(',');
 
           if (!lineupMap.has(lineupKey)) {
@@ -264,10 +240,8 @@ function TeamPositionAnalysis({
       const quartersPlayed = data.quarters.length;
       console.log(`Lineup ${lineupKey.substring(0, 50)}... has ${quartersPlayed} quarters`);
 
-      // Use more flexible minimum sample size based on data availability
-      const minSampleSize = selectedQuarter === 'all' ? 1 : 1;
-      
-      console.log(`Evaluating lineup: ${quartersPlayed} quarters played, min required: ${minSampleSize}`);
+      // Use adaptive minimum sample size - 1 for specific quarters, 2 for all quarters
+      const minSampleSize = selectedQuarter === 'all' ? 2 : 1;
       
       if (quartersPlayed >= minSampleSize) {
         const baseResult: PositionLineup = {

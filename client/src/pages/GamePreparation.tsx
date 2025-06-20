@@ -32,8 +32,6 @@ import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
-import PrintWrapper from '@/components/common/PrintWrapper';
-import { printClasses, formatForPrint } from '@/lib/printUtils';
 
 
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
@@ -421,12 +419,6 @@ export default function GamePreparation() {
   const opponent = game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName;
   const isHomeGame = game.homeTeamId === currentTeamId;
 
-  const gameTitle = game ? formatForPrint.gameTitle(
-    game.date, 
-    opponent || 'Unknown Opponent', 
-    game.round
-  ) : 'Game Preparation';
-
   return (
     <PageTemplate 
       title="Game Preparation" 
@@ -435,14 +427,14 @@ export default function GamePreparation() {
         { label: "Game Preparation" }
       ]}
     >
-        <Helmet>
-          <title>Game Preparation - {opponent} | Team Management</title>
-          <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
-        </Helmet>
+      <Helmet>
+        <title>Game Preparation - {opponent} | Team Management</title>
+        <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
+      </Helmet>
 
-        <div className="space-y-6 print-content">
+      <div className="space-y-6">
         {/* Header with Game Details */}
-        <Card className={printClasses.section}>
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -474,8 +466,8 @@ export default function GamePreparation() {
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)} className="space-y-4 print-content">
-          <TabsList className="grid w-full grid-cols-5 no-print print-hide">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="season">Season</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
@@ -483,15 +475,8 @@ export default function GamePreparation() {
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
           </TabsList>
 
-          {/* Print section headers - only visible when printing */}
-          <div className={`${printClasses.printOnly} space-y-4`} style={{ display: 'none' }}>
-            <div className={printClasses.section}>
-              <h2 className={printClasses.subtitle}>Game Overview</h2>
-            </div>
-          </div>
-
           {/* Overview Tab */}
-          <TabsContent value="overview" className={`space-y-6 ${printClasses.printShow} ${printClasses.section}`} data-tabs-content="overview">
+          <TabsContent value="overview" className="space-y-6">
 
 
             {(() => {
@@ -840,11 +825,21 @@ export default function GamePreparation() {
                         <div className="space-y-3">
                           {historicalGames.slice(0, 5).map((game, index) => {
                             // Check for special status games (e.g., forfeit, bye)
-                            const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName=== 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
+                            const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
 
-                            // Get scores directly from batch scores (already properly formatted)
+                            // Transform batch scores to calculate quarter breakdown
                             const gameScores = batchScores?.[game.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores : [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                              id: score.id,
+                              gameId: score.gameId,
+                              teamId: score.teamId,
+                              quarter: score.quarter,
+                              score: score.score,
+                              enteredBy: score.enteredBy,
+                              enteredAt: score.enteredAt,
+                              updatedAt: score.updatedAt,
+                              notes: score.notes
+                            })) : [];
 
                             // Calculate quarter scores for display
                             const calculateQuarterScores = () => {
@@ -988,7 +983,570 @@ export default function GamePreparation() {
                           })}
                         </div>
 
+
+
                         {/* Quarter Average Performance Boxes + Goal Difference */}
+                        <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+                          {[1, 2, 3, 4].map(quarter => {
+                            // Calculate average scores for this quarter across all historical games
+                            let totalTeamScore = 0;
+                            let totalOpponentScore = 0;
+                            let gamesWithData = 0;
+
+                            historicalGames.forEach(game => {
+                              const gameScores = batchScores?.[game.id] || [];
+                              const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                                id: score.id,
+                                gameId: score.gameId,
+                                teamId: score.teamId,
+                                quarter: score.quarter,
+                                score: score.score,
+                                enteredBy: score.enteredBy,
+                                enteredAt: score.enteredAt,
+                                updatedAt: score.updatedAt,
+                                notes: score.notes
+                              })) : [];
+
+                              const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                              const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+
+                                totalTeamScore += quarterTeamScore;
+                                totalOpponentScore += quarterOpponentScore;
+
+                              if(quarterTeamScore > 0 || quarterOpponentScore > 0){
+                                gamesWithData++;
+                              }
+                            });
+
+                            const avgTeamScore = gamesWithData > 0 ? totalTeamScore / gamesWithData : 0;
+                            const avgOpponentScore = gamesWithData > 0 ? totalOpponentScore / gamesWithData : 0;
+
+                            const isWinning = avgTeamScore > avgOpponentScore;
+                            const isLosing = avgTeamScore < avgOpponentScore;
+                            const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
+
+                            const getBackgroundClass = () => {
+                              if (isDraw) return 'bg-amber-100 border-amber-300';
+                              if (isWinning) return 'bg-green-100 border-green-300';
+                              return 'bg-red-100 border-red-300';
+                            };
+
+                            const getDiffTextColorClass = () => {
+                              if (isDraw) return 'text-amber-600 font-bold';
+                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                            };
+
+                            return (
+                              <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                {/* Quarter badge in top-left corner */}
+                                <div className="absolute -top-2 -left-2">
+                                  <Badge 
+                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
+                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
+                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
+                                      'bg-red-500 text-white border-red-600'
+                                    }`}
+                                  >
+                                    Q{quarter}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-1 mt-1">
+                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                    {avgTeamScore.toFixed(1)}–{avgOpponentScore.toFixed(1)}
+                                  </div>
+                                  <div className={`text-base ${getDiffTextColorClass()}`}>
+                                    {avgTeamScore - avgOpponentScore > 0 ? `+${(avgTeamScore - avgOpponentScore).toFixed(1)}` : (avgTeamScore - avgOpponentScore).toFixed(1)}
+                                  </div>
+
+                                  <div 
+                                    className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
+                                    title="Our share of total quarter scoring"
+                                  >
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        isWinning ? 'bg-green-500' : 
+                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                      }`}
+                                      style={{ 
+                                        width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`
+                                      }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Goal Difference Box - styled like quarter boxes */}
+                          {(() => {
+                            // Calculate overall goal difference for styling
+                            let totalGoalsFor = 0;
+                            let totalGoalsAgainst = 0;
+                            let gamesWithScores = 0;
+
+                            historicalGames.forEach(game => {
+                              const gameScores = batchScores?.[game.id] || [];
+                              if (gameScores.length > 0) {
+                                gamesWithScores++;
+
+                                let gameGoalsFor = 0;
+                                let gameGoalsAgainst = 0;
+
+                                gameScores.forEach(score => {
+                                  if (score.teamId === currentTeamId) {
+                                    gameGoalsFor += score.score;
+                                  } else {
+                                    gameGoalsAgainst += score.score;
+                                  }
+                                });
+
+                                totalGoalsFor += gameGoalsFor;
+                                totalGoalsAgainst += gameGoalsAgainst;
+                              }
+                            });
+
+                            const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
+                            const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
+                            const goalDifference = avgGoalsFor - avgGoalsAgainst;
+
+                            const isWinning = goalDifference > 0;
+                            const isLosing = goalDifference < 0;
+                            const isDraw = Math.abs(goalDifference) < 0.1;
+
+                            const getBackgroundClass = () => {
+                              if (isDraw) return 'bg-amber-100 border-amber-300';
+                              if (isWinning) return 'bg-green-100 border-green-300';
+                              return 'bg-red-100 border-red-300';
+                            };
+
+                            const getDiffTextColorClass = () => {
+                              if (isDraw) return 'text-amber-600 font-bold';
+                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                            };
+
+                            return (
+                              <div className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                {/* Goal difference badge in top-left corner */}
+                                <div className="absolute -top-2 -left-2">
+                                  <Badge 
+                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
+                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
+                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
+                                      'bg-red-500 text-white border-red-600'
+                                    }`}
+                                  >
+                                    AVG
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-1 mt-1">
+                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                    {avgGoalsFor.toFixed(1)}–{avgGoalsAgainst.toFixed(1)}
+                                  </div>
+                                  <div className={`text-base ${getDiffTextColorClass()}`}>
+                                    {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                                  </div>
+
+                                  <div 
+                                    className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
+                                    title="Our share of total game scoring"
+                                  >
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        isWinning ? 'bg-green-500' : 
+                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                      }`}
+                                      style={{ 
+                                        width: `${Math.min(100, Math.max(0, (avgGoalsFor / (avgGoalsFor + avgGoalsAgainst)) * 100))}%`
+                                      }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Position Performance - Side by Side */}
+                        {historicalGames.length > 0 && batchScores && Object.keys(batchScores).some(gameId => batchScores[gameId]?.length > 0) && (
+                          <div className="mt-6">
+                            {(() => {
+                              // Calculate position-based statistics from batch stats
+                              const positionTotals = {
+                                'GS': { goalsFor: 0, games: 0 },
+                                'GA': { goalsFor: 0, games: 0 },
+                                'GD': { goalsAgainst: 0, games: 0 },
+                                'GK': { goalsAgainst: 0, games: 0 }
+                              };
+
+                              let gamesWithPositionStats = 0;
+
+                              // Aggregate actual position stats from historical games
+                              historicalGames.forEach(game => {
+                                const gameStats = batchStats?.[game.id] || [];
+                                if (gameStats.length > 0) {
+                                  gamesWithPositionStats++;
+
+                                  // Group stats by position and sum across quarters
+                                  const positionSums = {};
+                                  gameStats.forEach(stat => {
+                                    if (!positionSums[stat.position]) {
+                                      positionSums[stat.position] = { goalsFor: 0, goalsAgainst: 0 };
+                                    }
+                                    positionSums[stat.position].goalsFor += stat.goalsFor || 0;
+                                    positionSums[stat.position].goalsAgainst += stat.goalsAgainst || 0;
+                                  });
+
+                                  // Add to position totals
+                                  ['GS', 'GA', 'GD', 'GK'].forEach(position => {
+                                    if (positionSums[position]) {
+                                      if (position === 'GS' || position === 'GA') {
+                                        positionTotals[position].goalsFor += positionSums[position].goalsFor;
+                                      }
+                                      if (position === 'GD' || position === 'GK') {
+                                        positionTotals[position].goalsAgainst += positionSums[position].goalsAgainst;
+                                      }
+                                      positionTotals[position].games++;
+                                    }
+                                  });
+                                }
+                              });
+
+                              // Calculate position averages
+                              const gsAvgGoalsFor = positionTotals.GS.games > 0 ? positionTotals.GS.goalsFor / positionTotals.GS.games : 0;
+                              const gaAvgGoalsFor = positionTotals.GA.games > 0 ? positionTotals.GA.goalsFor / positionTotals.GA.games : 0;
+                              const gdAvgGoalsAgainst = positionTotals.GD.games > 0 ? positionTotals.GD.goalsAgainst / positionTotals.GD.games : 0;
+                              const gkAvgGoalsAgainst = positionTotals.GK.games > 0 ? positionTotals.GK.goalsAgainst / positionTotals.GK.games : 0;
+
+                              const attackingPositionsTotal = gsAvgGoalsFor + gaAvgGoalsFor;
+                              const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
+
+                              return (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {/* Attack */}
+                                  <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-lg font-bold text-gray-800">Attack</span>
+                                      <span className="text-2xl font-bold text-green-600">{attackingPositionsTotal.toFixed(1)}</span>
+                                    </div>
+                                    {gamesWithPositionStats > 0 ? (
+                                      <>
+                                        <div className="space-y-2">
+                                          <div className="flex justify-between text-sm font-semibold">
+                                            <span>GS: {gsAvgGoalsFor.toFixed(1)}</span>
+                                            <span>GA: {gaAvgGoalsFor.toFixed(1)}</span>
+                                          </div>
+                                          <div className="w-full bg-gray-200 rounded-full h-3 flex">
+                                            <div
+                                              className="bg-green-600 h-3 rounded-l-full"
+                                              style={{ width: attackingPositionsTotal > 0 ? `${(gsAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
+                                            ></div>
+                                            <div
+                                              className="bg-green-400 h-3 rounded-r-full"
+                                              style={{ width: attackingPositionsTotal > 0 ? `${(gaAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
+                                            ></div>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          Based on position stats from {gamesWithPositionStats} games
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="text-xs text-gray-500">
+                                        No position statistics available
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Defence */}
+                                  <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-lg font-bold text-gray-800">Defence</span>
+                                      <span className="text-2xl font-bold text-red-600">{defendingPositionsTotal.toFixed(1)}</span>
+                                    </div>
+                                    {gamesWithPositionStats > 0 ? (
+                                      <>
+                                        <div className="space-y-2">
+                                          <div className="flex justify-between text-sm font-semibold">
+                                            <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
+                                            <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
+                                          </div>
+                                          <div className="w-full bg-gray-200 rounded-full h-3 flex">
+                                            <div
+                                              className="bg-red-600 h-3 rounded-l-full"
+                                              style={{ width: defendingPositionsTotal > 0 ? `${(gdAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
+                                            ></div>
+                                            <div
+                                              className="bg-red-400 h-3 rounded-r-full"
+                                              style={{ width: defendingPositionsTotal > 0 ? `${(gkAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
+                                            ></div>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          Based on position stats from {gamesWithPositionStats} games
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="text-xs text-gray-500">
+                                        No position statistics available
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+
+
+
+
+
+
+
+
+                  {/* Quick Actions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Zap className="h-5 w-5" />
+                        Quick Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          onClick={() => setActiveTab('lineup')}
+                        >
+                          <Users className="h-4 w-4" />
+                          Set Lineup
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          onClick={() => setActiveTab('analysis')}
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          View Analysis
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          onClick={() => setActiveTab('strategy')}
+                        >
+                          <FileText className="h-4 w-4" />
+                          Game Plan
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
+                          <Trophy className="h-4 w-4" />
+                          Print Summary
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+
+                </>
+              );
+            })()}
+          </TabsContent>
+
+          {/* Season Tab */}
+          <TabsContent value="season" className="space-y-6">
+            {(() => {
+              if (loadingSeasonGames) {
+                return (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading season games...</p>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Card>
+                  <CardHeader className="pb-6">
+                    <CardTitle>
+                      Season Games ({game?.seasonName || 'Current Season'})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {seasonGames.length > 0 ? (
+                      <>
+                        <div className="space-y-3">
+                          {seasonGames.map((seasonGame, index) => {
+                            // Check for special status games (e.g., forfeit, bye)
+                            const isSpecialStatus = seasonGame.statusName === 'forfeit-win' || seasonGame.statusName === 'forfeit-loss' || seasonGame.statusName === 'bye' || seasonGame.statusName === 'abandoned' || seasonGame.statusDisplayName === 'Forfeit Loss' || seasonGame.statusDisplayName === 'Forfeit Win';
+
+                            // Transform batch scores to calculate quarter breakdown
+                            const gameScores = seasonBatchScores?.[seasonGame.id] || [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                              id: score.id,
+                              gameId: score.gameId,
+                              teamId: score.teamId,
+                              quarter: score.quarter,
+                              score: score.score,
+                              enteredBy: score.enteredBy,
+                              enteredAt: score.enteredAt,
+                              updatedAt: score.updatedAt,
+                              notes: score.notes
+                            })) : [];
+
+                            // Calculate quarter scores for display
+                            const calculateQuarterScores = () => {
+                              if (!transformedScores.length) return null;
+
+                              const teamScores = [0, 0, 0, 0];
+                              const opponentScores = [0, 0, 0, 0];
+
+                              transformedScores.forEach(score => {
+                                const quarterIndex = score.quarter - 1;
+                                if (quarterIndex >= 0 && quarterIndex < 4) {
+                                  if (score.teamId === currentTeamId) {
+                                    teamScores[quarterIndex] = score.score;
+                                  } else {
+                                    opponentScores[quarterIndex] = score.score;
+                                  }
+                                }
+                              });
+
+                              // Calculate cumulative scores
+                              const teamCumulative = [];
+                              const opponentCumulative = [];
+                              let teamTotal = 0;
+                              let opponentTotal = 0;
+
+                              for (let i = 0; i < 4; i++) {
+                                teamTotal += teamScores[i];
+                                opponentTotal += opponentScores[i];
+                                teamCumulative.push(teamTotal);
+                                opponentCumulative.push(opponentTotal);
+                              }
+
+                              return {
+                                quarter: teamScores,
+                                cumulative: teamCumulative,
+                                opponentQuarter: opponentScores,
+                                opponentCumulative: opponentCumulative,
+                                finalScore: { team: teamTotal, opponent: opponentTotal }
+                              };
+                            };
+
+                            const quarterData = calculateQuarterScores();
+                            const hasQuarterData = quarterData !== null;
+
+                            return (
+                              <div key={seasonGame.id} className="relative">
+                                {/* Use the standard GameResultCard for consistent styling and scoring */}
+                                <GameResultCard
+                                  game={seasonGame}
+                                  currentTeamId={currentTeamId}
+                                  centralizedScores={transformedScores}
+                                  showLink={true}
+                                  className="w-full"
+                                />
+
+                                {/* Right side - quarter breakdown for non-special games */}
+                                <div className="ml-4 flex-shrink-0">
+                                  {!isSpecialStatus && hasQuarterData ? (
+                                    (() => {
+                                      // Calculate quarter scores for display
+                                      const teamScores = [0, 0, 0, 0];
+                                      const opponentScores = [0, 0, 0, 0];
+
+                                      transformedScores.forEach(score => {
+                                        const quarterIndex = score.quarter - 1;
+                                        if (quarterIndex >= 0 && quarterIndex < 4) {
+                                          if (score.teamId === currentTeamId) {
+                                            teamScores[quarterIndex] = score.score;
+                                          } else {
+                                            opponentScores[quarterIndex] = score.score;
+                                          }
+                                        }
+                                      });
+
+                                      // Calculate cumulative scores
+                                      const teamCumulative = [];
+                                      const opponentCumulative = [];
+                                      let teamTotal = 0;
+                                      let opponentTotal = 0;
+
+                                      for (let i = 0; i < 4; i++) {
+                                        teamTotal += teamScores[i];
+                                        opponentTotal += opponentScores[i];
+                                        teamCumulative.push(teamTotal);
+                                        opponentCumulative.push(opponentTotal);
+                                      }
+
+                                      return (
+                                        <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                          <div className="text-xs space-y-1">
+                                            {/* Quarter-by-quarter scores on top (lighter) */}
+                                            <div className="grid grid-cols-4 gap-1">
+                                              {teamScores.map((teamScore, qIndex) => {
+                                                const opponentScore = opponentScores[qIndex];
+                                                const quarterWin = teamScore > opponentScore;
+                                                const quarterLoss = teamScore < opponentScore;
+
+                                                const quarterClass = quarterWin 
+                                                  ? 'bg-green-100 text-green-800 border border-green-400' 
+                                                  : quarterLoss 
+                                                    ? 'bg-red-100 text-red-800 border border-red-400'
+                                                    : 'bg-amber-100 text-amber-800 border border-amber-400';
+
+                                                return (
+                                                  <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
+                                                    {teamScore}–{opponentScore}
+                                                  </span>
+                                                );
+                                              })}
+                                            </div>
+                                            {/* Cumulative scores underneath (darker) */}
+                                            <div className="grid grid-cols-4 gap-1">
+                                              {teamCumulative.map((teamCum, qIndex) => {
+                                                const opponentCum = opponentCumulative[qIndex];
+                                                const cumulativeWin = teamCum > opponentCum;
+                                                const cumulativeLoss = teamCum < opponentCum;
+
+                                                const cumulativeClass = cumulativeWin 
+                                                  ? 'bg-green-200 text-green-800 border border-green-500' 
+                                                  : cumulativeLoss 
+                                                    ? 'bg-red-200 text-red-800 border border-red-500'
+                                                    : 'bg-amber-200 text-amber-800 border border-amber-500';
+
+                                                return (
+                                                  <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
+                                                    {teamCum}–{opponentCum}
+                                                  </span>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()
+                                  ) : (
+                                    null
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Season Quarter Average Performance Boxes + Goal Difference */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
                           {[1, 2, 3, 4].map(quarter => {
                             // Calculate average scores for this quarter across all season games
@@ -1003,7 +1561,17 @@ export default function GamePreparation() {
                                   seasonGame.statusName === 'forfeit-loss') return;
 
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
-                              const transformedScores = Array.isArray(gameScores) ? gameScores : [];
+                              const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                                id: score.id,
+                                gameId: score.gameId,
+                                teamId: score.teamId,
+                                quarter: score.quarter,
+                                score: score.score,
+                                enteredBy: score.enteredBy,
+                                enteredAt: score.enteredAt,
+                                updatedAt: score.updatedAt,
+                                notes: score.notes
+                              })) : [];
 
                               const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
                               const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
@@ -1323,10 +1891,7 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Analysis Tab */}
-          <TabsContent value="analysis" className="space-y-6 print-show" data-tabs-content="analysis">
-            <div className="print-only print-show" style={{ display: 'none' }}>
-              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Opponent Analysis</h2>
-            </div>
+          <TabsContent value="analysis" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
               {/* Historical Performance */}
@@ -1412,10 +1977,7 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Lineup Tab */}
-          <TabsContent value="lineup" className="print-show" data-tabs-content="lineup">
-            <div className="print-only print-show" style={{ display: 'none' }}>
-              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Team Lineup</h2>
-            </div>
+          <TabsContent value="lineup">
             <LineupTab
               game={game}
               players={players || []}
@@ -1428,10 +1990,7 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Strategy Tab */}
-          <TabsContent value="strategy" className="print-show" data-tabs-content="strategy">
-            <div className="print-only print-show" style={{ display: 'none' }}>
-              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Game Strategy</h2>
-            </div>
+          <TabsContent value="strategy">
             <StrategyTab
               gameId={gameId!}
               teamId={currentTeamId!}
@@ -1454,7 +2013,7 @@ export default function GamePreparation() {
             />
           </TabsContent>
         </Tabs>
-        </div>
+      </div>
     </PageTemplate>
   );
 }
