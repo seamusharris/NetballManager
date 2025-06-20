@@ -95,23 +95,88 @@ export default function ColorStyleGuide() {
     { code: "GK", name: "Goal Keeper", color: "#2563eb", bgClass: "bg-blue-600", description: "Primary blue - trust" }
   ];
 
-  const statCategories = [
-    { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <Target className="h-4 w-4" /> },
-    { name: "Goals Against", color: "#dc2626", bgClass: "bg-red-600", icon: <Shield className="h-4 w-4" /> },
-    { name: "Intercepts", color: "#2563eb", bgClass: "bg-blue-600", icon: <Zap className="h-4 w-4" /> },
-    { name: "Rebounds", color: "#ca8a04", bgClass: "bg-yellow-600", icon: <TrendingUp className="h-4 w-4" /> },
-    { name: "Turnovers", color: "#ea580c", bgClass: "bg-orange-600", icon: <AlertTriangle className="h-4 w-4" /> },
-    { name: "Penalties", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertCircle className="h-4 w-4" /> },
-    { name: "Centre Pass", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Play className="h-4 w-4" /> },
-    { name: "Rating", color: "#059669", bgClass: "bg-emerald-600", icon: <Star className="h-4 w-4" /> }
+  // Statistics Color Schemes - Multiple Options
+  const statCategoriesOption1 = [
+    { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <Target className="h-4 w-4" />, description: "Classic green for positive outcomes" },
+    { name: "Goals Against", color: "#dc2626", bgClass: "bg-red-600", icon: <Shield className="h-4 w-4" />, description: "Traditional red for defensive stats" },
+    { name: "Intercepts", color: "#2563eb", bgClass: "bg-blue-600", icon: <Zap className="h-4 w-4" />, description: "Blue for active defensive plays" },
+    { name: "Rebounds", color: "#ca8a04", bgClass: "bg-yellow-600", icon: <TrendingUp className="h-4 w-4" />, description: "Yellow for recovery actions" },
+    { name: "Turnovers", color: "#ea580c", bgClass: "bg-orange-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Orange for concerning events" },
+    { name: "Penalties", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertCircle className="h-4 w-4" />, description: "Purple for rule infractions" },
+    { name: "Centre Pass", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Play className="h-4 w-4" />, description: "Cyan for neutral possession" },
+    { name: "Rating", color: "#059669", bgClass: "bg-emerald-600", icon: <Star className="h-4 w-4" />, description: "Emerald for overall performance" }
   ];
 
-  const gameStatuses = [
+  // Option 2: Monochromatic Blue Scheme
+  const statCategoriesOption2 = [
+    { name: "Goals For", color: "#1e40af", bgClass: "bg-blue-800", icon: <Target className="h-4 w-4" />, description: "Deep blue for primary positive stat" },
+    { name: "Goals Against", color: "#3b82f6", bgClass: "bg-blue-600", icon: <Shield className="h-4 w-4" />, description: "Medium blue for defensive stat" },
+    { name: "Intercepts", color: "#60a5fa", bgClass: "bg-blue-400", icon: <Zap className="h-4 w-4" />, description: "Light blue for quick actions" },
+    { name: "Rebounds", color: "#93c5fd", bgClass: "bg-blue-300", icon: <TrendingUp className="h-4 w-4" />, description: "Lighter blue for recoveries" },
+    { name: "Turnovers", color: "#dbeafe", bgClass: "bg-blue-200", icon: <AlertTriangle className="h-4 w-4" />, description: "Very light blue for negative events" },
+    { name: "Penalties", color: "#1e3a8a", bgClass: "bg-blue-900", icon: <AlertCircle className="h-4 w-4" />, description: "Darkest blue for infractions" },
+    { name: "Centre Pass", color: "#2563eb", bgClass: "bg-blue-600", icon: <Play className="h-4 w-4" />, description: "Standard blue for neutral events" },
+    { name: "Rating", color: "#1d4ed8", bgClass: "bg-blue-700", icon: <Star className="h-4 w-4" />, description: "Strong blue for ratings" }
+  ];
+
+  // Option 3: Warm/Cool Contrast
+  const statCategoriesOption3 = [
+    { name: "Goals For", color: "#dc2626", bgClass: "bg-red-600", icon: <Target className="h-4 w-4" />, description: "Warm red for attacking stats" },
+    { name: "Goals Against", color: "#2563eb", bgClass: "bg-blue-600", icon: <Shield className="h-4 w-4" />, description: "Cool blue for defensive stats" },
+    { name: "Intercepts", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Zap className="h-4 w-4" />, description: "Cool cyan for defensive actions" },
+    { name: "Rebounds", color: "#f97316", bgClass: "bg-orange-600", icon: <TrendingUp className="h-4 w-4" />, description: "Warm orange for recovery" },
+    { name: "Turnovers", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Neutral purple for errors" },
+    { name: "Penalties", color: "#e11d48", bgClass: "bg-rose-600", icon: <AlertCircle className="h-4 w-4" />, description: "Warm rose for infractions" },
+    { name: "Centre Pass", color: "#10b981", bgClass: "bg-emerald-600", icon: <Play className="h-4 w-4" />, description: "Neutral green for possession" },
+    { name: "Rating", color: "#059669", bgClass: "bg-emerald-600", icon: <Star className="h-4 w-4" />, description: "Green for positive ratings" }
+  ];
+
+  // Option 4: Earth Tones Scheme
+  const statCategoriesOption4 = [
+    { name: "Goals For", color: "#65a30d", bgClass: "bg-lime-600", icon: <Target className="h-4 w-4" />, description: "Natural lime for growth/success" },
+    { name: "Goals Against", color: "#a16207", bgClass: "bg-yellow-700", icon: <Shield className="h-4 w-4" />, description: "Earth yellow for caution" },
+    { name: "Intercepts", color: "#0369a1", bgClass: "bg-sky-700", icon: <Zap className="h-4 w-4" />, description: "Deep sky for decisive actions" },
+    { name: "Rebounds", color: "#b45309", bgClass: "bg-amber-700", icon: <TrendingUp className="h-4 w-4" />, description: "Amber for recovery actions" },
+    { name: "Turnovers", color: "#92400e", bgClass: "bg-orange-700", icon: <AlertTriangle className="h-4 w-4" />, description: "Earth orange for mistakes" },
+    { name: "Penalties", color: "#7c2d12", bgClass: "bg-orange-800", icon: <AlertCircle className="h-4 w-4" />, description: "Deep earth tone for penalties" },
+    { name: "Centre Pass", color: "#059669", bgClass: "bg-emerald-600", icon: <Play className="h-4 w-4" />, description: "Natural emerald for balance" },
+    { name: "Rating", color: "#166534", bgClass: "bg-green-800", icon: <Star className="h-4 w-4" />, description: "Forest green for excellence" }
+  ];
+
+  // Game Status Color Schemes - Multiple Options
+  const gameStatusesOption1 = [
     { name: "Upcoming", color: "#3b82f6", bgClass: "bg-blue-500", description: "Game scheduled but not started" },
     { name: "In Progress", color: "#f59e0b", bgClass: "bg-amber-500", description: "Game currently being played" },
     { name: "Completed", color: "#10b981", bgClass: "bg-emerald-500", description: "Game finished successfully" },
     { name: "Cancelled", color: "#6b7280", bgClass: "bg-gray-500", description: "Game cancelled or postponed" },
     { name: "Forfeit", color: "#ef4444", bgClass: "bg-red-500", description: "Game ended by forfeit" }
+  ];
+
+  // Option 2: Traffic Light System
+  const gameStatusesOption2 = [
+    { name: "Upcoming", color: "#6b7280", bgClass: "bg-gray-500", description: "Neutral gray for waiting state" },
+    { name: "In Progress", color: "#f59e0b", bgClass: "bg-amber-500", description: "Amber for caution/active" },
+    { name: "Completed", color: "#22c55e", bgClass: "bg-green-500", description: "Green for go/complete" },
+    { name: "Cancelled", color: "#ef4444", bgClass: "bg-red-500", description: "Red for stop/cancel" },
+    { name: "Forfeit", color: "#dc2626", bgClass: "bg-red-600", description: "Darker red for serious issues" }
+  ];
+
+  // Option 3: Cool Spectrum
+  const gameStatusesOption3 = [
+    { name: "Upcoming", color: "#8b5cf6", bgClass: "bg-violet-500", description: "Violet for future events" },
+    { name: "In Progress", color: "#06b6d4", bgClass: "bg-cyan-500", description: "Cyan for active flow" },
+    { name: "Completed", color: "#10b981", bgClass: "bg-emerald-500", description: "Emerald for completion" },
+    { name: "Cancelled", color: "#64748b", bgClass: "bg-slate-500", description: "Slate for neutral cancellation" },
+    { name: "Forfeit", color: "#475569", bgClass: "bg-slate-600", description: "Darker slate for forfeits" }
+  ];
+
+  // Option 4: Seasonal Palette
+  const gameStatusesOption4 = [
+    { name: "Upcoming", color: "#c084fc", bgClass: "bg-purple-400", description: "Soft purple for anticipation" },
+    { name: "In Progress", color: "#fb7185", bgClass: "bg-rose-400", description: "Rose for energy and action" },
+    { name: "Completed", color: "#4ade80", bgClass: "bg-green-400", description: "Fresh green for achievement" },
+    { name: "Cancelled", color: "#94a3b8", bgClass: "bg-slate-400", description: "Muted slate for cancellation" },
+    { name: "Forfeit", color: "#f87171", bgClass: "bg-red-400", description: "Soft red for forfeits" }
   ];
 
   const actionColors = [
@@ -171,6 +236,112 @@ export default function ColorStyleGuide() {
                 style={{ backgroundColor: position.color }}
               />
               <div className="text-xs font-medium">{position.code}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const StatsColorScheme = ({ title, stats, description }: {
+    title: string;
+    stats: typeof statCategoriesOption1;
+    description: string;
+  }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {stats.map(stat => (
+            <div key={stat.name} className="p-4 border rounded-lg">
+              <div className="flex items-center gap-3 mb-3">
+                <div 
+                  className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white`}
+                  style={{ backgroundColor: stat.color }}
+                >
+                  {stat.icon}
+                </div>
+                <div>
+                  <div className="font-medium">{stat.name}</div>
+                  <div className="text-sm text-muted-foreground">{stat.color}</div>
+                </div>
+              </div>
+              <p className="text-sm mb-3">{stat.description}</p>
+              <div className="flex gap-2">
+                <Button size="sm" className={`${stat.bgClass} hover:${stat.bgClass}/90`}>
+                  {stat.icon}
+                  <span className="ml-2">{stat.name}</span>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-8 gap-2 p-4 bg-muted/20 rounded-lg">
+          <div className="text-xs font-semibold text-center mb-2 col-span-8">Color Harmony Visualization</div>
+          {stats.map(stat => (
+            <div key={stat.name} className="text-center">
+              <div 
+                className="w-8 h-8 rounded-full mx-auto mb-1"
+                style={{ backgroundColor: stat.color }}
+              />
+              <div className="text-xs font-medium">{stat.name.split(' ')[0]}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const GameStatusColorScheme = ({ title, statuses, description }: {
+    title: string;
+    statuses: typeof gameStatusesOption1;
+    description: string;
+  }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {statuses.map(status => (
+            <div key={status.name} className="p-4 border rounded-lg">
+              <div className="flex items-center gap-3 mb-3">
+                <div 
+                  className={`w-4 h-4 rounded-full`}
+                  style={{ backgroundColor: status.color }}
+                />
+                <div>
+                  <div className="font-medium">{status.name}</div>
+                  <div className="text-sm text-muted-foreground">{status.color}</div>
+                </div>
+              </div>
+              <p className="text-sm mb-3">{status.description}</p>
+              <div className="flex gap-2">
+                <Badge className={`${status.bgClass} hover:${status.bgClass}/90`}>
+                  {status.name}
+                </Badge>
+                <Badge variant="outline" style={{ borderColor: status.color, color: status.color }}>
+                  {status.name}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg">
+          <div className="text-xs font-semibold text-center mb-2 col-span-5">Status Flow Visualization</div>
+          {statuses.map(status => (
+            <div key={status.name} className="text-center">
+              <div 
+                className="w-8 h-8 rounded-full mx-auto mb-1"
+                style={{ backgroundColor: status.color }}
+              />
+              <div className="text-xs font-medium">{status.name}</div>
             </div>
           ))}
         </div>
@@ -511,80 +682,119 @@ export default function ColorStyleGuide() {
           </Card>
         </section>
 
-        {/* Statistics Colors */}
+        {/* Statistics Colors - Multiple Options */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Statistics Colors</h2>
-          <Card>
+          <h2 className="text-2xl font-bold mb-6">Statistics Color Schemes</h2>
+          <p className="text-muted-foreground mb-6">
+            Four different color scheme options for statistical categories, each based on different color theory principles 
+            to provide variety while maintaining clear visual communication.
+          </p>
+          
+          <div className="space-y-8">
+            <StatsColorScheme
+              title="Option 1: Classic Semantic Colors"
+              stats={statCategoriesOption1}
+              description="Traditional color associations - green for positive, red for negative, with complementary colors for neutral stats."
+            />
+            
+            <StatsColorScheme
+              title="Option 2: Monochromatic Blue Harmony"
+              stats={statCategoriesOption2}
+              description="Single hue variation using different shades and tints of blue for a cohesive, professional appearance."
+            />
+            
+            <StatsColorScheme
+              title="Option 3: Warm/Cool Temperature Contrast"
+              stats={statCategoriesOption3}
+              description="Temperature-based color coding - warm colors for offensive/active stats, cool colors for defensive/passive stats."
+            />
+            
+            <StatsColorScheme
+              title="Option 4: Natural Earth Tones"
+              stats={statCategoriesOption4}
+              description="Earth-inspired palette using natural colors for a softer, more organic visual approach."
+            />
+          </div>
+
+          <Card className="mt-6">
             <CardHeader>
-              <CardTitle>Stat Category Color Coding</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Consistent colors for different statistical categories
-              </p>
+              <CardTitle>Statistics Color Theory Rationale</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {statCategories.map(stat => (
-                  <div key={stat.name} className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div 
-                        className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white`}
-                        style={{ backgroundColor: stat.color }}
-                      >
-                        {stat.icon}
-                      </div>
-                      <div>
-                        <div className="font-medium">{stat.name}</div>
-                        <div className="text-sm text-muted-foreground">{stat.color}</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" className={`${stat.bgClass} hover:${stat.bgClass}/90`}>
-                        {stat.icon}
-                        <span className="ml-2">{stat.name}</span>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2 text-green-600">Positive Stats (Goals For, Rating)</h4>
+                  <p className="text-sm text-muted-foreground">Consistently use green tones across all schemes to reinforce positive associations and success.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-red-600">Negative/Defensive Stats</h4>
+                  <p className="text-sm text-muted-foreground">Red and blue families for defensive or concerning statistics, providing clear visual distinction.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-blue-600">Neutral/Action Stats</h4>
+                  <p className="text-sm text-muted-foreground">Mid-spectrum colors (blues, purples, cyans) for statistics that are neither inherently positive nor negative.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-amber-600">Warning/Attention Stats</h4>
+                  <p className="text-sm text-muted-foreground">Orange and yellow families for statistics that require attention or indicate caution.</p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </section>
 
-        {/* Game Status Colors */}
+        {/* Game Status Colors - Multiple Options */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Game Status Colors</h2>
-          <Card>
+          <h2 className="text-2xl font-bold mb-6">Game Status Color Schemes</h2>
+          <p className="text-muted-foreground mb-6">
+            Four different approaches to game status colors, from traditional traffic light systems to more sophisticated 
+            color harmonies that work well together while maintaining clear meaning.
+          </p>
+          
+          <div className="space-y-8">
+            <GameStatusColorScheme
+              title="Option 1: Standard UI Convention"
+              statuses={gameStatusesOption1}
+              description="Traditional interface colors - blue for info, amber for warning, green for success, gray for neutral, red for errors."
+            />
+            
+            <GameStatusColorScheme
+              title="Option 2: Traffic Light System"
+              statuses={gameStatusesOption2}
+              description="Clear stop/go metaphor - gray for waiting, amber for proceed with caution, green for go, red for stop."
+            />
+            
+            <GameStatusColorScheme
+              title="Option 3: Cool Spectrum Harmony"
+              statuses={gameStatusesOption3}
+              description="Harmonious cool colors that work well together while maintaining distinct meanings for each status."
+            />
+            
+            <GameStatusColorScheme
+              title="Option 4: Soft Seasonal Palette"
+              statuses={gameStatusesOption4}
+              description="Gentler, more approachable colors with reduced saturation for a friendlier user experience."
+            />
+          </div>
+
+          <Card className="mt-6">
             <CardHeader>
-              <CardTitle>Game State Visual Indicators</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Consistent status colors across game displays and dashboards
-              </p>
+              <CardTitle>Game Status Color Psychology</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {gameStatuses.map(status => (
-                  <div key={status.name} className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div 
-                        className={`w-4 h-4 rounded-full`}
-                        style={{ backgroundColor: status.color }}
-                      />
-                      <div>
-                        <div className="font-medium">{status.name}</div>
-                        <div className="text-sm text-muted-foreground">{status.color}</div>
-                      </div>
-                    </div>
-                    <p className="text-sm mb-3">{status.description}</p>
-                    <div className="flex gap-2">
-                      <Badge className={`${status.bgClass} hover:${status.bgClass}/90`}>
-                        {status.name}
-                      </Badge>
-                      <Badge variant="outline" style={{ borderColor: status.color, color: status.color }}>
-                        {status.name}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2 text-blue-600">Information States</h4>
+                  <p className="text-sm text-muted-foreground">Blue and purple convey information, planning, and future events. Perfect for upcoming games and preparatory states.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-amber-600">Active/Warning States</h4>
+                  <p className="text-sm text-muted-foreground">Amber and orange suggest activity, attention needed, and dynamic states. Ideal for in-progress games and active monitoring.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-green-600">Completion States</h4>
+                  <p className="text-sm text-muted-foreground">Green represents completion, success, and positive outcomes. Universal for finished games and achieved goals.</p>
+                </div>
               </div>
             </CardContent>
           </Card>
