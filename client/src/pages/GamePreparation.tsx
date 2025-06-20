@@ -32,6 +32,8 @@ import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
+import PrintWrapper from '@/components/common/PrintWrapper';
+import { printClasses, formatForPrint } from '@/lib/printUtils';
 
 
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
@@ -419,6 +421,12 @@ export default function GamePreparation() {
   const opponent = game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName;
   const isHomeGame = game.homeTeamId === currentTeamId;
 
+  const gameTitle = game ? formatForPrint.gameTitle(
+    game.date, 
+    getOpponentName(game) || 'Unknown Opponent', 
+    game.round
+  ) : 'Game Preparation';
+
   return (
     <PageTemplate 
       title="Game Preparation" 
@@ -427,6 +435,13 @@ export default function GamePreparation() {
         { label: "Game Preparation" }
       ]}
     >
+      <PrintWrapper 
+        title={gameTitle}
+        subtitle={game ? `Time: ${formatForPrint.time(game.time)} | ${game.venue || 'Venue TBD'}` : undefined}
+        className="max-w-7xl mx-auto"
+      >
+        <div className="space-y-6">
+        
       <Helmet>
         <title>Game Preparation - {opponent} | Team Management</title>
         <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
@@ -825,7 +840,7 @@ export default function GamePreparation() {
                         <div className="space-y-3">
                           {historicalGames.slice(0, 5).map((game, index) => {
                             // Check for special status games (e.g., forfeit, bye)
-                            const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
+                            const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName=== 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
 
                             // Transform batch scores to calculate quarter breakdown
                             const gameScores = batchScores?.[game.id] || [];
@@ -1319,7 +1334,7 @@ export default function GamePreparation() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className={`${printClasses.grid} grid-cols-2 md:grid-cols-4 gap-4 ${printClasses.noPrint}`}>
                         <Button
                           variant="outline"
                           className="flex items-center gap-2"
@@ -1394,14 +1409,14 @@ export default function GamePreparation() {
                             const gameScores = seasonBatchScores?.[seasonGame.id] || [];
                             const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
                               id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
+                              gameId: seasonGame.gameId,
+                              teamId: seasonGame.teamId,
+                              quarter: seasonGame.quarter,
+                              score: seasonGame.score,
+                              enteredBy: seasonGame.enteredBy,
+                              enteredAt: seasonGame.enteredAt,
+                              updatedAt: seasonGame.updatedAt,
+                              notes: seasonGame.notes
                             })) : [];
 
                             // Calculate quarter scores for display
@@ -1563,14 +1578,14 @@ export default function GamePreparation() {
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
                               const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
                                 id: score.id,
-                                gameId: score.gameId,
-                                teamId: score.teamId,
-                                quarter: score.quarter,
-                                score: score.score,
-                                enteredBy: score.enteredBy,
-                                enteredAt: score.enteredAt,
-                                updatedAt: score.updatedAt,
-                                notes: score.notes
+                                gameId: seasonGame.gameId,
+                                teamId: seasonGame.teamId,
+                                quarter: seasonGame.quarter,
+                                score: seasonGame.score,
+                                enteredBy: seasonGame.enteredBy,
+                                enteredAt: seasonGame.enteredAt,
+                                updatedAt: seasonGame.updatedAt,
+                                notes: seasonGame.notes
                               })) : [];
 
                               const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
@@ -2014,6 +2029,7 @@ export default function GamePreparation() {
           </TabsContent>
         </Tabs>
       </div>
+    </PrintWrapper>
     </PageTemplate>
   );
 }

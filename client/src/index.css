@@ -849,41 +849,185 @@ button.touch-manipulation .absolute[class*="rounded-full"] {
 
 /* Print styles */
 @media print {
-  .no-print {
+  /* Global print page setup */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  
+  /* Hide elements not needed for print */
+  .no-print, .no-print * {
     display: none !important;
   }
   
-  .page-card, .metric-card, .stat-card {
-    box-shadow: none !important;
-    border: 1px solid #e5e5e5 !important;
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
   }
   
-  /* Component example specific print styles */
-  .grid {
+  /* Reset body for print */
+  body {
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    color: black !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  /* Navigation and layout elements */
+  nav, header, .sidebar, .header, .navigation {
+    display: none !important;
+  }
+  
+  /* Main content adjustments */
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  /* Cards and containers */
+  .page-card, .metric-card, .stat-card, .print-card {
+    box-shadow: none !important;
+    border: 1px solid #333 !important;
+    background: white !important;
+    margin-bottom: 8pt !important;
     break-inside: avoid;
     page-break-inside: avoid;
   }
   
-  /* Reduce margins for print */
-  .mb-8 {
-    margin-bottom: 1rem !important;
+  /* Typography */
+  h1 { font-size: 16pt !important; margin-bottom: 8pt !important; }
+  h2 { font-size: 14pt !important; margin-bottom: 6pt !important; }
+  h3 { font-size: 12pt !important; margin-bottom: 4pt !important; }
+  h4, h5, h6 { font-size: 11pt !important; margin-bottom: 4pt !important; }
+  
+  p, div, span { font-size: 10pt !important; line-height: 1.3 !important; }
+  
+  /* Tables */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 8pt !important;
   }
   
-  .mb-6 {
-    margin-bottom: 0.75rem !important;
+  th, td {
+    border: 1px solid #333 !important;
+    padding: 4pt 6pt !important;
+    text-align: left !important;
+    font-size: 9pt !important;
+    background: white !important;
+    color: black !important;
   }
   
-  .mb-4 {
-    margin-bottom: 0.5rem !important;
+  th {
+    background-color: #f5f5f5 !important;
+    font-weight: bold !important;
   }
   
-  /* Ensure good contrast for print */
-  .border-gray-200 {
-    border-color: #d1d5db !important;
+  /* Grid layouts for print */
+  .grid, .print-grid {
+    display: block !important;
   }
   
-  /* Optimize spacing for print density */
-  .space-y-12 > * + * {
-    margin-top: 1.5rem !important;
+  .grid > *, .print-grid > * {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 6pt !important;
+  }
+  
+  /* Flexbox adjustments */
+  .flex {
+    display: block !important;
+  }
+  
+  .flex > * {
+    display: block !important;
+    margin-bottom: 2pt !important;
+  }
+  
+  /* Page breaking */
+  .print-section, .break-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .page-break-before {
+    page-break-before: always;
+  }
+  
+  .page-break-after {
+    page-break-after: always;
+  }
+  
+  /* Spacing adjustments for print density */
+  .space-y-12 > * + * { margin-top: 8pt !important; }
+  .space-y-8 > * + * { margin-top: 6pt !important; }
+  .space-y-6 > * + * { margin-top: 4pt !important; }
+  .space-y-4 > * + * { margin-top: 3pt !important; }
+  .space-y-2 > * + * { margin-top: 2pt !important; }
+  
+  .mb-8 { margin-bottom: 6pt !important; }
+  .mb-6 { margin-bottom: 4pt !important; }
+  .mb-4 { margin-bottom: 3pt !important; }
+  .mb-2 { margin-bottom: 2pt !important; }
+  
+  /* Color adjustments for print */
+  * {
+    color: black !important;
+    background: transparent !important;
+  }
+  
+  /* Borders for print clarity */
+  .border, .border-gray-200, .border-gray-300 {
+    border-color: #333 !important;
+  }
+  
+  /* Badges and status indicators */
+  .badge, .status-badge {
+    border: 1px solid #333 !important;
+    padding: 1pt 3pt !important;
+    background: white !important;
+    color: black !important;
+    display: inline-block !important;
+  }
+  
+  /* Button adjustments */
+  button, .button {
+    border: 1px solid #333 !important;
+    background: white !important;
+    color: black !important;
+    padding: 2pt 4pt !important;
+  }
+  
+  /* Hide interactive elements */
+  button:not(.print-button), .button:not(.print-button), 
+  input, select, textarea, .interactive {
+    display: none !important;
+  }
+  
+  /* Tabs content - show all tabs when printing */
+  .tab-content {
+    display: block !important;
+  }
+  
+  /* Images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Links */
+  a {
+    color: black !important;
+    text-decoration: underline !important;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #666;
   }
 }
