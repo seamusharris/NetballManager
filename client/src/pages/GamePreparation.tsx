@@ -435,11 +435,6 @@ export default function GamePreparation() {
         { label: "Game Preparation" }
       ]}
     >
-      <PrintWrapper 
-        title={gameTitle}
-        subtitle={game ? `Time: ${formatForPrint.time(game.time)} | ${game.venue || 'Venue TBD'}` : undefined}
-        className="max-w-7xl mx-auto"
-      >
         <Helmet>
           <title>Game Preparation - {opponent} | Team Management</title>
           <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
@@ -847,19 +842,9 @@ export default function GamePreparation() {
                             // Check for special status games (e.g., forfeit, bye)
                             const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName=== 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
 
-                            // Transform batch scores to calculate quarter breakdown
+                            // Get scores directly from batch scores (already properly formatted)
                             const gameScores = batchScores?.[game.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
-                            })) : [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores : [];
 
                             // Calculate quarter scores for display
                             const calculateQuarterScores = () => {
@@ -1413,19 +1398,9 @@ export default function GamePreparation() {
                             // Check for special status games (e.g., forfeit, bye)
                             const isSpecialStatus = seasonGame.statusName === 'forfeit-win' || seasonGame.statusName === 'forfeit-loss' || seasonGame.statusName === 'bye' || seasonGame.statusName === 'abandoned' || seasonGame.statusDisplayName === 'Forfeit Loss' || seasonGame.statusDisplayName === 'Forfeit Win';
 
-                            // Transform batch scores to calculate quarter breakdown
+                            // Get scores directly from batch scores (already properly formatted)
                             const gameScores = seasonBatchScores?.[seasonGame.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: seasonGame.gameId,
-                              teamId: seasonGame.teamId,
-                              quarter: seasonGame.quarter,
-                              score: seasonGame.score,
-                              enteredBy: seasonGame.enteredBy,
-                              enteredAt: seasonGame.enteredAt,
-                              updatedAt: seasonGame.updatedAt,
-                              notes: seasonGame.notes
-                            })) : [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores : [];
 
                             // Calculate quarter scores for display
                             const calculateQuarterScores = () => {
@@ -2046,7 +2021,6 @@ export default function GamePreparation() {
           </TabsContent>
         </Tabs>
         </div>
-      </PrintWrapper>
     </PageTemplate>
   );
 }
