@@ -217,5 +217,7 @@ function PlayerBox({
   return <div className={className}>{playerBoxContent}</div>;
 }
 
-// Default export
+export { PlayerBox };
+
+// Add default export for compatibility
 export default PlayerBox;
