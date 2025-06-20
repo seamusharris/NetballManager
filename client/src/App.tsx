@@ -61,13 +61,13 @@ import SplitViewExamples from './pages/SplitViewExamples';
 import GridExamples from './pages/GridExamples';
 import CardCollectionExamples from './pages/CardCollectionExamples';
 import TournamentBracketExamples from './pages/TournamentBracketExamples';
-import MatchTimelineExamples from './pages/MatchTimelineExamples';
-import PositionRotationExamples from './pages/PositionRotationExamples';
-import TeamFormationExamples from './pages/TeamFormationExamples';
-import ScoreProgressionExamples from './pages/ScoreProgressionExamples';
-import SubstitutionFlowExamples from './pages/SubstitutionFlowExamples';
-import RosterManagementExamples from './pages/RosterManagementExamples';
-import LiveStatsInterfaceExamples from './pages/LiveStatsInterfaceExamples';
+const MatchTimelineExamples = lazy(() => import('./pages/MatchTimelineExamples'));
+const PositionRotationExamples = lazy(() => import('./pages/PositionRotationExamples'));
+const TeamFormationExamples = lazy(() => import('./pages/TeamFormationExamples'));
+const ScoreProgressionExamples = lazy(() => import('./pages/ScoreProgressionExamples'));
+const SubstitutionFlowExamples = lazy(() => import('./pages/SubstitutionFlowExamples'));
+const RosterManagementExamples = lazy(() => import('./pages/RosterManagementExamples'));
+const LiveStatsInterfaceExamples = lazy(() => import('./pages/LiveStatsInterfaceExamples'));
 import RecommendationExamples from './pages/RecommendationExamples';
 /**
  * Loading spinner component for suspense fallbacks
@@ -182,8 +182,60 @@ function Router() {
         <Route path="/recommendation-examples" component={RecommendationExamples} />
         <Route path="/tournament-bracket-examples" component={TournamentBracketExamples} />
         <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
-        <Route path="/roster-management-examples" component={RosterManagementExamples} />
-        <Route path="/live-stats-interface-examples" component={LiveStatsInterfaceExamples} />
+        <Route path="/roster-management-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Roster Management Examples..." />}>
+                <RosterManagementExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route path="/live-stats-interface-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Live Stats Interface Examples..." />}>
+                <LiveStatsInterfaceExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route path="/match-timeline-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Match Timeline Examples..." />}>
+                <MatchTimelineExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route path="/position-rotation-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Position Rotation Examples..." />}>
+                <PositionRotationExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route path="/team-formation-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Team Formation Examples..." />}>
+                <TeamFormationExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route path="/score-progression-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Score Progression Examples..." />}>
+                <ScoreProgressionExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
