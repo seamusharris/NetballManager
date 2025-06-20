@@ -1972,6 +1972,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- GAME STATS API -----
+  // Batch endpoint to get rosters for multiple games at once
+  app.post("/api/games/rosters/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      console.log("POST Batch rosters endpoint received body:", req.body);
+      const { gameIds } = req.body;
+      console.log("Extracted gameIds from POST body:", gameIds);
+
+      // More robust parameter validation - return empty object instead of error for empty requests
+      if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
+        console.log("POST Batch rosters endpoint: No game IDs provided, returning empty object");
+        return res.json({});
+      }
+
+      // Parse and validate game IDs
+      const validGameIds = gameIds
+        .map(id => {
+          const parsed = typeof id === 'number' ? id : parseInt(id, 10);
+          return isNaN(parsed) ? null : parsed;
+        })
+        .filter((id): id is number => id !== null && id > 0);
+
+      if (!validGameIds.length) {
+        return res.status(400).json({ error: "No valid game IDs provided" });
+      }
+
+      console.log(`POST Batch fetching rosters for ${validGameIds.length} games: ${validGameIds.join(',')}`);
+
+      // Process each game ID in parallel with error handling
+      const rosterPromises = validGameIds.map(async (gameId) => {
+        try {
+          const rosters = await storage.getRostersByGame(gameId);
+          return { gameId, rosters, success: true };
+        } catch (error) {
+          console.error(`Error fetching rosters for game ${gameId}:`, error);
+          return { gameId, rosters: [], success: false };
+        }
+      });
+
+      const results = await Promise.all(rosterPromises);
+
+      // Create a map of gameId -> rosters[]
+      const rostersMap = results.reduce((acc, result) => {
+        acc[result.gameId] = result.rosters;
+        return acc;
+      }, {} as Record<number, any[]>);
+
+      console.log(`POST Batch rosters endpoint successfully returned rosters for ${validGameIds.length} games`);
+      res.json(rostersMap);
+    } catch (error) {
+      console.error(`Error in POST batch game rosters endpoint:`, error);
+      res.status(500).json({ error: "Failed to get batch game rosters" });
+    }
+  });
+
   // Batch endpoint to get stats for multiple games at once
   app.post("/api/games/stats/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {

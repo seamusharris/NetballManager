@@ -91,20 +91,14 @@ export class UnifiedDataFetcher {
     // Batch fetch rosters
     if (includeRosters) {
       try {
-        const rosterPromises = gameIds.map(gameId => 
-          apiClient.get(`/api/games/${gameId}/rosters`)
-            .then(roster => ({ gameId, roster }))
-            .catch(error => ({ gameId, roster: [], error }))
-        );
+        const rostersResponse = await apiClient.post('/api/games/rosters/batch', { gameIds });
+        results.rosters = rostersResponse;
 
-        const rosterResults = await Promise.all(rosterPromises);
-        results.rosters = {};
-
-        rosterResults.forEach(({ gameId, roster }) => {
-          results.rosters[gameId] = roster;
+        // Cache individual game rosters
+        Object.entries(rostersResponse).forEach(([gameId, rosters]) => {
           queryClient.setQueryData(
-            CACHE_KEYS.gameRoster(gameId), 
-            roster
+            CACHE_KEYS.gameRoster(parseInt(gameId)), 
+            rosters
           );
         });
       } catch (error) {
