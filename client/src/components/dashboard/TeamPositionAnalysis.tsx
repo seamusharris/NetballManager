@@ -97,10 +97,17 @@ function TeamPositionAnalysis({
         firstFewEntries: sampleRoster?.slice(0, 3),
         allPositions: sampleRoster?.map(r => r.position).filter((pos, idx, arr) => arr.indexOf(pos) === idx)
       });
+    } else {
+      console.log('TeamPositionAnalysis: No roster data available - this is the root cause');
     }
 
     if (!centralizedStats || !centralizedRosters || Object.keys(centralizedStats).length === 0 || Object.keys(centralizedRosters).length === 0) {
-      console.log('TeamPositionAnalysis: Missing required data - skipping calculation');
+      console.log('TeamPositionAnalysis: Missing required data - skipping calculation', {
+        hasStats: !!centralizedStats && Object.keys(centralizedStats).length > 0,
+        hasRosters: !!centralizedRosters && Object.keys(centralizedRosters).length > 0,
+        statsKeys: Object.keys(centralizedStats || {}),
+        rostersKeys: Object.keys(centralizedRosters || {})
+      });
       return;
     }
 

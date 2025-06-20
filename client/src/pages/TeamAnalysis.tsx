@@ -193,8 +193,8 @@ export default function TeamAnalysis() {
   // Fetch batch statistics for all completed games
   const { statsMap: centralizedStats = {}, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
 
-  // Also fetch roster data specifically
-  const { rostersMap: batchRostersMap = {}, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
+  // Fetch roster data for analysis components
+  const { rostersMap: centralizedRosters = {}, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
   const [analytics, setAnalytics] = useState<PerformanceMetrics>({
     momentum: { trend: 'stable', strength: 0, recentForm: [] },
@@ -1062,7 +1062,7 @@ export default function TeamAnalysis() {
           games={completedGames}
           players={players}
           centralizedStats={centralizedStats}
-          centralizedRosters={batchRostersMap || {}}
+          centralizedRosters={centralizedRosters}
           currentClubId={currentClubId}
         />
 
@@ -1071,7 +1071,7 @@ export default function TeamAnalysis() {
           games={completedGames}
           players={players}
           centralizedStats={centralizedStats}
-          centralizedRosters={batchRostersMap || {}}
+          centralizedRosters={centralizedRosters}
           currentClubId={currentClubId}
         />
 
