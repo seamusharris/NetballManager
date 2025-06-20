@@ -110,12 +110,21 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
         console.log('ClubContext: No stored club, selecting:', targetClubId);
       }
 
-      // Set everything synchronously
-      localStorage.setItem('currentClubId', targetClubId.toString());
-      apiClient.setClubContext({ currentClubId: targetClubId });
-      startTransition(() => {
-        setCurrentClubId(targetClubId);
-      });
+      // Set everything synchronously only if we have a valid club ID
+      if (targetClubId != null) {
+        localStorage.setItem('currentClubId', targetClubId.toString());
+        apiClient.setClubContext({ currentClubId: targetClubId });
+        startTransition(() => {
+          setCurrentClubId(targetClubId);
+        });
+      } else {
+        // No clubs available, clear any stored data
+        localStorage.removeItem('currentClubId');
+        apiClient.setClubContext({ currentClubId: null });
+        startTransition(() => {
+          setCurrentClubId(null);
+        });
+      }
       setIsInitialized(true);
 
       console.log('ClubContext: Initialization completed with club:', targetClubId);
