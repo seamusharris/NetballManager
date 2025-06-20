@@ -1184,6 +1184,9 @@ export default function GamePreparation() {
 
                               // Aggregate actual position stats from historical games
                               historicalGames.forEach(game => {
+                                // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
+                                if (!game.statusAllowsStatistics) return;
+
                                 const gameStats = batchStats?.[game.id] || [];
                                 if (gameStats.length > 0) {
                                   gamesWithPositionStats++;
@@ -1755,10 +1758,8 @@ export default function GamePreparation() {
 
                               // Aggregate actual position stats from season games
                               seasonGames.forEach(seasonGame => {
-                                // Skip BYE and forfeit games for statistical calculations
-                                if (seasonGame.statusName === 'bye' || 
-                                    seasonGame.statusName === 'forfeit-win' || 
-                                    seasonGame.statusName === 'forfeit-loss') return;
+                                // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
+                                if (!seasonGame.statusAllowsStatistics) return;
 
                                 const gameStats = seasonBatchStats?.[seasonGame.id] || [];
                                 if (gameStats.length > 0) {
