@@ -85,6 +85,9 @@ function PlayerBox({
     }
   };
 
+  // Safe fallback to prevent undefined access
+  const currentTextSizes = textSizes[size] || textSizes.md;
+
   const playerInitials = (() => {
     if (player.firstName && player.lastName) {
       return getInitials(player.firstName, player.lastName);
@@ -145,12 +148,12 @@ function PlayerBox({
       {/* Player Details */}
       <div className="flex-1 flex items-center">
         <div className="flex-1">
-          <div className={`${textSizes[size].name} font-bold player-name`}>
+          <div className={`${currentTextSizes.name} font-bold player-name`}>
             {player.displayName}
           </div>
 
           {showPositions && (
-            <div className={`${textSizes[size].position} player-positions flex items-center gap-2`}>
+            <div className={`${currentTextSizes.position} player-positions flex items-center gap-2`}>
               <span>
                 {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
                   ? player.positionPreferences.join(', ') 
@@ -167,7 +170,7 @@ function PlayerBox({
           )}
 
           {!showPositions && (customBadge || player.active === false) && (
-            <div className={`${textSizes[size].position} flex items-center gap-2`}>
+            <div className={`${currentTextSizes.position} flex items-center gap-2`}>
               {customBadge ? (
                 <span className="inline-flex items-center">{customBadge}</span>
               ) : (
@@ -193,7 +196,7 @@ function PlayerBox({
                 <div className={`${size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl'} font-bold`}>
                   {stat.value}
                 </div>
-                <div className={`${textSizes[size].stats} opacity-75`}>
+                <div className={`${currentTextSizes.stats} opacity-75`}>
                   {stat.label}
                 </div>
               </div>
