@@ -445,9 +445,9 @@ export default function GamePreparation() {
           <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
         </Helmet>
 
-        <div className="space-y-6">
+        <div className="space-y-6 print-content">
         {/* Header with Game Details */}
-        <Card>
+        <Card className="print-section">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -479,7 +479,7 @@ export default function GamePreparation() {
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)} className="space-y-4 print-content">
           <TabsList className="grid w-full grid-cols-5 no-print print-hide">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="season">Season</TabsTrigger>
@@ -496,7 +496,7 @@ export default function GamePreparation() {
           </div>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6 print-show" data-tabs-content="overview">
+          <TabsContent value="overview" className="space-y-6 print-show print-section" data-tabs-content="overview">
 
 
             {(() => {

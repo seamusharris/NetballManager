@@ -56,21 +56,32 @@ export default function PrintWrapper({
             margin: 15mm;
           }
           
-          /* Reset everything */
-          * {
-            box-sizing: border-box !important;
-          }
-          
-          /* Hide non-essential elements */
-          nav, header, .sidebar, .navigation, .no-print,
-          button:not(.print-keep), .btn:not(.print-keep),
-          .tabs-list, .tab-trigger, .print-hide {
+          /* Hide non-essential elements - be more specific */
+          header[role="banner"], 
+          nav[role="navigation"], 
+          .sidebar, 
+          .navigation, 
+          .no-print,
+          .print-hide,
+          button:not(.print-keep), 
+          .btn:not(.print-keep),
+          [data-radix-popper-content-wrapper],
+          .tabs-list, 
+          .tab-trigger,
+          .breadcrumb,
+          .page-actions {
             display: none !important;
           }
           
           /* Show print-only elements */
           .print-only, .print-show {
             display: block !important;
+          }
+          
+          /* Force show main content areas */
+          main, .print-content, [data-tabs-content] {
+            display: block !important;
+            visibility: visible !important;
           }
           
           /* Body and root styling */
@@ -86,7 +97,7 @@ export default function PrintWrapper({
           }
           
           /* Main content container */
-          .print-content, main {
+          .print-content, main, .tab-content, [data-tabs-content] {
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
@@ -94,6 +105,8 @@ export default function PrintWrapper({
             box-shadow: none !important;
             border: none !important;
             background: white !important;
+            display: block !important;
+            visibility: visible !important;
           }
           
           /* Typography hierarchy */
@@ -221,9 +234,15 @@ export default function PrintWrapper({
           .page-break-after { page-break-after: always !important; }
           .break-inside-avoid { break-inside: avoid !important; page-break-inside: avoid !important; }
           
-          /* Tabs - show all content */
+          /* Tabs - show all content and hide tab navigation */
           .tabs-content, [data-tabs-content] {
             display: block !important;
+            visibility: visible !important;
+          }
+          
+          /* Hide tab navigation completely */
+          [role="tablist"], .tabs-list {
+            display: none !important;
           }
           
           /* Hide interactive elements */
