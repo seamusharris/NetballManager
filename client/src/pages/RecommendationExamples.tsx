@@ -498,3 +498,462 @@ export default function RecommendationExamples() {
     </PageTemplate>
   );
 }
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Printer, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+
+export default function RecommendationExamples() {
+  // Sample data matching your actual data structure from console logs
+  const samplePlayers = [
+    {
+      id: 61,
+      displayName: "Emma Wilson",
+      firstName: "Emma",
+      lastName: "Wilson",
+      positionPreferences: ["GA", "GS"],
+      avatarColor: "bg-blue-500",
+      active: true
+    },
+    {
+      id: 62,
+      displayName: "Sarah Johnson",
+      firstName: "Sarah",
+      lastName: "Johnson",
+      positionPreferences: ["C", "WA", "WD"],
+      avatarColor: "bg-green-600",
+      active: true
+    },
+    {
+      id: 64,
+      displayName: "Lily Chen",
+      firstName: "Lily",
+      lastName: "Chen",
+      positionPreferences: ["GK", "GD"],
+      avatarColor: "bg-purple-500",
+      active: true
+    },
+    {
+      id: 65,
+      displayName: "Mia Thompson",
+      firstName: "Mia",
+      lastName: "Thompson",
+      positionPreferences: ["WA", "C", "GA"],
+      avatarColor: "bg-orange-500",
+      active: true
+    },
+    {
+      id: 66,
+      displayName: "Zoe Parker",
+      firstName: "Zoe",
+      lastName: "Parker",
+      positionPreferences: ["GD", "WD"],
+      avatarColor: "bg-red-500",
+      active: true
+    },
+    {
+      id: 67,
+      displayName: "Kate Miller",
+      firstName: "Kate",
+      lastName: "Miller",
+      positionPreferences: ["GA", "WA"],
+      avatarColor: "bg-teal-500",
+      active: true
+    },
+    {
+      id: 68,
+      displayName: "Jessica Adams",
+      firstName: "Jessica",
+      lastName: "Adams",
+      positionPreferences: ["GK", "GD"],
+      avatarColor: "bg-pink-500",
+      active: true
+    }
+  ];
+
+  // Sample opponent and quarter scores based on console data
+  const upcomingOpponent = "Deep Creek Emeralds";
+  const quarterResults = [
+    { quarter: 1, teamScore: 5, opponentScore: 2, result: "win" },
+    { quarter: 2, teamScore: 2, opponentScore: 3, result: "loss" },
+    { quarter: 3, teamScore: 2, opponentScore: 1, result: "win" },
+    { quarter: 4, teamScore: 2, opponentScore: -1, result: "win" }
+  ];
+
+  // Sample position performance data from game stats
+  const positionPerformance = {
+    "GA": { goalsFor: 12, goalsAgainst: 0, rating: 8.2, quarters: [1, 3, 4] },
+    "GS": { goalsFor: 8, goalsAgainst: 0, rating: 7.8, quarters: [2, 4] },
+    "WA": { goalsFor: 0, goalsAgainst: 0, rating: 7.5, quarters: [1, 2, 3] },
+    "C": { goalsFor: 0, goalsAgainst: 0, rating: 8.0, quarters: [1, 2, 4] },
+    "WD": { goalsFor: 0, goalsAgainst: 2, rating: 7.2, quarters: [2, 3, 4] },
+    "GD": { goalsFor: 0, goalsAgainst: 3, rating: 6.8, quarters: [1, 3, 4] },
+    "GK": { goalsFor: 0, goalsAgainst: 1, rating: 7.0, quarters: [1, 2, 3] }
+  };
+
+  const getResultIcon = (result: string) => {
+    switch (result) {
+      case "win":
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case "loss":
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default:
+        return <Minus className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getResultColor = (result: string) => {
+    switch (result) {
+      case "win":
+        return "bg-green-100 text-green-800 border-green-300";
+      case "loss":
+        return "bg-red-100 text-red-800 border-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300";
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <PageTemplate 
+      title="Lineup Recommendations" 
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "Lineup Recommendations" }
+      ]}
+      actions={
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handlePrint}
+          className="no-print flex items-center gap-2"
+        >
+          <Printer className="h-4 w-4" />
+          Print Examples
+        </Button>
+      }
+    >
+      <Helmet>
+        <title>Lineup Recommendations - Component Library</title>
+        <meta name="description" content="5 different ways to display player positions compared to team quarter scores for lineup recommendations." />
+        <style type="text/css">{`
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+            body {
+              font-size: 12px;
+              line-height: 1.3;
+            }
+            .prose {
+              max-width: none !important;
+            }
+            section {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+          }
+        `}</style>
+      </Helmet>
+
+      <div className="prose max-w-none mb-6">
+        <p className="text-lg text-gray-700">
+          5 different ways to display player positions compared to team quarter scores for upcoming opponent: <strong>{upcomingOpponent}</strong>
+        </p>
+      </div>
+
+      {/* Format 1: Quarter-by-Quarter Comparison Cards */}
+      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 1: Quarter-by-Quarter Comparison Cards</h2>
+        <p className="text-gray-700 mb-6">Players who performed in specific quarters with quarter results</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {quarterResults.map((quarter) => (
+            <Card key={quarter.quarter} className="shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between">
+                  <span>Quarter {quarter.quarter}</span>
+                  {getResultIcon(quarter.result)}
+                </CardTitle>
+                <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getResultColor(quarter.result)}`}>
+                  {quarter.teamScore}-{quarter.opponentScore}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <PlayerBox
+                    key={player.id}
+                    player={player}
+                    size="sm"
+                    showPositions={true}
+                    className="shadow-sm transition-shadow duration-200 hover:shadow-md"
+                    style={{ 
+                      borderColor: quarter.result === 'win' ? '#16a34a' : quarter.result === 'loss' ? '#dc2626' : '#6b7280',
+                      borderWidth: '2px'
+                    }}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Format 2: Position Performance Grid */}
+      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 2: Position Performance Grid</h2>
+        <p className="text-gray-700 mb-6">Players grouped by positions with performance statistics</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Object.entries(positionPerformance).map(([position, perf]) => (
+            <Card key={position} className="shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-center">
+                  <Badge variant="outline" className="text-lg font-bold px-3 py-1">
+                    {position}
+                  </Badge>
+                </CardTitle>
+                <div className="text-center text-sm text-gray-600">
+                  Goals: {perf.goalsFor}-{perf.goalsAgainst} | Rating: {perf.rating}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {samplePlayers
+                  .filter(player => player.positionPreferences.includes(position))
+                  .map((player) => (
+                    <PlayerBox
+                      key={player.id}
+                      player={player}
+                      size="sm"
+                      showPositions={false}
+                      stats={[
+                        { label: "Rating", value: perf.rating.toString() }
+                      ]}
+                      className="shadow-sm transition-shadow duration-200 hover:shadow-md"
+                      style={{ 
+                        borderColor: perf.rating >= 8 ? '#16a34a' : perf.rating >= 7 ? '#f59e0b' : '#dc2626',
+                        borderWidth: '2px'
+                      }}
+                    />
+                  ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Format 3: Recommended vs Alternative Lineups */}
+      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 3: Recommended vs Alternative Lineups</h2>
+        <p className="text-gray-700 mb-6">Side-by-side comparison of lineup options</p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recommended Lineup */}
+          <Card className="shadow-lg border-green-200">
+            <CardHeader className="bg-green-50">
+              <CardTitle className="text-green-800 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Recommended Lineup
+              </CardTitle>
+              <p className="text-sm text-green-700">Based on opponent performance analysis</p>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              {samplePlayers.slice(0, 4).map((player, index) => (
+                <PlayerBox
+                  key={player.id}
+                  player={player}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Match %", value: `${85 - index * 5}%` },
+                    { label: "Form", value: "Good" }
+                  ]}
+                  className="shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  style={{ 
+                    borderColor: '#16a34a',
+                    backgroundColor: '#f0fdf4',
+                    borderWidth: '2px'
+                  }}
+                />
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Alternative Lineup */}
+          <Card className="shadow-lg border-orange-200">
+            <CardHeader className="bg-orange-50">
+              <CardTitle className="text-orange-800 flex items-center gap-2">
+                <Minus className="h-5 w-5" />
+                Alternative Lineup
+              </CardTitle>
+              <p className="text-sm text-orange-700">More defensive approach</p>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              {samplePlayers.slice(3, 7).map((player, index) => (
+                <PlayerBox
+                  key={player.id}
+                  player={player}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Match %", value: `${75 - index * 3}%` },
+                    { label: "Form", value: "Fair" }
+                  ]}
+                  className="shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  style={{ 
+                    borderColor: '#f59e0b',
+                    backgroundColor: '#fffbeb',
+                    borderWidth: '2px'
+                  }}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Format 4: Timeline View with Quarter Rotations */}
+      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 4: Timeline View with Quarter Rotations</h2>
+        <p className="text-gray-700 mb-6">Horizontal timeline showing player rotations through quarters</p>
+
+        <div className="space-y-6">
+          {quarterResults.map((quarter) => (
+            <div key={quarter.quarter} className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="text-lg px-3 py-1">
+                    Q{quarter.quarter}
+                  </Badge>
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getResultColor(quarter.result)}`}>
+                    {quarter.teamScore}-{quarter.opponentScore}
+                  </div>
+                </div>
+                {getResultIcon(quarter.result)}
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {samplePlayers.map((player, index) => (
+                  <PlayerBox
+                    key={player.id}
+                    player={player}
+                    size="sm"
+                    showPositions={true}
+                    className="shadow-sm transition-shadow duration-200 hover:shadow-md"
+                    style={{ 
+                      borderColor: quarter.result === 'win' ? '#16a34a' : quarter.result === 'loss' ? '#dc2626' : '#6b7280',
+                      backgroundColor: index < 7 ? '#ffffff' : '#f3f4f6',
+                      opacity: index < 7 ? 1 : 0.6
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Format 5: Compact Summary with Key Insights */}
+      <section className="mb-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 5: Compact Summary with Key Insights</h2>
+        <p className="text-gray-700 mb-6">Quick overview focusing on top performers and recommendations</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Top Performers */}
+          <Card className="shadow-md border-blue-200">
+            <CardHeader className="pb-3 bg-blue-50">
+              <CardTitle className="text-blue-800 text-lg">Top Performers vs {upcomingOpponent}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-3">
+              {samplePlayers.slice(0, 3).map((player) => (
+                <PlayerBox
+                  key={player.id}
+                  player={player}
+                  size="sm"
+                  showPositions={true}
+                  stats={[
+                    { label: "Score", value: "8.5" }
+                  ]}
+                  className="shadow-sm"
+                  style={{ 
+                    borderColor: '#3b82f6',
+                    backgroundColor: '#eff6ff'
+                  }}
+                />
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Key Changes */}
+          <Card className="shadow-md border-purple-200">
+            <CardHeader className="pb-3 bg-purple-50">
+              <CardTitle className="text-purple-800 text-lg">Recommended Changes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-3">
+              {samplePlayers.slice(1, 4).map((player) => (
+                <PlayerBox
+                  key={player.id}
+                  player={player}
+                  size="sm"
+                  showPositions={true}
+                  className="shadow-sm"
+                  style={{ 
+                    borderColor: '#a855f7',
+                    backgroundColor: '#faf5ff'
+                  }}
+                />
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Bench Options */}
+          <Card className="shadow-md border-gray-200">
+            <CardHeader className="pb-3 bg-gray-50">
+              <CardTitle className="text-gray-800 text-lg">Bench Strength</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-3">
+              {samplePlayers.slice(4, 7).map((player) => (
+                <PlayerBox
+                  key={player.id}
+                  player={player}
+                  size="sm"
+                  showPositions={true}
+                  className="shadow-sm"
+                  style={{ 
+                    borderColor: '#6b7280',
+                    backgroundColor: '#f9fafb'
+                  }}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">Match Summary vs {upcomingOpponent}</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className="text-2xl font-bold text-green-600">11-5</div>
+              <div className="text-sm text-gray-600">Last Result</div>
+            </div>
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className="text-2xl font-bold text-blue-600">8.2</div>
+              <div className="text-sm text-gray-600">Avg Rating</div>
+            </div>
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className="text-2xl font-bold text-purple-600">65%</div>
+              <div className="text-sm text-gray-600">Win Rate</div>
+            </div>
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className="text-2xl font-bold text-orange-600">3-1</div>
+              <div className="text-sm text-gray-600">Q3 Strength</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </PageTemplate>
+  );
+}
