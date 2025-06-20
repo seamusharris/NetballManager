@@ -15,13 +15,13 @@ const sampleQuarterScores = {
 };
 
 const samplePlayers = [
-  { id: 1, displayName: "Sarah M", firstName: "Sarah", lastName: "Mitchell", isActive: true },
-  { id: 2, displayName: "Emma K", firstName: "Emma", lastName: "Klein", isActive: true },
-  { id: 3, displayName: "Chloe R", firstName: "Chloe", lastName: "Roberts", isActive: true },
-  { id: 4, displayName: "Jessica L", firstName: "Jessica", lastName: "Lee", isActive: true },
-  { id: 5, displayName: "Amy T", firstName: "Amy", lastName: "Thompson", isActive: true },
-  { id: 6, displayName: "Sophie W", firstName: "Sophie", lastName: "Williams", isActive: true },
-  { id: 7, displayName: "Hannah P", firstName: "Hannah", lastName: "Parker", isActive: true }
+  { id: 1, displayName: "Sarah M", firstName: "Sarah", lastName: "Mitchell", isActive: true, avatarColor: "bg-gray-500" },
+  { id: 2, displayName: "Emma K", firstName: "Emma", lastName: "Klein", isActive: true, avatarColor: "bg-gray-500" },
+  { id: 3, displayName: "Chloe R", firstName: "Chloe", lastName: "Roberts", isActive: true, avatarColor: "bg-gray-500" },
+  { id: 4, displayName: "Jessica L", firstName: "Jessica", lastName: "Lee", isActive: true, avatarColor: "bg-gray-500" },
+  { id: 5, displayName: "Amy T", firstName: "Amy", lastName: "Thompson", isActive: true, avatarColor: "bg-gray-500" },
+  { id: 6, displayName: "Sophie W", firstName: "Sophie", lastName: "Williams", isActive: true, avatarColor: "bg-gray-500" },
+  { id: 7, displayName: "Hannah P", firstName: "Hannah", lastName: "Parker", isActive: true, avatarColor: "bg-gray-500" }
 ];
 
 const samplePlayerPositions = {
