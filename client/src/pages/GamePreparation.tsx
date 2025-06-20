@@ -2029,7 +2029,6 @@ export default function GamePreparation() {
             />
           </TabsContent>
         </Tabs>
-      </div>
     </PrintWrapper>
     </PageTemplate>
   );
