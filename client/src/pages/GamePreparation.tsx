@@ -1192,7 +1192,7 @@ export default function GamePreparation() {
                                 // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
                                 if (!game.statusAllowsStatistics) return;
 
-                                const gameStats = batchStats?.[game.id] || [];
+                                const gameStats = historicalBatchStats?.[game.id] || [];
                                 if (gameStats.length > 0) {
                                   gamesWithPositionStats++;
 
@@ -1974,8 +1974,10 @@ export default function GamePreparation() {
                 <CardContent>
                   <TeamPositionAnalysis
                     games={historicalGames}
-                    players={players}
-                    currentTeamId={currentTeamId}
+                    players={players as any}
+                    centralizedStats={historicalBatchStats || {}}
+                    centralizedRosters={historicalBatchRosters || {}}
+                    currentClubId={currentClubId}
                   />
                 </CardContent>
               </Card>
