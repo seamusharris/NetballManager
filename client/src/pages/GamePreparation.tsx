@@ -91,7 +91,7 @@ const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode;
   return (
     <div style={{ 
       border: '3px solid purple', 
-      backgroundColor: 'rgba(128, 0, 128, 0.1)`, 
+      backgroundColor: 'rgba(128, 0, 128, 0.1)', 
       padding: '12px',
       margin: '8px',
       position: 'relative'
@@ -120,7 +120,7 @@ const QuarterBoxDiagnostic = ({ children, quarter }: { children: React.ReactNode
   return (
     <div style={{ 
       border: '2px solid blue', 
-      backgroundColor: 'rgba(0, 0, 255, 0.05)`, 
+      backgroundColor: 'rgba(0, 0, 255, 0.05)', 
       padding: '4px',
       position: 'relative'
     }}>
@@ -147,7 +147,7 @@ const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) 
   return (
     <div style={{ 
       border: '2px solid orange', 
-      backgroundColor: 'rgba(255, 165, 0, 0.1)`, 
+      backgroundColor: 'rgba(255, 165, 0, 0.1)', 
       padding: '6px',
       position: 'relative'
     }}>
