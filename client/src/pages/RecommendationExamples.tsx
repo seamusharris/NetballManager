@@ -15,13 +15,13 @@ const sampleQuarterScores = {
 };
 
 const samplePlayers = [
-  { id: 1, displayName: "Sarah M", firstName: "Sarah", lastName: "Mitchell", isActive: true, avatarColor: "bg-gray-500" },
-  { id: 2, displayName: "Emma K", firstName: "Emma", lastName: "Klein", isActive: true, avatarColor: "bg-gray-500" },
-  { id: 3, displayName: "Chloe R", firstName: "Chloe", lastName: "Roberts", isActive: true, avatarColor: "bg-gray-500" },
-  { id: 4, displayName: "Jessica L", firstName: "Jessica", lastName: "Lee", isActive: true, avatarColor: "bg-gray-500" },
-  { id: 5, displayName: "Amy T", firstName: "Amy", lastName: "Thompson", isActive: true, avatarColor: "bg-gray-500" },
-  { id: 6, displayName: "Sophie W", firstName: "Sophie", lastName: "Williams", isActive: true, avatarColor: "bg-gray-500" },
-  { id: 7, displayName: "Hannah P", firstName: "Hannah", lastName: "Parker", isActive: true, avatarColor: "bg-gray-500" }
+  { id: 1, displayName: "Sarah M", firstName: "Sarah", lastName: "Mitchell", active: true, avatarColor: "bg-green-600", positionPreferences: ["GS", "GA"] },
+  { id: 2, displayName: "Emma K", firstName: "Emma", lastName: "Klein", active: true, avatarColor: "bg-blue-500", positionPreferences: ["C", "WA"] },
+  { id: 3, displayName: "Chloe R", firstName: "Chloe", lastName: "Roberts", active: true, avatarColor: "bg-purple-500", positionPreferences: ["GK", "GD"] },
+  { id: 4, displayName: "Jessica L", firstName: "Jessica", lastName: "Lee", active: true, avatarColor: "bg-orange-500", positionPreferences: ["WA", "C"] },
+  { id: 5, displayName: "Amy T", firstName: "Amy", lastName: "Thompson", active: true, avatarColor: "bg-red-500", positionPreferences: ["WD", "GD"] },
+  { id: 6, displayName: "Sophie W", firstName: "Sophie", lastName: "Williams", active: true, avatarColor: "bg-teal-500", positionPreferences: ["GK", "GD"] },
+  { id: 7, displayName: "Hannah P", firstName: "Hannah", lastName: "Parker", active: true, avatarColor: "bg-pink-500", positionPreferences: ["GA", "GS"] }
 ];
 
 const samplePlayerPositions = {
@@ -118,8 +118,9 @@ export default function RecommendationExamples() {
                         <div key={position} className="relative">
                           <PlayerBox 
                             player={data.player}
-                            size="compact"
-                            showAvatar={false}
+                            size="sm"
+                            showPositions={false}
+                            className="mb-1"
                           />
                           <div className="absolute top-0 right-0 flex gap-1">
                             <Badge variant="outline" className="text-xs">
@@ -164,7 +165,7 @@ export default function RecommendationExamples() {
 
                 return (
                   <div key={player.id} className="space-y-3">
-                    <PlayerBox player={player} size="default" />
+                    <PlayerBox player={player} size="md" />
 
                     <div className="space-y-2">
                       {playerQuarters.map(qData => {
@@ -228,7 +229,7 @@ export default function RecommendationExamples() {
                         <h4 className="text-xs font-semibold text-center">Attack</h4>
                         <div className="space-y-1">
                           <div className="relative">
-                            <PlayerBox player={quarterData.GS.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.GS.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">GS</Badge>
                             </div>
@@ -239,7 +240,7 @@ export default function RecommendationExamples() {
                             )}
                           </div>
                           <div className="relative">
-                            <PlayerBox player={quarterData.GA.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.GA.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">GA</Badge>
                             </div>
@@ -257,19 +258,19 @@ export default function RecommendationExamples() {
                         <h4 className="text-xs font-semibold text-center">Center</h4>
                         <div className="space-y-1">
                           <div className="relative">
-                            <PlayerBox player={quarterData.WA.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.WA.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">WA</Badge>
                             </div>
                           </div>
                           <div className="relative">
-                            <PlayerBox player={quarterData.C.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.C.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">C</Badge>
                             </div>
                           </div>
                           <div className="relative">
-                            <PlayerBox player={quarterData.WD.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.WD.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">WD</Badge>
                             </div>
@@ -282,13 +283,13 @@ export default function RecommendationExamples() {
                         <h4 className="text-xs font-semibold text-center">Defense</h4>
                         <div className="space-y-1">
                           <div className="relative">
-                            <PlayerBox player={quarterData.GD.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.GD.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">GD</Badge>
                             </div>
                           </div>
                           <div className="relative">
-                            <PlayerBox player={quarterData.GK.player} size="compact" showAvatar={false} />
+                            <PlayerBox player={quarterData.GK.player} size="sm" showPositions={false} />
                             <div className="absolute -top-1 -right-1">
                               <Badge variant="outline" className="text-xs">GK</Badge>
                             </div>
@@ -335,7 +336,7 @@ export default function RecommendationExamples() {
                 return (
                   <div key={player.id} className="grid grid-cols-5 gap-2 items-center py-2 border-b">
                     <div>
-                      <PlayerBox player={player} size="compact" showAvatar={false} />
+                      <PlayerBox player={player} size="sm" showPositions={false} />
                     </div>
 
                     {playerQuarters.map(qData => {
@@ -402,7 +403,7 @@ export default function RecommendationExamples() {
                 <div className="space-y-3">
                   <div className="p-3 bg-green-50 rounded">
                     <div className="flex items-center gap-2 mb-2">
-                      <PlayerBox player={samplePlayers[0]} size="compact" showAvatar={false} />
+                      <PlayerBox player={samplePlayers[0]} size="sm" showPositions={false} />
                       <Badge className="bg-green-100 text-green-800">MVP</Badge>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -413,7 +414,7 @@ export default function RecommendationExamples() {
 
                   <div className="p-3 bg-yellow-50 rounded">
                     <div className="flex items-center gap-2 mb-2">
-                      <PlayerBox player={samplePlayers[1]} size="compact" showAvatar={false} />
+                      <PlayerBox player={samplePlayers[1]} size="sm" showPositions={false} />
                       <Badge className="bg-yellow-100 text-yellow-800">Variable</Badge>
                     </div>
                     <p className="text-sm text-gray-600">
