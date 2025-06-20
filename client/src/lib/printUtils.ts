@@ -1,114 +1,132 @@
 
+// Print utility classes and functions for consistent printing across the application
 export const printClasses = {
-  // Layout classes that work well in print
-  section: 'print-section mb-6 break-inside-avoid',
-  card: 'print-card bg-white border rounded-lg p-4 break-inside-avoid',
-  grid: 'print-grid grid gap-4',
+  // Content visibility
+  printOnly: 'print-only',
+  printShow: 'print-show', 
+  printHide: 'print-hide',
+  noPrint: 'no-print',
+  printContent: 'print-content',
+  section: 'print-section',
   
-  // Typography classes optimized for print
-  title: 'print-title text-xl font-bold mb-4',
-  subtitle: 'print-subtitle text-lg font-semibold mb-3',
-  heading: 'text-base font-semibold mb-2',
-  text: 'text-sm',
-  caption: 'text-xs text-gray-600',
+  // Layout
+  grid: 'print-grid',
+  pageBreak: 'print-page-break',
   
-  // Table classes for print
-  table: 'w-full border-collapse break-inside-avoid',
-  tableHeader: 'bg-gray-50 font-semibold',
-  tableCell: 'border border-gray-200 px-3 py-2 text-sm',
+  // Typography
+  title: 'print-title',
+  subtitle: 'print-subtitle',
+  heading: 'print-heading',
   
-  // Utility classes
-  noBreak: 'break-inside-avoid page-break-inside-avoid',
-  noPrint: 'no-print print-hide',
-  printOnly: 'hidden print:block',
-  printShow: 'print:block print:visible',
-  
-  // Status and badge classes for print
-  badge: 'badge inline-block px-2 py-1 text-xs rounded border',
-  statusBadge: 'status-badge inline-block px-2 py-1 text-xs rounded border',
+  // Spacing
+  spacing: 'print-spacing',
+  compact: 'print-compact'
 };
 
+// Format utilities for print content
 export const formatForPrint = {
-  // Format dates for print
-  date: (date: string | Date) => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-AU', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  },
+  gameTitle: (date: string, opponent: string, round: string) => 
+    `Game Preparation: ${opponent} - Round ${round} (${new Date(date).toLocaleDateString()})`,
   
-  // Format time for print
   time: (time: string) => {
-    if (!time) return 'TBD';
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    try {
+      const [hours, minutes] = time.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours), parseInt(minutes));
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return time;
+    }
   },
   
-  // Format game title for print
-  gameTitle: (date: string, opponent: string, round?: string) => {
-    const formattedDate = formatForPrint.date(date);
-    const roundText = round ? ` - Round ${round}` : '';
-    return `${formattedDate} vs ${opponent}${roundText}`;
-  },
+  date: (dateStr: string) => new Date(dateStr).toLocaleDateString('en-AU', {
+    weekday: 'long',
+    year: 'numeric', 
+    month: 'long',
+    day: 'numeric'
+  })
 };
 
-// Unified print CSS that targets actual DOM structure
+// Enhanced print CSS with selective tab support
 export const UNIFIED_PRINT_CSS = `
   @media print {
-    /* Page setup */
     @page {
       size: A4;
       margin: 15mm;
+      color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
     
-    /* STEP 1: Hide navigation and UI elements */
-    /* Target actual navigation structure */
-    nav, 
-    .sidebar,
-    header[role="banner"],
+    /* CRITICAL: Hide ALL navigation elements */
+    nav,
     [role="navigation"],
+    [role="banner"], 
+    header[role="banner"],
+    .sidebar,
+    .breadcrumb,
+    .page-actions,
     .no-print,
     .print-hide,
-    /* Shadcn UI specific selectors */
+    
+    /* Shadcn/Radix UI specific navigation */
     [data-radix-popper-content-wrapper],
     [data-radix-select-content],
     [data-radix-dropdown-menu-content],
-    /* Tab navigation */
+    [data-radix-popover-content],
+    
+    /* Tab navigation - CRITICAL */
     [role="tablist"],
     .tabs-list,
     [data-tabs-list],
-    /* Buttons except print buttons */
+    [data-radix-tabs-list],
+    div[role="tablist"],
+    
+    /* All buttons except explicitly kept ones */
     button:not(.print-keep):not([data-print-keep]),
     .btn:not(.print-keep):not([data-print-keep]),
-    /* Breadcrumbs and page actions */
-    .breadcrumb,
-    .page-actions,
-    .no-print * {
+    
+    /* Page chrome */
+    .page-header .flex.justify-end,
+    .page-template > div:first-child > div:last-child
+    {
       display: none !important;
       visibility: hidden !important;
+      height: 0 !important;
+      overflow: hidden !important;
     }
     
-    /* STEP 2: Force show content areas */
-    /* Target actual content structure */
-    main,
+    /* FORCE SHOW: Print content */
     .print-content,
     .print-show,
     .print-section,
-    [data-tabs-content],
-    .tab-content,
-    .tabs-content {
+    [data-print="show"],
+    main {
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
     }
     
-    /* STEP 3: Reset document structure */
+    /* TAB CONTENT MANAGEMENT */
+    /* Hide inactive tab content by default */
+    [data-radix-tabs-content]:not([data-state="active"]) {
+      display: none !important;
+    }
+    
+    /* Force show active tab content */
+    [data-radix-tabs-content][data-state="active"],
+    [data-radix-tabs-content][data-print-tab="active"] {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    /* Override any hiding on print-marked content */
+    [data-print-tab="active"] * {
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    /* Reset document structure */
     html, body {
       font-size: 10pt !important;
       line-height: 1.3 !important;
@@ -121,10 +139,10 @@ export const UNIFIED_PRINT_CSS = `
       overflow: visible !important;
     }
     
-    /* STEP 4: Content container styling */
+    /* Content structure */
     .print-content,
     main,
-    [data-tabs-content] {
+    [data-radix-tabs-content] {
       width: 100% !important;
       max-width: none !important;
       margin: 0 !important;
@@ -134,7 +152,7 @@ export const UNIFIED_PRINT_CSS = `
       background: white !important;
     }
     
-    /* STEP 5: Typography hierarchy */
+    /* Typography hierarchy */
     .print-title, h1 {
       font-size: 16pt !important;
       font-weight: bold !important;
@@ -161,7 +179,7 @@ export const UNIFIED_PRINT_CSS = `
       background: transparent !important;
     }
     
-    /* STEP 6: Cards and containers */
+    /* Cards and containers */
     .card, 
     [data-card], 
     .bg-card,
@@ -171,142 +189,132 @@ export const UNIFIED_PRINT_CSS = `
       background: white !important;
       border: 1pt solid #333 !important;
       margin-bottom: 4pt !important;
-      padding: 4pt !important;
-      box-shadow: none !important;
+      padding: 6pt !important;
       border-radius: 0 !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      box-shadow: none !important;
     }
     
-    /* STEP 7: Tables */
+    /* Tables */
     table {
       width: 100% !important;
       border-collapse: collapse !important;
-      margin-bottom: 6pt !important;
-      font-size: 8pt !important;
+      margin-bottom: 8pt !important;
     }
     
     th, td {
       border: 1pt solid #333 !important;
-      padding: 2pt !important;
-      text-align: left !important;
+      padding: 3pt !important;
       font-size: 8pt !important;
-      background: white !important;
-      color: black !important;
+      text-align: left !important;
     }
     
     th {
+      background: #f0f0f0 !important;
       font-weight: bold !important;
-      background-color: #f5f5f5 !important;
     }
     
-    /* STEP 8: Layout adjustments */
-    .grid, .flex {
-      display: block !important;
-    }
-    
-    .grid > *, .flex > * {
-      display: block !important;
-      width: 100% !important;
-      margin-bottom: 3pt !important;
-      float: none !important;
-    }
-    
-    /* STEP 9: Remove all colors and effects */
-    * {
-      color: black !important;
-      background: transparent !important;
-      text-shadow: none !important;
-      box-shadow: none !important;
-    }
-    
-    /* STEP 10: Spacing normalization */
-    .space-y-6 > * + *, 
-    .space-y-4 > * + *, 
-    .space-y-2 > * + * {
-      margin-top: 3pt !important;
-    }
-    
-    .mb-8, .mb-6, .mb-4 { margin-bottom: 3pt !important; }
-    .mb-2 { margin-bottom: 2pt !important; }
-    .mt-8, .mt-6, .mt-4 { margin-top: 3pt !important; }
-    .mt-2 { margin-top: 2pt !important; }
-    
-    /* STEP 11: Page breaks */
-    .page-break-before { page-break-before: always !important; }
-    .page-break-after { page-break-after: always !important; }
-    .break-inside-avoid { break-inside: avoid !important; page-break-inside: avoid !important; }
-    
-    /* STEP 12: Badges and indicators */
-    .badge, [data-badge] {
+    /* Badges and status indicators */
+    .badge, 
+    [class*="badge-"] {
       border: 1pt solid #333 !important;
-      padding: 1pt 2pt !important;
-      background: white !important;
-      color: black !important;
-      display: inline-block !important;
+      padding: 1pt 3pt !important;
       font-size: 7pt !important;
-      border-radius: 0 !important;
+      font-weight: bold !important;
     }
     
-    /* STEP 13: Interactive elements */
-    input, select, textarea, 
-    button:not(.print-keep):not([data-print-keep]) {
-      display: none !important;
+    /* Progress bars */
+    .progress,
+    [role="progressbar"] {
+      border: 1pt solid #333 !important;
+      height: 8pt !important;
+      background: white !important;
     }
     
-    /* STEP 14: Links */
-    a {
-      color: black !important;
-      text-decoration: underline !important;
+    /* Grid layouts */
+    .grid {
+      display: block !important;
     }
     
-    /* STEP 15: Images */
-    img {
-      max-width: 100% !important;
-      height: auto !important;
+    .grid > * {
+      display: block !important;
+      margin-bottom: 4pt !important;
+      page-break-inside: avoid !important;
     }
     
-    /* STEP 16: Print-only elements */
+    /* Print-only content */
     .print-only {
       display: block !important;
-      visibility: visible !important;
+    }
+    
+    /* Page breaks */
+    .print-page-break {
+      page-break-before: always !important;
+    }
+    
+    /* Avoid breaks */
+    .card, .widget-container, .content-box {
+      page-break-inside: avoid !important;
     }
   }
 `;
 
-// Helper function to trigger print with custom title
-export const printPage = (title?: string) => {
-  if (title) {
-    const originalTitle = document.title;
-    document.title = title;
-    window.print();
-    document.title = originalTitle;
-  } else {
-    window.print();
-  }
-};
-
-// Helper to prepare page for print (add unified CSS)
-export const preparePrintLayout = () => {
-  // Remove any existing print stylesheets
-  const existingPrintStyles = document.querySelectorAll('style[data-print-styles]');
-  existingPrintStyles.forEach(style => style.remove());
-  
-  // Add unified print CSS
-  const styleElement = document.createElement('style');
-  styleElement.setAttribute('data-print-styles', 'unified');
-  styleElement.textContent = UNIFIED_PRINT_CSS;
-  document.head.appendChild(styleElement);
-  
-  // Add print-mode class to body
+// Print preparation functions
+export function preparePrintLayout() {
+  // Add print mode class to body
   document.body.classList.add('print-mode');
-};
+  
+  // Mark the currently active tab for printing
+  const activeTab = document.querySelector('[data-radix-tabs-content][data-state="active"]');
+  if (activeTab) {
+    activeTab.setAttribute('data-print-tab', 'active');
+  }
+  
+  // Ensure all content in active tab is visible
+  if (activeTab) {
+    const allElements = activeTab.querySelectorAll('*');
+    allElements.forEach(el => {
+      (el as HTMLElement).style.setProperty('visibility', 'visible', 'important');
+      (el as HTMLElement).style.setProperty('opacity', '1', 'important');
+    });
+  }
+}
 
-// Clean up after print
-export const cleanupPrintLayout = () => {
+export function cleanupPrintLayout() {
+  // Remove print mode class
   document.body.classList.remove('print-mode');
   
-  // Remove unified print styles
-  const printStyles = document.querySelectorAll('style[data-print-styles="unified"]');
-  printStyles.forEach(style => style.remove());
-};
+  // Clean up print tab markers
+  const printTabs = document.querySelectorAll('[data-print-tab]');
+  printTabs.forEach(tab => {
+    tab.removeAttribute('data-print-tab');
+  });
+  
+  // Remove forced styles
+  const allElements = document.querySelectorAll('[style*="visibility"][style*="important"]');
+  allElements.forEach(el => {
+    (el as HTMLElement).style.removeProperty('visibility');
+    (el as HTMLElement).style.removeProperty('opacity');
+  });
+}
+
+// Print-specific component wrapper
+export function withPrintSupport<T extends Record<string, any>>(
+  Component: React.ComponentType<T>
+): React.ComponentType<T> {
+  return function PrintSupportedComponent(props: T) {
+    React.useEffect(() => {
+      const handleBeforePrint = () => preparePrintLayout();
+      const handleAfterPrint = () => cleanupPrintLayout();
+      
+      window.addEventListener('beforeprint', handleBeforePrint);
+      window.addEventListener('afterprint', handleAfterPrint);
+      
+      return () => {
+        window.removeEventListener('beforeprint', handleBeforePrint);
+        window.removeEventListener('afterprint', handleAfterPrint);
+      };
+    }, []);
+    
+    return React.createElement(Component, props);
+  };
+}

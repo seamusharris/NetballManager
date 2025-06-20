@@ -26,23 +26,31 @@ export default function PrintWrapper({
 }: PrintWrapperProps) {
 
   const handlePrint = () => {
+    console.log('Print initiated - preparing layout...');
+    
     onBeforePrint?.();
 
-    // Use unified print system
+    // Use unified print system with tab detection
     preparePrintLayout();
 
     // Set document title for print
     const originalTitle = document.title;
     document.title = title;
 
-    // Trigger print
-    window.print();
-
-    // Cleanup after print
-    document.title = originalTitle;
-    cleanupPrintLayout();
-
-    onAfterPrint?.();
+    console.log('Triggering browser print dialog...');
+    
+    // Small delay to ensure layout preparation is complete
+    setTimeout(() => {
+      window.print();
+      
+      // Cleanup after print dialog
+      setTimeout(() => {
+        document.title = originalTitle;
+        cleanupPrintLayout();
+        onAfterPrint?.();
+        console.log('Print cleanup completed');
+      }, 100);
+    }, 50);
   };
 
   return (
@@ -61,7 +69,7 @@ export default function PrintWrapper({
               data-print-keep
             >
               <Printer className="h-4 w-4" />
-              Print
+              Print Current Tab
             </Button>
           )}
           {showPDFButton && (
