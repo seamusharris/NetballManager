@@ -101,6 +101,15 @@ function TeamPositionAnalysis({
       centralizedRosters[game.id]
     );
 
+    console.log('TeamPositionAnalysis: Processing games:', games.map(g => ({ 
+      id: g.id, 
+      completed: g.statusIsCompleted, 
+      allowsStats: g.statusAllowsStatistics,
+      hasStats: !!centralizedStats[g.id],
+      hasRosters: !!centralizedRosters[g.id],
+      included: completedGames.some(cg => cg.id === g.id)
+    })));
+
     // Map to track different position lineups and their performance
     const lineupMap = new Map<string, {
       formation: Record<string, string>;
@@ -161,6 +170,11 @@ function TeamPositionAnalysis({
         });
 
         console.log(`Game ${game.id}, Quarter ${quarter}: Found ${Object.keys(positionLineup).length}/7 positions`, positionLineup);
+        console.log(`Game ${game.id}, Quarter ${quarter}: Roster entries for this quarter:`, quarterRoster);
+        console.log(`Game ${game.id}, Quarter ${quarter}: Players lookup:`, quarterRoster.map(r => {
+          const player = players.find(p => p.id === r.playerId);
+          return { position: r.position, playerId: r.playerId, playerFound: !!player, playerName: player?.displayName };
+        }));
         
         // Debug missing positions for Dingoes
         if (Object.keys(positionLineup).length < 7) {
