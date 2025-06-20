@@ -286,9 +286,6 @@ export default function GamePreparation() {
         // Only include completed games
         if (!g.statusIsCompleted) return false;
 
-        // Exclude BYE games (they don't count for wins/losses)
-        if (g.statusName === 'bye') return false;
-
         // Only include games from the same season
         return g.seasonId === game.seasonId;
       });
@@ -840,8 +837,8 @@ export default function GamePreparation() {
                               score: score.score,
                               enteredBy: score.enteredBy,
                               enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
+                              updatedAt: score.```text
+notes
                             })) : [];
 
                             // Calculate quarter scores for display
@@ -1558,6 +1555,11 @@ export default function GamePreparation() {
                             let gamesWithData = 0;
 
                             seasonGames.forEach(seasonGame => {
+                              // Skip BYE games and forfeit games for goal statistics
+                              if (seasonGame.statusName === 'bye' || 
+                                  seasonGame.statusName === 'forfeit-win' || 
+                                  seasonGame.statusName === 'forfeit-loss') return;
+
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
                               const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
                                 id: score.id,
