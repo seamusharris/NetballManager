@@ -62,14 +62,37 @@ export default function ColorStyleGuide() {
     active: true
   };
 
-  const netballPositions = [
-    { code: "GS", name: "Goal Shooter", color: "#dc2626", bgClass: "bg-red-600" },
-    { code: "GA", name: "Goal Attack", color: "#ea580c", bgClass: "bg-orange-600" },
-    { code: "WA", name: "Wing Attack", color: "#ca8a04", bgClass: "bg-yellow-600" },
-    { code: "C", name: "Centre", color: "#16a34a", bgClass: "bg-green-600" },
-    { code: "WD", name: "Wing Defence", color: "#0891b2", bgClass: "bg-cyan-600" },
-    { code: "GD", name: "Goal Defence", color: "#2563eb", bgClass: "bg-blue-600" },
-    { code: "GK", name: "Goal Keeper", color: "#7c3aed", bgClass: "bg-violet-600" }
+  // Option 1: Warm/Cool Contrast
+  const positionColorsOption1 = [
+    { code: "GS", name: "Goal Shooter", color: "#dc2626", bgClass: "bg-red-600", description: "Deep red - aggressive, goal-focused" },
+    { code: "GA", name: "Goal Attack", color: "#ea580c", bgClass: "bg-orange-600", description: "Vibrant orange - dynamic attack" },
+    { code: "WA", name: "Wing Attack", color: "#f59e0b", bgClass: "bg-amber-600", description: "Golden amber - warm transition" },
+    { code: "C", name: "Centre", color: "#10b981", bgClass: "bg-emerald-600", description: "Emerald green - balanced center" },
+    { code: "WD", name: "Wing Defence", color: "#0891b2", bgClass: "bg-cyan-600", description: "Cool cyan - defensive transition" },
+    { code: "GD", name: "Goal Defence", color: "#2563eb", bgClass: "bg-blue-600", description: "Strong blue - protective" },
+    { code: "GK", name: "Goal Keeper", color: "#4338ca", bgClass: "bg-indigo-600", description: "Deep indigo - ultimate defense" }
+  ];
+
+  // Option 2: Analogous Harmony
+  const positionColorsOption2 = [
+    { code: "GS", name: "Goal Shooter", color: "#e11d48", bgClass: "bg-rose-600", description: "Rose - precision striking" },
+    { code: "GA", name: "Goal Attack", color: "#ec4899", bgClass: "bg-pink-600", description: "Pink - creative attack" },
+    { code: "WA", name: "Wing Attack", color: "#a855f7", bgClass: "bg-purple-600", description: "Purple - wing creativity" },
+    { code: "C", name: "Centre", color: "#7c3aed", bgClass: "bg-violet-600", description: "Violet - central control" },
+    { code: "WD", name: "Wing Defence", color: "#6366f1", bgClass: "bg-indigo-600", description: "Indigo - wing protection" },
+    { code: "GD", name: "Goal Defence", color: "#3b82f6", bgClass: "bg-blue-600", description: "Blue - defensive strength" },
+    { code: "GK", name: "Goal Keeper", color: "#0ea5e9", bgClass: "bg-sky-600", description: "Sky blue - last line defense" }
+  ];
+
+  // Option 3: Triadic Balance
+  const positionColorsOption3 = [
+    { code: "GS", name: "Goal Shooter", color: "#dc2626", bgClass: "bg-red-600", description: "Primary red - power" },
+    { code: "GA", name: "Goal Attack", color: "#f97316", bgClass: "bg-orange-600", description: "Orange-red - energy" },
+    { code: "WA", name: "Wing Attack", color: "#eab308", bgClass: "bg-yellow-600", description: "Primary yellow - speed" },
+    { code: "C", name: "Centre", color: "#84cc16", bgClass: "bg-lime-600", description: "Yellow-green - growth" },
+    { code: "WD", name: "Wing Defence", color: "#10b981", bgClass: "bg-emerald-600", description: "Green - stability" },
+    { code: "GD", name: "Goal Defence", color: "#0891b2", bgClass: "bg-cyan-600", description: "Blue-green - calm strength" },
+    { code: "GK", name: "Goal Keeper", color: "#2563eb", bgClass: "bg-blue-600", description: "Primary blue - trust" }
   ];
 
   const statCategories = [
@@ -100,6 +123,61 @@ export default function ColorStyleGuide() {
     { name: "Export/Share", color: "#7c3aed", bgClass: "bg-violet-600", description: "Data export, sharing features" }
   ];
 
+  const PositionColorScheme = ({ title, positions, description }: {
+    title: string;
+    positions: typeof positionColorsOption1;
+    description: string;
+  }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {positions.map(position => (
+            <div key={position.code} className="p-4 border rounded-lg">
+              <div className="flex items-center gap-3 mb-3">
+                <div 
+                  className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold`}
+                  style={{ backgroundColor: position.color }}
+                >
+                  {position.code}
+                </div>
+                <div>
+                  <div className="font-medium">{position.name}</div>
+                  <div className="text-sm text-muted-foreground">{position.color}</div>
+                </div>
+              </div>
+              <p className="text-sm mb-3">{position.description}</p>
+              <div className="flex gap-2">
+                <Badge className={`${position.bgClass} hover:${position.bgClass}/90`}>
+                  {position.code}
+                </Badge>
+                <Badge variant="outline" style={{ borderColor: position.color, color: position.color }}>
+                  {position.name}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-7 gap-2 p-4 bg-muted/20 rounded-lg">
+          <div className="text-xs font-semibold text-center mb-2 col-span-7">Color Flow Visualization</div>
+          {positions.map(position => (
+            <div key={position.code} className="text-center">
+              <div 
+                className="w-8 h-8 rounded-full mx-auto mb-1"
+                style={{ backgroundColor: position.color }}
+              />
+              <div className="text-xs font-medium">{position.code}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <PageTemplate 
       title="Color Style Guide" 
@@ -111,10 +189,186 @@ export default function ColorStyleGuide() {
       <div className="space-y-8">
         <div className="prose max-w-none">
           <p className="text-lg text-gray-700">
-            Comprehensive color standardization guide for the netball application. This ensures consistent 
-            visual communication across all features and components.
+            Comprehensive color standardization guide for the netball application with multiple color scheme options
+            based on color theory principles. This ensures consistent visual communication across all features and components.
           </p>
         </div>
+
+        {/* Typography System */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Typography System</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Main Typography Hierarchy */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Typography Hierarchy</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Consistent text styles with semantic meaning and visual hierarchy
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h1 className="text-4xl font-bold text-foreground mb-2">Heading 1 (H1)</h1>
+                  <p className="text-sm text-muted-foreground">4xl, bold, primary color - Page titles</p>
+                </div>
+                
+                <div>
+                  <h2 className="text-3xl font-semibold text-foreground mb-2">Heading 2 (H2)</h2>
+                  <p className="text-sm text-muted-foreground">3xl, semibold - Section headers</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-2xl font-semibold text-foreground mb-2">Heading 3 (H3)</h3>
+                  <p className="text-sm text-muted-foreground">2xl, semibold - Widget headers</p>
+                </div>
+                
+                <div>
+                  <h4 className="text-xl font-medium text-foreground mb-2">Heading 4 (H4)</h4>
+                  <p className="text-sm text-muted-foreground">xl, medium - Card titles</p>
+                </div>
+                
+                <div>
+                  <h5 className="text-lg font-medium text-foreground mb-2">Heading 5 (H5)</h5>
+                  <p className="text-sm text-muted-foreground">lg, medium - Subsection headers</p>
+                </div>
+                
+                <div>
+                  <h6 className="text-base font-medium text-foreground mb-2">Heading 6 (H6)</h6>
+                  <p className="text-sm text-muted-foreground">base, medium - Label headers</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Body Text and Special Styles */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Body Text & Special Styles</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Different text weights and styles for various content types
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <p className="text-lg text-foreground mb-1">Large paragraph text</p>
+                  <p className="text-sm text-muted-foreground">lg, normal weight - Introductory text</p>
+                </div>
+                
+                <div>
+                  <p className="text-base text-foreground mb-1">Regular paragraph text for main content and descriptions.</p>
+                  <p className="text-sm text-muted-foreground">base, normal weight - Body content</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Small supporting text and captions</p>
+                  <p className="text-xs text-muted-foreground">sm, normal weight - Metadata, captions</p>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Extra small text for fine print</p>
+                  <p className="text-xs text-muted-foreground">xs, normal weight - Fine print, timestamps</p>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <p className="text-base font-bold text-foreground mb-1">Bold emphasis text</p>
+                  <p className="text-base font-semibold text-primary mb-1">Semibold primary color text</p>
+                  <p className="text-base font-medium text-secondary mb-1">Medium secondary color text</p>
+                  <p className="text-base italic text-muted-foreground mb-1">Italic muted text</p>
+                  <p className="text-base underline text-foreground mb-1">Underlined text for links</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Statistical Text Styles */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Statistical & Data Text</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Specialized text styles for displaying numbers and data
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <div className="text-4xl font-bold font-mono text-primary mb-1">89</div>
+                  <p className="text-sm text-muted-foreground">4xl, bold, mono - Large statistics</p>
+                </div>
+                
+                <div>
+                  <div className="text-3xl font-bold font-mono text-foreground mb-1">24-18</div>
+                  <p className="text-sm text-muted-foreground">3xl, bold, mono - Scores</p>
+                </div>
+                
+                <div>
+                  <div className="text-2xl font-semibold font-mono text-green-600 mb-1">78%</div>
+                  <p className="text-sm text-muted-foreground">2xl, semibold, mono - Performance metrics</p>
+                </div>
+                
+                <div>
+                  <div className="text-lg font-medium font-mono text-blue-600 mb-1">15.4</div>
+                  <p className="text-sm text-muted-foreground">lg, medium, mono - Small statistics</p>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 p-4 bg-muted/20 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">W</div>
+                    <div className="text-xs text-muted-foreground">Win</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">L</div>
+                    <div className="text-xs text-muted-foreground">Loss</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-amber-600">D</div>
+                    <div className="text-xs text-muted-foreground">Draw</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Interactive Text States */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Interactive Text States</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Text colors for different interaction states
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-base text-foreground hover:text-primary cursor-pointer mb-1 transition-colors">
+                    Hover state text (hover to see)
+                  </p>
+                  <p className="text-sm text-muted-foreground">Foreground → Primary on hover</p>
+                </div>
+                
+                <div>
+                  <p className="text-base text-primary mb-1">Active/Selected text</p>
+                  <p className="text-sm text-muted-foreground">Primary color for active states</p>
+                </div>
+                
+                <div>
+                  <p className="text-base text-muted-foreground mb-1">Inactive/Disabled text</p>
+                  <p className="text-sm text-muted-foreground">Muted foreground for disabled</p>
+                </div>
+                
+                <div>
+                  <p className="text-base text-destructive mb-1">Error state text</p>
+                  <p className="text-sm text-muted-foreground">Destructive color for errors</p>
+                </div>
+                
+                <div>
+                  <p className="text-base text-green-600 mb-1">Success state text</p>
+                  <p className="text-sm text-muted-foreground">Green for success messages</p>
+                </div>
+                
+                <div>
+                  <p className="text-base text-amber-600 mb-1">Warning state text</p>
+                  <p className="text-sm text-muted-foreground">Amber for warning messages</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
 
         {/* Primary Brand Colors */}
         <section>
@@ -157,6 +411,57 @@ export default function ColorStyleGuide() {
               usage="Awards, special metrics, highlights"
             />
           </div>
+        </section>
+
+        {/* Netball Position Colors - Multiple Options */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Netball Position Color Schemes</h2>
+          <p className="text-muted-foreground mb-6">
+            Three different color scheme options based on color theory principles. Each offers different psychological 
+            and visual benefits for position identification.
+          </p>
+          
+          <div className="space-y-8">
+            <PositionColorScheme
+              title="Option 1: Warm/Cool Contrast"
+              positions={positionColorsOption1}
+              description="Based on warm (attack) to cool (defense) color temperature progression. Creates strong visual distinction between offensive and defensive roles."
+            />
+            
+            <PositionColorScheme
+              title="Option 2: Analogous Harmony"
+              positions={positionColorsOption2}
+              description="Uses adjacent colors on the color wheel for a harmonious, pleasing visual flow. Creates subtle but clear position distinctions."
+            />
+            
+            <PositionColorScheme
+              title="Option 3: Triadic Balance"
+              positions={positionColorsOption3}
+              description="Based on triadic color relationships for vibrant contrast while maintaining balance. Offers high visibility and clear position differentiation."
+            />
+          </div>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Color Theory Rationale</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2 text-orange-600">Warm Colors (Attack)</h4>
+                  <p className="text-sm text-muted-foreground">Red, orange, yellow convey energy, aggression, and forward movement - perfect for Goal Shooter, Goal Attack, and Wing Attack positions.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-green-600">Balanced Colors (Mid-court)</h4>
+                  <p className="text-sm text-muted-foreground">Green represents balance, growth, and versatility - ideal for the Centre position that connects attack and defense.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-blue-600">Cool Colors (Defense)</h4>
+                  <p className="text-sm text-muted-foreground">Blue, indigo, cyan suggest stability, protection, and calm strength - appropriate for Wing Defense, Goal Defense, and Goal Keeper.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Player Avatar Colors */}
@@ -206,56 +511,6 @@ export default function ColorStyleGuide() {
           </Card>
         </section>
 
-        {/* Netball Position Colors */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Netball Position Colors</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Position-Specific Color Coding</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Consistent colors for each netball position across charts, stats, and displays
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {netballPositions.map(position => (
-                  <div key={position.code} className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div 
-                        className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold`}
-                        style={{ backgroundColor: position.color }}
-                      >
-                        {position.code}
-                      </div>
-                      <div>
-                        <div className="font-medium">{position.name}</div>
-                        <div className="text-sm text-muted-foreground">{position.color}</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge className={`${position.bgClass} hover:${position.bgClass}/90`}>
-                        {position.code}
-                      </Badge>
-                      <Badge variant="outline" style={{ borderColor: position.color, color: position.color }}>
-                        {position.name}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="p-4 bg-muted/30 rounded-lg">
-                <h4 className="font-semibold mb-2">Position Color Logic</h4>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>• <strong>Attackers (GS, GA):</strong> Red/Orange spectrum - aggressive, goal-focused</li>
-                  <li>• <strong>Mid-court (WA, C, WD):</strong> Yellow/Green/Cyan - dynamic, versatile</li>
-                  <li>• <strong>Defenders (GD, GK):</strong> Blue/Purple spectrum - defensive, protective</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
         {/* Statistics Colors */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Statistics Colors</h2>
@@ -290,36 +545,6 @@ export default function ColorStyleGuide() {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <h4 className="font-semibold mb-2">Positive Stats</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-600 rounded"></div>
-                      <span className="text-sm">Goals For, Intercepts, Rebounds</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-emerald-600 rounded"></div>
-                      <span className="text-sm">Player Ratings, Performance</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <h4 className="font-semibold mb-2">Negative Stats</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-red-600 rounded"></div>
-                      <span className="text-sm">Goals Against, Errors</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-orange-600 rounded"></div>
-                      <span className="text-sm">Turnovers, Warnings</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -405,84 +630,6 @@ export default function ColorStyleGuide() {
               </div>
             </CardContent>
           </Card>
-        </section>
-
-        {/* Display Variations */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Display Variations</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Badge Variations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Solid Badges</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-green-600">Win</Badge>
-                    <Badge className="bg-red-600">Loss</Badge>
-                    <Badge className="bg-amber-600">Draw</Badge>
-                    <Badge className="bg-blue-600">Active</Badge>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold mb-2">Outline Badges</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="border-green-600 text-green-700">Win</Badge>
-                    <Badge variant="outline" className="border-red-600 text-red-700">Loss</Badge>
-                    <Badge variant="outline" className="border-amber-600 text-amber-700">Draw</Badge>
-                    <Badge variant="outline" className="border-blue-600 text-blue-700">Active</Badge>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">Soft Badges</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Win</Badge>
-                    <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Loss</Badge>
-                    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Draw</Badge>
-                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Active</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Button Variations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Primary Actions</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Button className="bg-green-600 hover:bg-green-700">Create</Button>
-                    <Button className="bg-blue-600 hover:bg-blue-700">Edit</Button>
-                    <Button className="bg-red-600 hover:bg-red-700">Delete</Button>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold mb-2">Secondary Actions</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="border-green-600 text-green-700 hover:bg-green-50">Create</Button>
-                    <Button variant="outline" className="border-blue-600 text-blue-700 hover:bg-blue-50">Edit</Button>
-                    <Button variant="outline" className="border-red-600 text-red-700 hover:bg-red-50">Delete</Button>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">Ghost Actions</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="ghost" className="text-green-700 hover:bg-green-100">Create</Button>
-                    <Button variant="ghost" className="text-blue-700 hover:bg-blue-100">Edit</Button>
-                    <Button variant="ghost" className="text-red-700 hover:bg-red-100">Delete</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </section>
 
         {/* Implementation Guidelines */}
