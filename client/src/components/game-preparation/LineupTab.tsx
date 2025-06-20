@@ -17,6 +17,8 @@ import { apiClient } from '@/lib/apiClient';
 import CourtDisplay from '@/components/ui/court-display';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
+import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
+import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import type { Game, Player, Roster, Position } from '@shared/schema';
 
 interface LineupTabProps {
@@ -54,6 +56,30 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   });
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const { toast } = useToast();
+
+  // Get completed games for historical analysis
+  const [completedGames, setCompletedGames] = useState<Game[]>([]);
+  const [centralizedStats, setCentralizedStats] = useState<Record<string, any[]>>({});
+
+  // Fetch completed games for the team
+  useEffect(() => {
+    const fetchCompletedGames = async () => {
+      try {
+        const response = await apiClient.get('/api/games');
+        if (response && Array.isArray(response)) {
+          const completed = response.filter((g: Game) => 
+            g.statusId === 3 && // completed status
+            (g.homeTeamId === game.homeTeamId || g.awayTeamId === game.awayTeamId)
+          );
+          setCompletedGames(completed.slice(0, 10)); // Use last 10 completed games
+        }
+      } catch (error) {
+        console.error('Failed to fetch completed games:', error);
+      }
+    };
+
+    fetchCompletedGames();
+  }, [game.homeTeamId, game.awayTeamId]);
 
   // Initialize player availability
   useEffect(() => {
@@ -227,12 +253,17 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   };
 
   const generatePositionEffectivenessRecommendations = (availablePlayers: Player[]): LineupRecommendation[] => {
-    if (!rosters || rosters.length === 0) return [];
+    // Use the centralized roster data that's already being fetched
+    const { rostersMap = {}, isLoading: isLoadingRosters } = useBatchRosterData(
+      completedGames.map(g => g.id)
+    );
+
+    if (isLoadingRosters || Object.keys(rostersMap).length === 0) return [];
 
     const recommendations: LineupRecommendation[] = [];
     
-    // Analyze historical roster data to find effective position combinations
-    const positionLineups = analyzeHistoricalLineups(availablePlayers);
+    // Analyze historical roster data from centralized data
+    const positionLineups = analyzeHistoricalLineupsFromCentralized(availablePlayers, rostersMap);
     
     // Generate recommendations based on different criteria
     const highestScoring = generateHighestScoringLineup(positionLineups, availablePlayers);
@@ -250,52 +281,76 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     return recommendations;
   };
 
-  const analyzeHistoricalLineups = (availablePlayers: Player[]) => {
-    // Group rosters by quarters and analyze effectiveness
-    const quarterLineups = new Map();
-    
-    rosters.forEach(roster => {
-      const key = `q${roster.quarter}`;
-      if (!quarterLineups.has(key)) {
-        quarterLineups.set(key, []);
-      }
-      quarterLineups.get(key).push(roster);
-    });
-
+  const analyzeHistoricalLineupsFromCentralized = (availablePlayers: Player[], rostersMap: Record<string, any[]>) => {
     const lineupAnalysis = [];
     
-    quarterLineups.forEach((quarterRoster, quarter) => {
-      // Build position formation for this quarter
-      const formation: Record<string, number> = {};
-      const quarterPlayers = new Set();
-
-      quarterRoster.forEach((entry: any) => {
-        const player = availablePlayers.find(p => p.id === entry.playerId);
-        if (player && entry.position) {
-          formation[entry.position] = player.id;
-          quarterPlayers.add(player.id);
+    // Process roster data from each game
+    Object.entries(rostersMap).forEach(([gameId, gameRosters]) => {
+      if (!gameRosters || gameRosters.length === 0) return;
+      
+      // Group by quarter
+      const quarterLineups = new Map();
+      gameRosters.forEach(roster => {
+        const key = `game${gameId}-q${roster.quarter}`;
+        if (!quarterLineups.has(key)) {
+          quarterLineups.set(key, []);
         }
+        quarterLineups.get(key).push(roster);
       });
 
-      // Only consider complete lineups with all 7 positions
-      if (Object.keys(formation).length === 7 && quarterPlayers.size === 7) {
-        // Check if all players in this formation are available
-        const allPlayersAvailable = Object.values(formation).every(playerId => 
-          availablePlayers.some(p => p.id === playerId)
-        );
+      quarterLineups.forEach((quarterRoster, quarterKey) => {
+        // Build position formation for this quarter
+        const formation: Record<string, number> = {};
+        const quarterPlayers = new Set();
 
-        if (allPlayersAvailable) {
-          lineupAnalysis.push({
-            formation,
-            quarter: quarter,
-            // Mock performance metrics - in real implementation, these would come from game stats
-            goalsFor: Math.random() * 10 + 5, // 5-15 goals
-            goalsAgainst: Math.random() * 8 + 2, // 2-10 goals
-            winRate: Math.random() * 100, // 0-100%
-            gamesPlayed: Math.floor(Math.random() * 5) + 1 // 1-5 games
-          });
+        quarterRoster.forEach((entry: any) => {
+          const player = availablePlayers.find(p => p.id === entry.playerId);
+          if (player && entry.position) {
+            formation[entry.position] = player.id;
+            quarterPlayers.add(player.id);
+          }
+        });
+
+        // Only consider complete lineups with all 7 positions
+        if (Object.keys(formation).length === 7 && quarterPlayers.size === 7) {
+          // Check if all players in this formation are currently available
+          const allPlayersAvailable = Object.values(formation).every(playerId => 
+            availablePlayers.some(p => p.id === playerId)
+          );
+
+          if (allPlayersAvailable) {
+            // Find the corresponding game to get actual performance data
+            const gameData = completedGames.find(g => g.id === parseInt(gameId));
+            const gameStats = centralizedStats[gameId] || [];
+            
+            // Calculate actual performance metrics if available
+            let goalsFor = 0;
+            let goalsAgainst = 0;
+            
+            if (gameData) {
+              // Calculate goals from game result or use mock data
+              if (gameData.teamGoals !== null && gameData.opponentGoals !== null) {
+                goalsFor = gameData.teamGoals / 4; // Average per quarter
+                goalsAgainst = gameData.opponentGoals / 4;
+              } else {
+                // Use mock data based on game result patterns
+                goalsFor = Math.random() * 8 + 3; // 3-11 goals per quarter
+                goalsAgainst = Math.random() * 6 + 2; // 2-8 goals per quarter
+              }
+            }
+
+            lineupAnalysis.push({
+              formation,
+              quarter: quarterKey,
+              gameId: parseInt(gameId),
+              goalsFor,
+              goalsAgainst,
+              winRate: gameData?.teamGoals > gameData?.opponentGoals ? 100 : 0,
+              gamesPlayed: 1
+            });
+          }
         }
-      }
+      });
     });
 
     return lineupAnalysis;
