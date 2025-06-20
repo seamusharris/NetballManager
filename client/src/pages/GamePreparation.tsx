@@ -1871,7 +1871,8 @@ export default function GamePreparation() {
                     )}
                   </CardContent>
                 </Card>
-            )()}
+              );
+            })()}
           </TabsContent>
 
           {/* Analysis Tab */}
