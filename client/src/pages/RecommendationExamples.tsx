@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -53,907 +52,132 @@ const samplePlayerPositions = {
   }
 };
 
-const getPlayerColor = (name: string) => {
-  const colors = {
-    "Sarah M": "#3B82F6",
-    "Emma K": "#10B981", 
-    "Chloe R": "#F59E0B",
-    "Jessica L": "#EF4444",
-    "Amy T": "#8B5CF6",
-    "Sophie W": "#06B6D4",
-    "Hannah P": "#F97316"
-  };
-  return colors[name] || "#6B7280";
-};
-
-const getQuarterResult = (quarter: number) => {
-  const scores = sampleQuarterScores[quarter];
-  const diff = scores.team - scores.opponent;
-  if (diff > 0) return { result: 'win', icon: TrendingUp, color: 'text-green-600 bg-green-50 border-green-200' };
-  if (diff < 0) return { result: 'loss', icon: TrendingDown, color: 'text-red-600 bg-red-50 border-red-200' };
-  return { result: 'draw', icon: Minus, color: 'text-amber-600 bg-amber-50 border-amber-200' };
-};
-
-// Variation 1: Timeline Style
-const TimelineRecommendations = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <div className="w-4 h-4 bg-blue-500 rounded"></div>
-        Variation 1: Timeline Quarter Analysis
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-6">
-        {[1, 2, 3, 4].map(quarter => {
-          const scores = sampleQuarterScores[quarter];
-          const quarterInfo = getQuarterResult(quarter);
-          const Icon = quarterInfo.icon;
-          
-          return (
-            <div key={quarter} className="flex items-start gap-4">
-              {/* Quarter Header */}
-              <div className={`flex-shrink-0 w-20 p-3 rounded-lg border ${quarterInfo.color}`}>
-                <div className="text-center">
-                  <div className="text-sm font-medium">Q{quarter}</div>
-                  <div className="text-lg font-bold">{scores.team}-{scores.opponent}</div>
-                  <Icon className="h-4 w-4 mx-auto mt-1" />
-                </div>
-              </div>
-
-              {/* Position Players */}
-              <div className="flex-1">
-                <div className="grid grid-cols-7 gap-2">
-                  {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => {
-                    const player = samplePlayerPositions[quarter][position];
-                    const isShooter = ['GS', 'GA'].includes(position);
-                    
-                    return (
-                      <div 
-                        key={position}
-                        className="p-2 border rounded-lg bg-white shadow-sm"
-                        style={{ borderColor: getPlayerColor(player.name) + '40' }}
-                      >
-                        <div className="text-xs font-medium text-center mb-1">{position}</div>
-                        <div 
-                          className="text-xs text-center font-medium p-1 rounded text-white"
-                          style={{ backgroundColor: getPlayerColor(player.name) }}
-                        >
-                          {player.name}
-                        </div>
-                        {isShooter && (
-                          <div className="text-xs text-center mt-1">
-                            <span className="text-green-600">{player.goals}g</span>
-                            {player.missed > 0 && <span className="text-red-500 ml-1">{player.missed}m</span>}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Variation 2: Grid Layout
-const GridRecommendations = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <div className="w-4 h-4 bg-green-500 rounded"></div>
-        Variation 2: Grid Quarter Comparison
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map(quarter => {
-          const scores = sampleQuarterScores[quarter];
-          const quarterInfo = getQuarterResult(quarter);
-          
-          return (
-            <div key={quarter} className={`p-4 rounded-lg border-2 ${quarterInfo.color}`}>
-              <div className="text-center mb-3">
-                <h3 className="font-bold">Quarter {quarter}</h3>
-                <div className="text-2xl font-bold">{scores.team} - {scores.opponent}</div>
-                <Badge variant={quarterInfo.result === 'win' ? 'default' : quarterInfo.result === 'loss' ? 'destructive' : 'secondary'}>
-                  {quarterInfo.result === 'win' ? 'Won' : quarterInfo.result === 'loss' ? 'Lost' : 'Draw'}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
-                {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => {
-                  const player = samplePlayerPositions[quarter][position];
-                  const isShooter = ['GS', 'GA'].includes(position);
-                  
-                  return (
-                    <div key={position} className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{position}:</span>
-                      <div className="flex items-center gap-2">
-                        <span 
-                          className="px-2 py-1 rounded text-white text-xs"
-                          style={{ backgroundColor: getPlayerColor(player.name) }}
-                        >
-                          {player.name}
-                        </span>
-                        {isShooter && (
-                          <span className="text-xs text-muted-foreground">
-                            {player.goals}g/{player.missed}m
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Variation 3: Player-Focused
-const PlayerFocusedRecommendations = () => {
-  const allPlayers = new Set<string>();
-  Object.values(samplePlayerPositions).forEach(quarter => {
-    Object.values(quarter).forEach(player => allPlayers.add(player.name));
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-purple-500 rounded"></div>
-          Variation 3: Player Performance Analysis
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {Array.from(allPlayers).map(playerName => (
-            <div key={playerName} className="border rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div 
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: getPlayerColor(playerName) }}
-                ></div>
-                <h3 className="font-bold">{playerName}</h3>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map(quarter => {
-                  const position = Object.keys(samplePlayerPositions[quarter]).find(
-                    pos => samplePlayerPositions[quarter][pos].name === playerName
-                  );
-                  const player = position ? samplePlayerPositions[quarter][position] : null;
-                  const scores = sampleQuarterScores[quarter];
-                  const quarterInfo = getQuarterResult(quarter);
-                  
-                  return (
-                    <div key={quarter} className={`p-3 rounded border ${quarterInfo.color}`}>
-                      <div className="text-center">
-                        <div className="text-sm font-medium">Q{quarter}</div>
-                        <div className="text-lg font-bold">{scores.team}-{scores.opponent}</div>
-                        {player ? (
-                          <div className="mt-2">
-                            <Badge variant="outline">{position}</Badge>
-                            {['GS', 'GA'].includes(position) && (
-                              <div className="text-xs mt-1">
-                                {player.goals}g/{player.missed}m
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-muted-foreground mt-2">Not playing</div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Variation 4: Court Layout Style
-const CourtLayoutRecommendations = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <div className="w-4 h-4 bg-orange-500 rounded"></div>
-        Variation 4: Court Position Layout
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-8">
-        {[1, 2, 3, 4].map(quarter => {
-          const scores = sampleQuarterScores[quarter];
-          const quarterInfo = getQuarterResult(quarter);
-          const Icon = quarterInfo.icon;
-          
-          return (
-            <div key={quarter}>
-              {/* Quarter Header */}
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <div className={`px-4 py-2 rounded-lg border ${quarterInfo.color}`}>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold">Quarter {quarter}</span>
-                    <span className="text-2xl font-bold">{scores.team} - {scores.opponent}</span>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Court Layout */}
-              <div className="relative bg-gray-50 rounded-lg p-6">
-                <div className="grid grid-cols-3 gap-8 h-32">
-                  {/* Attack Third */}
-                  <div className="border-r-2 border-dashed border-gray-300 relative">
-                    <div className="text-xs text-center font-medium text-gray-500 mb-2">Attack</div>
-                    <div className="space-y-3">
-                      {['GS', 'GA'].map(position => {
-                        const player = samplePlayerPositions[quarter][position];
-                        return (
-                          <div 
-                            key={position}
-                            className="p-2 border rounded text-center text-white text-xs"
-                            style={{ backgroundColor: getPlayerColor(player.name) }}
-                          >
-                            <div className="font-bold">{position}</div>
-                            <div>{player.name}</div>
-                            <div>{player.goals}g/{player.missed}m</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Center Third */}
-                  <div className="border-r-2 border-dashed border-gray-300 relative">
-                    <div className="text-xs text-center font-medium text-gray-500 mb-2">Center</div>
-                    <div className="space-y-3">
-                      {['WA', 'C', 'WD'].map(position => {
-                        const player = samplePlayerPositions[quarter][position];
-                        return (
-                          <div 
-                            key={position}
-                            className="p-2 border rounded text-center text-white text-xs"
-                            style={{ backgroundColor: getPlayerColor(player.name) }}
-                          >
-                            <div className="font-bold">{position}</div>
-                            <div>{player.name}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Defense Third */}
-                  <div className="relative">
-                    <div className="text-xs text-center font-medium text-gray-500 mb-2">Defense</div>
-                    <div className="space-y-3">
-                      {['GD', 'GK'].map(position => {
-                        const player = samplePlayerPositions[quarter][position];
-                        return (
-                          <div 
-                            key={position}
-                            className="p-2 border rounded text-center text-white text-xs"
-                            style={{ backgroundColor: getPlayerColor(player.name) }}
-                          >
-                            <div className="font-bold">{position}</div>
-                            <div>{player.name}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Variation 5: Compact Summary
-const CompactSummaryRecommendations = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <div className="w-4 h-4 bg-red-500 rounded"></div>
-        Variation 5: Compact Performance Summary
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left p-2">Position</th>
-              {[1, 2, 3, 4].map(quarter => (
-                <th key={quarter} className="text-center p-2">
-                  <div>Q{quarter}</div>
-                  <div className="text-sm font-normal">
-                    {sampleQuarterScores[quarter].team}-{sampleQuarterScores[quarter].opponent}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => (
-              <tr key={position} className="border-b">
-                <td className="p-2 font-medium">{position}</td>
-                {[1, 2, 3, 4].map(quarter => {
-                  const player = samplePlayerPositions[quarter][position];
-                  const scores = sampleQuarterScores[quarter];
-                  const quarterInfo = getQuarterResult(quarter);
-                  const isShooter = ['GS', 'GA'].includes(position);
-                  
-                  return (
-                    <td key={quarter} className={`p-2 text-center border ${quarterInfo.color}`}>
-                      <div 
-                        className="inline-block px-2 py-1 rounded text-white text-xs mb-1"
-                        style={{ backgroundColor: getPlayerColor(player.name) }}
-                      >
-                        {player.name}
-                      </div>
-                      {isShooter && (
-                        <div className="text-xs">
-                          <span className="text-green-600">{player.goals}g</span>
-                          <span className="text-red-500 ml-1">{player.missed}m</span>
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div className="mt-4 flex justify-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-50 border border-green-200 rounded"></div>
-          <span className="text-xs">Won Quarter</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-50 border border-red-200 rounded"></div>
-          <span className="text-xs">Lost Quarter</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-amber-50 border border-amber-200 rounded"></div>
-          <span className="text-xs">Draw Quarter</span>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 export default function RecommendationExamples() {
-  return (
-    <PageTemplate 
-      title="Lineup Recommendations" 
-      breadcrumbs={[
-        { label: "Component Examples", href: "/component-examples" },
-        { label: "Lineup Recommendations" }
-      ]}
-    >
-      <div className="space-y-8">
-        <div className="prose max-w-none">
-          <p className="text-lg text-gray-700">
-            Five different ways to display player positions alongside quarter scores for tactical analysis. 
-            Each variation offers a different perspective on how lineups performed during specific quarters.
-          </p>
-        </div>
+  const getTrendIcon = (current: number, previous: number) => {
+    if (current > previous) return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (current < previous) return <TrendingDown className="h-4 w-4 text-red-600" />;
+    return <Minus className="h-4 w-4 text-gray-400" />;
+  };
 
-        <TimelineRecommendations />
-        <GridRecommendations />
-        <PlayerFocusedRecommendations />
-        <CourtLayoutRecommendations />
-        <CompactSummaryRecommendations />
+  return (
+    <PageTemplate title="Recommendation Examples">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-600" />
+              Game Performance Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold mb-2">Quarter-by-Quarter Breakdown</h4>
+                <div className="space-y-2">
+                  {Object.entries(sampleQuarterScores).map(([quarter, scores]) => (
+                    <div key={quarter} className="flex justify-between items-center p-2 rounded bg-gray-50">
+                      <span>Q{quarter}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-blue-50">
+                          {scores.team} - {scores.opponent}
+                        </Badge>
+                        {getTrendIcon(scores.team, scores.opponent)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Key Performance Indicators</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Total Score</span>
+                    <Badge className="bg-green-100 text-green-800">32 - 27</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shooting Accuracy</span>
+                    <Badge className="bg-blue-100 text-blue-800">76%</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Strongest Quarter</span>
+                    <Badge className="bg-purple-100 text-purple-800">Q3 (+8)</Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Implementation Notes</CardTitle>
+            <CardTitle>Position Analysis by Quarter</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 text-sm">
-              <div>
-                <h4 className="font-semibold">Data Requirements:</h4>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Quarter-by-quarter official scores (team vs opponent)</li>
-                  <li>Player positions for each quarter</li>
-                  <li>Goals for/against by position (for shooters primarily)</li>
-                  <li>Player identification and colors</li>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {Object.entries(samplePlayerPositions).map(([quarter, positions]) => (
+                <div key={quarter} className="space-y-3">
+                  <h4 className="font-semibold text-center">Quarter {quarter}</h4>
+                  <Separator />
+                  <div className="space-y-2">
+                    {Object.entries(positions).map(([position, player]) => (
+                      <div key={position} className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {position}
+                          </Badge>
+                          <span>{player.name}</span>
+                        </div>
+                        {player.goals > 0 && (
+                          <Badge className="bg-green-50 text-green-700 text-xs">
+                            {player.goals}G
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tactical Recommendations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold text-green-700 mb-2">Strengths</h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• Strong Q3 performance (+8 margin)</li>
+                  <li>• Effective shooting combination</li>
+                  <li>• Good position rotations</li>
                 </ul>
               </div>
               
-              <div>
-                <h4 className="font-semibold">Key Features:</h4>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Visual correlation between quarter results and player lineups</li>
-                  <li>Color-coded players for easy tracking across quarters</li>
-                  <li>Clear win/loss/draw indicators for each quarter</li>
-                  <li>Shooter statistics prominently displayed</li>
-                  <li>Multiple layout options for different use cases</li>
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold text-amber-700 mb-2">Areas for Improvement</h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• Q2 defensive pressure</li>
+                  <li>• Shooting accuracy in Q4</li>
+                  <li>• Transition defense</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold text-blue-700 mb-2">Next Game Focus</h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• Maintain Q3 intensity</li>
+                  <li>• Practice Q2 scenarios</li>
+                  <li>• Review shooting technique</li>
                 </ul>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </PageTemplate>
-  );
-}
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Printer, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-
-export default function RecommendationExamples() {
-  // Sample data matching your actual data structure from console logs
-  const samplePlayers = [
-    {
-      id: 61,
-      displayName: "Emma Wilson",
-      firstName: "Emma",
-      lastName: "Wilson",
-      positionPreferences: ["GA", "GS"],
-      avatarColor: "bg-blue-500",
-      active: true
-    },
-    {
-      id: 62,
-      displayName: "Sarah Johnson",
-      firstName: "Sarah",
-      lastName: "Johnson",
-      positionPreferences: ["C", "WA", "WD"],
-      avatarColor: "bg-green-600",
-      active: true
-    },
-    {
-      id: 64,
-      displayName: "Lily Chen",
-      firstName: "Lily",
-      lastName: "Chen",
-      positionPreferences: ["GK", "GD"],
-      avatarColor: "bg-purple-500",
-      active: true
-    },
-    {
-      id: 65,
-      displayName: "Mia Thompson",
-      firstName: "Mia",
-      lastName: "Thompson",
-      positionPreferences: ["WA", "C", "GA"],
-      avatarColor: "bg-orange-500",
-      active: true
-    },
-    {
-      id: 66,
-      displayName: "Zoe Parker",
-      firstName: "Zoe",
-      lastName: "Parker",
-      positionPreferences: ["GD", "WD"],
-      avatarColor: "bg-red-500",
-      active: true
-    },
-    {
-      id: 67,
-      displayName: "Kate Miller",
-      firstName: "Kate",
-      lastName: "Miller",
-      positionPreferences: ["GA", "WA"],
-      avatarColor: "bg-teal-500",
-      active: true
-    },
-    {
-      id: 68,
-      displayName: "Jessica Adams",
-      firstName: "Jessica",
-      lastName: "Adams",
-      positionPreferences: ["GK", "GD"],
-      avatarColor: "bg-pink-500",
-      active: true
-    }
-  ];
-
-  // Sample opponent and quarter scores based on console data
-  const upcomingOpponent = "Deep Creek Emeralds";
-  const quarterResults = [
-    { quarter: 1, teamScore: 5, opponentScore: 2, result: "win" },
-    { quarter: 2, teamScore: 2, opponentScore: 3, result: "loss" },
-    { quarter: 3, teamScore: 2, opponentScore: 1, result: "win" },
-    { quarter: 4, teamScore: 2, opponentScore: -1, result: "win" }
-  ];
-
-  // Sample position performance data from game stats
-  const positionPerformance = {
-    "GA": { goalsFor: 12, goalsAgainst: 0, rating: 8.2, quarters: [1, 3, 4] },
-    "GS": { goalsFor: 8, goalsAgainst: 0, rating: 7.8, quarters: [2, 4] },
-    "WA": { goalsFor: 0, goalsAgainst: 0, rating: 7.5, quarters: [1, 2, 3] },
-    "C": { goalsFor: 0, goalsAgainst: 0, rating: 8.0, quarters: [1, 2, 4] },
-    "WD": { goalsFor: 0, goalsAgainst: 2, rating: 7.2, quarters: [2, 3, 4] },
-    "GD": { goalsFor: 0, goalsAgainst: 3, rating: 6.8, quarters: [1, 3, 4] },
-    "GK": { goalsFor: 0, goalsAgainst: 1, rating: 7.0, quarters: [1, 2, 3] }
-  };
-
-  const getResultIcon = (result: string) => {
-    switch (result) {
-      case "win":
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
-      case "loss":
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
-      default:
-        return <Minus className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getResultColor = (result: string) => {
-    switch (result) {
-      case "win":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "loss":
-        return "bg-red-100 text-red-800 border-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  return (
-    <PageTemplate 
-      title="Lineup Recommendations" 
-      breadcrumbs={[
-        { label: "Component Examples", href: "/component-examples" },
-        { label: "Lineup Recommendations" }
-      ]}
-      actions={
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handlePrint}
-          className="no-print flex items-center gap-2"
-        >
-          <Printer className="h-4 w-4" />
-          Print Examples
-        </Button>
-      }
-    >
-      <Helmet>
-        <title>Lineup Recommendations - Component Library</title>
-        <meta name="description" content="5 different ways to display player positions compared to team quarter scores for lineup recommendations." />
-        <style type="text/css">{`
-          @media print {
-            .no-print {
-              display: none !important;
-            }
-            body {
-              font-size: 12px;
-              line-height: 1.3;
-            }
-            .prose {
-              max-width: none !important;
-            }
-            section {
-              break-inside: avoid;
-              page-break-inside: avoid;
-            }
-          }
-        `}</style>
-      </Helmet>
-
-      <div className="prose max-w-none mb-6">
-        <p className="text-lg text-gray-700">
-          5 different ways to display player positions compared to team quarter scores for upcoming opponent: <strong>{upcomingOpponent}</strong>
-        </p>
-      </div>
-
-      {/* Format 1: Quarter-by-Quarter Comparison Cards */}
-      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 1: Quarter-by-Quarter Comparison Cards</h2>
-        <p className="text-gray-700 mb-6">Players who performed in specific quarters with quarter results</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quarterResults.map((quarter) => (
-            <Card key={quarter.quarter} className="shadow-md">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between">
-                  <span>Quarter {quarter.quarter}</span>
-                  {getResultIcon(quarter.result)}
-                </CardTitle>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getResultColor(quarter.result)}`}>
-                  {quarter.teamScore}-{quarter.opponentScore}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {samplePlayers.slice(0, 3).map((player) => (
-                  <PlayerBox
-                    key={player.id}
-                    player={player}
-                    size="sm"
-                    showPositions={true}
-                    className="shadow-sm transition-shadow duration-200 hover:shadow-md"
-                    style={{ 
-                      borderColor: quarter.result === 'win' ? '#16a34a' : quarter.result === 'loss' ? '#dc2626' : '#6b7280',
-                      borderWidth: '2px'
-                    }}
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Format 2: Position Performance Grid */}
-      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 2: Position Performance Grid</h2>
-        <p className="text-gray-700 mb-6">Players grouped by positions with performance statistics</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Object.entries(positionPerformance).map(([position, perf]) => (
-            <Card key={position} className="shadow-md">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-center">
-                  <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                    {position}
-                  </Badge>
-                </CardTitle>
-                <div className="text-center text-sm text-gray-600">
-                  Goals: {perf.goalsFor}-{perf.goalsAgainst} | Rating: {perf.rating}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {samplePlayers
-                  .filter(player => player.positionPreferences.includes(position))
-                  .map((player) => (
-                    <PlayerBox
-                      key={player.id}
-                      player={player}
-                      size="sm"
-                      showPositions={false}
-                      stats={[
-                        { label: "Rating", value: perf.rating.toString() }
-                      ]}
-                      className="shadow-sm transition-shadow duration-200 hover:shadow-md"
-                      style={{ 
-                        borderColor: perf.rating >= 8 ? '#16a34a' : perf.rating >= 7 ? '#f59e0b' : '#dc2626',
-                        borderWidth: '2px'
-                      }}
-                    />
-                  ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Format 3: Recommended vs Alternative Lineups */}
-      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 3: Recommended vs Alternative Lineups</h2>
-        <p className="text-gray-700 mb-6">Side-by-side comparison of lineup options</p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recommended Lineup */}
-          <Card className="shadow-lg border-green-200">
-            <CardHeader className="bg-green-50">
-              <CardTitle className="text-green-800 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Recommended Lineup
-              </CardTitle>
-              <p className="text-sm text-green-700">Based on opponent performance analysis</p>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              {samplePlayers.slice(0, 4).map((player, index) => (
-                <PlayerBox
-                  key={player.id}
-                  player={player}
-                  size="md"
-                  showPositions={true}
-                  stats={[
-                    { label: "Match %", value: `${85 - index * 5}%` },
-                    { label: "Form", value: "Good" }
-                  ]}
-                  className="shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-                  style={{ 
-                    borderColor: '#16a34a',
-                    backgroundColor: '#f0fdf4',
-                    borderWidth: '2px'
-                  }}
-                />
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Alternative Lineup */}
-          <Card className="shadow-lg border-orange-200">
-            <CardHeader className="bg-orange-50">
-              <CardTitle className="text-orange-800 flex items-center gap-2">
-                <Minus className="h-5 w-5" />
-                Alternative Lineup
-              </CardTitle>
-              <p className="text-sm text-orange-700">More defensive approach</p>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              {samplePlayers.slice(3, 7).map((player, index) => (
-                <PlayerBox
-                  key={player.id}
-                  player={player}
-                  size="md"
-                  showPositions={true}
-                  stats={[
-                    { label: "Match %", value: `${75 - index * 3}%` },
-                    { label: "Form", value: "Fair" }
-                  ]}
-                  className="shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-                  style={{ 
-                    borderColor: '#f59e0b',
-                    backgroundColor: '#fffbeb',
-                    borderWidth: '2px'
-                  }}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Format 4: Timeline View with Quarter Rotations */}
-      <section className="mb-12 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 4: Timeline View with Quarter Rotations</h2>
-        <p className="text-gray-700 mb-6">Horizontal timeline showing player rotations through quarters</p>
-
-        <div className="space-y-6">
-          {quarterResults.map((quarter) => (
-            <div key={quarter.quarter} className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="text-lg px-3 py-1">
-                    Q{quarter.quarter}
-                  </Badge>
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getResultColor(quarter.result)}`}>
-                    {quarter.teamScore}-{quarter.opponentScore}
-                  </div>
-                </div>
-                {getResultIcon(quarter.result)}
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                {samplePlayers.map((player, index) => (
-                  <PlayerBox
-                    key={player.id}
-                    player={player}
-                    size="sm"
-                    showPositions={true}
-                    className="shadow-sm transition-shadow duration-200 hover:shadow-md"
-                    style={{ 
-                      borderColor: quarter.result === 'win' ? '#16a34a' : quarter.result === 'loss' ? '#dc2626' : '#6b7280',
-                      backgroundColor: index < 7 ? '#ffffff' : '#f3f4f6',
-                      opacity: index < 7 ? 1 : 0.6
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Format 5: Compact Summary with Key Insights */}
-      <section className="mb-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Format 5: Compact Summary with Key Insights</h2>
-        <p className="text-gray-700 mb-6">Quick overview focusing on top performers and recommendations</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Top Performers */}
-          <Card className="shadow-md border-blue-200">
-            <CardHeader className="pb-3 bg-blue-50">
-              <CardTitle className="text-blue-800 text-lg">Top Performers vs {upcomingOpponent}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-3">
-              {samplePlayers.slice(0, 3).map((player) => (
-                <PlayerBox
-                  key={player.id}
-                  player={player}
-                  size="sm"
-                  showPositions={true}
-                  stats={[
-                    { label: "Score", value: "8.5" }
-                  ]}
-                  className="shadow-sm"
-                  style={{ 
-                    borderColor: '#3b82f6',
-                    backgroundColor: '#eff6ff'
-                  }}
-                />
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Key Changes */}
-          <Card className="shadow-md border-purple-200">
-            <CardHeader className="pb-3 bg-purple-50">
-              <CardTitle className="text-purple-800 text-lg">Recommended Changes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-3">
-              {samplePlayers.slice(1, 4).map((player) => (
-                <PlayerBox
-                  key={player.id}
-                  player={player}
-                  size="sm"
-                  showPositions={true}
-                  className="shadow-sm"
-                  style={{ 
-                    borderColor: '#a855f7',
-                    backgroundColor: '#faf5ff'
-                  }}
-                />
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Bench Options */}
-          <Card className="shadow-md border-gray-200">
-            <CardHeader className="pb-3 bg-gray-50">
-              <CardTitle className="text-gray-800 text-lg">Bench Strength</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-3">
-              {samplePlayers.slice(4, 7).map((player) => (
-                <PlayerBox
-                  key={player.id}
-                  player={player}
-                  size="sm"
-                  showPositions={true}
-                  className="shadow-sm"
-                  style={{ 
-                    borderColor: '#6b7280',
-                    backgroundColor: '#f9fafb'
-                  }}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Summary Stats */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800">Match Summary vs {upcomingOpponent}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-white p-3 rounded-lg shadow-sm">
-              <div className="text-2xl font-bold text-green-600">11-5</div>
-              <div className="text-sm text-gray-600">Last Result</div>
-            </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm">
-              <div className="text-2xl font-bold text-blue-600">8.2</div>
-              <div className="text-sm text-gray-600">Avg Rating</div>
-            </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm">
-              <div className="text-2xl font-bold text-purple-600">65%</div>
-              <div className="text-sm text-gray-600">Win Rate</div>
-            </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm">
-              <div className="text-2xl font-bold text-orange-600">3-1</div>
-              <div className="text-sm text-gray-600">Q3 Strength</div>
-            </div>
-          </div>
-        </div>
-      </section>
     </PageTemplate>
   );
 }
