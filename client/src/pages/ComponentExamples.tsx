@@ -262,6 +262,14 @@ const examples: ExampleSection[] = [
 
   // Sport-Specific Components
   {
+    title: 'Lineup Recommendations',
+    description: 'Player position analysis compared to quarter scores for tactical insights.',
+    path: '/recommendation-examples',
+    icon: <Trophy className="h-5 w-5" />,
+    category: 'Sport-Specific',
+    status: 'Complete'
+  },
+  {
     title: 'Tournament Brackets',
     description: 'Playoff visualization, bracket layouts, and tournament progression displays.',
     path: '/tournament-bracket-examples',

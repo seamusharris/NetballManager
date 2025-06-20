@@ -68,6 +68,7 @@ import ScoreProgressionExamples from './pages/ScoreProgressionExamples';
 import SubstitutionFlowExamples from './pages/SubstitutionFlowExamples';
 import RosterManagementExamples from './pages/RosterManagementExamples';
 import LiveStatsInterfaceExamples from './pages/LiveStatsInterfaceExamples';
+import RecommendationExamples from './pages/RecommendationExamples';
 /**
  * Loading spinner component for suspense fallbacks
  */
@@ -178,11 +179,8 @@ function Router() {
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />
+        <Route path="/recommendation-examples" component={RecommendationExamples} />
         <Route path="/tournament-bracket-examples" component={TournamentBracketExamples} />
-        <Route path="/match-timeline-examples" component={MatchTimelineExamples} />
-        <Route path="/position-rotation-examples" component={PositionRotationExamples} />
-        <Route path="/team-formation-examples" component={TeamFormationExamples} />
-        <Route path="/score-progression-examples" component={ScoreProgressionExamples} />
         <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
         <Route path="/roster-management-examples" component={RosterManagementExamples} />
         <Route path="/live-stats-interface-examples" component={LiveStatsInterfaceExamples} />
