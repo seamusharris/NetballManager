@@ -835,7 +835,8 @@ export default function GamePreparation() {
                             const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
                               id: score.id,
                               gameId: score.gameId,
-                              teamId: score.teamId                              quarter: score.quarter,
+                              teamId: score.teamId,
+                              quarter: score.quarter,
                               score: score.score,
                               enteredBy: score.enteredBy,
                               enteredAt: score.enteredAt,
