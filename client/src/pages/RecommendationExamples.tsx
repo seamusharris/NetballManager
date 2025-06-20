@@ -724,6 +724,1000 @@ export default function RecommendationExamples() {
           </CardContent>
         </Card>
 
+        {/* Display 8: Attacking vs Defensive Formation Strength */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-orange-600" />
+              Display 8: Attack vs Defense Formation Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
+                const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
+                const { result, color } = getScoreResult(scores.team, scores.opponent);
+                
+                const attackPositions = ['GS', 'GA', 'WA'];
+                const defensePositions = ['GK', 'GD', 'WD'];
+                const centerPosition = ['C'];
+                
+                const attackStrength = attackPositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / attackPositions.length;
+                const defenseStrength = defensePositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / defensePositions.length;
+                const centerStrength = quarterData.C.effectiveness;
+
+                return (
+                  <div key={quarter} className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold">Quarter {quarter} Balance</h3>
+                      <Badge className={color}>
+                        {scores.team} - {scores.opponent}
+                      </Badge>
+                    </div>
+
+                    {/* Balance overview */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <div className="text-sm font-semibold text-red-700">Attack</div>
+                        <div className={`text-2xl font-bold ${getEffectivenessColor(attackStrength)}`}>
+                          {attackStrength.toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm font-semibold text-green-700">Center</div>
+                        <div className={`text-2xl font-bold ${getEffectivenessColor(centerStrength)}`}>
+                          {centerStrength}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="text-sm font-semibold text-blue-700">Defense</div>
+                        <div className={`text-2xl font-bold ${getEffectivenessColor(defenseStrength)}`}>
+                          {defenseStrength.toFixed(0)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Detailed breakdown */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* Attack third */}
+                      <div className="space-y-2">
+                        {attackPositions.map(pos => {
+                          const data = quarterData[pos as keyof typeof quarterData];
+                          return (
+                            <div key={pos} className="flex items-center gap-2 p-2 bg-red-50 rounded">
+                              <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                              <PlayerBox player={data.player} size="xs" showPositions={false} />
+                              <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                {data.effectiveness}%
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Center third */}
+                      <div className="space-y-2">
+                        {centerPosition.map(pos => {
+                          const data = quarterData[pos as keyof typeof quarterData];
+                          return (
+                            <div key={pos} className="flex items-center gap-2 p-2 bg-green-50 rounded">
+                              <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                              <PlayerBox player={data.player} size="xs" showPositions={false} />
+                              <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                {data.effectiveness}%
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Defense third */}
+                      <div className="space-y-2">
+                        {defensePositions.map(pos => {
+                          const data = quarterData[pos as keyof typeof quarterData];
+                          return (
+                            <div key={pos} className="flex items-center gap-2 p-2 bg-blue-50 rounded">
+                              <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                              <PlayerBox player={data.player} size="xs" showPositions={false} />
+                              <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                {data.effectiveness}%
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Display 9: Formation Stability Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-teal-600" />
+              Display 9: Formation Stability & Player Rotation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
+                const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
+                const { result, color } = getScoreResult(scores.team, scores.opponent);
+                
+                // Calculate how many players stayed in same position vs previous quarter
+                const prevQuarter = parseInt(quarter) - 1;
+                let stabilityMetrics = { same: 0, moved: 0, new: 0 };
+                
+                if (prevQuarter >= 1) {
+                  const prevData = samplePlayerPositions[prevQuarter as keyof typeof samplePlayerPositions];
+                  Object.entries(quarterData).forEach(([pos, data]) => {
+                    const prevInSamePos = prevData[pos as keyof typeof prevData];
+                    if (prevInSamePos && prevInSamePos.player.id === data.player.id) {
+                      stabilityMetrics.same++;
+                    } else {
+                      // Check if player was in different position
+                      const wasInDifferentPos = Object.values(prevData).some(prev => prev.player.id === data.player.id);
+                      if (wasInDifferentPos) {
+                        stabilityMetrics.moved++;
+                      } else {
+                        stabilityMetrics.new++;
+                      }
+                    }
+                  });
+                }
+
+                const stabilityPercentage = ((stabilityMetrics.same / 7) * 100);
+
+                return (
+                  <div key={quarter} className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold">Quarter {quarter} Stability</h3>
+                        {prevQuarter >= 1 && (
+                          <div className="text-sm text-gray-600">
+                            vs Q{prevQuarter}: {stabilityMetrics.same} same, {stabilityMetrics.moved} moved, {stabilityMetrics.new} new
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <Badge className={color}>
+                          {scores.team} - {scores.opponent}
+                        </Badge>
+                        {prevQuarter >= 1 && (
+                          <div className="mt-1">
+                            <Badge className={stabilityPercentage >= 70 ? 'bg-green-100 text-green-800' : stabilityPercentage >= 40 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
+                              {stabilityPercentage.toFixed(0)}% stable
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Formation layout */}
+                    <div className="bg-teal-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* Attack positions */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-teal-700">Attack</h4>
+                          {['GS', 'GA'].map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            let statusColor = 'bg-white';
+                            let statusText = '';
+                            
+                            if (prevQuarter >= 1) {
+                              const prevData = samplePlayerPositions[prevQuarter as keyof typeof samplePlayerPositions];
+                              const prevInSamePos = prevData[pos as keyof typeof prevData];
+                              if (prevInSamePos && prevInSamePos.player.id === data.player.id) {
+                                statusColor = 'bg-green-100 border-green-300';
+                                statusText = 'Same';
+                              } else {
+                                const wasInDifferentPos = Object.values(prevData).some(prev => prev.player.id === data.player.id);
+                                if (wasInDifferentPos) {
+                                  statusColor = 'bg-yellow-100 border-yellow-300';
+                                  statusText = 'Moved';
+                                } else {
+                                  statusColor = 'bg-blue-100 border-blue-300';
+                                  statusText = 'New';
+                                }
+                              }
+                            }
+
+                            return (
+                              <div key={pos} className={`relative p-2 rounded border ${statusColor}`}>
+                                <div className="absolute -top-2 -left-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="text-xs text-center mt-1">
+                                  <Badge className={getRatingColor(data.rating)} size="sm">
+                                    {data.rating}
+                                  </Badge>
+                                  {statusText && (
+                                    <div className="text-xs text-gray-600 mt-1">{statusText}</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Center positions */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-teal-700">Center</h4>
+                          {['WA', 'C', 'WD'].map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            let statusColor = 'bg-white';
+                            let statusText = '';
+                            
+                            if (prevQuarter >= 1) {
+                              const prevData = samplePlayerPositions[prevQuarter as keyof typeof samplePlayerPositions];
+                              const prevInSamePos = prevData[pos as keyof typeof prevData];
+                              if (prevInSamePos && prevInSamePos.player.id === data.player.id) {
+                                statusColor = 'bg-green-100 border-green-300';
+                                statusText = 'Same';
+                              } else {
+                                const wasInDifferentPos = Object.values(prevData).some(prev => prev.player.id === data.player.id);
+                                if (wasInDifferentPos) {
+                                  statusColor = 'bg-yellow-100 border-yellow-300';
+                                  statusText = 'Moved';
+                                } else {
+                                  statusColor = 'bg-blue-100 border-blue-300';
+                                  statusText = 'New';
+                                }
+                              }
+                            }
+
+                            return (
+                              <div key={pos} className={`relative p-2 rounded border ${statusColor}`}>
+                                <div className="absolute -top-2 -left-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="text-xs text-center mt-1">
+                                  <Badge className={getRatingColor(data.rating)} size="sm">
+                                    {data.rating}
+                                  </Badge>
+                                  {statusText && (
+                                    <div className="text-xs text-gray-600 mt-1">{statusText}</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Defense positions */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-teal-700">Defense</h4>
+                          {['GD', 'GK'].map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            let statusColor = 'bg-white';
+                            let statusText = '';
+                            
+                            if (prevQuarter >= 1) {
+                              const prevData = samplePlayerPositions[prevQuarter as keyof typeof samplePlayerPositions];
+                              const prevInSamePos = prevData[pos as keyof typeof prevData];
+                              if (prevInSamePos && prevInSamePos.player.id === data.player.id) {
+                                statusColor = 'bg-green-100 border-green-300';
+                                statusText = 'Same';
+                              } else {
+                                const wasInDifferentPos = Object.values(prevData).some(prev => prev.player.id === data.player.id);
+                                if (wasInDifferentPos) {
+                                  statusColor = 'bg-yellow-100 border-yellow-300';
+                                  statusText = 'Moved';
+                                } else {
+                                  statusColor = 'bg-blue-100 border-blue-300';
+                                  statusText = 'New';
+                                }
+                              }
+                            }
+
+                            return (
+                              <div key={pos} className={`relative p-2 rounded border ${statusColor}`}>
+                                <div className="absolute -top-2 -left-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="text-xs text-center mt-1">
+                                  <Badge className={getRatingColor(data.rating)} size="sm">
+                                    {data.rating}
+                                  </Badge>
+                                  {statusText && (
+                                    <div className="text-xs text-gray-600 mt-1">{statusText}</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Display 10: Goal-Scoring Formation Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-600" />
+              Display 10: Goal-Scoring Formation Impact
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
+                const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
+                const { result, color } = getScoreResult(scores.team, scores.opponent);
+                
+                const totalGoals = Object.values(quarterData).reduce((sum, data) => sum + data.goals, 0);
+                const shootingPositions = ['GS', 'GA'];
+                const feedingPositions = ['WA', 'C'];
+                
+                const shootingGoals = shootingPositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].goals, 0);
+                const shootingEffectiveness = shootingPositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / shootingPositions.length;
+                const feedingEffectiveness = feedingPositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / feedingPositions.length;
+
+                return (
+                  <div key={quarter} className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold">Quarter {quarter} Scoring</h3>
+                        <div className="text-sm text-gray-600">
+                          {totalGoals} goals scored
+                        </div>
+                      </div>
+                      <Badge className={color}>
+                        {scores.team} - {scores.opponent}
+                      </Badge>
+                    </div>
+
+                    {/* Scoring metrics */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                        <div className="text-sm font-semibold text-yellow-700">Goals</div>
+                        <div className="text-2xl font-bold text-yellow-600">{totalGoals}</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <div className="text-sm font-semibold text-orange-700">Shooting</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(shootingEffectiveness)}`}>
+                          {shootingEffectiveness.toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm font-semibold text-green-700">Feeding</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(feedingEffectiveness)}`}>
+                          {feedingEffectiveness.toFixed(0)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Formation layout focused on attack */}
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* Shooting circle */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-yellow-700">Shooters</h4>
+                          {shootingPositions.map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            const goalContribution = totalGoals > 0 ? ((data.goals / totalGoals) * 100) : 0;
+                            
+                            return (
+                              <div key={pos} className="relative p-3 bg-white rounded border">
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span>Goals:</span>
+                                    <Badge className="bg-green-500 text-white" size="sm">
+                                      {data.goals}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Share:</span>
+                                    <span className="font-semibold">{goalContribution.toFixed(0)}%</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Effective:</span>
+                                    <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                      {data.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Feeding positions */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-yellow-700">Feeders</h4>
+                          {feedingPositions.map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            
+                            return (
+                              <div key={pos} className="relative p-3 bg-green-50 rounded border">
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(data.rating)} size="sm">
+                                      {data.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Effective:</span>
+                                    <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                      {data.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Support positions */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-yellow-700">Support</h4>
+                          {['WD', 'GD', 'GK'].map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            
+                            return (
+                              <div key={pos} className="relative p-2 bg-blue-50 rounded border">
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="xs" showPositions={false} />
+                                <div className="mt-1">
+                                  <Badge className={getRatingColor(data.rating)} size="sm">
+                                    {data.rating}
+                                  </Badge>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Display 11: Defensive Formation Strength */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-blue-600" />
+              Display 11: Defensive Formation Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
+                const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
+                const { result, color } = getScoreResult(scores.team, scores.opponent);
+                
+                const defensivePositions = ['GK', 'GD', 'WD'];
+                const transitionPositions = ['C', 'WA'];
+                const pressurePositions = ['GA', 'GS'];
+                
+                const defensiveStrength = defensivePositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / defensivePositions.length;
+                const transitionStrength = transitionPositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / transitionPositions.length;
+                const pressureStrength = pressurePositions.reduce((sum, pos) => sum + quarterData[pos as keyof typeof quarterData].effectiveness, 0) / pressurePositions.length;
+                
+                const opponentGoals = scores.opponent;
+                const defensiveImpact = opponentGoals <= 3 ? 'excellent' : opponentGoals <= 6 ? 'good' : opponentGoals <= 9 ? 'average' : 'needs work';
+
+                return (
+                  <div key={quarter} className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold">Quarter {quarter} Defense</h3>
+                        <div className="text-sm text-gray-600">
+                          Allowed {opponentGoals} goals - {defensiveImpact}
+                        </div>
+                      </div>
+                      <Badge className={color}>
+                        {scores.team} - {scores.opponent}
+                      </Badge>
+                    </div>
+
+                    {/* Defensive metrics */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="text-sm font-semibold text-blue-700">Defense</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(defensiveStrength)}`}>
+                          {defensiveStrength.toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm font-semibold text-green-700">Transition</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(transitionStrength)}`}>
+                          {transitionStrength.toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <div className="text-sm font-semibold text-red-700">Pressure</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(pressureStrength)}`}>
+                          {pressureStrength.toFixed(0)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Formation layout focused on defense */}
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* Front pressure */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-blue-700">Front Pressure</h4>
+                          {pressurePositions.map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            
+                            return (
+                              <div key={pos} className="relative p-3 bg-red-50 rounded border">
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(data.rating)} size="sm">
+                                      {data.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Pressure:</span>
+                                    <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                      {data.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Mid court transition */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-blue-700">Transition</h4>
+                          {transitionPositions.map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            
+                            return (
+                              <div key={pos} className="relative p-3 bg-green-50 rounded border">
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(data.rating)} size="sm">
+                                      {data.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Transition:</span>
+                                    <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                      {data.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Back line defense */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-blue-700">Back Defense</h4>
+                          {defensivePositions.map(pos => {
+                            const data = quarterData[pos as keyof typeof quarterData];
+                            
+                            return (
+                              <div key={pos} className="relative p-3 bg-blue-100 rounded border">
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <PlayerBox player={data.player} size="sm" showPositions={false} />
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(data.rating)} size="sm">
+                                      {data.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Defense:</span>
+                                    <Badge className={getEffectivenessColor(data.effectiveness)} size="sm">
+                                      {data.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Display 12: Formation Chemistry Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-purple-600" />
+              Display 12: Formation Chemistry & Connections
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
+                const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
+                const { result, color } = getScoreResult(scores.team, scores.opponent);
+                
+                // Calculate chemistry between adjacent positions
+                const connections = [
+                  { pos1: 'GS', pos2: 'GA', type: 'shooting' },
+                  { pos1: 'GA', pos2: 'WA', type: 'attack' },
+                  { pos1: 'WA', pos2: 'C', type: 'center' },
+                  { pos1: 'C', pos2: 'WD', type: 'center' },
+                  { pos1: 'WD', pos2: 'GD', type: 'defense' },
+                  { pos1: 'GD', pos2: 'GK', type: 'defense' }
+                ];
+
+                const chemistryScores = connections.map(conn => {
+                  const data1 = quarterData[conn.pos1 as keyof typeof quarterData];
+                  const data2 = quarterData[conn.pos2 as keyof typeof quarterData];
+                  const chemistry = (data1.effectiveness + data2.effectiveness) / 2;
+                  return { ...conn, chemistry, data1, data2 };
+                });
+
+                const overallChemistry = chemistryScores.reduce((sum, conn) => sum + conn.chemistry, 0) / chemistryScores.length;
+
+                return (
+                  <div key={quarter} className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold">Quarter {quarter} Chemistry</h3>
+                        <div className="text-sm text-gray-600">
+                          Overall: {overallChemistry.toFixed(0)}% chemistry
+                        </div>
+                      </div>
+                      <Badge className={color}>
+                        {scores.team} - {scores.opponent}
+                      </Badge>
+                    </div>
+
+                    {/* Chemistry overview */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <div className="text-sm font-semibold text-red-700">Attack Links</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(chemistryScores.filter(c => c.type === 'attack' || c.type === 'shooting').reduce((sum, c) => sum + c.chemistry, 0) / 2)}`}>
+                          {(chemistryScores.filter(c => c.type === 'attack' || c.type === 'shooting').reduce((sum, c) => sum + c.chemistry, 0) / 2).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm font-semibold text-green-700">Center Links</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(chemistryScores.filter(c => c.type === 'center').reduce((sum, c) => sum + c.chemistry, 0) / 2)}`}>
+                          {(chemistryScores.filter(c => c.type === 'center').reduce((sum, c) => sum + c.chemistry, 0) / 2).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="text-sm font-semibold text-blue-700">Defense Links</div>
+                        <div className={`text-xl font-bold ${getEffectivenessColor(chemistryScores.filter(c => c.type === 'defense').reduce((sum, c) => sum + c.chemistry, 0) / 2)}`}>
+                          {(chemistryScores.filter(c => c.type === 'defense').reduce((sum, c) => sum + c.chemistry, 0) / 2).toFixed(0)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Connection network */}
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="space-y-3">
+                        {chemistryScores.map((conn, idx) => {
+                          const connectionColor = conn.chemistry >= 80 ? 'border-green-400 bg-green-50' : 
+                                                conn.chemistry >= 70 ? 'border-yellow-400 bg-yellow-50' : 
+                                                'border-red-400 bg-red-50';
+
+                          return (
+                            <div key={idx} className={`p-3 rounded-lg border-2 ${connectionColor}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className={getPositionBadgeStyle(conn.pos1)}>{conn.pos1}</div>
+                                  <span className="text-gray-400">↔</span>
+                                  <div className={getPositionBadgeStyle(conn.pos2)}>{conn.pos2}</div>
+                                </div>
+                                <Badge className={getEffectivenessColor(conn.chemistry)}>
+                                  {conn.chemistry.toFixed(0)}% chemistry
+                                </Badge>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center gap-2">
+                                  <PlayerBox player={conn.data1.player} size="xs" showPositions={false} />
+                                  <div className="text-xs">
+                                    <Badge className={getRatingColor(conn.data1.rating)} size="sm">
+                                      {conn.data1.rating}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <PlayerBox player={conn.data2.player} size="xs" showPositions={false} />
+                                  <div className="text-xs">
+                                    <Badge className={getRatingColor(conn.data2.rating)} size="sm">
+                                      {conn.data2.rating}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Display 13: Formation Weakness Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              Display 13: Formation Weakness & Opportunity Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
+                const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
+                const { result, color } = getScoreResult(scores.team, scores.opponent);
+                
+                // Identify weaknesses and opportunities
+                const positionAnalysis = Object.entries(quarterData).map(([pos, data]) => ({
+                  position: pos,
+                  ...data,
+                  weakness: data.effectiveness < 70,
+                  opportunity: data.rating > 8.0 && data.effectiveness < 85
+                }));
+
+                const weakPositions = positionAnalysis.filter(p => p.weakness);
+                const opportunityPositions = positionAnalysis.filter(p => p.opportunity);
+                const strongPositions = positionAnalysis.filter(p => !p.weakness && !p.opportunity);
+
+                return (
+                  <div key={quarter} className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold">Quarter {quarter} Weaknesses</h3>
+                        <div className="text-sm text-gray-600">
+                          {weakPositions.length} weak, {opportunityPositions.length} opportunities, {strongPositions.length} strong
+                        </div>
+                      </div>
+                      <Badge className={color}>
+                        {scores.team} - {scores.opponent}
+                      </Badge>
+                    </div>
+
+                    {/* Summary metrics */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <div className="text-sm font-semibold text-red-700">Weaknesses</div>
+                        <div className="text-2xl font-bold text-red-600">{weakPositions.length}</div>
+                        <div className="text-xs text-red-600">positions</div>
+                      </div>
+                      <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                        <div className="text-sm font-semibold text-yellow-700">Opportunities</div>
+                        <div className="text-2xl font-bold text-yellow-600">{opportunityPositions.length}</div>
+                        <div className="text-xs text-yellow-600">to improve</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm font-semibold text-green-700">Strengths</div>
+                        <div className="text-2xl font-bold text-green-600">{strongPositions.length}</div>
+                        <div className="text-xs text-green-600">positions</div>
+                      </div>
+                    </div>
+
+                    {/* Formation layout with weakness indicators */}
+                    <div className="bg-orange-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* Attack third */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-orange-700">Attack</h4>
+                          {['GS', 'GA'].map(pos => {
+                            const analysis = positionAnalysis.find(p => p.position === pos);
+                            if (!analysis) return null;
+                            
+                            let indicatorColor = 'border-green-300 bg-green-50';
+                            let statusIcon = '✓';
+                            let statusText = 'Strong';
+                            
+                            if (analysis.weakness) {
+                              indicatorColor = 'border-red-400 bg-red-50';
+                              statusIcon = '⚠';
+                              statusText = 'Weak';
+                            } else if (analysis.opportunity) {
+                              indicatorColor = 'border-yellow-400 bg-yellow-50';
+                              statusIcon = '⭐';
+                              statusText = 'Opportunity';
+                            }
+
+                            return (
+                              <div key={pos} className={`relative p-3 rounded-lg border-2 ${indicatorColor}`}>
+                                <div className="absolute -top-2 -left-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <div className="absolute -top-2 -right-2">
+                                  <div className="text-lg">{statusIcon}</div>
+                                </div>
+                                
+                                <PlayerBox player={analysis.player} size="sm" showPositions={false} />
+                                
+                                <div className="mt-2 space-y-1">
+                                  <div className="text-xs font-semibold text-center">{statusText}</div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(analysis.rating)} size="sm">
+                                      {analysis.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Effective:</span>
+                                    <Badge className={getEffectivenessColor(analysis.effectiveness)} size="sm">
+                                      {analysis.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                  {analysis.goals > 0 && (
+                                    <div className="flex justify-between text-xs">
+                                      <span>Goals:</span>
+                                      <Badge className="bg-green-500 text-white" size="sm">
+                                        {analysis.goals}
+                                      </Badge>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Center third */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-orange-700">Center</h4>
+                          {['WA', 'C', 'WD'].map(pos => {
+                            const analysis = positionAnalysis.find(p => p.position === pos);
+                            if (!analysis) return null;
+                            
+                            let indicatorColor = 'border-green-300 bg-green-50';
+                            let statusIcon = '✓';
+                            let statusText = 'Strong';
+                            
+                            if (analysis.weakness) {
+                              indicatorColor = 'border-red-400 bg-red-50';
+                              statusIcon = '⚠';
+                              statusText = 'Weak';
+                            } else if (analysis.opportunity) {
+                              indicatorColor = 'border-yellow-400 bg-yellow-50';
+                              statusIcon = '⭐';
+                              statusText = 'Opportunity';
+                            }
+
+                            return (
+                              <div key={pos} className={`relative p-3 rounded-lg border-2 ${indicatorColor}`}>
+                                <div className="absolute -top-2 -left-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <div className="absolute -top-2 -right-2">
+                                  <div className="text-lg">{statusIcon}</div>
+                                </div>
+                                
+                                <PlayerBox player={analysis.player} size="sm" showPositions={false} />
+                                
+                                <div className="mt-2 space-y-1">
+                                  <div className="text-xs font-semibold text-center">{statusText}</div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(analysis.rating)} size="sm">
+                                      {analysis.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Effective:</span>
+                                    <Badge className={getEffectivenessColor(analysis.effectiveness)} size="sm">
+                                      {analysis.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Defense third */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-center text-orange-700">Defense</h4>
+                          {['GD', 'GK'].map(pos => {
+                            const analysis = positionAnalysis.find(p => p.position === pos);
+                            if (!analysis) return null;
+                            
+                            let indicatorColor = 'border-green-300 bg-green-50';
+                            let statusIcon = '✓';
+                            let statusText = 'Strong';
+                            
+                            if (analysis.weakness) {
+                              indicatorColor = 'border-red-400 bg-red-50';
+                              statusIcon = '⚠';
+                              statusText = 'Weak';
+                            } else if (analysis.opportunity) {
+                              indicatorColor = 'border-yellow-400 bg-yellow-50';
+                              statusIcon = '⭐';
+                              statusText = 'Opportunity';
+                            }
+
+                            return (
+                              <div key={pos} className={`relative p-3 rounded-lg border-2 ${indicatorColor}`}>
+                                <div className="absolute -top-2 -left-2">
+                                  <div className={getPositionBadgeStyle(pos)}>{pos}</div>
+                                </div>
+                                <div className="absolute -top-2 -right-2">
+                                  <div className="text-lg">{statusIcon}</div>
+                                </div>
+                                
+                                <PlayerBox player={analysis.player} size="sm" showPositions={false} />
+                                
+                                <div className="mt-2 space-y-1">
+                                  <div className="text-xs font-semibold text-center">{statusText}</div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Rating:</span>
+                                    <Badge className={getRatingColor(analysis.rating)} size="sm">
+                                      {analysis.rating}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span>Effective:</span>
+                                    <Badge className={getEffectivenessColor(analysis.effectiveness)} size="sm">
+                                      {analysis.effectiveness}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </PageTemplate>
   );
