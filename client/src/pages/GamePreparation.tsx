@@ -1307,14 +1307,7 @@ export default function GamePreparation() {
                           </div>
                         )}
                       </>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* No completed games message */}
-                {seasonGames.length === 0 && (
-                  <Card>
-                    <CardContent>
+                    ) : (
                       <div className="text-center py-8">
                         <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                         <p className="text-gray-600">No completed games found for this season</p>
@@ -1322,9 +1315,9 @@ export default function GamePreparation() {
                           Season games will appear here once they are completed
                         </p>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    )}
+                  </CardContent>
+                </Card>
               );
             })()}
           </TabsContent>
