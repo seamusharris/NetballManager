@@ -161,6 +161,13 @@ function TeamPositionAnalysis({
         });
 
         console.log(`Game ${game.id}, Quarter ${quarter}: Found ${Object.keys(positionLineup).length}/7 positions`, positionLineup);
+        
+        // Debug missing positions for Dingoes
+        if (Object.keys(positionLineup).length < 7) {
+          const missingPositions = positions.filter(pos => !positionLineup[pos]);
+          console.log(`Game ${game.id}, Quarter ${quarter}: Missing positions:`, missingPositions);
+          console.log(`Game ${game.id}, Quarter ${quarter}: Available roster entries:`, quarterRoster.map(r => ({ position: r.position, playerId: r.playerId })));
+        }
 
         // Only analyze complete lineups (all 7 positions filled)
         if (Object.keys(positionLineup).length === 7) {
