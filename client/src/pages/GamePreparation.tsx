@@ -837,8 +837,8 @@ export default function GamePreparation() {
                               score: score.score,
                               enteredBy: score.enteredBy,
                               enteredAt: score.enteredAt,
-                              updatedAt: score.```text
-notes
+                              updatedAt: score.updatedAt,
+                              notes: score.notes
                             })) : [];
 
                             // Calculate quarter scores for display
