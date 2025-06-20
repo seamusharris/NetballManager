@@ -441,6 +441,7 @@ export default function GamePreparation() {
         className="max-w-7xl mx-auto"
       >
         <div className="space-y-6">
+          <div>
         
       <Helmet>
         <title>Game Preparation - {opponent} | Team Management</title>
