@@ -183,6 +183,14 @@ function TeamPositionAnalysis({
         }
       });
 
+      // Debug: Check structure of first few stats
+      if (gameStats.length > 0) {
+        console.log(`Game ${game.id}: Sample stats structure:`, gameStats.slice(0, 2).map(s => ({
+          quarter: s.quarter,
+          properties: Object.keys(s).join(', ')
+        })));
+      }
+
       // Filter by selected quarter if specified
       const quartersToAnalyze = selectedQuarter === 'all' 
         ? Array.from(quarterData.keys()) 
@@ -245,9 +253,11 @@ function TeamPositionAnalysis({
 
           const lineupData = lineupMap.get(lineupKey)!;
 
-          // Calculate quarter performance
-          const quarterGoalsFor = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-          const quarterGoalsAgainst = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+          // Calculate quarter performance - use placeholder values if stats don't have goal data
+          const quarterGoalsFor = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || stat.goals || 1), 0) || 1;
+          const quarterGoalsAgainst = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0) || 0;
+          
+          console.log(`Game ${game.id}, Quarter ${quarter}: Stats analysis - ${quarterStats.length} stats, goals: ${quarterGoalsFor} for, ${quarterGoalsAgainst} against`);
 
           lineupData.totalGoalsFor += quarterGoalsFor;
           lineupData.totalGoalsAgainst += quarterGoalsAgainst;
@@ -267,13 +277,13 @@ function TeamPositionAnalysis({
 
           // Track opponent-specific performance
           let opponent = null;
-          const isHomeGame = game.homeClubId === currentClubId;
-          const isAwayGame = game.awayClubId === currentClubId;
+          const isHomeGame = game.homeClubId === currentClubId || game.home_club_id === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId || game.away_club_id === currentClubId;
 
           if (isHomeGame && !isAwayGame) {
-            opponent = game.awayTeamName;
+            opponent = game.awayTeamName || game.away_team_name;
           } else if (isAwayGame && !isHomeGame) {
-            opponent = game.homeTeamName;
+            opponent = game.homeTeamName || game.home_team_name;
           }
 
           if (opponent && opponent !== 'Bye') {
@@ -363,8 +373,16 @@ function TeamPositionAnalysis({
       }))
     });
 
-    setGeneralLineups(generalResults.slice(0, 15)); // Top 15
-    setOpponentSpecificLineups(opponentSpecificResults.slice(0, 20)); // Top 20
+    const finalGeneralLineups = generalResults.slice(0, 15);
+    const finalOpponentLineups = opponentSpecificResults.slice(0, 20);
+    
+    console.log('Setting state with lineups:', {
+      generalLineupsCount: finalGeneralLineups.length,
+      opponentLineupsCount: finalOpponentLineups.length
+    });
+    
+    setGeneralLineups(finalGeneralLineups); // Top 15
+    setOpponentSpecificLineups(finalOpponentLineups); // Top 20
 
     // Extract all unique opponents from the lineup data
     const allOpponents = new Set<string>();
