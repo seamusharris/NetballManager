@@ -440,15 +440,12 @@ export default function GamePreparation() {
         subtitle={game ? `Time: ${formatForPrint.time(game.time)} | ${game.venue || 'Venue TBD'}` : undefined}
         className="max-w-7xl mx-auto"
       >
-        <div className="space-y-6">
-          <div>
-        
-      <Helmet>
-        <title>Game Preparation - {opponent} | Team Management</title>
-        <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
-      </Helmet>
+        <Helmet>
+          <title>Game Preparation - {opponent} | Team Management</title>
+          <meta name="description" content={`Comprehensive game preparation for ${opponent} match`} />
+        </Helmet>
 
-      <div className="space-y-6">
+        <div className="space-y-6">
         {/* Header with Game Details */}
         <Card>
           <CardHeader>
@@ -2029,7 +2026,8 @@ export default function GamePreparation() {
             />
           </TabsContent>
         </Tabs>
-    </PrintWrapper>
+        </div>
+      </PrintWrapper>
     </PageTemplate>
   );
 }
