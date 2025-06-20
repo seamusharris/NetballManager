@@ -57,6 +57,56 @@ export default function PrintWrapper({
     <div className={className}>
       {/* Inject unified print CSS directly */}
       <style data-print-styles="wrapper">{UNIFIED_PRINT_CSS}</style>
+      
+      {/* Additional specific CSS to hide navigation elements we can see in the screenshot */}
+      <style data-print-styles="navigation-hide">{`
+        @media print {
+          /* Hide the specific sidebar structure visible in screenshot */
+          .layout > div:first-child,
+          div[class*="sidebar"],
+          div[class*="navigation"],
+          div:has(> div > a[href*="Club Dashboard"]),
+          div:has(> div > a[href*="Team Dashboard"]),
+          div:has(> div > a[href*="Games"]),
+          
+          /* Hide navigation sections by content */
+          div:has(> h2:contains("NAVIGATION")),
+          div:has(> div:contains("Club Dashboard")),
+          div:has(> div:contains("Team Dashboard")),
+          
+          /* Hide any flex container that might be the sidebar */
+          .flex > div:first-child:has(nav),
+          .flex > aside,
+          
+          /* Target by typical sidebar positioning */
+          div[style*="width: 250px"],
+          div[style*="width: 240px"],
+          div[style*="width: 200px"],
+          
+          /* Hide breadcrumb navigation */
+          nav[aria-label="breadcrumb"],
+          ol[class*="breadcrumb"],
+          .breadcrumb-nav
+          {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+          }
+          
+          /* Ensure main content takes full width */
+          main,
+          .main-content,
+          .page-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+          }
+        }
+      `}</style>
 
       {/* Print/PDF Controls */}
       {(showPrintButton || showPDFButton) && (

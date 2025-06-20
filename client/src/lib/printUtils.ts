@@ -57,7 +57,7 @@ export const UNIFIED_PRINT_CSS = `
       -webkit-print-color-adjust: exact;
     }
     
-    /* CRITICAL: Hide ALL navigation elements */
+    /* CRITICAL: Hide ALL navigation elements including sidebar */
     nav,
     [role="navigation"],
     [role="banner"], 
@@ -67,6 +67,28 @@ export const UNIFIED_PRINT_CSS = `
     .page-actions,
     .no-print,
     .print-hide,
+    
+    /* Specific sidebar targeting - multiple approaches */
+    aside,
+    [data-sidebar],
+    .sidebar-content,
+    .sidebar-menu,
+    .sidebar-nav,
+    div[class*="sidebar"],
+    
+    /* Layout containers that might contain sidebar */
+    .layout-sidebar,
+    .app-sidebar,
+    .main-sidebar,
+    
+    /* Navigation sections */
+    section:has([role="navigation"]),
+    div:has(nav),
+    
+    /* Breadcrumb and navigation lists */
+    .breadcrumb,
+    .breadcrumb-nav,
+    ol[class*="breadcrumb"],
     
     /* Shadcn/Radix UI specific navigation */
     [data-radix-popper-content-wrapper],
@@ -85,14 +107,25 @@ export const UNIFIED_PRINT_CSS = `
     button:not(.print-keep):not([data-print-keep]),
     .btn:not(.print-keep):not([data-print-keep]),
     
-    /* Page chrome */
+    /* Page chrome and headers */
     .page-header .flex.justify-end,
-    .page-template > div:first-child > div:last-child
+    .page-template > div:first-child > div:last-child,
+    
+    /* Common layout elements to hide */
+    .header-actions,
+    .page-actions,
+    .toolbar,
+    .action-bar
     {
       display: none !important;
       visibility: hidden !important;
       height: 0 !important;
+      width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
       overflow: hidden !important;
+      position: absolute !important;
+      left: -9999px !important;
     }
     
     /* FORCE SHOW: Print content */
@@ -126,7 +159,7 @@ export const UNIFIED_PRINT_CSS = `
       opacity: 1 !important;
     }
     
-    /* Reset document structure */
+    /* Reset document structure for proper printing */
     html, body {
       font-size: 10pt !important;
       line-height: 1.3 !important;
@@ -137,12 +170,23 @@ export const UNIFIED_PRINT_CSS = `
       width: 100% !important;
       max-width: none !important;
       overflow: visible !important;
+      height: auto !important;
     }
     
-    /* Content structure */
+    /* Force single column layout */
+    body * {
+      position: static !important;
+      float: none !important;
+    }
+    
+    /* Content structure - ensure full width */
     .print-content,
     main,
-    [data-radix-tabs-content] {
+    [data-radix-tabs-content],
+    .page-container,
+    .layout,
+    .main-content {
+      display: block !important;
       width: 100% !important;
       max-width: none !important;
       margin: 0 !important;
@@ -150,6 +194,20 @@ export const UNIFIED_PRINT_CSS = `
       box-shadow: none !important;
       border: none !important;
       background: white !important;
+      position: static !important;
+      left: auto !important;
+      right: auto !important;
+      top: auto !important;
+    }
+    
+    /* Ensure content flows naturally across pages */
+    .print-content > *,
+    main > *,
+    [data-radix-tabs-content] > * {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
+      max-width: none !important;
     }
     
     /* Typography hierarchy */
@@ -230,15 +288,19 @@ export const UNIFIED_PRINT_CSS = `
       background: white !important;
     }
     
-    /* Grid layouts */
+    /* Grid layouts - convert to linear flow */
     .grid {
       display: block !important;
+      columns: 1 !important;
+      column-gap: 0 !important;
     }
     
     .grid > * {
       display: block !important;
-      margin-bottom: 4pt !important;
+      margin-bottom: 8pt !important;
       page-break-inside: avoid !important;
+      width: 100% !important;
+      break-inside: avoid !important;
     }
     
     /* Print-only content */
@@ -251,9 +313,28 @@ export const UNIFIED_PRINT_CSS = `
       page-break-before: always !important;
     }
     
-    /* Avoid breaks */
-    .card, .widget-container, .content-box {
+    /* Better page break handling */
+    .card, 
+    .widget-container, 
+    .content-box,
+    .game-preparation-section,
+    .analysis-widget,
+    .stats-section {
       page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      margin-bottom: 12pt !important;
+    }
+    
+    /* Force page breaks after major sections */
+    .section-separator {
+      page-break-after: always !important;
+    }
+    
+    /* Allow breaks in large content areas */
+    .large-content,
+    .stats-table,
+    .analysis-content {
+      page-break-inside: auto !important;
     }
   }
 `;
