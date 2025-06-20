@@ -103,6 +103,14 @@ const examples: ExampleSection[] = [
     category: 'Sport-Specific',
     status: 'Complete'
   },
+  {
+    title: 'Position Performance Analysis',
+    description: 'Compare quarter results with player positions across 5 different visualization approaches.',
+    path: '/recommendation-examples',
+    icon: <BarChart3 className="h-5 w-5" />,
+    category: 'Sport-Specific',
+    status: 'Complete'
+  },
 
   // Navigation
   {
