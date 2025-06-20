@@ -265,6 +265,52 @@ export default function GamePreparation() {
   // Fetch batch statistics for position-based analysis
   const { statsMap: batchStats, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIdsArray);
 
+  // Load all season games for the current team
+  const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery({
+    queryKey: ['seasonGames', currentTeamId, game?.seasonId],
+    queryFn: async () => {
+      if (!currentTeamId || !game?.seasonId) return [];
+
+      // Get all games for the current team using existing API
+      const headers: Record<string, string> = {};
+      if (currentTeamId) {
+        headers['x-current-team-id'] = currentTeamId.toString();
+      }
+      const allGames = await apiClient.get('/api/games', headers);
+
+      // Filter for completed games in the same season
+      const seasonMatches = allGames.filter((g: any) => {
+        // Skip the current game
+        if (g.id === game.id) return false;
+
+        // Only include completed games
+        if (!g.statusIsCompleted) return false;
+
+        // Only include games from the same season
+        return g.seasonId === game.seasonId;
+      });
+
+      console.log(`Season games for team ${currentTeamId} in season ${game.seasonId}:`, seasonMatches);
+      return seasonMatches;
+    },
+    enabled: !!game && !!currentTeamId
+  });
+
+  // Get batch scores for season games
+  const seasonGameIds = seasonGames?.map(g => g.id) || [];
+  const { data: seasonBatchScores, isLoading: isLoadingSeasonScores } = useQuery({
+    queryKey: ['games', 'scores', 'batch', seasonGameIds.join(',')],
+    queryFn: async () => {
+      if (seasonGameIds.length === 0) return {};
+      return apiClient.post('/api/games/scores/batch', { gameIds: seasonGameIds });
+    },
+    enabled: seasonGameIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch batch statistics for season games
+  const { statsMap: seasonBatchStats, isLoading: isLoadingSeasonStats } = useBatchGameStatistics(seasonGameIds);
+
   // Initialize default tactical notes and objectives
   useEffect(() => {
     if (game && tacticalNotes.length === 0) {
@@ -1318,52 +1364,6 @@ export default function GamePreparation() {
           {/* Season Tab */}
           <TabsContent value="season" className="space-y-6">
             {(() => {
-              // Load all season games for the current team
-              const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery({
-                queryKey: ['seasonGames', currentTeamId, game?.seasonId],
-                queryFn: async () => {
-                  if (!currentTeamId || !game?.seasonId) return [];
-
-                  // Get all games for the current team using existing API
-                  const headers: Record<string, string> = {};
-                  if (currentTeamId) {
-                    headers['x-current-team-id'] = currentTeamId.toString();
-                  }
-                  const allGames = await apiClient.get('/api/games', headers);
-
-                  // Filter for completed games in the same season
-                  const seasonMatches = allGames.filter((g: any) => {
-                    // Skip the current game
-                    if (g.id === game.id) return false;
-
-                    // Only include completed games
-                    if (!g.statusIsCompleted) return false;
-
-                    // Only include games from the same season
-                    return g.seasonId === game.seasonId;
-                  });
-
-                  console.log(`Season games for team ${currentTeamId} in season ${game.seasonId}:`, seasonMatches);
-                  return seasonMatches;
-                },
-                enabled: !!game && !!currentTeamId
-              });
-
-              // Get batch scores for season games
-              const seasonGameIds = seasonGames?.map(g => g.id) || [];
-              const { data: seasonBatchScores, isLoading: isLoadingSeasonScores } = useQuery({
-                queryKey: ['games', 'scores', 'batch', seasonGameIds.join(',')],
-                queryFn: async () => {
-                  if (seasonGameIds.length === 0) return {};
-                  return apiClient.post('/api/games/scores/batch', { gameIds: seasonGameIds });
-                },
-                enabled: seasonGameIds.length > 0,
-                staleTime: 5 * 60 * 1000,
-              });
-
-              // Fetch batch statistics for season games
-              const { statsMap: seasonBatchStats, isLoading: isLoadingSeasonStats } = useBatchGameStatistics(seasonGameIds);
-
               if (loadingSeasonGames) {
                 return (
                   <div className="flex items-center justify-center h-32">
@@ -1871,8 +1871,7 @@ export default function GamePreparation() {
                     )}
                   </CardContent>
                 </Card>
-              );
-            })()}
+            )()}
           </TabsContent>
 
           {/* Analysis Tab */}
