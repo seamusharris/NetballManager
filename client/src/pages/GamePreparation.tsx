@@ -1559,17 +1559,7 @@ export default function GamePreparation() {
                                   seasonGame.statusName === 'forfeit-loss') return;
 
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
-                              const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                                id: score.id,
-                                gameId: seasonGame.gameId,
-                                teamId: seasonGame.teamId,
-                                quarter: seasonGame.quarter,
-                                score: seasonGame.score,
-                                enteredBy: seasonGame.enteredBy,
-                                enteredAt: seasonGame.enteredAt,
-                                updatedAt: seasonGame.updatedAt,
-                                notes: seasonGame.notes
-                              })) : [];
+                              const transformedScores = Array.isArray(gameScores) ? gameScores : [];
 
                               const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
                               const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
