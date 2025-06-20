@@ -179,13 +179,54 @@ export default function ColorStyleGuide() {
     { name: "Forfeit", color: "#f87171", bgClass: "bg-red-400", description: "Soft red for forfeits" }
   ];
 
-  const actionColors = [
-    { name: "Create/Add", color: "#16a34a", bgClass: "bg-green-600", description: "Adding new items, creating records" },
-    { name: "Edit/Update", color: "#3b82f6", bgClass: "bg-blue-600", description: "Modifying existing records" },
-    { name: "Delete/Remove", color: "#dc2626", bgClass: "bg-red-600", description: "Removing items, destructive actions" },
-    { name: "View/Details", color: "#6b7280", bgClass: "bg-gray-600", description: "Viewing information, navigation" },
-    { name: "Manage/Settings", color: "#ea580c", bgClass: "bg-orange-600", description: "Administrative functions" },
-    { name: "Export/Share", color: "#7c3aed", bgClass: "bg-violet-600", description: "Data export, sharing features" }
+  // Action Color Schemes - Multiple Options
+  const actionColorsOption1 = [
+    { name: "Create/Add", color: "#16a34a", bgClass: "bg-green-600", icon: <CheckCircle className="h-4 w-4" />, description: "Classic green for positive creation actions" },
+    { name: "Edit/Update", color: "#3b82f6", bgClass: "bg-blue-600", icon: <Eye className="h-4 w-4" />, description: "Traditional blue for modification actions" },
+    { name: "Delete/Remove", color: "#dc2626", bgClass: "bg-red-600", icon: <AlertCircle className="h-4 w-4" />, description: "Standard red for destructive actions" },
+    { name: "View/Details", color: "#6b7280", bgClass: "bg-gray-600", icon: <Info className="h-4 w-4" />, description: "Neutral gray for viewing actions" },
+    { name: "Manage/Settings", color: "#ea580c", bgClass: "bg-orange-600", icon: <Zap className="h-4 w-4" />, description: "Orange for administrative functions" },
+    { name: "Export/Share", color: "#7c3aed", bgClass: "bg-violet-600", icon: <Star className="h-4 w-4" />, description: "Purple for sharing and export features" }
+  ];
+
+  // Option 2: Warm/Cool Temperature System
+  const actionColorsOption2 = [
+    { name: "Create/Add", color: "#059669", bgClass: "bg-emerald-600", icon: <CheckCircle className="h-4 w-4" />, description: "Cool emerald for stable creation" },
+    { name: "Edit/Update", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Eye className="h-4 w-4" />, description: "Cool cyan for calm modification" },
+    { name: "Delete/Remove", color: "#e11d48", bgClass: "bg-rose-600", icon: <AlertCircle className="h-4 w-4" />, description: "Warm rose for urgent destruction" },
+    { name: "View/Details", color: "#64748b", bgClass: "bg-slate-600", icon: <Info className="h-4 w-4" />, description: "Neutral slate for passive viewing" },
+    { name: "Manage/Settings", color: "#f97316", bgClass: "bg-orange-600", icon: <Zap className="h-4 w-4" />, description: "Warm orange for active management" },
+    { name: "Export/Share", color: "#a855f7", bgClass: "bg-purple-600", icon: <Star className="h-4 w-4" />, description: "Purple for external sharing" }
+  ];
+
+  // Option 3: Analogous Harmony (Blue-based)
+  const actionColorsOption3 = [
+    { name: "Create/Add", color: "#0ea5e9", bgClass: "bg-sky-600", icon: <CheckCircle className="h-4 w-4" />, description: "Sky blue for new beginnings" },
+    { name: "Edit/Update", color: "#3b82f6", bgClass: "bg-blue-600", icon: <Eye className="h-4 w-4" />, description: "Primary blue for modifications" },
+    { name: "Delete/Remove", color: "#6366f1", bgClass: "bg-indigo-600", icon: <AlertCircle className="h-4 w-4" />, description: "Indigo for serious removals" },
+    { name: "View/Details", color: "#8b5cf6", bgClass: "bg-violet-600", icon: <Info className="h-4 w-4" />, description: "Violet for information access" },
+    { name: "Manage/Settings", color: "#a855f7", bgClass: "bg-purple-600", icon: <Zap className="h-4 w-4" />, description: "Purple for configuration" },
+    { name: "Export/Share", color: "#d946ef", bgClass: "bg-fuchsia-600", icon: <Star className="h-4 w-4" />, description: "Fuchsia for external actions" }
+  ];
+
+  // Option 4: Semantic Intensity System
+  const actionColorsOption4 = [
+    { name: "Create/Add", color: "#22c55e", bgClass: "bg-green-500", icon: <CheckCircle className="h-4 w-4" />, description: "Bright green for positive creation" },
+    { name: "Edit/Update", color: "#06b6d4", bgClass: "bg-cyan-500", icon: <Eye className="h-4 w-4" />, description: "Bright cyan for active editing" },
+    { name: "Delete/Remove", color: "#ef4444", bgClass: "bg-red-500", icon: <AlertCircle className="h-4 w-4" />, description: "Bright red for clear warnings" },
+    { name: "View/Details", color: "#64748b", bgClass: "bg-slate-500", icon: <Info className="h-4 w-4" />, description: "Muted slate for passive actions" },
+    { name: "Manage/Settings", color: "#f59e0b", bgClass: "bg-amber-500", icon: <Zap className="h-4 w-4" />, description: "Bright amber for attention" },
+    { name: "Export/Share", color: "#8b5cf6", bgClass: "bg-violet-500", icon: <Star className="h-4 w-4" />, description: "Bright violet for special actions" }
+  ];
+
+  // Option 5: Monochromatic Green System
+  const actionColorsOption5 = [
+    { name: "Create/Add", color: "#15803d", bgClass: "bg-green-700", icon: <CheckCircle className="h-4 w-4" />, description: "Deep green for primary creation" },
+    { name: "Edit/Update", color: "#16a34a", bgClass: "bg-green-600", icon: <Eye className="h-4 w-4" />, description: "Medium green for modifications" },
+    { name: "Delete/Remove", color: "#84cc16", bgClass: "bg-lime-600", icon: <AlertCircle className="h-4 w-4" />, description: "Lime for gentle removal" },
+    { name: "View/Details", color: "#22c55e", bgClass: "bg-green-500", icon: <Info className="h-4 w-4" />, description: "Bright green for viewing" },
+    { name: "Manage/Settings", color: "#4ade80", bgClass: "bg-green-400", icon: <Zap className="h-4 w-4" />, description: "Light green for settings" },
+    { name: "Export/Share", color: "#86efac", bgClass: "bg-green-300", icon: <Star className="h-4 w-4" />, description: "Very light green for sharing" }
   ];
 
   const PositionColorScheme = ({ title, positions, description }: {
@@ -342,6 +383,61 @@ export default function ColorStyleGuide() {
                 style={{ backgroundColor: status.color }}
               />
               <div className="text-xs font-medium">{status.name}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const ActionColorScheme = ({ title, actions, description }: {
+    title: string;
+    actions: typeof actionColorsOption1;
+    description: string;
+  }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {actions.map(action => (
+            <div key={action.name} className="p-4 border rounded-lg">
+              <div className="flex items-center gap-3 mb-3">
+                <div 
+                  className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white`}
+                  style={{ backgroundColor: action.color }}
+                >
+                  {action.icon}
+                </div>
+                <div>
+                  <div className="font-medium">{action.name}</div>
+                  <div className="text-sm text-muted-foreground">{action.color}</div>
+                </div>
+              </div>
+              <p className="text-sm mb-3">{action.description}</p>
+              <div className="flex gap-2">
+                <Button size="sm" className={`${action.bgClass} hover:${action.bgClass}/90`}>
+                  {action.icon}
+                  <span className="ml-2">{action.name}</span>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-6 gap-2 p-4 bg-muted/20 rounded-lg">
+          <div className="text-xs font-semibold text-center mb-2 col-span-6">Action Hierarchy Visualization</div>
+          {actions.map(action => (
+            <div key={action.name} className="text-center">
+              <div 
+                className="w-8 h-8 rounded-full mx-auto mb-1 flex items-center justify-center text-white text-xs"
+                style={{ backgroundColor: action.color }}
+              >
+                {action.icon}
+              </div>
+              <div className="text-xs font-medium">{action.name.split('/')[0]}</div>
             </div>
           ))}
         </div>
@@ -800,43 +896,76 @@ export default function ColorStyleGuide() {
           </Card>
         </section>
 
-        {/* Action Colors */}
+        {/* Action Colors - Multiple Options */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Action Colors</h2>
-          <Card>
+          <h2 className="text-2xl font-bold mb-6">Action Color Schemes</h2>
+          <p className="text-muted-foreground mb-6">
+            Five different approaches to action button colors, each based on different color theory principles 
+            to provide variety while maintaining intuitive user experience and clear action semantics.
+          </p>
+          
+          <div className="space-y-8">
+            <ActionColorScheme
+              title="Option 1: Classic Semantic Actions"
+              actions={actionColorsOption1}
+              description="Traditional interface colors with established meanings - green for creation, red for destruction, blue for modification."
+            />
+            
+            <ActionColorScheme
+              title="Option 2: Warm/Cool Temperature System"
+              actions={actionColorsOption2}
+              description="Temperature-based approach - warm colors for active/urgent actions, cool colors for passive/safe actions."
+            />
+            
+            <ActionColorScheme
+              title="Option 3: Analogous Blue Harmony"
+              actions={actionColorsOption3}
+              description="Harmonious blue-violet spectrum providing consistent visual flow while maintaining action distinctions."
+            />
+            
+            <ActionColorScheme
+              title="Option 4: High-Contrast Semantic System"
+              actions={actionColorsOption4}
+              description="Bright, high-contrast colors for maximum visibility and clear action identification in busy interfaces."
+            />
+            
+            <ActionColorScheme
+              title="Option 5: Monochromatic Green System"
+              actions={actionColorsOption5}
+              description="Single-hue variation using different shades of green for a calm, cohesive action system."
+            />
+          </div>
+
+          <Card className="mt-6">
             <CardHeader>
-              <CardTitle>Consistent Action Button Colors</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Standardized colors for different types of user actions
-              </p>
+              <CardTitle>Action Color Theory Rationale</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {actionColors.map(action => (
-                  <div key={action.name} className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div 
-                        className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white`}
-                        style={{ backgroundColor: action.color }}
-                      >
-                        {action.name === 'Create/Add' && <CheckCircle className="h-5 w-5" />}
-                        {action.name === 'Edit/Update' && <Eye className="h-5 w-5" />}
-                        {action.name === 'Delete/Remove' && <AlertCircle className="h-5 w-5" />}
-                        {action.name === 'View/Details' && <Info className="h-5 w-5" />}
-                        {action.name === 'Manage/Settings' && <Zap className="h-5 w-5" />}
-                        {action.name === 'Export/Share' && <Star className="h-5 w-5" />}
-                      </div>
-                      <div>
-                        <div className="font-medium">{action.name}</div>
-                        <div className="text-sm text-muted-foreground">{action.color}</div>
-                      </div>
-                    </div>
-                    <p className="text-sm mb-3">{action.description}</p>
-                    <Button size="sm" className={`${action.bgClass} hover:${action.bgClass}/90 w-full`}>
-                      {action.name}
-                    </Button>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2 text-green-600">Creative Actions (Create/Add)</h4>
+                  <p className="text-sm text-muted-foreground">Consistently use green tones across schemes to reinforce positive associations with new content creation and growth.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-blue-600">Modification Actions (Edit/Update)</h4>
+                  <p className="text-sm text-muted-foreground">Blue family colors suggest trust, stability, and careful modification of existing content.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-red-600">Destructive Actions (Delete/Remove)</h4>
+                  <p className="text-sm text-muted-foreground">Red tones universally signal danger, stopping, and destructive actions requiring user caution.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-gray-600">Passive Actions (View/Details)</h4>
+                  <p className="text-sm text-muted-foreground">Neutral grays for non-committal actions that don't change data or require special attention.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-orange-600">Management Actions (Settings/Admin)</h4>
+                  <p className="text-sm text-muted-foreground">Orange and amber suggest caution, attention, and administrative control requiring consideration.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 text-purple-600">External Actions (Export/Share)</h4>
+                  <p className="text-sm text-muted-foreground">Purple family colors indicate special features, premium actions, or external integrations.</p>
+                </div>
               </div>
             </CardContent>
           </Card>
