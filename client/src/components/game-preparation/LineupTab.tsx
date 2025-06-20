@@ -65,6 +65,27 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   const { rostersMap, isLoading: isLoadingRosters } = useBatchRosterData(completedGameIds);
   const { statsMap: centralizedStats, isLoading: isLoadingStats } = useBatchGameStatistics(completedGameIds);
 
+  // ADDED: Fetch official scores for completed games
+  const [officialScoresMap, setOfficialScoresMap] = useState<Record<number, any>>({});
+
+  useEffect(() => {
+    const fetchOfficialScores = async () => {
+      try {
+        const response = await apiClient.post('/api/games/scores/batch', { gameIds: completedGameIds });
+        if (response) {
+          setOfficialScoresMap(response);
+          console.log('LineupTab: Loaded official scores for', Object.keys(response).length, 'games');
+        }
+      } catch (error) {
+        console.error('LineupTab: Failed to fetch batch official scores:', error);
+      }
+    };
+
+    if (completedGameIds.length > 0) {
+      fetchOfficialScores();
+    }
+  }, [completedGameIds]);
+
   // Fetch completed games for the team
   useEffect(() => {
     const fetchCompletedGames = async () => {
@@ -343,9 +364,6 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
         quarterData.get(roster.quarter).push(roster);
       });
 
-      // Get game stats for this game to calculate quarter performance
-      const gameStats = centralizedStats[gameId] || [];
-
       quarterData.forEach((quarterRoster, quarter) => {
         // Build position formation for this quarter
         const formation: Record<string, number> = {};
@@ -362,42 +380,43 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
         // Only consider complete lineups with all 7 positions
         if (Object.keys(formation).length === 7 && quarterPlayers.size === 7) {
-          // Check if at least 5 players in this formation are currently available
-          const availablePlayersInFormation = Object.values(formation).filter(playerId => 
-            availablePlayers.some(p => p.id === playerId)
-          ).length;
+          const gameOfficialScores = officialScoresMap[parseInt(gameId)];
+          if (!gameOfficialScores?.quarterScores) {
+            console.log(`LineupTab: No official scores for game ${gameId} quarter ${quarter}`);
+            return;
+          }
 
-          if (availablePlayersInFormation >= 5) {
-            // Calculate quarter-specific performance from stats
-            const quarterStats = gameStats.filter(stat => 
-              stat.quarter === quarter && stat.teamId === currentTeamId
-            );
-            const quarterGoalsFor = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-            const quarterGoalsAgainst = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+          const quarterScore = gameOfficialScores.quarterScores[quarter.toString()];
+          if (!quarterScore) {
+            console.log(`LineupTab: No quarter ${quarter} score for game ${gameId}`);
+            return;
+          }
 
-            // Create lineup key based on position assignments
-            const lineupKey = POSITIONS.map(pos => `${pos}:${formation[pos]}`).join('|');
+          const quarterGoalsFor = quarterScore.for || 0;
+          const quarterGoalsAgainst = quarterScore.against || 0;
 
-            if (!quarterLineupMap.has(lineupKey)) {
-              quarterLineupMap.set(lineupKey, {
-                formation,
-                quarters: [],
-                totalGoalsFor: 0,
-                totalGoalsAgainst: 0,
-                wins: 0,
-                availablePlayersCount: availablePlayersInFormation
-              });
-            }
+          // Create lineup key based on position assignments
+          const lineupKey = POSITIONS.map(pos => `${pos}:${formation[pos]}`).join('|');
 
-            const lineupData = quarterLineupMap.get(lineupKey);
-            lineupData.quarters.push({ gameId: parseInt(gameId), quarter });
-            lineupData.totalGoalsFor += quarterGoalsFor;
-            lineupData.totalGoalsAgainst += quarterGoalsAgainst;
+          if (!quarterLineupMap.has(lineupKey)) {
+            quarterLineupMap.set(lineupKey, {
+              formation,
+              quarters: [],
+              totalGoalsFor: 0,
+              totalGoalsAgainst: 0,
+              wins: 0,
+              availablePlayersCount: availablePlayersInFormation
+            });
+          }
 
-            // Count as win if this quarter had positive goal differential
-            if (quarterGoalsFor > quarterGoalsAgainst) {
-              lineupData.wins += 1;
-            }
+          const lineupData = quarterLineupMap.get(lineupKey);
+          lineupData.quarters.push({ gameId: parseInt(gameId), quarter });
+          lineupData.totalGoalsFor += quarterGoalsFor;
+          lineupData.totalGoalsAgainst += quarterGoalsAgainst;
+
+          // Count as win if this quarter had positive goal differential
+          if (quarterGoalsFor > quarterGoalsAgainst) {
+            lineupData.wins += 1;
           }
         }
       });
