@@ -278,13 +278,16 @@ export default function GamePreparation() {
       }
       const allGames = await apiClient.get('/api/games', headers);
 
-      // Filter for completed games in the same season
+      // Filter for completed games in the same season, excluding BYE games
       const seasonMatches = allGames.filter((g: any) => {
         // Skip the current game
         if (g.id === game.id) return false;
 
         // Only include completed games
         if (!g.statusIsCompleted) return false;
+
+        // Exclude BYE games (they don't count for wins/losses)
+        if (g.statusName === 'bye') return false;
 
         // Only include games from the same season
         return g.seasonId === game.seasonId;
@@ -482,7 +485,7 @@ export default function GamePreparation() {
             {(() => {
               // Calculate actual statistics based on historical games using proper win rate calculator
               const recentGames = historicalGames.slice(0, Math.min(5, historicalGames.length));
-              
+
               // Calculate win rate using official scores
               const winRateResult = calculateTeamWinRate(
                 historicalGames,
@@ -490,7 +493,7 @@ export default function GamePreparation() {
                 currentClubId,
                 batchScores || {}
               );
-              
+
               const winCount = winRateResult.wins;
               const winRate = winRateResult.winRate;
 
@@ -514,20 +517,20 @@ export default function GamePreparation() {
                           <span className="text-sm text-muted-foreground">Win Rate:</span>
                           <span className="font-medium">{winRate.toFixed(0)}%</span>
                         </div>
-                        
+
                         {/* Recent Form Streak */}
                         {(() => {
                           if (historicalGames.length === 0) return null;
-                          
+
                           // Calculate recent form (last 3 games)
                           const recentGames = historicalGames.slice(0, 3);
                           const recentResults = recentGames.map(game => {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length === 0) return 'U'; // Unknown
-                            
+
                             let ourScore = 0;
                             let theirScore = 0;
-                            
+
                             gameScores.forEach(score => {
                               if (score.teamId === currentTeamId) {
                                 ourScore += score.score;
@@ -535,10 +538,10 @@ export default function GamePreparation() {
                                 theirScore += score.score;
                               }
                             });
-                            
+
                             return ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D';
                           });
-                          
+
                           return (
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-muted-foreground">Recent Form:</span>
@@ -559,18 +562,18 @@ export default function GamePreparation() {
                             </div>
                           );
                         })()}
-                        
+
                         {/* Home vs Away Performance */}
                         {(() => {
                           if (historicalGames.length === 0) return null;
-                          
+
                           const homeGames = historicalGames.filter(g => g.homeTeamId === currentTeamId);
                           const awayGames = historicalGames.filter(g => g.awayTeamId === currentTeamId);
-                          
+
                           const homeWins = homeGames.filter(game => {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length === 0) return false;
-                            
+
                             let ourScore = 0;
                             let theirScore = 0;
                             gameScores.forEach(score => {
@@ -579,11 +582,11 @@ export default function GamePreparation() {
                             });
                             return ourScore > theirScore;
                           }).length;
-                          
+
                           const awayWins = awayGames.filter(game => {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length === 0) return false;
-                            
+
                             let ourScore = 0;
                             let theirScore = 0;
                             gameScores.forEach(score => {
@@ -592,7 +595,7 @@ export default function GamePreparation() {
                             });
                             return ourScore > theirScore;
                           }).length;
-                          
+
                           return (
                             <div className="text-xs text-gray-600 space-y-1">
                               <div className="flex justify-between">
@@ -602,7 +605,7 @@ export default function GamePreparation() {
                             </div>
                           );
                         })()}
-                        
+
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Most Recent:</span>
                           <span className="font-medium">
@@ -631,11 +634,11 @@ export default function GamePreparation() {
                             {historicalGames.length > 0 ? `${winRateResult.wins}W-${winRateResult.losses}L${winRateResult.draws > 0 ? `-${winRateResult.draws}D` : ''}` : 'No history'}
                           </span>
                         </div>
-                        
+
                         {(() => {
                           // Enhanced statistics calculation
                           if (historicalGames.length === 0 || !batchScores) return null;
-                          
+
                           let totalGoalsFor = 0;
                           let totalGoalsAgainst = 0;
                           let gamesWithScores = 0;
@@ -647,10 +650,10 @@ export default function GamePreparation() {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length > 0) {
                               gamesWithScores++;
-                              
+
                               let gameGoalsFor = 0;
                               let gameGoalsAgainst = 0;
-                              
+
                               gameScores.forEach(score => {
                                 if (score.teamId === currentTeamId) {
                                   gameGoalsFor += score.score;
@@ -658,11 +661,11 @@ export default function GamePreparation() {
                                   gameGoalsAgainst += score.score;
                                 }
                               });
-                              
+
                               totalGoalsFor += gameGoalsFor;
                               totalGoalsAgainst += gameGoalsAgainst;
                               margins.push(gameGoalsFor - gameGoalsAgainst);
-                              
+
                               if (gameGoalsFor > highestScore) highestScore = gameGoalsFor;
                               if (gameGoalsFor < lowestScore) lowestScore = gameGoalsFor;
                             }
@@ -681,21 +684,21 @@ export default function GamePreparation() {
                                 <span className="text-sm text-muted-foreground">Avg Margin:</span>
                                 <span className="font-medium">{avgMargin.toFixed(1)} goals</span>
                               </div>
-                              
+
                               <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">Avg Score:</span>
                                 <span className="font-medium">
                                   {avgGoalsFor.toFixed(1)} - {avgGoalsAgainst.toFixed(1)}
                                 </span>
                               </div>
-                              
+
                               <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">Score Range:</span>
                                 <span className="font-medium">
                                   {lowestScore} - {highestScore}
                                 </span>
                               </div>
-                              
+
                               {/* Performance Indicator */}
                               <div className="pt-2 border-t">
                                 <div className="flex justify-between items-center">
@@ -746,7 +749,7 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={players.length > 0 ? (Math.min(players.length, 7) / players.length * 100) : 0} className="h-2" />
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Lineup Completion</span>
@@ -754,7 +757,7 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={0} className="h-2" />
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Historical Analysis</span>
@@ -762,7 +765,7 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={historicalGames.length > 0 ? 100 : 0} className="h-2" />
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Tactical Planning</span>
@@ -770,7 +773,7 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={(tacticalNotes.length / 5) * 100} className="h-2" />
                         </div>
-                        
+
                         {/* Game Readiness Indicator */}
                         <div className="pt-2 border-t">
                           <div className="flex items-center justify-between">
@@ -780,21 +783,21 @@ export default function GamePreparation() {
                                 const availableCount = Math.min(players.length, 7);
                                 const hasHistory = historicalGames.length > 0;
                                 const hasTactics = tacticalNotes.length >= 3;
-                                
+
                                 const readinessScore = (
                                   (availableCount >= 7 ? 40 : (availableCount / 7) * 40) +
                                   (hasHistory ? 30 : 0) +
                                   (hasTactics ? 30 : (tacticalNotes.length / 3) * 30)
                                 );
-                                
+
                                 const level = readinessScore >= 80 ? 'Excellent' :
                                             readinessScore >= 60 ? 'Good' :
                                             readinessScore >= 40 ? 'Fair' : 'Poor';
-                                
+
                                 const color = readinessScore >= 80 ? 'text-green-600' :
                                             readinessScore >= 60 ? 'text-blue-600' :
                                             readinessScore >= 40 ? 'text-amber-600' : 'text-red-600';
-                                
+
                                 return (
                                   <>
                                     <span className={`text-sm font-medium ${color}`}>
@@ -832,8 +835,7 @@ export default function GamePreparation() {
                             const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
                               id: score.id,
                               gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
+                              teamId: score.teamId                              quarter: score.quarter,
                               score: score.score,
                               enteredBy: score.enteredBy,
                               enteredAt: score.enteredAt,
@@ -983,7 +985,7 @@ export default function GamePreparation() {
                           })}
                         </div>
 
-                        
+
 
                         {/* Quarter Average Performance Boxes + Goal Difference */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -1077,7 +1079,7 @@ export default function GamePreparation() {
                               </div>
                             );
                           })}
-                          
+
                           {/* Goal Difference Box - styled like quarter boxes */}
                           {(() => {
                             // Calculate overall goal difference for styling
@@ -1089,10 +1091,10 @@ export default function GamePreparation() {
                               const gameScores = batchScores?.[game.id] || [];
                               if (gameScores.length > 0) {
                                 gamesWithScores++;
-                                
+
                                 let gameGoalsFor = 0;
                                 let gameGoalsAgainst = 0;
-                                
+
                                 gameScores.forEach(score => {
                                   if (score.teamId === currentTeamId) {
                                     gameGoalsFor += score.score;
@@ -1100,7 +1102,7 @@ export default function GamePreparation() {
                                     gameGoalsAgainst += score.score;
                                   }
                                 });
-                                
+
                                 totalGoalsFor += gameGoalsFor;
                                 totalGoalsAgainst += gameGoalsAgainst;
                               }
@@ -1302,13 +1304,13 @@ export default function GamePreparation() {
                     </Card>
                   )}
 
-                  
 
-                  
 
-                  
 
-                  
+
+
+
+
 
                   {/* Quick Actions */}
                   <Card>
@@ -1638,7 +1640,7 @@ export default function GamePreparation() {
                               </div>
                             );
                           })}
-                          
+
                           {/* Season Goal Difference Box - styled like quarter boxes */}
                           {(() => {
                             // Calculate overall goal difference for styling
@@ -1647,13 +1649,18 @@ export default function GamePreparation() {
                             let gamesWithScores = 0;
 
                             seasonGames.forEach(seasonGame => {
+                              // Skip BYE and forfeit games for statistical calculations
+                              if (seasonGame.statusName === 'bye' || 
+                                  seasonGame.statusName === 'forfeit-win' || 
+                                  seasonGame.statusName === 'forfeit-loss') return;
+
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
                               if (gameScores.length > 0) {
                                 gamesWithScores++;
-                                
+
                                 let gameGoalsFor = 0;
                                 let gameGoalsAgainst = 0;
-                                
+
                                 gameScores.forEach(score => {
                                   if (score.teamId === currentTeamId) {
                                     gameGoalsFor += score.score;
@@ -1661,7 +1668,7 @@ export default function GamePreparation() {
                                     gameGoalsAgainst += score.score;
                                   }
                                 });
-                                
+
                                 totalGoalsFor += gameGoalsFor;
                                 totalGoalsAgainst += gameGoalsAgainst;
                               }
@@ -1745,6 +1752,11 @@ export default function GamePreparation() {
 
                               // Aggregate actual position stats from season games
                               seasonGames.forEach(seasonGame => {
+                                // Skip BYE and forfeit games for statistical calculations
+                                if (seasonGame.statusName === 'bye' || 
+                                    seasonGame.statusName === 'forfeit-win' || 
+                                    seasonGame.statusName === 'forfeit-loss') return;
+
                                 const gameStats = seasonBatchStats?.[seasonGame.id] || [];
                                 if (gameStats.length > 0) {
                                   gamesWithPositionStats++;
