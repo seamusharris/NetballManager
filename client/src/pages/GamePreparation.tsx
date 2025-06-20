@@ -423,7 +423,7 @@ export default function GamePreparation() {
 
   const gameTitle = game ? formatForPrint.gameTitle(
     game.date, 
-    getOpponentName(game) || 'Unknown Opponent', 
+    opponent || 'Unknown Opponent', 
     game.round
   ) : 'Game Preparation';
 
