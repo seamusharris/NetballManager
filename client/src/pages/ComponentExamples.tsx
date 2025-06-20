@@ -342,7 +342,24 @@ const examples: ExampleSection[] = [
     icon: <Palette className="h-5 w-5" />,
     category: 'Layouts',
     status: 'Complete'
-  }
+  },
+  // Foundational Components
+  {
+    title: 'Color Examples',
+    description: 'Color palette examples and theming patterns for consistent visual design.',
+    path: '/color-examples',
+    icon: <Palette className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
+  {
+    title: 'Color Style Guide',
+    description: 'Comprehensive color standardization guide including avatar, position, action, and status colors.',
+    path: '/color-style-guide',
+    icon: <Palette className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
 ];
 
 const getStatusColor = (status: string) => {

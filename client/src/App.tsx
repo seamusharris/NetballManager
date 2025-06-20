@@ -45,6 +45,7 @@ import ChartExamples from './pages/ChartExamples';
 const CourtLayoutExamples = lazy(() => import('./pages/CourtLayoutExamples'));
 import LayoutExamples from './pages/LayoutExamples';
 import ColorExamples from './pages/ColorExamples';
+import ColorStyleGuide from './pages/ColorStyleGuide';
 import TimelineExamples from './pages/TimelineExamples';
 import StatisticsCardExamples from './pages/StatisticsCardExamples';
 import TooltipExamples from './pages/TooltipExamples';
@@ -164,6 +165,7 @@ function Router() {
         </Route>
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
+        <Route path="/color-style-guide" component={ColorStyleGuide} />
         <Route path="/navigation-examples" component={NavigationExamples} />
         <Route path="/table-examples" component={TableExamples} />
         <Route path="/list-examples" component={ListExamples} />
