@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
-  // Health check endpoint
+  // Basic routes
   app.get('/api/health', async (req, res) => {
     try {
       const isHealthy = await checkPoolHealth();
