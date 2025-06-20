@@ -16,16 +16,17 @@ export function usePrint() {
   }, []);
   
   const printPage = useCallback((title?: string) => {
+    const originalTitle = document.title;
+    
     if (title) {
-      const originalTitle = document.title;
       document.title = title;
-      handleBeforePrint();
-      window.print();
+    }
+    
+    handleBeforePrint();
+    window.print();
+    
+    if (title) {
       document.title = originalTitle;
-      // Note: handleAfterPrint will be called by the print event listeners
-    } else {
-      handleBeforePrint();
-      window.print();
     }
   }, [handleBeforePrint]);
   

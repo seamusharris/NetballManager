@@ -447,7 +447,7 @@ export default function GamePreparation() {
 
         <div className="space-y-6 print-content">
         {/* Header with Game Details */}
-        <Card className="print-section">
+        <Card className={printClasses.section}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -489,14 +489,14 @@ export default function GamePreparation() {
           </TabsList>
           
           {/* Print section headers - only visible when printing */}
-          <div className="print-only print-show space-y-4" style={{ display: 'none' }}>
-            <div className="print-section">
-              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Game Overview</h2>
+          <div className={`${printClasses.printOnly} space-y-4`} style={{ display: 'none' }}>
+            <div className={printClasses.section}>
+              <h2 className={printClasses.subtitle}>Game Overview</h2>
             </div>
           </div>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6 print-show print-section" data-tabs-content="overview">
+          <TabsContent value="overview" className={`space-y-6 ${printClasses.printShow} ${printClasses.section}`} data-tabs-content="overview">
 
 
             {(() => {
@@ -1382,9 +1382,9 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Season Tab */}
-          <TabsContent value="season" className="space-y-6 print-show" data-tabs-content="season">
-            <div className="print-only print-show" style={{ display: 'none' }}>
-              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Season Performance</h2>
+          <TabsContent value="season" className={`space-y-6 ${printClasses.printShow}`} data-tabs-content="season">
+            <div className={printClasses.printOnly} style={{ display: 'none' }}>
+              <h2 className={printClasses.subtitle}>Season Performance</h2>
             </div>
             {(() => {
               if (loadingSeasonGames) {
