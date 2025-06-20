@@ -100,31 +100,22 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.warn('ClubContext: Stored club ID invalid, resetting...');
           localStorage.removeItem('currentClubId');
-          const warrandyteClub = userClubs.find(club => club.id === 54);
-          targetClubId = warrandyteClub ? 54 : userClubs[0]?.id;
+          const warrandyteClub = userClubs.find(club => club.clubId === 54);
+          targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
         }
       } else {
         // No stored club - prefer Warrandyte (54) if available
-        const warrandyteClub = userClubs.find(club => club.id === 54);
-        targetClubId = warrandyteClub ? 54 : userClubs[0]?.id;
+        const warrandyteClub = userClubs.find(club => club.clubId === 54);
+        targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
         console.log('ClubContext: No stored club, selecting:', targetClubId);
       }
 
-      // Set everything synchronously only if we have a valid club ID
-      if (targetClubId != null) {
-        localStorage.setItem('currentClubId', targetClubId.toString());
-        apiClient.setClubContext({ currentClubId: targetClubId });
-        startTransition(() => {
-          setCurrentClubId(targetClubId);
-        });
-      } else {
-        // No clubs available, clear any stored data
-        localStorage.removeItem('currentClubId');
-        apiClient.setClubContext({ currentClubId: null });
-        startTransition(() => {
-          setCurrentClubId(null);
-        });
-      }
+      // Set everything synchronously
+      localStorage.setItem('currentClubId', targetClubId.toString());
+      apiClient.setClubContext({ currentClubId: targetClubId });
+      startTransition(() => {
+        setCurrentClubId(targetClubId);
+      });
       setIsInitialized(true);
 
       console.log('ClubContext: Initialization completed with club:', targetClubId);

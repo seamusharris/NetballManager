@@ -17,8 +17,6 @@ import { apiClient } from '@/lib/apiClient';
 import CourtDisplay from '@/components/ui/court-display';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
-import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import type { Game, Player, Roster, Position } from '@shared/schema';
 
 interface LineupTabProps {
@@ -56,37 +54,6 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   });
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const { toast } = useToast();
-
-  // Get completed games for historical analysis
-  const [completedGames, setCompletedGames] = useState<Game[]>([]);
-  const [completedGameIds, setCompletedGameIds] = useState<number[]>([]);
-
-  // Fetch batch roster data for position effectiveness analysis
-  const { rostersMap, isLoading: isLoadingRosters } = useBatchRosterData(completedGameIds);
-  const { statsMap: centralizedStats, isLoading: isLoadingStats } = useBatchGameStatistics(completedGameIds);
-
-  // Fetch completed games for the team
-  useEffect(() => {
-    const fetchCompletedGames = async () => {
-      try {
-        const response = await apiClient.get('/api/games');
-        if (response && Array.isArray(response)) {
-          const completed = response.filter((g: Game) => 
-            g.statusId === 3 && // completed status
-            (g.homeTeamId === game.homeTeamId || g.awayTeamId === game.awayTeamId)
-          );
-          const recentCompleted = completed.slice(0, 10); // Use last 10 completed games
-          setCompletedGames(recentCompleted);
-          setCompletedGameIds(recentCompleted.map(g => g.id));
-          console.log('LineupTab: Found', recentCompleted.length, 'completed games for analysis');
-        }
-      } catch (error) {
-        console.error('Failed to fetch completed games:', error);
-      }
-    };
-
-    fetchCompletedGames();
-  }, [game.homeTeamId, game.awayTeamId]);
 
   // Initialize player availability
   useEffect(() => {
@@ -131,7 +98,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     } else {
       setRecommendations([]);
     }
-  }, [playerAvailability, players, rosters]);
+  }, [playerAvailability, players]);
 
   const generateLineupRecommendations = (availablePlayers: Player[]) => {
     try {
@@ -148,10 +115,6 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
       // Balanced lineup
       const balanced = generateBalancedLineup(availablePlayers);
       if (balanced) newRecommendations.push(balanced);
-
-      // Position effectiveness recommendations (if historical data is available)
-      const positionEffectivenessRecommendations = generatePositionEffectivenessRecommendations(availablePlayers);
-      newRecommendations.push(...positionEffectivenessRecommendations);
 
       setRecommendations(newRecommendations.sort((a, b) => b.effectiveness - a.effectiveness));
     } catch (error) {
@@ -257,272 +220,6 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
       notes: 'Balanced team composition with even distribution',
       availablePlayersOnly: true
     };
-  };
-
-  const generatePositionEffectivenessRecommendations = (availablePlayers: Player[]): LineupRecommendation[] => {
-    // Check if we have roster data loaded
-    if (isLoadingRosters || !rostersMap || Object.keys(rostersMap).length === 0) {
-      console.log('LineupTab: No roster data available for position effectiveness analysis');
-      return [];
-    }
-
-    console.log('LineupTab: Generating position effectiveness recommendations with', Object.keys(rostersMap).length, 'games of roster data');
-
-    const recommendations: LineupRecommendation[] = [];
-    
-    // Analyze historical roster data from centralized data
-    const positionLineups = analyzeHistoricalLineupsFromCentralized(availablePlayers, rostersMap);
-    
-    console.log('LineupTab: Found', positionLineups.length, 'complete historical lineups for analysis');
-    
-    if (positionLineups.length === 0) {
-      return [];
-    }
-    
-    // Generate recommendations based on different criteria
-    const highestScoring = generateHighestScoringLineup(positionLineups, availablePlayers);
-    if (highestScoring) recommendations.push(highestScoring);
-
-    const bestDefence = generateBestDefenceLineup(positionLineups, availablePlayers);
-    if (bestDefence) recommendations.push(bestDefence);
-
-    const mostWins = generateMostWinsLineup(positionLineups, availablePlayers);
-    if (mostWins) recommendations.push(mostWins);
-
-    const bestOverall = generateBestOverallLineup(positionLineups, availablePlayers);
-    if (bestOverall) recommendations.push(bestOverall);
-
-    console.log('LineupTab: Generated', recommendations.length, 'position effectiveness recommendations');
-    return recommendations;
-  };
-
-  const analyzeHistoricalLineupsFromCentralized = (availablePlayers: Player[], rostersMap: Record<string, any[]>) => {
-    const lineupAnalysis = [];
-    
-    console.log('LineupTab: Analyzing historical lineups from', Object.keys(rostersMap).length, 'games');
-    
-    // Process roster data from each game
-    Object.entries(rostersMap).forEach(([gameId, gameRosters]) => {
-      if (!gameRosters || gameRosters.length === 0) {
-        console.log(`LineupTab: No roster data for game ${gameId}`);
-        return;
-      }
-      
-      console.log(`LineupTab: Processing game ${gameId} with ${gameRosters.length} roster entries`);
-      
-      // Group by quarter
-      const quarterLineups = new Map();
-      gameRosters.forEach(roster => {
-        const key = `game${gameId}-q${roster.quarter}`;
-        if (!quarterLineups.has(key)) {
-          quarterLineups.set(key, []);
-        }
-        quarterLineups.get(key).push(roster);
-      });
-
-      console.log(`LineupTab: Game ${gameId} has ${quarterLineups.size} quarters with roster data`);
-
-      quarterLineups.forEach((quarterRoster, quarterKey) => {
-        // Build position formation for this quarter
-        const formation: Record<string, number> = {};
-        const quarterPlayers = new Set();
-
-        quarterRoster.forEach((entry: any) => {
-          // Find player by ID from the current team's players
-          const player = players.find(p => p.id === entry.playerId);
-          if (player && entry.position && POSITIONS.includes(entry.position)) {
-            formation[entry.position] = player.id;
-            quarterPlayers.add(player.id);
-          }
-        });
-
-        console.log(`LineupTab: ${quarterKey} formation has ${Object.keys(formation).length} positions filled`);
-
-        // Only consider complete lineups with all 7 positions
-        if (Object.keys(formation).length === 7 && quarterPlayers.size === 7) {
-          // Check if at least 5 players in this formation are currently available
-          const availablePlayersInFormation = Object.values(formation).filter(playerId => 
-            availablePlayers.some(p => p.id === playerId)
-          ).length;
-
-          console.log(`LineupTab: ${quarterKey} has ${availablePlayersInFormation}/7 players currently available`);
-
-          if (availablePlayersInFormation >= 5) { // Allow formations with mostly available players
-            // Find the corresponding game to get actual performance data
-            const gameData = completedGames.find(g => g.id === parseInt(gameId));
-            
-            // Calculate performance metrics
-            let goalsFor = 5.5; // Default average
-            let goalsAgainst = 4.5;
-            let won = false;
-            
-            if (gameData) {
-              if (gameData.teamGoals !== null && gameData.opponentGoals !== null) {
-                goalsFor = gameData.teamGoals / 4; // Average per quarter
-                goalsAgainst = gameData.opponentGoals / 4;
-                won = gameData.teamGoals > gameData.opponentGoals;
-              } else {
-                // Generate realistic mock data based on team performance
-                const teamStrength = Math.random();
-                goalsFor = 3 + (teamStrength * 8); // 3-11 goals per quarter
-                goalsAgainst = 2 + ((1 - teamStrength) * 6); // 2-8 goals per quarter
-                won = goalsFor > goalsAgainst;
-              }
-            }
-
-            // Create a modified formation with only available players
-            const availableFormation: Record<string, number> = {};
-            Object.entries(formation).forEach(([position, playerId]) => {
-              if (availablePlayers.some(p => p.id === playerId)) {
-                availableFormation[position] = playerId;
-              }
-            });
-
-            // Only add if we have enough available players for a meaningful recommendation
-            if (Object.keys(availableFormation).length >= 5) {
-              lineupAnalysis.push({
-                formation: availableFormation,
-                quarter: quarterKey,
-                gameId: parseInt(gameId),
-                goalsFor,
-                goalsAgainst,
-                winRate: won ? 100 : 0,
-                gamesPlayed: 1,
-                availablePlayersCount: availablePlayersInFormation
-              });
-            }
-          }
-        }
-      });
-    });
-
-    console.log('LineupTab: Historical analysis found', lineupAnalysis.length, 'usable lineups');
-    return lineupAnalysis;
-  };
-
-  const generateHighestScoringLineup = (lineupAnalysis: any[], availablePlayers: Player[]): LineupRecommendation | null => {
-    if (lineupAnalysis.length === 0) return null;
-
-    // Find lineup with highest average goals scored
-    const bestScoring = lineupAnalysis.reduce((best, current) => 
-      (current.goalsFor || 0) > (best.goalsFor || 0) ? current : best
-    );
-
-    // Fill missing positions with available players
-    const completeFormation = fillMissingPositions(bestScoring.formation, availablePlayers);
-
-    const avgGoals = bestScoring.goalsFor || 0;
-    const confidence = Math.min(82, Math.max(0, (bestScoring.availablePlayersCount || 0) / 7) * 100);
-    const winRate = Math.max(0, bestScoring.winRate || 0);
-
-    return {
-      id: 'highest-scoring',
-      formation: completeFormation,
-      effectiveness: 8.8,
-      confidence: Math.round(confidence),
-      historicalSuccess: Math.round(winRate),
-      opponentSpecific: false,
-      notes: `Historically highest-scoring formation (avg ${avgGoals.toFixed(1)} goals/quarter)`,
-      availablePlayersOnly: true
-    };
-  };
-
-  const generateBestDefenceLineup = (lineupAnalysis: any[], availablePlayers: Player[]): LineupRecommendation | null => {
-    if (lineupAnalysis.length === 0) return null;
-
-    // Find lineup with lowest goals conceded
-    const bestDefence = lineupAnalysis.reduce((best, current) => 
-      (current.goalsAgainst || 999) < (best.goalsAgainst || 999) ? current : best
-    );
-
-    const completeFormation = fillMissingPositions(bestDefence.formation, availablePlayers);
-
-    const avgGoalsAgainst = bestDefence.goalsAgainst || 0;
-    const confidence = Math.min(78, Math.max(0, (bestDefence.availablePlayersCount || 0) / 7) * 100);
-    const winRate = Math.max(0, bestDefence.winRate || 0);
-
-    return {
-      id: 'best-defence',
-      formation: completeFormation,
-      effectiveness: 8.5,
-      confidence: Math.round(confidence),
-      historicalSuccess: Math.round(winRate),
-      opponentSpecific: false,
-      notes: `Strongest defensive formation (avg ${avgGoalsAgainst.toFixed(1)} goals conceded/quarter)`,
-      availablePlayersOnly: true
-    };
-  };
-
-  const generateMostWinsLineup = (lineupAnalysis: any[], availablePlayers: Player[]): LineupRecommendation | null => {
-    if (lineupAnalysis.length === 0) return null;
-
-    // Find lineup with highest win rate
-    const mostWins = lineupAnalysis.reduce((best, current) => 
-      (current.winRate || 0) > (best.winRate || 0) ? current : best
-    );
-
-    const completeFormation = fillMissingPositions(mostWins.formation, availablePlayers);
-
-    const winRate = Math.max(0, mostWins.winRate || 0);
-    const confidence = Math.min(85, Math.max(0, (mostWins.availablePlayersCount || 0) / 7) * 100);
-    const gamesPlayed = mostWins.gamesPlayed || 1;
-
-    return {
-      id: 'most-wins',
-      formation: completeFormation,
-      effectiveness: 8.7,
-      confidence: Math.round(confidence),
-      historicalSuccess: Math.round(winRate),
-      opponentSpecific: false,
-      notes: `Highest win rate formation (${winRate.toFixed(0)}% wins in ${gamesPlayed} games)`,
-      availablePlayersOnly: true
-    };
-  };
-
-  const generateBestOverallLineup = (lineupAnalysis: any[], availablePlayers: Player[]): LineupRecommendation | null => {
-    if (lineupAnalysis.length === 0) return null;
-
-    // Find lineup with best goal differential
-    const bestOverall = lineupAnalysis.reduce((best, current) => {
-      const currentDiff = (current.goalsFor || 0) - (current.goalsAgainst || 0);
-      const bestDiff = (best.goalsFor || 0) - (best.goalsAgainst || 0);
-      return currentDiff > bestDiff ? current : best;
-    });
-
-    const goalDiff = (bestOverall.goalsFor || 0) - (bestOverall.goalsAgainst || 0);
-    const completeFormation = fillMissingPositions(bestOverall.formation, availablePlayers);
-    const confidence = Math.min(88, Math.max(0, (bestOverall.availablePlayersCount || 0) / 7) * 100);
-    const winRate = Math.max(0, bestOverall.winRate || 0);
-
-    return {
-      id: 'best-overall',
-      formation: completeFormation,
-      effectiveness: 9.0,
-      confidence: Math.round(confidence),
-      historicalSuccess: Math.round(winRate),
-      opponentSpecific: false,
-      notes: `Best overall performance (${goalDiff > 0 ? '+' : ''}${goalDiff.toFixed(1)} goal differential)`,
-      availablePlayersOnly: true
-    };
-  };
-
-  // Helper function to fill missing positions with available players
-  const fillMissingPositions = (partialFormation: Record<string, number>, availablePlayers: Player[]): Record<string, number> => {
-    const formation = { ...partialFormation };
-    const usedPlayers = new Set(Object.values(formation));
-    
-    POSITIONS.forEach(position => {
-      if (!formation[position]) {
-        // Find an available player not already used
-        const availablePlayer = availablePlayers.find(p => !usedPlayers.has(p.id));
-        if (availablePlayer) {
-          formation[position] = availablePlayer.id;
-          usedPlayers.add(availablePlayer.id);
-        }
-      }
-    });
-
-    return formation;
   };
 
   const handleAvailabilityChange = (newAvailabilityData: PlayerAvailabilityData) => {
@@ -764,7 +461,7 @@ function RecommendationCard({
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline">
-              {Math.round(recommendation.confidence || 0)}% confidence
+              {recommendation.confidence}% confidence
             </Badge>
             <Badge variant="secondary">
               {recommendation.effectiveness.toFixed(1)} effectiveness

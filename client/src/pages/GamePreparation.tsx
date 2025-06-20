@@ -3,7 +3,6 @@ import { useParams } from 'wouter';
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
-import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -248,11 +247,6 @@ export default function GamePreparation() {
 
   // Strategy data will be handled by StrategyTab component internally
   const strategyData = null;
-
-  // Fetch batch statistics and rosters for historical games analysis
-  const historicalGameIds = historicalGames.map((game: any) => game.id);
-  const { statsMap: historicalBatchStats, isLoading: loadingHistoricalStats } = useBatchGameStatistics(historicalGameIds);
-  const { rostersMap: historicalBatchRosters, isLoading: loadingHistoricalRosters } = useBatchRosterData(historicalGameIds);
   const isLoadingStrategy = false;
   const strategyError = null;
 
@@ -268,7 +262,8 @@ export default function GamePreparation() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Remove duplicate - using the batch data from historical games above
+  // Fetch batch statistics for position-based analysis
+  const { statsMap: batchStats, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIdsArray);
 
   // Load all season games for the current team
   const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery({
@@ -1192,7 +1187,7 @@ export default function GamePreparation() {
                                 // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
                                 if (!game.statusAllowsStatistics) return;
 
-                                const gameStats = historicalBatchStats?.[game.id] || [];
+                                const gameStats = batchStats?.[game.id] || [];
                                 if (gameStats.length > 0) {
                                   gamesWithPositionStats++;
 
@@ -1974,10 +1969,8 @@ export default function GamePreparation() {
                 <CardContent>
                   <TeamPositionAnalysis
                     games={historicalGames}
-                    players={players as any}
-                    centralizedStats={historicalBatchStats || {}}
-                    centralizedRosters={historicalBatchRosters || {}}
-                    currentClubId={currentClubId}
+                    players={players}
+                    currentTeamId={currentTeamId}
                   />
                 </CardContent>
               </Card>

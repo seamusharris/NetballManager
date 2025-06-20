@@ -59,19 +59,15 @@ function TeamPositionAnalysis({
 
     const uniqueOpponents = Array.from(new Set(
       games
-        .filter(game => 
-          (game.statusIsCompleted || game.statusName === 'completed') && 
-          (game.statusAllowsStatistics !== false)
-        )
+        .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
         .map(game => {
-          // Handle different game data structures
-          const isHomeGame = game.homeClubId === currentClubId || game.home_club_id === currentClubId;
-          const isAwayGame = game.awayClubId === currentClubId || game.away_club_id === currentClubId;
+          const isHomeGame = game.homeClubId === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId;
 
           if (isHomeGame && !isAwayGame) {
-            return game.awayTeamName || game.away_team_name;
+            return game.awayTeamName;
           } else if (isAwayGame && !isHomeGame) {
-            return game.homeTeamName || game.home_team_name;
+            return game.homeTeamName;
           }
           return null;
         })
@@ -88,11 +84,7 @@ function TeamPositionAnalysis({
       rostersKeys: Object.keys(centralizedRosters || {}),
       gamesLength: games?.length,
       selectedQuarter,
-      currentClubId,
-      gamesStructure: games?.slice(0, 2).map(g => ({
-        id: g.id,
-        properties: Object.keys(g).join(', ')
-      }))
+      currentClubId
     });
 
     // Debug roster data structure
@@ -131,9 +123,8 @@ function TeamPositionAnalysis({
     }
 
     const completedGames = games.filter(game => 
-      // Use the actual property names from the game data
-      (game.statusIsCompleted || game.statusName === 'completed') && 
-      (game.statusAllowsStatistics !== false) &&  // Allow if not explicitly false
+      game.statusIsCompleted && 
+      game.statusAllowsStatistics &&
       centralizedStats[game.id] &&
       centralizedRosters[game.id]
     );
@@ -182,8 +173,6 @@ function TeamPositionAnalysis({
           quarterData.get(stat.quarter)!.stats.push(stat);
         }
       });
-
-
 
       // Filter by selected quarter if specified
       const quartersToAnalyze = selectedQuarter === 'all' 
@@ -247,12 +236,9 @@ function TeamPositionAnalysis({
 
           const lineupData = lineupMap.get(lineupKey)!;
 
-          // Calculate quarter performance based on available stats
-          // For now, use roster completeness as a proxy for lineup effectiveness
-          const quarterGoalsFor = quarterRoster.length > 0 ? quarterRoster.length : 1;
-          const quarterGoalsAgainst = Math.max(0, 7 - quarterRoster.length);
-          
-
+          // Calculate quarter performance
+          const quarterGoalsFor = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+          const quarterGoalsAgainst = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
           lineupData.totalGoalsFor += quarterGoalsFor;
           lineupData.totalGoalsAgainst += quarterGoalsAgainst;
@@ -262,26 +248,23 @@ function TeamPositionAnalysis({
           if (!lineupData.gamesPlayed.some(g => g.id === game.id)) {
             lineupData.gamesPlayed.push(game);
 
-            // Calculate game result based on roster effectiveness
-            const gameRosterTotal = gameRosters.reduce((sum, roster) => sum + roster.length, 0);
-            const maxPossibleRoster = gameRosters.length * 7; // 4 quarters * 7 positions
-            const rosterEffectiveness = maxPossibleRoster > 0 ? (gameRosterTotal / maxPossibleRoster) : 0;
-            
-            // Consider games with >80% roster completeness as wins for analysis purposes
-            if (rosterEffectiveness > 0.8) {
+            // Calculate game result for win tracking
+            const gameGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+            const gameGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+            if (gameGoalsFor > gameGoalsAgainst) {
               lineupData.wins++;
             }
           }
 
           // Track opponent-specific performance
           let opponent = null;
-          const isHomeGame = game.homeClubId === currentClubId || game.home_club_id === currentClubId;
-          const isAwayGame = game.awayClubId === currentClubId || game.away_club_id === currentClubId;
+          const isHomeGame = game.homeClubId === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId;
 
           if (isHomeGame && !isAwayGame) {
-            opponent = game.awayTeamName || game.away_team_name;
+            opponent = game.awayTeamName;
           } else if (isAwayGame && !isHomeGame) {
-            opponent = game.homeTeamName || game.home_team_name;
+            opponent = game.homeTeamName;
           }
 
           if (opponent && opponent !== 'Bye') {
@@ -304,11 +287,14 @@ function TeamPositionAnalysis({
     const generalResults: PositionLineup[] = [];
     const opponentSpecificResults: OpponentSpecificLineup[] = [];
 
+    console.log(`Total lineups before filtering: ${lineupMap.size}`);
+    
     lineupMap.forEach((data, lineupKey) => {
       const quartersPlayed = data.quarters.length;
+      console.log(`Lineup ${lineupKey.substring(0, 50)}... has ${quartersPlayed} quarters`);
 
-      // Use adaptive minimum sample size - allow single quarters for historical analysis
-      const minSampleSize = 1;
+      // Use adaptive minimum sample size - 1 for specific quarters, 2 for all quarters
+      const minSampleSize = selectedQuarter === 'all' ? 2 : 1;
       
       if (quartersPlayed >= minSampleSize) {
         const baseResult: PositionLineup = {
@@ -358,26 +344,8 @@ function TeamPositionAnalysis({
     generalResults.sort((a, b) => b.effectiveness - a.effectiveness);
     opponentSpecificResults.sort((a, b) => b.effectiveness - a.effectiveness);
 
-    console.log('Final analysis results:', {
-      totalGeneralResults: generalResults.length,
-      totalOpponentResults: opponentSpecificResults.length,
-      generalResultsPreview: generalResults.slice(0, 3).map(r => ({
-        formation: Object.entries(r.formation).map(([pos, name]) => `${pos}:${name}`).join(',').substring(0, 50),
-        effectiveness: r.effectiveness,
-        quarters: r.quarters.length
-      }))
-    });
-
-    const finalGeneralLineups = generalResults.slice(0, 15);
-    const finalOpponentLineups = opponentSpecificResults.slice(0, 20);
-    
-    console.log('Setting state with lineups:', {
-      generalLineupsCount: finalGeneralLineups.length,
-      opponentLineupsCount: finalOpponentLineups.length
-    });
-    
-    setGeneralLineups(finalGeneralLineups); // Top 15
-    setOpponentSpecificLineups(finalOpponentLineups); // Top 20
+    setGeneralLineups(generalResults.slice(0, 15)); // Top 15
+    setOpponentSpecificLineups(opponentSpecificResults.slice(0, 20)); // Top 20
 
     // Extract all unique opponents from the lineup data
     const allOpponents = new Set<string>();
@@ -390,6 +358,7 @@ function TeamPositionAnalysis({
     });
 
     const sortedOpponents = Array.from(allOpponents).sort();
+    console.log('Setting opponents dropdown to:', sortedOpponents);
     setOpponents(sortedOpponents);
   };
 
