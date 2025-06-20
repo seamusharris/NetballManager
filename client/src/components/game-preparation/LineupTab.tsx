@@ -405,20 +405,24 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
     // Find lineup with highest average goals scored
     const bestScoring = lineupAnalysis.reduce((best, current) => 
-      current.goalsFor > best.goalsFor ? current : best
+      (current.goalsFor || 0) > (best.goalsFor || 0) ? current : best
     );
 
     // Fill missing positions with available players
     const completeFormation = fillMissingPositions(bestScoring.formation, availablePlayers);
 
+    const avgGoals = bestScoring.goalsFor || 0;
+    const confidence = Math.min(82, Math.max(0, (bestScoring.availablePlayersCount || 0) / 7) * 100);
+    const winRate = Math.max(0, bestScoring.winRate || 0);
+
     return {
       id: 'highest-scoring',
       formation: completeFormation,
       effectiveness: 8.8,
-      confidence: Math.min(82, (bestScoring.availablePlayersCount / 7) * 100),
-      historicalSuccess: Math.round(bestScoring.winRate),
+      confidence: Math.round(confidence),
+      historicalSuccess: Math.round(winRate),
       opponentSpecific: false,
-      notes: `Historically highest-scoring formation (avg ${bestScoring.goalsFor.toFixed(1)} goals/quarter)`,
+      notes: `Historically highest-scoring formation (avg ${avgGoals.toFixed(1)} goals/quarter)`,
       availablePlayersOnly: true
     };
   };
@@ -428,19 +432,23 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
     // Find lineup with lowest goals conceded
     const bestDefence = lineupAnalysis.reduce((best, current) => 
-      current.goalsAgainst < best.goalsAgainst ? current : best
+      (current.goalsAgainst || 999) < (best.goalsAgainst || 999) ? current : best
     );
 
     const completeFormation = fillMissingPositions(bestDefence.formation, availablePlayers);
+
+    const avgGoalsAgainst = bestDefence.goalsAgainst || 0;
+    const confidence = Math.min(78, Math.max(0, (bestDefence.availablePlayersCount || 0) / 7) * 100);
+    const winRate = Math.max(0, bestDefence.winRate || 0);
 
     return {
       id: 'best-defence',
       formation: completeFormation,
       effectiveness: 8.5,
-      confidence: Math.min(78, (bestDefence.availablePlayersCount / 7) * 100),
-      historicalSuccess: Math.round(bestDefence.winRate),
+      confidence: Math.round(confidence),
+      historicalSuccess: Math.round(winRate),
       opponentSpecific: false,
-      notes: `Strongest defensive formation (avg ${bestDefence.goalsAgainst.toFixed(1)} goals conceded/quarter)`,
+      notes: `Strongest defensive formation (avg ${avgGoalsAgainst.toFixed(1)} goals conceded/quarter)`,
       availablePlayersOnly: true
     };
   };
@@ -450,19 +458,23 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
     // Find lineup with highest win rate
     const mostWins = lineupAnalysis.reduce((best, current) => 
-      current.winRate > best.winRate ? current : best
+      (current.winRate || 0) > (best.winRate || 0) ? current : best
     );
 
     const completeFormation = fillMissingPositions(mostWins.formation, availablePlayers);
+
+    const winRate = Math.max(0, mostWins.winRate || 0);
+    const confidence = Math.min(85, Math.max(0, (mostWins.availablePlayersCount || 0) / 7) * 100);
+    const gamesPlayed = mostWins.gamesPlayed || 1;
 
     return {
       id: 'most-wins',
       formation: completeFormation,
       effectiveness: 8.7,
-      confidence: Math.min(85, (mostWins.availablePlayersCount / 7) * 100),
-      historicalSuccess: Math.round(mostWins.winRate),
+      confidence: Math.round(confidence),
+      historicalSuccess: Math.round(winRate),
       opponentSpecific: false,
-      notes: `Highest win rate formation (${mostWins.winRate.toFixed(0)}% wins in ${mostWins.gamesPlayed} games)`,
+      notes: `Highest win rate formation (${winRate.toFixed(0)}% wins in ${gamesPlayed} games)`,
       availablePlayersOnly: true
     };
   };
@@ -472,20 +484,22 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
     // Find lineup with best goal differential
     const bestOverall = lineupAnalysis.reduce((best, current) => {
-      const currentDiff = current.goalsFor - current.goalsAgainst;
-      const bestDiff = best.goalsFor - best.goalsAgainst;
+      const currentDiff = (current.goalsFor || 0) - (current.goalsAgainst || 0);
+      const bestDiff = (best.goalsFor || 0) - (best.goalsAgainst || 0);
       return currentDiff > bestDiff ? current : best;
     });
 
-    const goalDiff = bestOverall.goalsFor - bestOverall.goalsAgainst;
+    const goalDiff = (bestOverall.goalsFor || 0) - (bestOverall.goalsAgainst || 0);
     const completeFormation = fillMissingPositions(bestOverall.formation, availablePlayers);
+    const confidence = Math.min(88, Math.max(0, (bestOverall.availablePlayersCount || 0) / 7) * 100);
+    const winRate = Math.max(0, bestOverall.winRate || 0);
 
     return {
       id: 'best-overall',
       formation: completeFormation,
       effectiveness: 9.0,
-      confidence: Math.min(88, (bestOverall.availablePlayersCount / 7) * 100),
-      historicalSuccess: Math.round(bestOverall.winRate),
+      confidence: Math.round(confidence),
+      historicalSuccess: Math.round(winRate),
       opponentSpecific: false,
       notes: `Best overall performance (${goalDiff > 0 ? '+' : ''}${goalDiff.toFixed(1)} goal differential)`,
       availablePlayersOnly: true
@@ -750,7 +764,7 @@ function RecommendationCard({
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline">
-              {recommendation.confidence}% confidence
+              {Math.round(recommendation.confidence || 0)}% confidence
             </Badge>
             <Badge variant="secondary">
               {recommendation.effectiveness.toFixed(1)} effectiveness
