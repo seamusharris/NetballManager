@@ -93,6 +93,20 @@ export default function AnalysisTab({
   const { statsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
   const { rostersMap, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
+  // Debug roster data
+  useEffect(() => {
+    console.log('AnalysisTab: Roster data received:', {
+      gameIds,
+      rostersMapKeys: Object.keys(rostersMap || {}),
+      isLoadingRosters,
+      sampleRosterData: rostersMap && Object.keys(rostersMap).length > 0 ? 
+        Object.entries(rostersMap).slice(0, 2).reduce((acc, [gameId, rosters]) => {
+          acc[gameId] = rosters;
+          return acc;
+        }, {} as Record<string, any>) : 'No data'
+    });
+  }, [rostersMap, isLoadingRosters, gameIds]);
+
   // Calculate analysis data
   useEffect(() => {
     if (!statsMap || isLoadingStats || isLoadingRosters || !opponentGames.length) {

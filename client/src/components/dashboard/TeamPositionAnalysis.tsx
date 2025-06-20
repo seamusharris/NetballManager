@@ -79,7 +79,16 @@ function TeamPositionAnalysis({
 
   // Calculate position lineup effectiveness
   useEffect(() => {
-    if (!centralizedStats || !centralizedRosters || Object.keys(centralizedStats).length === 0) {
+    console.log('TeamPositionAnalysis: useEffect triggered with:', {
+      statsKeys: Object.keys(centralizedStats || {}),
+      rostersKeys: Object.keys(centralizedRosters || {}),
+      gamesLength: games?.length,
+      selectedQuarter,
+      currentClubId
+    });
+
+    if (!centralizedStats || !centralizedRosters || Object.keys(centralizedStats).length === 0 || Object.keys(centralizedRosters).length === 0) {
+      console.log('TeamPositionAnalysis: Missing required data - skipping calculation');
       return;
     }
 
@@ -169,12 +178,16 @@ function TeamPositionAnalysis({
           }
         });
 
+        console.log(`Game ${game.id}, Quarter ${quarter}: Raw quarter roster data:`, quarterRoster);
         console.log(`Game ${game.id}, Quarter ${quarter}: Found ${Object.keys(positionLineup).length}/7 positions`, positionLineup);
         console.log(`Game ${game.id}, Quarter ${quarter}: Roster entries for this quarter:`, quarterRoster);
         console.log(`Game ${game.id}, Quarter ${quarter}: Players lookup:`, quarterRoster.map(r => {
           const player = players.find(p => p.id === r.playerId);
           return { position: r.position, playerId: r.playerId, playerFound: !!player, playerName: player?.displayName };
         }));
+        
+        // Debug the roster structure
+        console.log(`Game ${game.id}, Quarter ${quarter}: All game rosters structure:`, centralizedRosters[game.id]);
         
         // Debug missing positions for Dingoes
         if (Object.keys(positionLineup).length < 7) {

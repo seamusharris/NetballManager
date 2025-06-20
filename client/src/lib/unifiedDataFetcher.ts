@@ -91,8 +91,10 @@ export class UnifiedDataFetcher {
     // Batch fetch rosters
     if (includeRosters) {
       try {
+        console.log(`UnifiedDataFetcher: Batch fetching rosters for ${gameIds.length} games`);
         const rostersResponse = await apiClient.post('/api/games/rosters/batch', { gameIds });
         results.rosters = rostersResponse;
+        console.log(`UnifiedDataFetcher: Batch rosters received for ${Object.keys(rostersResponse).length} games`);
 
         // Cache individual game rosters
         Object.entries(rostersResponse).forEach(([gameId, rosters]) => {

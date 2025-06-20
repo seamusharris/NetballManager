@@ -1,37 +1,28 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 export function useBatchRosterData(gameIds: number[]) {
   const { data: rostersMap = {}, isLoading, error } = useQuery({
-    queryKey: ['batch-rosters', gameIds.sort().join(',')],
+    queryKey: CACHE_KEYS.batchRosters(gameIds),
     queryFn: async () => {
-      if (!gameIds.length) return {};
+      if (!gameIds.length) {
+        console.log('useBatchRosterData: No game IDs provided');
+        return {};
+      }
 
-      // Fetch rosters for all games in parallel
-      const rosterPromises = gameIds.map(async (gameId) => {
-        try {
-          const rosters = await apiClient.get(`/api/games/${gameId}/rosters`);
-          return { gameId, rosters };
-        } catch (error) {
-          console.error(`Error fetching rosters for game ${gameId}:`, error);
-          return { gameId, rosters: [] };
-        }
-      });
-
-      const results = await Promise.all(rosterPromises);
-
-      // Create a map of gameId -> rosters[]
-      const rostersMap = results.reduce((acc, result) => {
-        acc[result.gameId] = result.rosters;
-        return acc;
-      }, {} as Record<number, any[]>);
-
-      return rostersMap;
+      console.log('useBatchRosterData: Fetching rosters for games:', gameIds);
+      const response = await apiClient.post('/api/games/rosters/batch', { gameIds });
+      console.log('useBatchRosterData: Received response:', response);
+      return response;
     },
     enabled: gameIds.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  return { rostersMap, isLoading, error };
+  return {
+    rostersMap,
+    isLoading,
+    error
+  };
 }
