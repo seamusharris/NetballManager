@@ -100,13 +100,13 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.warn('ClubContext: Stored club ID invalid, resetting...');
           localStorage.removeItem('currentClubId');
-          const warrandyteClub = userClubs.find(club => club.clubId === 54);
-          targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
+          const warrandyteClub = userClubs.find(club => club.id === 54);
+          targetClubId = warrandyteClub ? 54 : userClubs[0]?.id;
         }
       } else {
         // No stored club - prefer Warrandyte (54) if available
-        const warrandyteClub = userClubs.find(club => club.clubId === 54);
-        targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
+        const warrandyteClub = userClubs.find(club => club.id === 54);
+        targetClubId = warrandyteClub ? 54 : userClubs[0]?.id;
         console.log('ClubContext: No stored club, selecting:', targetClubId);
       }
 
