@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -87,7 +86,7 @@ export default function RecommendationExamples() {
       ]}
     >
       <div className="space-y-8">
-        
+
         {/* Display 1: Quarter-by-Quarter with Position Performance */}
         <Card>
           <CardHeader>
@@ -101,7 +100,7 @@ export default function RecommendationExamples() {
               {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
                 const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
                 const { result, color } = getScoreResult(scores.team, scores.opponent);
-                
+
                 return (
                   <div key={quarter} className="space-y-4">
                     <div className="text-center">
@@ -111,9 +110,9 @@ export default function RecommendationExamples() {
                       </Badge>
                       <p className="text-sm text-gray-600 capitalize">{result}</p>
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="space-y-2">
                       {Object.entries(quarterData).map(([position, data]) => (
                         <div key={position} className="relative">
@@ -166,12 +165,12 @@ export default function RecommendationExamples() {
                 return (
                   <div key={player.id} className="space-y-3">
                     <PlayerBox player={player} size="default" />
-                    
+
                     <div className="space-y-2">
                       {playerQuarters.map(qData => {
                         if (!qData) return null;
                         const { result, color } = getScoreResult(qData.quarterScore.team, qData.quarterScore.opponent);
-                        
+
                         return (
                           <div key={qData.quarter} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
                             <div className="flex items-center gap-2">
@@ -212,7 +211,7 @@ export default function RecommendationExamples() {
               {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
                 const quarterData = samplePlayerPositions[quarter as keyof typeof samplePlayerPositions];
                 const { result, color } = getScoreResult(scores.team, scores.opponent);
-                
+
                 return (
                   <div key={quarter} className="space-y-4">
                     <div className="text-center">
@@ -221,7 +220,7 @@ export default function RecommendationExamples() {
                         {scores.team} - {scores.opponent} ({result})
                       </Badge>
                     </div>
-                    
+
                     {/* Court layout */}
                     <div className="grid grid-cols-3 gap-2 bg-green-50 p-4 rounded-lg">
                       {/* Attack third */}
@@ -252,7 +251,7 @@ export default function RecommendationExamples() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Center third */}
                       <div className="space-y-2">
                         <h4 className="text-xs font-semibold text-center">Center</h4>
@@ -277,7 +276,7 @@ export default function RecommendationExamples() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Defense third */}
                       <div className="space-y-2">
                         <h4 className="text-xs font-semibold text-center">Defense</h4>
@@ -321,7 +320,7 @@ export default function RecommendationExamples() {
                 <div className="text-center">Q3</div>
                 <div className="text-center">Q4</div>
               </div>
-              
+
               {samplePlayers.map(player => {
                 const playerQuarters = Object.entries(samplePlayerPositions).map(([quarter, positions]) => {
                   const playerPosition = Object.entries(positions).find(([, data]) => data.player.id === player.id);
@@ -338,12 +337,12 @@ export default function RecommendationExamples() {
                     <div>
                       <PlayerBox player={player} size="compact" showAvatar={false} />
                     </div>
-                    
+
                     {playerQuarters.map(qData => {
                       if (!qData) return <div key="empty" className="text-center text-gray-400">-</div>;
-                      
+
                       const { result, color } = getScoreResult(qData.quarterScore.team, qData.quarterScore.opponent);
-                      
+
                       return (
                         <div key={qData.quarter} className="text-center space-y-1">
                           <Badge variant="outline" className="text-xs">
@@ -380,7 +379,7 @@ export default function RecommendationExamples() {
                 {Object.entries(sampleQuarterScores).map(([quarter, scores]) => {
                   const { result, color } = getScoreResult(scores.team, scores.opponent);
                   const margin = Math.abs(scores.team - scores.opponent);
-                  
+
                   return (
                     <div key={quarter} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                       <div>
@@ -397,7 +396,7 @@ export default function RecommendationExamples() {
                   );
                 })}
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Key Player Insights</h3>
                 <div className="space-y-3">
@@ -411,7 +410,7 @@ export default function RecommendationExamples() {
                       Most effective in Goal Shooter position.
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-yellow-50 rounded">
                     <div className="flex items-center gap-2 mb-2">
                       <PlayerBox player={samplePlayers[1]} size="compact" showAvatar={false} />
@@ -422,7 +421,7 @@ export default function RecommendationExamples() {
                       Consider consistent positioning.
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-blue-50 rounded">
                     <h4 className="font-medium mb-2">Strategic Recommendations</h4>
                     <ul className="text-sm text-gray-600 space-y-1">

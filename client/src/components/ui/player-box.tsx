@@ -30,7 +30,7 @@ interface PlayerBoxProps {
   hasSelect?: boolean;
 }
 
-export function PlayerBox({ 
+function PlayerBox({ 
   player, 
   actions, 
   showPositions = true, 
@@ -216,3 +216,6 @@ export function PlayerBox({
 
   return <div className={className}>{playerBoxContent}</div>;
 }
+
+// Default export
+export default PlayerBox;
