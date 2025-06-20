@@ -2003,6 +2003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rosterPromises = validGameIds.map(async (gameId) => {
         try {
           const rosters = await storage.getRostersByGame(gameId);
+          console.log(`Batch rosters: Game ${gameId} has ${rosters.length} roster entries`);
           return { gameId, rosters, success: true };
         } catch (error) {
           console.error(`Error fetching rosters for game ${gameId}:`, error);
@@ -2018,7 +2019,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {} as Record<number, any[]>);
 
-      console.log(`POST Batch rosters endpoint successfully returned rosters for ${validGameIds.length} games`);
+      const rostersCount = Object.entries(rostersMap).map(([gameId, rosters]) => `${gameId}:${rosters.length}`).join(', ');
+      console.log(`POST Batch rosters endpoint successfully returned rosters for ${validGameIds.length} games. Counts: ${rostersCount}`);
       res.json(rostersMap);
     } catch (error) {
       console.error(`Error in POST batch game rosters endpoint:`, error);

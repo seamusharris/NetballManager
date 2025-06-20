@@ -87,6 +87,18 @@ function TeamPositionAnalysis({
       currentClubId
     });
 
+    // Debug roster data structure
+    if (centralizedRosters && Object.keys(centralizedRosters).length > 0) {
+      const sampleGameId = Object.keys(centralizedRosters)[0];
+      const sampleRoster = centralizedRosters[sampleGameId];
+      console.log('TeamPositionAnalysis: Sample roster data structure:', {
+        gameId: sampleGameId,
+        rosterLength: sampleRoster?.length || 0,
+        firstFewEntries: sampleRoster?.slice(0, 3),
+        allPositions: sampleRoster?.map(r => r.position).filter((pos, idx, arr) => arr.indexOf(pos) === idx)
+      });
+    }
+
     if (!centralizedStats || !centralizedRosters || Object.keys(centralizedStats).length === 0 || Object.keys(centralizedRosters).length === 0) {
       console.log('TeamPositionAnalysis: Missing required data - skipping calculation');
       return;
