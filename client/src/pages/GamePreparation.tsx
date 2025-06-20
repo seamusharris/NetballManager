@@ -480,16 +480,23 @@ export default function GamePreparation() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-5 no-print print-hide">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="season">Season</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="lineup">Lineup</TabsTrigger>
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
           </TabsList>
+          
+          {/* Print section headers - only visible when printing */}
+          <div className="print-only print-show space-y-4" style={{ display: 'none' }}>
+            <div className="print-section">
+              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Game Overview</h2>
+            </div>
+          </div>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6 print-show" data-tabs-content="overview">
 
 
             {(() => {
@@ -1375,7 +1382,10 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Season Tab */}
-          <TabsContent value="season" className="space-y-6">
+          <TabsContent value="season" className="space-y-6 print-show" data-tabs-content="season">
+            <div className="print-only print-show" style={{ display: 'none' }}>
+              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Season Performance</h2>
+            </div>
             {(() => {
               if (loadingSeasonGames) {
                 return (
@@ -1904,7 +1914,10 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Analysis Tab */}
-          <TabsContent value="analysis" className="space-y-6">
+          <TabsContent value="analysis" className="space-y-6 print-show" data-tabs-content="analysis">
+            <div className="print-only print-show" style={{ display: 'none' }}>
+              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Opponent Analysis</h2>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
               {/* Historical Performance */}
@@ -1990,7 +2003,10 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Lineup Tab */}
-          <TabsContent value="lineup">
+          <TabsContent value="lineup" className="print-show" data-tabs-content="lineup">
+            <div className="print-only print-show" style={{ display: 'none' }}>
+              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Team Lineup</h2>
+            </div>
             <LineupTab
               game={game}
               players={players || []}
@@ -2003,7 +2019,10 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Strategy Tab */}
-          <TabsContent value="strategy">
+          <TabsContent value="strategy" className="print-show" data-tabs-content="strategy">
+            <div className="print-only print-show" style={{ display: 'none' }}>
+              <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">Game Strategy</h2>
+            </div>
             <StrategyTab
               gameId={gameId!}
               teamId={currentTeamId!}

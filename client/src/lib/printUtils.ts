@@ -1,8 +1,8 @@
 
 export const printClasses = {
   // Layout classes that work well in print
-  section: 'print-section mb-6',
-  card: 'print-card bg-white border rounded-lg p-4',
+  section: 'print-section mb-6 break-inside-avoid',
+  card: 'print-card bg-white border rounded-lg p-4 break-inside-avoid',
   grid: 'print-grid grid gap-4',
   
   // Typography classes optimized for print
@@ -13,14 +13,14 @@ export const printClasses = {
   caption: 'text-xs text-gray-600',
   
   // Table classes for print
-  table: 'w-full border-collapse',
+  table: 'w-full border-collapse break-inside-avoid',
   tableHeader: 'bg-gray-50 font-semibold',
   tableCell: 'border border-gray-200 px-3 py-2 text-sm',
   
   // Utility classes
   noBreak: 'break-inside-avoid page-break-inside-avoid',
-  noPrint: 'no-print',
-  printOnly: 'hidden print:block',
+  noPrint: 'no-print print-hide',
+  printOnly: 'hidden print-show',
   
   // Status and badge classes for print
   badge: 'badge inline-block px-2 py-1 text-xs rounded border',

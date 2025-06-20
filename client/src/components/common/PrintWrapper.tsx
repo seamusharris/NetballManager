@@ -2,8 +2,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, FileDown } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 
 interface PrintWrapperProps {
   children: React.ReactNode;
@@ -21,7 +19,7 @@ export default function PrintWrapper({
   title, 
   subtitle,
   showPrintButton = true,
-  showPDFButton = true,
+  showPDFButton = false, // Disable PDF for now
   className = '',
   onBeforePrint,
   onAfterPrint
@@ -29,69 +27,66 @@ export default function PrintWrapper({
   
   const handlePrint = () => {
     onBeforePrint?.();
-    window.print();
-    onAfterPrint?.();
-  };
-
-  const handlePDF = () => {
-    onBeforePrint?.();
     
-    // Create PDF from the print content
-    const printContent = document.querySelector('.print-content');
-    if (printContent) {
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      // Add title
-      doc.setFontSize(18);
-      doc.text(title, 20, 20);
-
-      if (subtitle) {
-        doc.setFontSize(12);
-        doc.text(subtitle, 20, 30);
-      }
-
-      // For now, we'll capture the content as text
-      // In a more advanced implementation, you could use html2canvas
-      const textContent = printContent.textContent || '';
-      const lines = doc.splitTextToSize(textContent, 170);
-      doc.setFontSize(10);
-      doc.text(lines, 20, subtitle ? 40 : 30);
-
-      doc.save(`${title.toLowerCase().replace(/\s+/g, '-')}.pdf`);
-    }
+    // Add print-mode class to body to trigger print styles
+    document.body.classList.add('print-mode');
+    
+    // Set document title for print
+    const originalTitle = document.title;
+    document.title = title;
+    
+    // Trigger print
+    window.print();
+    
+    // Cleanup after print
+    document.title = originalTitle;
+    document.body.classList.remove('print-mode');
     
     onAfterPrint?.();
   };
 
   return (
     <div className={className}>
-      {/* Print Styles */}
+      {/* Enhanced Print Styles */}
       <style>{`
         @media print {
-          /* Hide everything not intended for print */
-          .no-print, .no-print * {
-            display: none !important;
-          }
-          
-          /* Reset page margins and styling */
+          /* Page setup */
           @page {
             size: A4;
             margin: 15mm;
           }
           
-          body {
-            font-size: 11pt;
-            line-height: 1.4;
-            color: black;
-            background: white;
+          /* Reset everything */
+          * {
+            box-sizing: border-box !important;
           }
           
-          /* Print content styling */
-          .print-content {
+          /* Hide non-essential elements */
+          nav, header, .sidebar, .navigation, .no-print,
+          button:not(.print-keep), .btn:not(.print-keep),
+          .tabs-list, .tab-trigger, .print-hide {
+            display: none !important;
+          }
+          
+          /* Show print-only elements */
+          .print-only, .print-show {
+            display: block !important;
+          }
+          
+          /* Body and root styling */
+          html, body {
+            font-size: 10pt !important;
+            line-height: 1.3 !important;
+            color: black !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+          }
+          
+          /* Main content container */
+          .print-content, main {
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
@@ -101,108 +96,164 @@ export default function PrintWrapper({
             background: white !important;
           }
           
-          /* Typography for print */
-          .print-title {
-            font-size: 16pt;
-            font-weight: bold;
-            margin-bottom: 8pt;
+          /* Typography hierarchy */
+          .print-title, h1 {
+            font-size: 16pt !important;
+            font-weight: bold !important;
+            margin: 0 0 8pt 0 !important;
+            color: black !important;
+            border-bottom: 2pt solid black !important;
+            padding-bottom: 4pt !important;
+          }
+          
+          .print-subtitle, h2 {
+            font-size: 12pt !important;
+            font-weight: normal !important;
+            margin: 0 0 12pt 0 !important;
             color: black !important;
           }
           
-          .print-subtitle {
-            font-size: 12pt;
-            margin-bottom: 12pt;
+          h3 { font-size: 11pt !important; margin: 8pt 0 4pt 0 !important; }
+          h4, h5, h6 { font-size: 10pt !important; margin: 6pt 0 3pt 0 !important; }
+          
+          p, div, span, td, th {
+            font-size: 9pt !important;
+            line-height: 1.2 !important;
             color: black !important;
+            background: transparent !important;
+          }
+          
+          /* Cards and containers */
+          .card, [data-card], .bg-card {
+            background: white !important;
+            border: 1pt solid #333 !important;
+            margin-bottom: 6pt !important;
+            padding: 6pt !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
           
           /* Tables */
           table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 12pt;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-bottom: 8pt !important;
+            font-size: 8pt !important;
           }
           
           th, td {
-            border: 1px solid #333;
-            padding: 4pt 6pt;
-            text-align: left;
-            font-size: 10pt;
+            border: 1pt solid #333 !important;
+            padding: 3pt !important;
+            text-align: left !important;
+            font-size: 8pt !important;
+            background: white !important;
+            color: black !important;
           }
           
           th {
-            background-color: #f0f0f0 !important;
-            font-weight: bold;
+            font-weight: bold !important;
+            background-color: #f5f5f5 !important;
           }
           
-          /* Cards and sections */
-          .print-section {
-            margin-bottom: 12pt;
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-          
-          .print-card {
-            border: 1px solid #333;
-            padding: 8pt;
-            margin-bottom: 8pt;
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-          
-          /* Grid layouts */
-          .print-grid {
+          /* Grid and flex layouts */
+          .grid, .flex {
             display: block !important;
           }
           
-          .print-grid > * {
+          .grid > *, .flex > * {
             display: block !important;
             width: 100% !important;
-            margin-bottom: 8pt;
-          }
-          
-          /* Text sizing */
-          .text-lg { font-size: 12pt !important; }
-          .text-base { font-size: 11pt !important; }
-          .text-sm { font-size: 10pt !important; }
-          .text-xs { font-size: 9pt !important; }
-          
-          /* Colors for print */
-          * {
-            color: black !important;
-            background: white !important;
+            margin-bottom: 4pt !important;
+            float: none !important;
           }
           
           /* Badges and status indicators */
-          .badge, .status-badge {
-            border: 1px solid #333 !important;
-            padding: 2pt 4pt !important;
+          .badge, [data-badge] {
+            border: 1pt solid #333 !important;
+            padding: 1pt 3pt !important;
             background: white !important;
+            color: black !important;
+            display: inline-block !important;
+            font-size: 7pt !important;
+            border-radius: 0 !important;
+          }
+          
+          /* Progress bars - show as text */
+          .progress, [data-progress] {
+            border: 1pt solid #333 !important;
+            height: auto !important;
+            background: white !important;
+            padding: 2pt !important;
+          }
+          
+          .progress > *, [data-progress] > * {
+            display: none !important;
+          }
+          
+          .progress::after, [data-progress]::after {
+            content: "Progress: " attr(data-value) "%" !important;
+            font-size: 8pt !important;
             color: black !important;
           }
           
+          /* Remove all colors and backgrounds */
+          * {
+            color: black !important;
+            background: transparent !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+          }
+          
           /* Spacing adjustments */
-          .space-y-6 > * + * { margin-top: 6pt !important; }
-          .space-y-4 > * + * { margin-top: 4pt !important; }
-          .space-y-2 > * + * { margin-top: 2pt !important; }
+          .space-y-6 > * + *, .space-y-4 > * + *, .space-y-2 > * + * {
+            margin-top: 4pt !important;
+          }
           
-          .mb-6 { margin-bottom: 6pt !important; }
-          .mb-4 { margin-bottom: 4pt !important; }
+          .mb-8, .mb-6, .mb-4 { margin-bottom: 4pt !important; }
           .mb-2 { margin-bottom: 2pt !important; }
+          .mt-8, .mt-6, .mt-4 { margin-top: 4pt !important; }
+          .mt-2 { margin-top: 2pt !important; }
           
-          /* Flexbox to block for print */
-          .flex {
+          /* Page breaks */
+          .page-break-before { page-break-before: always !important; }
+          .page-break-after { page-break-after: always !important; }
+          .break-inside-avoid { break-inside: avoid !important; page-break-inside: avoid !important; }
+          
+          /* Tabs - show all content */
+          .tabs-content, [data-tabs-content] {
             display: block !important;
           }
           
-          .grid {
+          /* Hide interactive elements */
+          input, select, textarea, button:not(.print-keep) {
+            display: none !important;
+          }
+          
+          /* Links */
+          a {
+            color: black !important;
+            text-decoration: underline !important;
+          }
+          
+          /* Images */
+          img {
+            max-width: 100% !important;
+            height: auto !important;
+          }
+          
+          /* Ensure specific containers are visible */
+          .print-section, .content-section {
             display: block !important;
+            margin-bottom: 8pt !important;
           }
         }
       `}</style>
       
       {/* Print/PDF Controls */}
       {(showPrintButton || showPDFButton) && (
-        <div className="flex justify-end gap-2 mb-6 no-print">
+        <div className="flex justify-end gap-2 mb-6 no-print print-hide">
           {showPrintButton && (
             <Button 
               variant="outline" 
@@ -216,8 +267,9 @@ export default function PrintWrapper({
           {showPDFButton && (
             <Button 
               variant="outline" 
-              onClick={handlePDF}
+              onClick={() => console.log('PDF generation not implemented')}
               className="flex items-center gap-2"
+              disabled
             >
               <FileDown className="h-4 w-4" />
               Save PDF
@@ -228,8 +280,14 @@ export default function PrintWrapper({
       
       {/* Print Content */}
       <div className="print-content">
-        <div className="print-title">{title}</div>
-        {subtitle && <div className="print-subtitle">{subtitle}</div>}
+        {/* Print header - only visible when printing */}
+        <div className="print-only print-show" style={{ display: 'none' }}>
+          <h1 className="print-title">{title}</h1>
+          {subtitle && <div className="print-subtitle">{subtitle}</div>}
+          <hr style={{ border: '1pt solid black', margin: '8pt 0' }} />
+        </div>
+        
+        {/* Main content */}
         {children}
       </div>
     </div>
