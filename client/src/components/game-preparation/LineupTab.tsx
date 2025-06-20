@@ -270,6 +270,10 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
     const recommendations: LineupRecommendation[] = [];
     
+    // Get current team ID from the game
+    const currentTeamId = game.homeTeamId === game.awayTeamId ? game.homeTeamId : 
+                         (players.length > 0 ? players[0].teamId : game.homeTeamId);
+    
     // Get opponent information for this game
     const opponent = game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName;
     const opponentId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
@@ -365,7 +369,9 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
           if (availablePlayersInFormation >= 5) {
             // Calculate quarter-specific performance from stats
-            const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+            const quarterStats = gameStats.filter(stat => 
+              stat.quarter === quarter && stat.teamId === currentTeamId
+            );
             const quarterGoalsFor = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
             const quarterGoalsAgainst = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
@@ -596,11 +602,46 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   const generateGeneralRecommendations = (availablePlayers: Player[]): LineupRecommendation[] => {
     const recommendations: LineupRecommendation[] = [];
     
-    // Position-optimized (already exists)
-    const positionOptimized = generatePositionOptimizedLineup(availablePlayers);
-    if (positionOptimized) {
-      positionOptimized.notes = `${positionOptimized.notes} (No opponent-specific data available)`;
-      recommendations.push(positionOptimized);
+    // Analyze all historical data (not opponent-specific)
+    const allGameLineups = analyzeHistoricalLineupsFromCentralized(availablePlayers, rostersMap);
+    
+    if (allGameLineups.length > 0) {
+      // Generate general historical recommendations
+      const highestScoring = generateHighestScoringLineup(allGameLineups, availablePlayers);
+      if (highestScoring) {
+        highestScoring.notes = `${highestScoring.notes} (General historical data)`;
+        highestScoring.opponentSpecific = false;
+        recommendations.push(highestScoring);
+      }
+
+      const bestDefence = generateBestDefenceLineup(allGameLineups, availablePlayers);
+      if (bestDefence) {
+        bestDefence.notes = `${bestDefence.notes} (General historical data)`;
+        bestDefence.opponentSpecific = false;
+        recommendations.push(bestDefence);
+      }
+
+      const mostWins = generateMostWinsLineup(allGameLineups, availablePlayers);
+      if (mostWins) {
+        mostWins.notes = `${mostWins.notes} (General historical data)`;
+        mostWins.opponentSpecific = false;
+        recommendations.push(mostWins);
+      }
+
+      const bestOverall = generateBestOverallLineup(allGameLineups, availablePlayers);
+      if (bestOverall) {
+        bestOverall.notes = `${bestOverall.notes} (General historical data)`;
+        bestOverall.opponentSpecific = false;
+        recommendations.push(bestOverall);
+      }
+    } else {
+      // Fallback to position-optimized when no historical data
+      const positionOptimized = generatePositionOptimizedLineup(availablePlayers);
+      if (positionOptimized) {
+        positionOptimized.notes = `${positionOptimized.notes} (No historical data available)`;
+        positionOptimized.opponentSpecific = false;
+        recommendations.push(positionOptimized);
+      }
     }
     
     return recommendations;
