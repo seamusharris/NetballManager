@@ -95,6 +95,9 @@ export default function Roster() {
         } catch (error) {
           console.error('Error restoring preparation state:', error);
         }
+      } else {
+        // No preparation state, go directly to roster management for game from URL
+        setCurrentStep('roster');
       }
       
       // Set game ID regardless
@@ -121,7 +124,8 @@ export default function Roster() {
     // Only update if different to prevent loops
     if (gameId !== selectedGameId) {
       setSelectedGameId(gameId);
-      setCurrentStep('availability');
+      // Go directly to roster management - most users want to edit rosters, not set availability
+      setCurrentStep('roster');
     }
   };
 
@@ -182,10 +186,14 @@ export default function Roster() {
       <ArrowRight className="h-4 w-4 text-gray-400" />
 
       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-        currentStep === 'roster' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+        currentStep === 'roster' ? 'bg-blue-100 text-blue-800' : 
+        selectedGameId ? 'bg-gray-100 text-gray-800 cursor-pointer hover:bg-gray-200' : 'bg-gray-100 text-gray-600'
       }`}>
         <ClipboardList className="h-4 w-4" />
         <span className="text-sm font-medium">Manage Roster</span>
+        {selectedGameId && currentStep !== 'roster' && (
+          <Badge variant="secondary" className="ml-1 text-xs">Ready</Badge>
+        )}
       </div>
     </div>
   );
@@ -208,7 +216,6 @@ export default function Roster() {
       <Button
         variant="outline"
         onClick={() => setCurrentStep('roster')}
-        disabled={availablePlayerIds.length === 0}
         className="flex items-center gap-2"
       >
         <ClipboardList className="h-4 w-4" />
