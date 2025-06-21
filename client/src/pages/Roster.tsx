@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Users, Calendar, Settings, ArrowRight, ClipboardList } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiRequest } from '@/lib/apiClient';
-import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
+import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import { useLocation, useParams } from 'wouter';
 import { Game, Player, Opponent } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
@@ -73,7 +73,7 @@ export default function Roster() {
           const state = JSON.parse(prepState);
           if (state.gameId === gameIdFromUrl && state.fromPreparation) {
             console.log('Restoring preparation state for game:', gameIdFromUrl);
-            
+
             // Convert availability data format
             if (state.availability) {
               const availableIds = Object.entries(state.availability)
@@ -81,14 +81,14 @@ export default function Roster() {
                 .map(([id]) => parseInt(id));
               setAvailablePlayerIds(availableIds);
             }
-            
+
             // Set current step based on what was completed
             if (state.lineup && Object.values(state.lineup).every(p => p !== null)) {
               setCurrentStep('roster');
             } else {
               setCurrentStep('availability');
             }
-            
+
             // Clear the session state after use
             sessionStorage.removeItem('roster-prep-state');
           }
@@ -99,7 +99,7 @@ export default function Roster() {
         // No preparation state, go directly to roster management for game from URL
         setCurrentStep('roster');
       }
-      
+
       // Set game ID regardless
       setSelectedGameId(gameIdFromUrl);
     }
@@ -291,14 +291,18 @@ export default function Roster() {
       )}
 
       {selectedGameId && currentStep === 'roster' && (
-        <SimpleRosterManager
-          selectedGameId={selectedGameId}
-          setSelectedGameId={handleGameSelection}
-          players={players}
-          games={games}
-          opponents={opponents}
-          isLoading={isLoading}
-          availablePlayerIds={availablePlayerIds}
+        <DragDropRosterManager
+          availablePlayers={players.filter(p => availablePlayerIds.includes(p.id))}
+          gameInfo={{
+            opponent: selectedGame?.awayTeamName || selectedGame?.homeTeamName || 'Unknown',
+            date: selectedGame?.date || '',
+            time: selectedGame?.time || ''
+          }}
+          gameId={selectedGameId}
+          onRosterChange={() => {}}
+          onRosterSaved={() => {
+            // Optional: Add success toast or other feedback
+          }}
         />
       )}
     </PageTemplate>
