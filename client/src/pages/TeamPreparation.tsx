@@ -39,32 +39,28 @@ interface Game {
 }
 
 export default function TeamPreparation() {
-  const { currentTeamId, currentClubId } = useClub();
+  const { currentClubId } = useClub();
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
 
-  // Get current team details
-  const { data: currentTeam } = useQuery<Team>({
-    queryKey: ['/api/teams', currentTeamId],
-    enabled: !!currentTeamId,
+  // Get all teams from current club
+  const { data: clubTeams = [] } = useQuery<Team[]>({
+    queryKey: ['/api/teams'],
+    enabled: !!currentClubId,
   });
 
-  // Get all teams across all clubs to find teams in same division
+  // Get selected team details
+  const { data: selectedTeam } = useQuery<Team>({
+    queryKey: ['/api/teams', selectedTeamId],
+    enabled: !!selectedTeamId,
+  });
+
+  // Get all teams across all clubs to find opponent teams
   const { data: allTeams = [] } = useQuery<Team[]>({
     queryKey: ['/api/teams/all'],
-    enabled: !!currentClubId && !!currentTeam,
+    enabled: !!currentClubId && !!selectedTeam,
   });
-
-  // Filter teams to same division, excluding current team
-  const samesSectionTeams = useMemo(() => {
-    if (!currentTeam || !allTeams.length) return [];
-    return allTeams.filter(team => 
-      team.division === currentTeam.division && 
-      team.id !== currentTeamId &&
-      (team.season_id || team.seasonId) === (currentTeam.season_id || currentTeam.seasonId) &&
-      (team.club_id || team.clubId) !== currentClubId // Exclude teams from current club
-    );
-  }, [allTeams, currentTeam, currentTeamId, currentClubId]);
 
   // Get games for analysis
   const { data: allGames = [] } = useQuery<Game[]>({
@@ -72,25 +68,41 @@ export default function TeamPreparation() {
     enabled: !!currentClubId,
   });
 
-  // Get historical games between current team and selected opponent
+  // Get teams that the selected team has played against
+  const opponentTeamsFromGames = useMemo(() => {
+    if (!selectedTeamId || !allGames.length || !allTeams.length) return [];
+    
+    const opponentIds = new Set<number>();
+    allGames.forEach(game => {
+      if (game.homeTeamId === selectedTeamId && game.awayTeamId) {
+        opponentIds.add(game.awayTeamId);
+      } else if (game.awayTeamId === selectedTeamId && game.homeTeamId) {
+        opponentIds.add(game.homeTeamId);
+      }
+    });
+
+    return allTeams.filter(team => opponentIds.has(team.id));
+  }, [selectedTeamId, allGames, allTeams]);
+
+  // Get historical games between selected team and opponent
   const historicalGames = useMemo(() => {
-    if (!selectedOpponentId || !currentTeamId) return [];
+    if (!selectedOpponentId || !selectedTeamId) return [];
     return allGames.filter(game => 
-      (game.homeTeamId === currentTeamId && game.awayTeamId === selectedOpponentId) ||
-      (game.homeTeamId === selectedOpponentId && game.awayTeamId === currentTeamId)
+      (game.homeTeamId === selectedTeamId && game.awayTeamId === selectedOpponentId) ||
+      (game.homeTeamId === selectedOpponentId && game.awayTeamId === selectedTeamId)
     );
-  }, [allGames, currentTeamId, selectedOpponentId]);
+  }, [allGames, selectedTeamId, selectedOpponentId]);
 
   // Get opponent team details
-  const selectedOpponent = samesSectionTeams.find(team => team.id === selectedOpponentId);
+  const selectedOpponent = opponentTeamsFromGames.find(team => team.id === selectedOpponentId);
 
-  // Get games for current team (for season analysis)
-  const currentTeamGames = useMemo(() => {
-    if (!currentTeamId) return [];
+  // Get games for selected team (for season analysis)
+  const selectedTeamGames = useMemo(() => {
+    if (!selectedTeamId) return [];
     return allGames.filter(game => 
-      game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
+      game.homeTeamId === selectedTeamId || game.awayTeamId === selectedTeamId
     );
-  }, [allGames, currentTeamId]);
+  }, [allGames, selectedTeamId]);
 
   // Get games for opponent team (for season analysis)
   const opponentGames = useMemo(() => {
@@ -106,7 +118,7 @@ export default function TeamPreparation() {
     return <Minus className="h-4 w-4 text-gray-400" />;
   };
 
-  if (!currentTeam) {
+  if (!selectedTeam && !selectedTeamId) {
     return (
       <PageTemplate title="Team Preparation">
         <div className="flex items-center justify-center h-64">
@@ -127,31 +139,56 @@ export default function TeamPreparation() {
               Team Matchup Analysis
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Compare {currentTeam?.name} against other teams in {currentTeam?.division}
+              Select a team from your club and choose an opponent to analyze
             </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-blue-50">
-                    Your Team
-                  </Badge>
-                  <span className="font-medium">{currentTeam?.name}</span>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Your Team</label>
+                  <Select 
+                    value={selectedTeamId?.toString() || ""} 
+                    onValueChange={(value) => {
+                      setSelectedTeamId(value ? parseInt(value) : null);
+                      setSelectedOpponentId(null); // Reset opponent when team changes
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a team from your club..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clubTeams.map((team) => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name} ({team.division})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <span className="text-muted-foreground">vs</span>
-                <div className="flex-1">
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Opponent</label>
                   <Select 
                     value={selectedOpponentId?.toString() || ""} 
                     onValueChange={(value) => setSelectedOpponentId(value ? parseInt(value) : null)}
+                    disabled={!selectedTeamId || opponentTeamsFromGames.length === 0}
                   >
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Select opponent team..." />
+                    <SelectTrigger>
+                      <SelectValue 
+                        placeholder={
+                          !selectedTeamId 
+                            ? "Select a team first..." 
+                            : opponentTeamsFromGames.length === 0 
+                            ? "No opponents found..." 
+                            : "Choose opponent team..."
+                        } 
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {samesSectionTeams.map((team) => (
+                      {opponentTeamsFromGames.map((team) => (
                         <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.name}
+                          {team.name} ({team.clubName || team.clubCode || 'Unknown Club'})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -159,9 +196,9 @@ export default function TeamPreparation() {
                 </div>
               </div>
               
-              {samesSectionTeams.length === 0 && (
+              {selectedTeamId && opponentTeamsFromGames.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No other teams found in {currentTeam?.division}
+                  {selectedTeam?.name} hasn't played against any teams yet
                 </p>
               )}
             </div>
@@ -191,8 +228,8 @@ export default function TeamPreparation() {
                         <div className="text-center">
                           <div className="text-2xl font-bold text-green-600">
                             {historicalGames.filter(game => 
-                              (game.homeTeamId === currentTeamId && game.statusDisplayName?.includes('Win')) ||
-                              (game.awayTeamId === currentTeamId && game.statusDisplayName?.includes('Loss'))
+                              (game.homeTeamId === selectedTeamId && game.statusDisplayName?.includes('Win')) ||
+                              (game.awayTeamId === selectedTeamId && game.statusDisplayName?.includes('Loss'))
                             ).length}
                           </div>
                           <p className="text-sm text-muted-foreground">Wins</p>
@@ -200,8 +237,8 @@ export default function TeamPreparation() {
                         <div className="text-center">
                           <div className="text-2xl font-bold text-red-600">
                             {historicalGames.filter(game => 
-                              (game.homeTeamId === currentTeamId && game.statusDisplayName?.includes('Loss')) ||
-                              (game.awayTeamId === currentTeamId && game.statusDisplayName?.includes('Win'))
+                              (game.homeTeamId === selectedTeamId && game.statusDisplayName?.includes('Loss')) ||
+                              (game.awayTeamId === selectedTeamId && game.statusDisplayName?.includes('Win'))
                             ).length}
                           </div>
                           <p className="text-sm text-muted-foreground">Losses</p>
@@ -228,13 +265,13 @@ export default function TeamPreparation() {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm">
-                                {game.homeTeamId === currentTeamId ? currentTeam?.name : selectedOpponent?.name} vs{' '}
-                                {game.awayTeamId === currentTeamId ? currentTeam?.name : selectedOpponent?.name}
+                                {game.homeTeamId === selectedTeamId ? selectedTeam?.name : selectedOpponent?.name} vs{' '}
+                                {game.awayTeamId === selectedTeamId ? selectedTeam?.name : selectedOpponent?.name}
                               </span>
                               {game.statusDisplayName && (
                                 <Badge variant={
-                                  (game.homeTeamId === currentTeamId && game.statusDisplayName.includes('Win')) ||
-                                  (game.awayTeamId === currentTeamId && game.statusDisplayName.includes('Loss'))
+                                  (game.homeTeamId === selectedTeamId && game.statusDisplayName.includes('Win')) ||
+                                  (game.awayTeamId === selectedTeamId && game.statusDisplayName.includes('Loss'))
                                     ? 'default' : 'destructive'
                                 }>
                                   {game.statusDisplayName}
@@ -264,20 +301,20 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <h4 className="font-semibold text-blue-600 mb-3">{currentTeam?.name}</h4>
+                      <h4 className="font-semibold text-blue-600 mb-3">{selectedTeam?.name}</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm">Games Played</span>
-                          <Badge variant="outline">{currentTeamGames.length}</Badge>
+                          <Badge variant="outline">{selectedTeamGames.length}</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Division</span>
-                          <Badge variant="secondary">{currentTeam?.division}</Badge>
+                          <Badge variant="secondary">{selectedTeam?.division}</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Recent Form</span>
                           <div className="flex gap-1">
-                            {currentTeamGames.slice(-5).map((game, idx) => (
+                            {selectedTeamGames.slice(-5).map((game, idx) => (
                               <div 
                                 key={game.id} 
                                 className={`w-2 h-2 rounded-full ${
@@ -335,30 +372,30 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-blue-600">{currentTeam?.name}</h4>
+                      <h4 className="font-semibold text-blue-600">{selectedTeam?.name}</h4>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span>Win Rate</span>
                           <Badge className="bg-blue-100 text-blue-800">
-                            {currentTeamGames.length > 0 
-                              ? Math.round((currentTeamGames.filter(g => g.statusDisplayName?.includes('Win')).length / currentTeamGames.length) * 100)
+                            {selectedTeamGames.length > 0 
+                              ? Math.round((selectedTeamGames.filter(g => g.statusDisplayName?.includes('Win')).length / selectedTeamGames.length) * 100)
                               : 0}%
                           </Badge>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Total Games</span>
-                          <Badge variant="outline">{currentTeamGames.length}</Badge>
+                          <Badge variant="outline">{selectedTeamGames.length}</Badge>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Wins</span>
                           <Badge className="bg-green-100 text-green-800">
-                            {currentTeamGames.filter(g => g.statusDisplayName?.includes('Win')).length}
+                            {selectedTeamGames.filter(g => g.statusDisplayName?.includes('Win')).length}
                           </Badge>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Losses</span>
                           <Badge className="bg-red-100 text-red-800">
-                            {currentTeamGames.filter(g => g.statusDisplayName?.includes('Loss')).length}
+                            {selectedTeamGames.filter(g => g.statusDisplayName?.includes('Loss')).length}
                           </Badge>
                         </div>
                       </div>
@@ -405,16 +442,16 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <h4 className="font-semibold mb-3">{currentTeam?.name} - Next Games</h4>
+                      <h4 className="font-semibold mb-3">{selectedTeam?.name} - Next Games</h4>
                       <div className="space-y-2">
-                        {currentTeamGames
+                        {selectedTeamGames
                           .filter(game => new Date(game.date) > new Date())
                           .slice(0, 3)
                           .map((game) => (
                             <div key={game.id} className="flex justify-between items-center p-2 rounded bg-blue-50">
                               <span className="text-sm">{game.date}</span>
                               <span className="text-sm font-medium">
-                                vs {game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName}
+                                vs {game.homeTeamId === selectedTeamId ? game.awayTeamName : game.homeTeamName}
                               </span>
                             </div>
                           ))
