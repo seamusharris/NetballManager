@@ -11,6 +11,7 @@ import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
+import { QuarterScoresDisplay } from './quarter-scores-display';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
 
@@ -25,6 +26,7 @@ interface GameResultCardProps {
   showDate?: boolean;
   showRound?: boolean;
   showScore?: boolean;
+  showQuarterScores?: boolean;
   compact?: boolean;
   currentTeamId?: number;
   clubTeams?: any[];
@@ -41,6 +43,7 @@ export default function GameResultCard({
   showDate = true,
   showRound = true,
   showScore = true,
+  showQuarterScores = false,
   compact = false,
   currentTeamId,
   clubTeams = []
@@ -292,29 +295,44 @@ export default function GameResultCard({
         </div>
       </div>
 
-      {/* Right side - Score */}
-      {showScore && (
-        isByeGame ? (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-white bg-gray-600 rounded">
-            —
-          </div>
-        ) : !game.statusIsCompleted ? (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded">
-            —
-          </div>
-        ) : scores ? (
-          <ScoreBadge 
-            teamScore={scores.finalScore.for} 
-            opponentScore={scores.finalScore.against}
-            result={scores.result}
-            className="ml-auto"
+      {/* Right side - Score and Quarter Scores */}
+      <div className="ml-auto flex items-center gap-4">
+        {/* Quarter scores if enabled and available */}
+        {showQuarterScores && scores && scores.quarterScores && scores.quarterScores.length > 0 && (
+          <QuarterScoresDisplay
+            quarterScores={scores.quarterScores.map(q => ({
+              quarter: q.quarter,
+              teamScore: q.teamScore,
+              opponentScore: q.opponentScore
+            }))}
+            size="sm"
+            className="mr-4"
           />
-        ) : (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
-            —
-          </div>
-        )
-      )}
+        )}
+
+        {/* Main score */}
+        {showScore && (
+          isByeGame ? (
+            <div className="px-3 py-1 text-sm font-medium text-white bg-gray-600 rounded">
+              —
+            </div>
+          ) : !game.statusIsCompleted ? (
+            <div className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded">
+              —
+            </div>
+          ) : scores ? (
+            <ScoreBadge 
+              teamScore={scores.finalScore.for} 
+              opponentScore={scores.finalScore.against}
+              result={scores.result}
+            />
+          ) : (
+            <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
+              —
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 
