@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
+import { apiClient } from '@/lib/apiClient';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
-import { apiClient } from '@/lib/apiClient';
+import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 
 interface Team {
   id: number;
@@ -95,20 +96,20 @@ export default function TeamPreparation() {
     console.log('selectedTeamId:', selectedTeamId);
     console.log('allGames.length:', allGames.length);
     console.log('gamesLoading:', gamesLoading);
-    
+
     if (!selectedTeamId || !allGames.length || gamesLoading) {
       console.log('Early return - no team selected, no games, or still loading');
       return [];
     }
-    
+
     const opponentIds = new Set<number>();
     const gamesForTeam = allGames.filter(game => 
       game.homeTeamId === selectedTeamId || game.awayTeamId === selectedTeamId
     );
-    
+
     console.log('Games for selected team:', gamesForTeam.length);
     console.log('First few games for team:', gamesForTeam.slice(0, 3));
-    
+
     gamesForTeam.forEach(game => {
       if (game.homeTeamId === selectedTeamId && game.awayTeamId) {
         opponentIds.add(game.awayTeamId);
@@ -259,7 +260,7 @@ export default function TeamPreparation() {
                   </Select>
                 </div>
               </div>
-              
+
               {selectedTeamId && opponentTeamsFromGames.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   {selectedTeam?.name} hasn't played against any teams yet
@@ -286,74 +287,13 @@ export default function TeamPreparation() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {historicalGames.length > 0 ? (
-                    <div className="space-y-4">
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">
-                            {historicalGames.filter(game => 
-                              (game.homeTeamId === selectedTeamId && game.statusDisplayName?.includes('Win')) ||
-                              (game.awayTeamId === selectedTeamId && game.statusDisplayName?.includes('Loss'))
-                            ).length}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Wins</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-red-600">
-                            {historicalGames.filter(game => 
-                              (game.homeTeamId === selectedTeamId && game.statusDisplayName?.includes('Loss')) ||
-                              (game.awayTeamId === selectedTeamId && game.statusDisplayName?.includes('Win'))
-                            ).length}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Losses</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-gray-600">
-                            {historicalGames.length}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Total Games</p>
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div className="space-y-2">
-                        <h4 className="font-semibold">Recent Matchups</h4>
-                        {historicalGames.slice(0, 5).map((game) => (
-                          <div key={game.id} className="flex justify-between items-center p-2 rounded bg-gray-50">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">{game.date}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {game.round || 'Regular'}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">
-                                {game.homeTeamId === selectedTeamId ? selectedTeam?.name : selectedOpponent?.name} vs{' '}
-                                {game.awayTeamId === selectedTeamId ? selectedTeam?.name : selectedOpponent?.name}
-                              </span>
-                              {game.statusDisplayName && (
-                                <Badge variant={
-                                  (game.homeTeamId === selectedTeamId && game.statusDisplayName.includes('Win')) ||
-                                  (game.awayTeamId === selectedTeamId && game.statusDisplayName.includes('Loss'))
-                                    ? 'default' : 'destructive'
-                                }>
-                                  {game.statusDisplayName}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No previous games found between these teams</p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        This will be a fresh matchup!
-                      </p>
-                    </div>
-                  )}
+                  <PreviousGamesDisplay
+                    selectedTeamId={selectedTeamId}
+                    selectedOpponentId={selectedOpponentId}
+                    historicalGames={historicalGames}
+                    selectedTeam={selectedTeam}
+                    selectedOpponent={selectedOpponent}
+                  />
                 </CardContent>
               </Card>
 
@@ -391,7 +331,7 @@ export default function TeamPreparation() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold text-red-600 mb-3">{selectedOpponent?.name}</h4>
                       <div className="space-y-2">
@@ -464,7 +404,7 @@ export default function TeamPreparation() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <h4 className="font-semibold text-red-600">{selectedOpponent?.name}</h4>
                       <div className="space-y-3">
@@ -522,7 +462,7 @@ export default function TeamPreparation() {
                         }
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold mb-3">{selectedOpponent?.name} - Next Games</h4>
                       <div className="space-y-2">
