@@ -118,16 +118,6 @@ export default function TeamPreparation() {
     return <Minus className="h-4 w-4 text-gray-400" />;
   };
 
-  if (!selectedTeam && !selectedTeamId) {
-    return (
-      <PageTemplate title="Team Preparation">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Please select a team to begin preparation analysis.</p>
-        </div>
-      </PageTemplate>
-    );
-  }
-
   return (
     <PageTemplate title="Team Preparation">
       <div className="space-y-6">
