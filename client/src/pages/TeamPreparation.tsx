@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
@@ -50,9 +50,16 @@ interface Game {
 
 export default function TeamPreparation() {
   const { currentClubId, currentTeamId } = useClub();
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(currentTeamId);
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+
+  // Update selected team when current team context changes
+  useEffect(() => {
+    if (currentTeamId && !selectedTeamId) {
+      setSelectedTeamId(currentTeamId);
+    }
+  }, [currentTeamId, selectedTeamId]);
 
   // Get all teams from current club
   const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
