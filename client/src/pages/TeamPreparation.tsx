@@ -15,8 +15,12 @@ interface Team {
   id: number;
   name: string;
   division: string;
-  club_id: number;
-  season_id: number;
+  club_id?: number;
+  clubId?: number;
+  season_id?: number;
+  seasonId?: number;
+  clubName?: string;
+  clubCode?: string;
 }
 
 interface Game {
@@ -45,9 +49,9 @@ export default function TeamPreparation() {
     enabled: !!currentTeamId,
   });
 
-  // Get all teams in the same division/section
+  // Get all teams across all clubs to find teams in same division
   const { data: allTeams = [] } = useQuery<Team[]>({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams/all'],
     enabled: !!currentClubId && !!currentTeam,
   });
 
@@ -57,9 +61,10 @@ export default function TeamPreparation() {
     return allTeams.filter(team => 
       team.division === currentTeam.division && 
       team.id !== currentTeamId &&
-      team.season_id === currentTeam.season_id
+      (team.season_id || team.seasonId) === (currentTeam.season_id || currentTeam.seasonId) &&
+      (team.club_id || team.clubId) !== currentClubId // Exclude teams from current club
     );
-  }, [allTeams, currentTeam, currentTeamId]);
+  }, [allTeams, currentTeam, currentTeamId, currentClubId]);
 
   // Get games for analysis
   const { data: allGames = [] } = useQuery<Game[]>({

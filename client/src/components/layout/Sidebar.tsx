@@ -81,6 +81,11 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         label: 'Team Analysis', 
         icon: <Trophy className="w-5 h-5" /> 
       },
+      { 
+        path: `/team-preparation`, 
+        label: 'Team Preparation', 
+        icon: <Target className="w-5 h-5" /> 
+      },
     ] : [
       // Disabled links when no team selected
       { 
