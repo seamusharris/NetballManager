@@ -3117,19 +3117,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Rosters data must be an array' });
       }
 
-      // First delete all existing roster entries for this game
-      await storage.deleteRostersByGame(parseInt(gameId));
+      const gameIdNum = parseInt(gameId);
+      console.log(`Batch saving ${rosterData.length} roster entries for game ${gameIdNum}`);
 
-      // Then insert all new roster entries
-      for (const roster of rosterData) {
-        await storage.createRoster(roster);
+      // Use a single transaction for the entire operation
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+
+        // Delete all existing roster entries for this game in one operation
+        const deleteResult = await client.query(
+          'DELETE FROM rosters WHERE game_id = $1',
+          [gameIdNum]
+        );
+        console.log(`Deleted ${deleteResult.rowCount} existing roster entries`);
+
+        // Bulk insert all new entries if we have any
+        if (rosterData.length > 0) {
+          // Create the VALUES part of the query
+          const values = [];
+          const params = [];
+          let paramIndex = 1;
+
+          for (const roster of rosterData) {
+            values.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`);
+            params.push(roster.gameId, roster.quarter, roster.position, roster.playerId);
+            paramIndex += 4;
+          }
+
+          const insertQuery = `
+            INSERT INTO rosters (game_id, quarter, position, player_id)
+            VALUES ${values.join(', ')}
+          `;
+
+          const insertResult = await client.query(insertQuery, params);
+          console.log(`Bulk inserted ${insertResult.rowCount} roster entries`);
+        }
+
+        await client.query('COMMIT');
+
+        res.status(201).json({ 
+          success: true, 
+          message: `Batch saved ${rosterData.length} roster entries for game ${gameId}`,
+          count: rosterData.length
+        });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
       }
-
-      res.status(201).json({ 
-        success: true, 
-        message: `Batch saved ${rosterData.length} roster entries for game ${gameId}`,
-        count: rosterData.length
-      });
     } catch (error) {
       console.error('Error batch saving roster entries:', error);
       res.status(500).json({ error: 'Failed to batch save roster entries' });

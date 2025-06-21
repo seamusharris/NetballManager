@@ -591,6 +591,20 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  async createRostersBulk(rosterData: Array<{
+    gameId: number;
+    quarter: number;
+    position: string;
+    playerId: number;
+  }>): Promise<any[]> {
+    if (rosterData.length === 0) return [];
+    
+    return await db
+      .insert(rosters)
+      .values(rosterData)
+      .returning();
+  }
+
   // Game Stats methods
   async getGameStatsByGame(gameId: number, teamId?: number): Promise<GameStat[]> {
     try {
