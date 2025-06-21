@@ -11,6 +11,10 @@ import { apiClient } from '@/lib/apiClient';
 import { Badge } from '@/components/ui/badge';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 import RecentGames from '@/components/dashboard/RecentGames';
+import PlayerStatsCard from '@/components/statistics/PlayerStatsCard';
+import SeasonGamesDisplay from '@/components/ui/season-games-display';
+import { cn } from '@/lib/utils';
+import { winRateCalculator } from '@/lib/winRateCalculator';
 
 export default function ClubDashboard() {
   const { currentClub, currentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();

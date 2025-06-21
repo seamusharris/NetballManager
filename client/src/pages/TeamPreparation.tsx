@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { useLocation } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
@@ -226,6 +227,15 @@ export default function TeamPreparation() {
     );
   }, [allGames, selectedOpponentId]);
 
+  // Get season games for the selected team
+  const seasonGames = useMemo(() => {
+    if (!currentTeamId) return [];
+    return allGames.filter(game => 
+      (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId) &&
+      game.statusIsCompleted
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [allGames, currentTeamId]);
+
   const getTrendIcon = (current: number, previous: number) => {
     if (current > previous) return <TrendingUp className="h-4 w-4 text-green-600" />;
     if (current < previous) return <TrendingDown className="h-4 w-4 text-red-600" />;
@@ -301,9 +311,10 @@ export default function TeamPreparation() {
 
         {selectedOpponent && (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="season">Season Analysis</TabsTrigger>
+              <TabsTrigger value="season-games">Season Games</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -513,6 +524,17 @@ export default function TeamPreparation() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="season-games" className="space-y-6">
+              <SeasonGamesDisplay
+                seasonGames={seasonGames}
+                currentTeamId={currentTeamId}
+                seasonName={selectedTeam?.seasonName}
+                isLoading={gamesLoading}
+                batchScores={scoresMap}
+                batchStats={statsMap}
+              />
             </TabsContent>
           </Tabs>
         )}
