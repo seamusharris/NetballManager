@@ -251,31 +251,14 @@ export default function TeamPreparation() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Your Team</label>
-                  <Select 
-                    value={currentTeamId?.toString() || ""} 
-                    onValueChange={(value) => {
-                      console.log('Team selection changed:', value);
-                      const teamId = value ? parseInt(value) : null;
-                      console.log('Setting currentTeamId to:', teamId);
-                      
-                      // Invalidate games cache to force refetch for new team
-                      queryClient.invalidateQueries({ queryKey: ['games'] });
-                      
-                      setSelectedTeamId(teamId);
-                      setSelectedOpponentId(null); // Reset opponent when team changes
+                  <TeamSwitcher 
+                    mode="required" 
+                    onTeamChange={(teamId) => {
+                      console.log('Team selection changed via TeamSwitcher:', teamId);
+                      // Reset opponent when team changes
+                      setSelectedOpponentId(null);
                     }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a team from your club..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clubTeams.map((team) => (
-                        <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.name} ({team.division})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 <div className="space-y-2">
