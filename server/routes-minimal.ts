@@ -56,6 +56,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User clubs endpoint - required for app initialization
+  app.get('/api/user/clubs', async (req, res) => {
+    try {
+      // For development, return a sample club to allow initialization
+      res.json([{
+        id: 1,
+        name: 'Sample Netball Club',
+        location: 'Sample Location',
+        role: 'admin',
+        permissions: {
+          canManagePlayers: true,
+          canManageGames: true,
+          canManageStats: true,
+          canViewOtherTeams: true
+        }
+      }]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch user clubs' });
+    }
+  });
+
   const server = createServer(app);
   return server;
 }
