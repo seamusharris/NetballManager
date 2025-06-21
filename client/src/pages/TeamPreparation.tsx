@@ -4,14 +4,14 @@ import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import { useLocation } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLocation } from 'wouter';
-import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 
 interface Team {
   id: number;
@@ -167,7 +167,7 @@ export default function TeamPreparation() {
   // Get historical games between selected team and opponent with score data
   const historicalGames = useMemo(() => {
     if (!selectedOpponentId || !selectedTeamId) return [];
-    
+
     const games = allGames.filter(game => 
       (game.homeTeamId === selectedTeamId && game.awayTeamId === selectedOpponentId) ||
       (game.homeTeamId === selectedOpponentId && game.awayTeamId === selectedTeamId)
@@ -176,11 +176,11 @@ export default function TeamPreparation() {
     // Enrich games with score data
     return games.map(game => {
       const scores = scoresMap[game.id] || [];
-      
+
       // Calculate total scores for each team
       const homeScores = scores.filter(s => s.teamId === game.homeTeamId);
       const awayScores = scores.filter(s => s.teamId === game.awayTeamId);
-      
+
       const homeScore = homeScores.reduce((sum, s) => sum + (s.score || 0), 0);
       const awayScore = awayScores.reduce((sum, s) => sum + (s.score || 0), 0);
 
