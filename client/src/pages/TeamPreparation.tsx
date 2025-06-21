@@ -40,7 +40,9 @@ interface Game {
   homeClubCode?: string;
   awayClubCode?: string;
   statusId: number | null;
+  statusName?: string;
   statusDisplayName?: string;
+  statusIsCompleted?: boolean;
   round?: string;
   venue?: string;
   seasonId: number | null;
@@ -66,9 +68,9 @@ export default function TeamPreparation() {
 
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ['games', currentClubId],
-    queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId,
+    queryKey: ['games', currentClubId, selectedTeamId],
+    queryFn: () => apiClient.get(`/api/games${selectedTeamId ? `?teamId=${selectedTeamId}` : ''}`),
+    enabled: !!currentClubId && !!selectedTeamId,
   });
 
   // Get all teams across all clubs to find opponent teams
@@ -158,9 +160,16 @@ export default function TeamPreparation() {
 
   // Get scores for games
   const gameIds = allGames.map(game => game.id);
-  const { data: scoresMap = {} } = useQuery({
+  const { data: scoresMap = {} } = useQuery<Record<string, any[]>>({
     queryKey: ['scores', gameIds],
     queryFn: () => apiClient.post('/api/games/scores/batch', { gameIds }),
+    enabled: gameIds.length > 0,
+  });
+
+  // Get stats for games
+  const { data: statsMap = {} } = useQuery<Record<string, any[]>>({
+    queryKey: ['stats', gameIds],
+    queryFn: () => apiClient.post('/api/games/stats/batch', { gameIds }),
     enabled: gameIds.length > 0,
   });
 
@@ -168,10 +177,14 @@ export default function TeamPreparation() {
   const historicalGames = useMemo(() => {
     if (!selectedOpponentId || !selectedTeamId) return [];
 
-    const games = allGames.filter(game => 
-      (game.homeTeamId === selectedTeamId && game.awayTeamId === selectedOpponentId) ||
-      (game.homeTeamId === selectedOpponentId && game.awayTeamId === selectedTeamId)
-    );
+    const games = allGames.filter(game => {
+      // Filter out upcoming games - only show completed games
+      const isCompleted = (game as any).statusIsCompleted || (game as any).statusName === 'completed';
+      const isMatchup = (game.homeTeamId === selectedTeamId && game.awayTeamId === selectedOpponentId) ||
+                       (game.homeTeamId === selectedOpponentId && game.awayTeamId === selectedTeamId);
+      
+      return isCompleted && isMatchup;
+    });
 
     // Enrich games with score data
     return games.map(game => {
@@ -316,11 +329,11 @@ export default function TeamPreparation() {
                 </CardHeader>
                 <CardContent>
                   <PreviousGamesDisplay
-                    selectedTeamId={selectedTeamId}
-                    selectedOpponentId={selectedOpponentId}
                     historicalGames={historicalGames}
-                    selectedTeam={selectedTeam}
-                    selectedOpponent={selectedOpponent}
+                    currentTeamId={selectedTeamId || 0}
+                    currentClubId={currentClubId || 0}
+                    batchScores={scoresMap}
+                    opponentName={selectedOpponent?.name || 'Unknown'}
                   />
                 </CardContent>
               </Card>
