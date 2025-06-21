@@ -45,9 +45,18 @@ export default function TeamPreparation() {
   const [, setLocation] = useLocation();
 
   // Get all teams from current club
-  const { data: clubTeams = [] } = useQuery<Team[]>({
+  const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
     queryKey: ['/api/clubs', currentClubId, 'teams'],
     enabled: !!currentClubId,
+  });
+
+  // Debug logging
+  console.log('Team loading debug:', {
+    currentClubId,
+    clubTeams,
+    teamsLoading,
+    teamsError,
+    dataLength: clubTeams?.length
   });
 
   // Get selected team details
