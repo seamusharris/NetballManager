@@ -35,9 +35,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
       { path: '/preparation', label: 'Game Preparation', icon: <Target className="w-5 h-5" /> },
       { path: '/preparation-2', label: 'Game Preparation Pro', icon: <Target className="w-5 h-5" /> },
-      { path: '/game-preparation/1', label: 'Game Preparation Claude', icon: <Target className="w-5 h-5" /> },
+      
       { path: '/team-preparation', label: 'Team Preparation', icon: <Target className="w-5 h-5" /> },
-      { path: '/team-analysis', label: 'Team Analysis', icon: <Trophy className="w-5 h-5" /> },
       { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
       { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" /> },
       { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" /> },
@@ -70,6 +69,11 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         path: `/opponent-preparation/${currentTeamId}`, 
         label: 'Opponent Preparation', 
         icon: <Target className="w-5 h-5" /> 
+      },
+      { 
+        path: `/team-analysis`, 
+        label: 'Team Analysis', 
+        icon: <Trophy className="w-5 h-5" /> 
       },
     ] : [
       // Disabled links when no team selected
@@ -107,6 +111,13 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         icon: <Target className="w-5 h-5" />, 
         disabled: true,
         fallbackLabel: 'Opponent Preparation (Select Team First)'
+      },
+      { 
+        path: '/team-analysis-disabled', 
+        label: 'Team Analysis', 
+        icon: <Trophy className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Team Analysis (Select Team First)'
       },
       { 
         path: '/team-analysis-disabled', 
