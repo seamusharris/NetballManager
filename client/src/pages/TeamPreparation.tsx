@@ -64,7 +64,7 @@ export default function TeamPreparation() {
 
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ['/api/games'],
+    queryKey: ['games', currentClubId],
     enabled: !!currentClubId,
   });
 

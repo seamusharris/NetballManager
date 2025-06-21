@@ -1,0 +1,63 @@
+=== API CLIENT REQUEST SUCCESS END ===
+
+2Console.js:61 Warning: Encountered two children with the same key, `/games/123`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at nav
+    at div
+    at aside
+    at Sidebar (https://06939ff9-de41-48d1-9a28-d585995fc8e1-00-cads4uttf4sf.riker.replit.dev/src/components/layout/Sidebar.tsx:37:35)
+    at div
+    at Layout (https://06939ff9-de41-48d1-9a28-d585995fc8e1-00-cads4uttf4sf.riker.replit.dev/src/components/layout/Layout.tsx:22:34)
+    at Router
+    at AppContent
+    at Provider (https://06939ff9-de41-48d1-9a28-d585995fc8e1-00-cads4uttf4sf.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=526c3c5a:38:15)
+    at TooltipProvider (https://06939ff9-de41-48d1-9a28-d585995fc8e1-00-cads4uttf4sf.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=526c3c5a:62:5)
+    at ClubProvider (https://06939ff9-de41-48d1-9a28-d585995fc8e1-00-cads4uttf4sf.riker.replit.dev/src/contexts/ClubContext.tsx:22:25)
+    at QueryClientProvider (https://06939ff9-de41-48d1-9a28-d585995fc8e1-00-cads4uttf4sf.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=526c3c5a:2805:3)
+    at App
+Mt.forEach.n.<computed> @ Console.js:61
+printWarning @ chunk-RPCDYKBN.js?v=526c3c5a:521
+error @ chunk-RPCDYKBN.js?v=526c3c5a:505
+warnOnInvalidKey @ chunk-RPCDYKBN.js?v=526c3c5a:10219
+reconcileChildrenArray @ chunk-RPCDYKBN.js?v=526c3c5a:10235
+reconcileChildFibers2 @ chunk-RPCDYKBN.js?v=526c3c5a:10559
+reconcileChildren @ chunk-RPCDYKBN.js?v=526c3c5a:14292
+updateHostComponent @ chunk-RPCDYKBN.js?v=526c3c5a:14807
+beginWork @ chunk-RPCDYKBN.js?v=526c3c5a:15935
+beginWork$1 @ chunk-RPCDYKBN.js?v=526c3c5a:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=526c3c5a:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=526c3c5a:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=526c3c5a:19116
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=526c3c5a:18874
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=526c3c5a:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=526c3c5a:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=526c3c5a:555
+flush @ @tanstack_react-query.js?v=526c3c5a:569
+batch @ @tanstack_react-query.js?v=526c3c5a:587
+dispatch_fn @ @tanstack_react-query.js?v=526c3c5a:996
+setData @ @tanstack_react-query.js?v=526c3c5a:696
+onSuccess @ @tanstack_react-query.js?v=526c3c5a:897
+resolve @ @tanstack_react-query.js?v=526c3c5a:456
+Promise.then
+run @ @tanstack_react-query.js?v=526c3c5a:498
+start @ @tanstack_react-query.js?v=526c3c5a:536
+fetch @ @tanstack_react-query.js?v=526c3c5a:926
+executeFetch_fn @ @tanstack_react-query.js?v=526c3c5a:2211
+setOptions @ @tanstack_react-query.js?v=526c3c5a:1955
+(anonymous) @ @tanstack_react-query.js?v=526c3c5a:3032
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=526c3c5a:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=526c3c5a:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=526c3c5a:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=526c3c5a:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=526c3c5a:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=526c3c5a:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=526c3c5a:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=526c3c5a:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=526c3c5a:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=526c3c5a:19432
+commitRoot @ chunk-RPCDYKBN.js?v=526c3c5a:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=526c3c5a:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=526c3c5a:18718
+workLoop @ chunk-RPCDYKBN.js?v=526c3c5a:197
+flushWork @ chunk-RPCDYKBN.js?v=526c3c5a:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=526c3c5a:384Understand this error
