@@ -34,6 +34,9 @@ import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import { unifiedDataFetcher } from '@/lib/unifiedDataFetcher';
+import { calculatePositionStats } from '@/lib/gameScoreService';
+import { calculatePositionAverages } from '@/lib/positionStatsCalculator';
 
 
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
@@ -175,7 +178,7 @@ const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) 
 export default function GamePreparation() {
   const params = useParams();
   const { data: nextGame } = useNextGame();
-  
+
   // Use gameId from URL params, or fallback to next game ID
   const gameId = params.gameId ? parseInt(params.gameId) : nextGame?.id;
   const { currentClubId, currentTeamId } = useClub();
@@ -1269,58 +1272,17 @@ export default function GamePreparation() {
                         {seasonGames.length > 0 && seasonBatchScores && Object.keys(seasonBatchScores).some(gameId => seasonBatchScores[gameId]?.length > 0) && (
                           <div className="mt-6">
                             {(() => {
-                              // Calculate position-based statistics from season batch stats
-                              const positionTotals = {
-                                'GS': { goalsFor: 0, games: 0 },
-                                'GA': { goalsFor: 0, games: 0 },
-                                'GD': { goalsAgainst: 0, games: 0 },
-                                'GK': { goalsAgainst: 0, games: 0 }
-                              };
-
-                              let gamesWithPositionStats = 0;
-
-                              // Aggregate actual position stats from season games
-                              seasonGames.forEach(seasonGame => {
-                                // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
-                                if (!seasonGame.statusAllowsStatistics) return;
-
-                                const gameStats = seasonBatchStats?.[seasonGame.id] || [];
-                                if (gameStats.length > 0) {
-                                  gamesWithPositionStats++;
-
-                                  // Group stats by position and sum across quarters
-                                  const positionSums = {};
-                                  gameStats.forEach(stat => {
-                                    if (!positionSums[stat.position]) {
-                                      positionSums[stat.position] = { goalsFor: 0, goalsAgainst: 0 };
-                                    }
-                                    positionSums[stat.position].goalsFor += stat.goalsFor || 0;
-                                    positionSums[stat.position].goalsAgainst += stat.goalsAgainst || 0;
-                                  });
-
-                                  // Add to position totals
-                                  ['GS', 'GA', 'GD', 'GK'].forEach(position => {
-                                    if (positionSums[position]) {
-                                      if (position === 'GS' || position === 'GA') {
-                                        positionTotals[position].goalsFor += positionSums[position].goalsFor;
-                                      }
-                                      if (position === 'GD' || position === 'GK') {
-                                        positionTotals[position].goalsAgainst += positionSums[position].goalsAgainst;
-                                      }
-                                      positionTotals[position].games++;
-                                    }
-                                  });
-                                }
-                              });
-
-                              // Calculate position averages
-                              const gsAvgGoalsFor = positionTotals.GS.games > 0 ? positionTotals.GS.goalsFor / positionTotals.GS.games : 0;
-                              const gaAvgGoalsFor = positionTotals.GA.games > 0 ? positionTotals.GA.goalsFor / positionTotals.GA.games : 0;
-                              const gdAvgGoalsAgainst = positionTotals.GD.games > 0 ? positionTotals.GD.goalsAgainst / positionTotals.GD.games : 0;
-                              const gkAvgGoalsAgainst = positionTotals.GK.games > 0 ? positionTotals.GK.goalsAgainst / positionTotals.GK.games : 0;
-
-                              const attackingPositionsTotal = gsAvgGoalsFor + gaAvgGoalsFor;
-                              const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
+                              // Calculate position-based statistics using shared utility
+                              const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats, currentTeamId);
+                              const { 
+                                gsAvgGoalsFor, 
+                                gaAvgGoalsFor, 
+                                gdAvgGoalsAgainst, 
+                                gkAvgGoalsAgainst, 
+                                attackingPositionsTotal, 
+                                defendingPositionsTotal, 
+                                gamesWithPositionStats 
+                              } = positionAverages;
 
                               return (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
