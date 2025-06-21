@@ -11,6 +11,7 @@ interface PreviousGamesDisplayProps {
   currentTeamId: number;
   currentClubId: number;
   batchScores: Record<string, any[]>;
+  batchStats?: Record<string, any[]>;
   opponentName: string;
   className?: string;
 }
@@ -20,6 +21,7 @@ export default function PreviousGamesDisplay({
   currentTeamId,
   currentClubId,
   batchScores,
+  batchStats,
   opponentName,
   className = ""
 }: PreviousGamesDisplayProps) {
@@ -390,7 +392,7 @@ export default function PreviousGamesDisplay({
                 // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
                 if (!game.statusAllowsStatistics) return;
 
-                const gameStats = batchScores?.[game.id] || [];
+                const gameStats = batchStats?.[game.id] || [];
                 if (gameStats.length > 0) {
                   // Check if this game has position stats for any of our target positions
                   const hasRelevantStats = gameStats.some(stat => 
