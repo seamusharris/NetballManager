@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -116,8 +115,8 @@ export default function SeasonGamesDisplay({
         <div className="space-y-6">
           {/* Games List */}
           <div className="space-y-3">
-            {seasonGames.map((seasonGame, index) => {
-              const gameScores = batchScores?.[seasonGame.id] || [];
+            {seasonGames.map((game, index) => {
+              const gameScores = batchScores?.[game.id] || [];
               const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
                 id: score.id,
                 gameId: score.gameId,
@@ -131,13 +130,14 @@ export default function SeasonGamesDisplay({
               })) : [];
 
               return (
-                <div key={seasonGame.id} className="relative">
+                <div key={game.id} className="relative">
                   {/* Use the standard GameResultCard for consistent styling and scoring */}
                   <GameResultCard
-                    game={seasonGame}
+                    game={game}
                     currentTeamId={currentTeamId}
                     centralizedScores={transformedScores}
                     showLink={true}
+                    showQuarterScores={true}
                     className="w-full"
                   />
                 </div>
