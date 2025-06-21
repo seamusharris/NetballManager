@@ -1,4 +1,3 @@
-
 /**
  * Global scores cache for official game scores
  * Provides persistent caching across component unmounts and page navigation
@@ -88,7 +87,7 @@ export function convertOfficialScoresToGameScores(
 
   // Group scores by quarter
   const scoresByQuarter: Record<number, { [teamId: number]: number }> = {};
-  
+
   officialScores.forEach(score => {
     if (!scoresByQuarter[score.quarter]) {
       scoresByQuarter[score.quarter] = {};
@@ -157,8 +156,21 @@ export function clearGameCache(gameId: number): void {
 /**
  * Clear all cached scores
  */
-export function clearAllCache(): void {
+export function clearAllScoresCache(): void {
   scoresCache.clear();
+}
+
+/**
+ * Clear preparation-related caches when game status or scores change
+ */
+export function clearPreparationCaches(gameId?: number): void {
+  if (gameId) {
+    // Clear specific game cache
+    clearGameCache(gameId);
+  } else {
+    // Clear all preparation-related data
+    clearAllScoresCache();
+  }
 }
 
 /**
