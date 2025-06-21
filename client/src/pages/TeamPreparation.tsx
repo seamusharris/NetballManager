@@ -87,20 +87,36 @@ export default function TeamPreparation() {
 
   // Get teams that the selected team has played against
   const opponentTeamsFromGames = useMemo(() => {
-    if (!selectedTeamId || !allGames.length) return [];
+    console.log('=== OPPONENT ANALYSIS START ===');
+    console.log('selectedTeamId:', selectedTeamId);
+    console.log('allGames.length:', allGames.length);
+    
+    if (!selectedTeamId || !allGames.length) {
+      console.log('Early return - no team selected or no games');
+      return [];
+    }
     
     const opponentIds = new Set<number>();
-    allGames.forEach(game => {
+    const gamesForTeam = allGames.filter(game => 
+      game.homeTeamId === selectedTeamId || game.awayTeamId === selectedTeamId
+    );
+    
+    console.log('Games for selected team:', gamesForTeam.length);
+    console.log('First few games for team:', gamesForTeam.slice(0, 3));
+    
+    gamesForTeam.forEach(game => {
       if (game.homeTeamId === selectedTeamId && game.awayTeamId) {
         opponentIds.add(game.awayTeamId);
+        console.log('Found opponent (away):', game.awayTeamName, 'ID:', game.awayTeamId);
       } else if (game.awayTeamId === selectedTeamId && game.homeTeamId) {
         opponentIds.add(game.homeTeamId);
+        console.log('Found opponent (home):', game.homeTeamName, 'ID:', game.homeTeamId);
       }
     });
 
-    // Extract opponent teams directly from game data instead of relying on allTeams
+    // Extract opponent teams directly from game data
     const opponents: Team[] = [];
-    allGames.forEach(game => {
+    gamesForTeam.forEach(game => {
       if (game.homeTeamId === selectedTeamId && game.awayTeamId && game.awayTeamName) {
         const opponentTeam = {
           id: game.awayTeamId,
@@ -126,12 +142,10 @@ export default function TeamPreparation() {
       }
     });
 
-    console.log('Opponent teams debug:', {
-      selectedTeamId,
-      totalGames: allGames.length,
-      opponentIds: Array.from(opponentIds),
-      opponents: opponents
-    });
+    console.log('=== FINAL OPPONENT RESULTS ===');
+    console.log('Opponent IDs found:', Array.from(opponentIds));
+    console.log('Opponent teams:', opponents);
+    console.log('=== OPPONENT ANALYSIS END ===');
 
     return opponents;
   }, [selectedTeamId, allGames]);
