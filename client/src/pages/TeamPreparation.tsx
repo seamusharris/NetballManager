@@ -192,7 +192,10 @@ export default function TeamPreparation() {
                   <Select 
                     value={selectedTeamId?.toString() || ""} 
                     onValueChange={(value) => {
-                      setSelectedTeamId(value ? parseInt(value) : null);
+                      console.log('Team selection changed:', value);
+                      const teamId = value ? parseInt(value) : null;
+                      console.log('Setting selectedTeamId to:', teamId);
+                      setSelectedTeamId(teamId);
                       setSelectedOpponentId(null); // Reset opponent when team changes
                     }}
                   >
