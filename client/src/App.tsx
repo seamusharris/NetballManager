@@ -98,6 +98,7 @@ import TeamAnalysis from './pages/TeamAnalysis';
 import Preparation from './pages/Preparation';
 import Preparation2 from './pages/Preparation2';
 import GamePreparation from './pages/GamePreparation';
+import TeamPreparation from './pages/TeamPreparation';
 
 function Router() {
   return (
@@ -121,6 +122,7 @@ function Router() {
         <Route path="/preparation" component={withErrorBoundary(Preparation, 'Preparation')} />
         <Route path="/opponent-preparation/:teamId" component={withErrorBoundary(OpponentPreparation, 'OpponentPreparation')} />
         <Route path="/game-preparation/:gameId" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
+        <Route path="/team-preparation" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />
         <Route path="/club-dashboard" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
 
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
