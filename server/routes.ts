@@ -2,9 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { sql, eq, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db, pool } from "./db";
-import * as schema from "@shared/schema";
 import { 
   insertPlayerSchema, importPlayerSchema,
   insertGameSchema, importGameSchema,
@@ -48,27 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // For development, simulate an authenticated user with access to all clubs
     if (!req.user) {
       try {
-        req.user = {
-          id: 1,
-          username: 'dev_user',
-          clubs: [{
-            clubId: 1,
-            role: 'admin',
-            permissions: {
-              canManagePlayers: true,
-              canManageGames: true,
-              canManageStats: true,
-              canViewOtherTeams: true
-            }
-          }],
-          currentClubId: 1
-        };
-      } catch (error) {
-        console.error('Error setting up dev user:', error);
-      }
-    }
-    next();
-  });
+
 
   // Official Game Scores endpoints
   app.get('/api/games/:gameId/scores', async (req, res) => {
@@ -160,7 +139,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-      try {
         // Check database health first
         const isHealthy = await checkPoolHealth();
         if (!isHealthy) {
@@ -194,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
-          const userClubs = allClubs?.rows.map(club => ({
+          const userClubs = allClubs.rows.map(club => ({
             clubId: club.id,
             role: 'admin',
             permissions: {
@@ -203,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               canManageStats: true,
               canViewOtherTeams: true,
             }
-          })) || [];
+          }));
 
           req.user = {
             id: 1,

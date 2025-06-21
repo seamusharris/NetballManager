@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ClubProvider from '@/contexts/ClubContext';
 import { initializeCacheManager } from '@/lib/cacheManager';
 import { Toaster } from "@/components/ui/toaster";

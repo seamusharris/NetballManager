@@ -7,7 +7,6 @@ import * as schema from "@shared/schema";
 neonConfig.webSocketConstructor = ws;
 neonConfig.useSecureWebSocket = true;
 neonConfig.pipelineConnect = false;
-neonConfig.pipelineTLS = false;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
