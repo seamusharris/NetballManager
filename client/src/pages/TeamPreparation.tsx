@@ -63,7 +63,7 @@ export default function TeamPreparation() {
   });
 
   // Get games for analysis
-  const { data: allGames = [] } = useQuery<Game[]>({
+  const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ['/api/games'],
     enabled: !!currentClubId,
   });
@@ -82,7 +82,8 @@ export default function TeamPreparation() {
     teamsError,
     dataLength: clubTeams?.length,
     selectedTeamId,
-    gamesCount: allGames?.length
+    gamesCount: allGames?.length,
+    gamesLoading
   });
 
   // Get teams that the selected team has played against
@@ -90,9 +91,10 @@ export default function TeamPreparation() {
     console.log('=== OPPONENT ANALYSIS START ===');
     console.log('selectedTeamId:', selectedTeamId);
     console.log('allGames.length:', allGames.length);
+    console.log('gamesLoading:', gamesLoading);
     
-    if (!selectedTeamId || !allGames.length) {
-      console.log('Early return - no team selected or no games');
+    if (!selectedTeamId || !allGames.length || gamesLoading) {
+      console.log('Early return - no team selected, no games, or still loading');
       return [];
     }
     
