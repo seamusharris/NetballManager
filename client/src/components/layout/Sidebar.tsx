@@ -35,6 +35,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
       { path: '/preparation', label: 'Game Preparation', icon: <Target className="w-5 h-5" /> },
       { path: '/preparation-2', label: 'Game Preparation Pro', icon: <Target className="w-5 h-5" /> },
+      { path: '/game-preparation/1', label: 'Game Preparation Claude', icon: <Target className="w-5 h-5" /> },
       { path: '/team-preparation', label: 'Team Preparation', icon: <Target className="w-5 h-5" /> },
       { path: '/team-analysis', label: 'Team Analysis', icon: <Trophy className="w-5 h-5" /> },
       { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
@@ -61,33 +62,13 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         icon: <ClipboardList className="w-5 h-5" /> 
       },
       { 
-        path: nextGame ? `/preparation/${nextGame.id}` : `/games/${currentTeamId}`, 
-        label: 'Game Preparation', 
-        icon: <Target className="w-5 h-5" /> 
-      },
-      { 
-        path: `/preparation-2`, 
-        label: 'Game Preparation Pro', 
-        icon: <Target className="w-5 h-5" /> 
-      },
-      { 
-        path: nextGame ? `/game-preparation/${nextGame.id}` : `/games/${currentTeamId}`, 
+        path: nextGame ? `/game-preparation/${nextGame.id}` : `/game-preparation/1`, 
         label: 'Game Preparation Claude', 
         icon: <Target className="w-5 h-5" /> 
       },
       { 
         path: `/opponent-preparation/${currentTeamId}`, 
         label: 'Opponent Preparation', 
-        icon: <Target className="w-5 h-5" /> 
-      },
-      { 
-        path: `/team-analysis`, 
-        label: 'Team Analysis', 
-        icon: <Trophy className="w-5 h-5" /> 
-      },
-      { 
-        path: `/team-preparation`, 
-        label: 'Team Preparation', 
         icon: <Target className="w-5 h-5" /> 
       },
     ] : [
