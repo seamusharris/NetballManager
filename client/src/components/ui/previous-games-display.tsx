@@ -374,72 +374,79 @@ export default function PreviousGamesDisplay({
         {historicalGames.length > 0 && (
           <div className="mt-6">
             {(() => {
-              // Calculate attack vs defense breakdown based on actual quarter-by-quarter stats
-              let totalAttackGoals = 0; // GA + GS goals
-              let totalDefenseConceded = 0; // Goals conceded by GD + GK
-              let totalGAGoals = 0;
-              let totalGSGoals = 0;
-              let totalGDConceded = 0;
-              let totalGKConceded = 0;
-              let gamesWithStats = 0;
+              // Calculate attack vs defense breakdown based on actual position stats
+              const positionTotals = {
+                'GS': { goalsFor: 0, games: 0 },
+                'GA': { goalsFor: 0, games: 0 },
+                'GD': { goalsAgainst: 0, games: 0 },
+                'GK': { goalsAgainst: 0, games: 0 }
+              };
 
-              // Check each game for quarter-by-quarter statistics
-              const { default: unifiedStatsService } = require('@/lib/statisticsService');
-              
-              // We need to use the batch stats that should be available from the parent
-              // For now, let's calculate from the transformed scores we already have
+              let gamesWithPositionStats = 0;
+              const gamesWithStatsSet = new Set();
+
+              // Use batch stats to get actual position-based statistics
               historicalGames.forEach(game => {
-                const gameScores = batchScores?.[game.id] || [];
-                const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                  id: score.id,
-                  gameId: score.gameId,
-                  teamId: score.teamId,
-                  quarter: score.quarter,
-                  score: score.score,
-                  enteredBy: score.enteredBy,
-                  enteredAt: score.enteredAt,
-                  updatedAt: score.updatedAt,
-                  notes: score.notes
-                })) : [];
+                // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
+                if (!game.statusAllowsStatistics) return;
 
-                // Only count games that have quarter-by-quarter data
-                if (transformedScores.length > 0) {
-                  gamesWithStats++;
+                const gameStats = batchScores?.[game.id] || [];
+                if (gameStats.length > 0) {
+                  // Check if this game has position stats for any of our target positions
+                  const hasRelevantStats = gameStats.some(stat => 
+                    ['GS', 'GA', 'GD', 'GK'].includes(stat.position)
+                  );
 
-                  // For now, we'll need to estimate from total scores until we have access to position stats
-                  // This is a temporary solution - ideally we'd calculate from actual GA/GS/GD/GK stats
-                  let gameGoalsFor = 0;
-                  let gameGoalsAgainst = 0;
+                  if (hasRelevantStats) {
+                    gamesWithStatsSet.add(game.id);
 
-                  transformedScores.forEach(score => {
-                    if (score.teamId === currentTeamId) {
-                      gameGoalsFor += score.score;
-                    } else {
-                      gameGoalsAgainst += score.score;
-                    }
-                  });
+                    // Calculate position sums for this game
+                    const positionSums = {
+                      'GS': { goalsFor: 0, goalsAgainst: 0 },
+                      'GA': { goalsFor: 0, goalsAgainst: 0 },
+                      'GD': { goalsFor: 0, goalsAgainst: 0 },
+                      'GK': { goalsFor: 0, goalsAgainst: 0 }
+                    };
 
-                  // Use the same estimation ratios but apply them to actual quarter data
-                  const gaEstimate = gameGoalsFor * 0.48;
-                  const gsEstimate = gameGoalsFor * 0.52;
-                  const gdEstimate = gameGoalsAgainst * 0.45;
-                  const gkEstimate = gameGoalsAgainst * 0.55;
+                    gameStats.forEach(stat => {
+                      if (['GS', 'GA', 'GD', 'GK'].includes(stat.position)) {
+                        positionSums[stat.position].goalsFor += stat.goalsFor || 0;
+                        positionSums[stat.position].goalsAgainst += stat.goalsAgainst || 0;
+                      }
+                    });
 
-                  totalGAGoals += gaEstimate;
-                  totalGSGoals += gsEstimate;
-                  totalGDConceded += gdEstimate;
-                  totalGKConceded += gkEstimate;
-                  totalAttackGoals += gameGoalsFor;
-                  totalDefenseConceded += gameGoalsAgainst;
+                    // Add to position totals
+                    ['GS', 'GA', 'GD', 'GK'].forEach(position => {
+                      if (positionSums[position]) {
+                        if (position === 'GS' || position === 'GA') {
+                          positionTotals[position].goalsFor += positionSums[position].goalsFor;
+                        }
+                        if (position === 'GD' || position === 'GK') {
+                          positionTotals[position].goalsAgainst += positionSums[position].goalsAgainst;
+                        }
+                        positionTotals[position].games++;
+                      }
+                    });
+                  }
                 }
               });
 
-              const avgAttackPerformance = gamesWithStats > 0 ? totalAttackGoals / gamesWithStats : 0;
-              const avgDefensePerformance = gamesWithStats > 0 ? totalDefenseConceded / gamesWithStats : 0;
-              const avgGAGoals = gamesWithStats > 0 ? totalGAGoals / gamesWithStats : 0;
-              const avgGSGoals = gamesWithStats > 0 ? totalGSGoals / gamesWithStats : 0;
-              const avgGDConceded = gamesWithStats > 0 ? totalGDConceded / gamesWithStats : 0;
-              const avgGKConceded = gamesWithStats > 0 ? totalGKConceded / gamesWithStats : 0;
+              gamesWithPositionStats = gamesWithStatsSet.size;
+
+              // Calculate averages from actual position stats
+              const gaAvgGoalsFor = positionTotals.GA.games > 0 ? positionTotals.GA.goalsFor / positionTotals.GA.games : 0;
+              const gsAvgGoalsFor = positionTotals.GS.games > 0 ? positionTotals.GS.goalsFor / positionTotals.GS.games : 0;
+              const gdAvgGoalsAgainst = positionTotals.GD.games > 0 ? positionTotals.GD.goalsAgainst / positionTotals.GD.games : 0;
+              const gkAvgGoalsAgainst = positionTotals.GK.games > 0 ? positionTotals.GK.goalsAgainst / positionTotals.GK.games : 0;
+
+              const attackUnitPerformance = gaAvgGoalsFor + gsAvgGoalsFor;
+              const defenseUnitPerformance = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
+
+              const gaContribution = gaAvgGoalsFor;
+              const gsContribution = gsAvgGoalsFor;
+
+              const gdConceded = gdAvgGoalsAgainst;
+              const gkConceded = gkAvgGoalsAgainst;
 
               return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -447,28 +454,28 @@ export default function PreviousGamesDisplay({
                   <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-gray-800">Attack vs {opponentName}</span>
-                      <span className="text-2xl font-bold text-green-600">{avgAttackPerformance.toFixed(1)}</span>
+                      <span className="text-2xl font-bold text-green-600">{attackUnitPerformance.toFixed(1)}</span>
                     </div>
-                    {gamesWithStats > 0 ? (
+                    {gamesWithPositionStats > 0 ? (
                       <>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm font-semibold">
-                            <span>GA: {avgGAGoals.toFixed(1)}</span>
-                            <span>GS: {avgGSGoals.toFixed(1)}</span>
+                            <span>GA: {gaContribution.toFixed(1)}</span>
+                            <span>GS: {gsContribution.toFixed(1)}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3 flex">
                             <div
                               className="bg-green-400 h-3 rounded-l-full"
-                              style={{ width: avgAttackPerformance > 0 ? `${(avgGAGoals / avgAttackPerformance) * 100}%` : '48%' }}
+                              style={{ width: attackUnitPerformance > 0 ? `${(gaContribution / attackUnitPerformance) * 100}%` : '48%' }}
                             ></div>
                             <div
                               className="bg-green-600 h-3 rounded-r-full"
-                              style={{ width: avgAttackPerformance > 0 ? `${(avgGSGoals / avgAttackPerformance) * 100}%` : '52%' }}
+                              style={{ width: attackUnitPerformance > 0 ? `${(gsContribution / attackUnitPerformance) * 100}%` : '52%' }}
                             ></div>
                           </div>
                         </div>
                         <div className="text-xs text-gray-500">
-                          Based on {gamesWithStats} games vs {opponentName}
+                          Based on {gamesWithPositionStats} games vs {opponentName}
                         </div>
                       </>
                     ) : (
@@ -482,28 +489,28 @@ export default function PreviousGamesDisplay({
                   <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-gray-800">Defense vs {opponentName}</span>
-                      <span className="text-2xl font-bold text-red-600">{avgDefensePerformance.toFixed(1)}</span>
+                      <span className="text-2xl font-bold text-red-600">{defenseUnitPerformance.toFixed(1)}</span>
                     </div>
-                    {gamesWithStats > 0 ? (
+                    {gamesWithPositionStats > 0 ? (
                       <>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm font-semibold">
-                            <span>GD: {avgGDConceded.toFixed(1)}</span>
-                            <span>GK: {avgGKConceded.toFixed(1)}</span>
+                            <span>GD: {gdConceded.toFixed(1)}</span>
+                            <span>GK: {gkConceded.toFixed(1)}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3 flex">
                             <div
                               className="bg-red-400 h-3 rounded-l-full"
-                              style={{ width: avgDefensePerformance > 0 ? `${(avgGDConceded / avgDefensePerformance) * 100}%` : '45%' }}
+                              style={{ width: defenseUnitPerformance > 0 ? `${(gdConceded / defenseUnitPerformance) * 100}%` : '45%' }}
                             ></div>
                             <div
                               className="bg-red-600 h-3 rounded-r-full"
-                              style={{ width: avgDefensePerformance > 0 ? `${(avgGKConceded / avgDefensePerformance) * 100}%` : '55%' }}
+                              style={{ width: defenseUnitPerformance > 0 ? `${(gkConceded / defenseUnitPerformance) * 100}%` : '55%' }}
                             ></div>
                           </div>
                         </div>
                         <div className="text-xs text-gray-500">
-                          Based on {gamesWithStats} games vs {opponentName}
+                          Based on {gamesWithPositionStats} games vs {opponentName}
                         </div>
                       </>
                     ) : (
