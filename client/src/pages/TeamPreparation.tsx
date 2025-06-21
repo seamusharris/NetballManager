@@ -321,6 +321,7 @@ export default function TeamPreparation() {
                     currentTeamId={currentTeamId || 0}
                     currentClubId={currentClubId || 0}
                     batchScores={scoresMap}
+                    batchStats={statsMap}
                     opponentName={selectedOpponent?.name || 'Unknown'}
                   />
                 </CardContent>
