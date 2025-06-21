@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
+import { apiClient } from '@/lib/apiClient';
 
 interface Team {
   id: number;
@@ -45,7 +46,7 @@ interface Game {
 }
 
 export default function TeamPreparation() {
-  const { currentClubId } = useClub();
+  const { currentClubId, currentTeamId } = useClub();
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
@@ -65,6 +66,7 @@ export default function TeamPreparation() {
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ['games', currentClubId],
+    queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId,
   });
 
