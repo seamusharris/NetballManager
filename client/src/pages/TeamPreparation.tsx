@@ -46,7 +46,7 @@ export default function TeamPreparation() {
 
   // Get all teams from current club
   const { data: clubTeams = [] } = useQuery<Team[]>({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/clubs', currentClubId, 'teams'],
     enabled: !!currentClubId,
   });
 
