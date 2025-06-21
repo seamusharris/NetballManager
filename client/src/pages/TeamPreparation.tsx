@@ -31,6 +31,12 @@ interface Game {
   awayTeamId: number | null;
   homeTeamName?: string;
   awayTeamName?: string;
+  homeTeamDivision?: string;
+  awayTeamDivision?: string;
+  homeClubName?: string;
+  awayClubName?: string;
+  homeClubCode?: string;
+  awayClubCode?: string;
   statusId: number | null;
   statusDisplayName?: string;
   round?: string;
@@ -50,31 +56,33 @@ export default function TeamPreparation() {
     enabled: !!currentClubId,
   });
 
-  // Debug logging
-  console.log('Team loading debug:', {
-    currentClubId,
-    clubTeams,
-    teamsLoading,
-    teamsError,
-    dataLength: clubTeams?.length
-  });
-
   // Get selected team details
   const { data: selectedTeam } = useQuery<Team>({
     queryKey: ['/api/teams', selectedTeamId],
     enabled: !!selectedTeamId,
   });
 
-  // Get all teams across all clubs to find opponent teams
-  const { data: allTeams = [] } = useQuery<Team[]>({
-    queryKey: ['/api/teams/all'],
-    enabled: !!currentClubId && !!selectedTeam,
-  });
-
   // Get games for analysis
   const { data: allGames = [] } = useQuery<Game[]>({
     queryKey: ['/api/games'],
     enabled: !!currentClubId,
+  });
+
+  // Get all teams across all clubs to find opponent teams
+  const { data: allTeams = [] } = useQuery<Team[]>({
+    queryKey: ['/api/teams/all'],
+    enabled: !!currentClubId,
+  });
+
+  // Debug logging
+  console.log('Team loading debug:', {
+    currentClubId,
+    clubTeams,
+    teamsLoading,
+    teamsError,
+    dataLength: clubTeams?.length,
+    selectedTeamId,
+    gamesCount: allGames?.length
   });
 
   // Get teams that the selected team has played against
