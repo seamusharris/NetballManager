@@ -287,7 +287,7 @@ export default function TeamPreparation() {
                     </div>
                     
                     <div>
-                      <h4 className="font-semibold text-red-600 mb-3">{selectedOpponent.name}</h4>
+                      <h4 className="font-semibold text-red-600 mb-3">{selectedOpponent?.name}</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm">Games Played</span>
@@ -295,7 +295,7 @@ export default function TeamPreparation() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Division</span>
-                          <Badge variant="secondary">{selectedOpponent.division}</Badge>
+                          <Badge variant="secondary">{selectedOpponent?.division}</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Recent Form</span>
@@ -330,7 +330,7 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-blue-600">{currentTeam.name}</h4>
+                      <h4 className="font-semibold text-blue-600">{currentTeam?.name}</h4>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span>Win Rate</span>
@@ -360,7 +360,7 @@ export default function TeamPreparation() {
                     </div>
                     
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-red-600">{selectedOpponent.name}</h4>
+                      <h4 className="font-semibold text-red-600">{selectedOpponent?.name}</h4>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span>Win Rate</span>
@@ -400,7 +400,7 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <h4 className="font-semibold mb-3">{currentTeam.name} - Next Games</h4>
+                      <h4 className="font-semibold mb-3">{currentTeam?.name} - Next Games</h4>
                       <div className="space-y-2">
                         {currentTeamGames
                           .filter(game => new Date(game.date) > new Date())
@@ -418,7 +418,7 @@ export default function TeamPreparation() {
                     </div>
                     
                     <div>
-                      <h4 className="font-semibold mb-3">{selectedOpponent.name} - Next Games</h4>
+                      <h4 className="font-semibold mb-3">{selectedOpponent?.name} - Next Games</h4>
                       <div className="space-y-2">
                         {opponentGames
                           .filter(game => new Date(game.date) > new Date())
