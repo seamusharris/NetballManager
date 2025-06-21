@@ -374,3 +374,206 @@ export default function PreviousGamesDisplay({
     </Card>
   );
 }
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trophy, Calendar, MapPin, Users } from 'lucide-react';
+
+interface PreviousGamesDisplayProps {
+  selectedTeamId: number | null;
+  selectedOpponentId: number | null;
+  historicalGames: any[];
+  selectedTeam: any;
+  selectedOpponent: any;
+}
+
+export default function PreviousGamesDisplay({
+  selectedTeamId,
+  selectedOpponentId,
+  historicalGames,
+  selectedTeam,
+  selectedOpponent
+}: PreviousGamesDisplayProps) {
+  // Filter out upcoming games - only show completed games
+  const completedGames = historicalGames.filter(game => 
+    game.statusIsCompleted && new Date(game.date) <= new Date()
+  );
+
+  if (!selectedTeamId || !selectedOpponentId) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Select both teams to view head-to-head history
+      </div>
+    );
+  }
+
+  if (completedGames.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="font-semibold text-lg mb-2">No Previous Games</h3>
+        <p className="text-muted-foreground">
+          {selectedTeam?.name} and {selectedOpponent?.name} haven't played against each other yet
+        </p>
+      </div>
+    );
+  }
+
+  // Calculate head-to-head record
+  let teamWins = 0;
+  let opponentWins = 0;
+  let draws = 0;
+
+  completedGames.forEach(game => {
+    const isTeamHome = game.homeTeamId === selectedTeamId;
+    const teamScore = isTeamHome ? game.homeScore : game.awayScore;
+    const opponentScore = isTeamHome ? game.awayScore : game.homeScore;
+
+    if (teamScore > opponentScore) {
+      teamWins++;
+    } else if (opponentScore > teamScore) {
+      opponentWins++;
+    } else {
+      draws++;
+    }
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Head-to-Head Summary */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <div className="text-2xl font-bold text-blue-600">{teamWins}</div>
+            <p className="text-sm text-muted-foreground">{selectedTeam?.name} Wins</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <div className="text-2xl font-bold text-gray-600">{draws}</div>
+            <p className="text-sm text-muted-foreground">Draws</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <div className="text-2xl font-bold text-red-600">{opponentWins}</div>
+            <p className="text-sm text-muted-foreground">{selectedOpponent?.name} Wins</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Games */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Recent Matchups ({completedGames.length} games)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {completedGames
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .slice(0, 5)
+              .map((game) => {
+                const isTeamHome = game.homeTeamId === selectedTeamId;
+                const teamScore = isTeamHome ? game.homeScore : game.awayScore;
+                const opponentScore = isTeamHome ? game.awayScore : game.homeScore;
+                
+                let result = 'Draw';
+                let resultColor = 'gray';
+                
+                if (teamScore > opponentScore) {
+                  result = 'Win';
+                  resultColor = 'green';
+                } else if (opponentScore > teamScore) {
+                  result = 'Loss';
+                  resultColor = 'red';
+                }
+
+                return (
+                  <div key={game.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">{game.date}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Round {game.round} • {game.venue || 'TBA'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          {teamScore || 0} - {opponentScore || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {isTeamHome ? 'Home' : 'Away'}
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={resultColor === 'green' ? 'default' : resultColor === 'red' ? 'destructive' : 'secondary'}
+                        className={
+                          resultColor === 'green' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                          resultColor === 'red' ? '' :
+                          'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }
+                      >
+                        {result}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+          
+          {completedGames.length > 5 && (
+            <div className="text-center mt-4">
+              <Button variant="outline" size="sm">
+                View All {completedGames.length} Games
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Performance Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Performance Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <h4 className="font-semibold mb-2">Average Score</h4>
+              <div className="text-2xl font-bold text-blue-600">
+                {completedGames.length > 0 ? 
+                  Math.round(completedGames.reduce((sum, game) => {
+                    const isTeamHome = game.homeTeamId === selectedTeamId;
+                    return sum + (isTeamHome ? (game.homeScore || 0) : (game.awayScore || 0));
+                  }, 0) / completedGames.length) : 0
+                }
+              </div>
+              <p className="text-sm text-muted-foreground">Points per game vs {selectedOpponent?.name}</p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-2">Win Percentage</h4>
+              <div className="text-2xl font-bold text-green-600">
+                {completedGames.length > 0 ? 
+                  Math.round((teamWins / completedGames.length) * 100) : 0
+                }%
+              </div>
+              <p className="text-sm text-muted-foreground">Success rate in head-to-head</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

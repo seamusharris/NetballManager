@@ -156,14 +156,42 @@ export default function TeamPreparation() {
     return opponents;
   }, [selectedTeamId, allGames, gamesLoading]);
 
-  // Get historical games between selected team and opponent
+  // Get scores for games
+  const gameIds = allGames.map(game => game.id);
+  const { data: scoresMap = {} } = useQuery({
+    queryKey: ['scores', gameIds],
+    queryFn: () => apiClient.post('/api/games/scores/batch', { gameIds }),
+    enabled: gameIds.length > 0,
+  });
+
+  // Get historical games between selected team and opponent with score data
   const historicalGames = useMemo(() => {
     if (!selectedOpponentId || !selectedTeamId) return [];
-    return allGames.filter(game => 
+    
+    const games = allGames.filter(game => 
       (game.homeTeamId === selectedTeamId && game.awayTeamId === selectedOpponentId) ||
       (game.homeTeamId === selectedOpponentId && game.awayTeamId === selectedTeamId)
     );
-  }, [allGames, selectedTeamId, selectedOpponentId]);
+
+    // Enrich games with score data
+    return games.map(game => {
+      const scores = scoresMap[game.id] || [];
+      
+      // Calculate total scores for each team
+      const homeScores = scores.filter(s => s.teamId === game.homeTeamId);
+      const awayScores = scores.filter(s => s.teamId === game.awayTeamId);
+      
+      const homeScore = homeScores.reduce((sum, s) => sum + (s.score || 0), 0);
+      const awayScore = awayScores.reduce((sum, s) => sum + (s.score || 0), 0);
+
+      return {
+        ...game,
+        homeScore,
+        awayScore,
+        hasScores: scores.length > 0
+      };
+    });
+  }, [allGames, selectedTeamId, selectedOpponentId, scoresMap]);
 
   // Get opponent team details
   const selectedOpponent = opponentTeamsFromGames.find(team => team.id === selectedOpponentId);
