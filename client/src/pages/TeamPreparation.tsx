@@ -79,7 +79,7 @@ export default function TeamPreparation() {
 
   // Get teams that the selected team has played against
   const opponentTeamsFromGames = useMemo(() => {
-    if (!selectedTeamId || !allGames.length || !allTeams.length) return [];
+    if (!selectedTeamId || !allGames.length) return [];
     
     const opponentIds = new Set<number>();
     allGames.forEach(game => {
@@ -90,8 +90,43 @@ export default function TeamPreparation() {
       }
     });
 
-    return allTeams.filter(team => opponentIds.has(team.id));
-  }, [selectedTeamId, allGames, allTeams]);
+    // Extract opponent teams directly from game data instead of relying on allTeams
+    const opponents: Team[] = [];
+    allGames.forEach(game => {
+      if (game.homeTeamId === selectedTeamId && game.awayTeamId && game.awayTeamName) {
+        const opponentTeam = {
+          id: game.awayTeamId,
+          name: game.awayTeamName,
+          division: game.awayTeamDivision || '',
+          clubName: game.awayClubName,
+          clubCode: game.awayClubCode
+        };
+        if (!opponents.find(t => t.id === opponentTeam.id)) {
+          opponents.push(opponentTeam);
+        }
+      } else if (game.awayTeamId === selectedTeamId && game.homeTeamId && game.homeTeamName) {
+        const opponentTeam = {
+          id: game.homeTeamId,
+          name: game.homeTeamName,
+          division: game.homeTeamDivision || '',
+          clubName: game.homeClubName,
+          clubCode: game.homeClubCode
+        };
+        if (!opponents.find(t => t.id === opponentTeam.id)) {
+          opponents.push(opponentTeam);
+        }
+      }
+    });
+
+    console.log('Opponent teams debug:', {
+      selectedTeamId,
+      totalGames: allGames.length,
+      opponentIds: Array.from(opponentIds),
+      opponents: opponents
+    });
+
+    return opponents;
+  }, [selectedTeamId, allGames]);
 
   // Get historical games between selected team and opponent
   const historicalGames = useMemo(() => {
