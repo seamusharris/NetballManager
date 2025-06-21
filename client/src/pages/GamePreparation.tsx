@@ -17,6 +17,7 @@ import {
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { useNextGame } from '@/hooks/use-next-game';
 import { formatShortDate } from '@/lib/utils';
 import { calculateTeamWinRate } from '@/lib/winRateCalculator';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -173,7 +174,10 @@ const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) 
 
 export default function GamePreparation() {
   const params = useParams();
-  const gameId = params.gameId ? parseInt(params.gameId) : undefined;
+  const { data: nextGame } = useNextGame();
+  
+  // Use gameId from URL params, or fallback to next game ID
+  const gameId = params.gameId ? parseInt(params.gameId) : nextGame?.id;
   const { currentClubId, currentTeamId } = useClub();
   const { toast } = useToast();
 

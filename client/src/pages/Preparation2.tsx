@@ -125,7 +125,7 @@ export default function Preparation2() {
 
   // Get next upcoming game
   const nextGame = upcomingGames
-    .filter((game: any) => !game.statusIsCompleted && new Date(game.date) > new Date())
+    .filter((game: any) => !game.statusIsCompleted && new Date(game.date) >= new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
 
   // Set default selected game to next game

@@ -28,11 +28,15 @@ export function useNextGame() {
         .filter(game => {
           const isCompleted = game.statusIsCompleted === true;
           const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
+          const gameDate = new Date(game.date);
+          const now = new Date();
           
-          return !isCompleted && isTeamGame && !game.isBye;
+          // Include games that are not completed and are today or in the future
+          return !isCompleted && isTeamGame && !game.isBye && gameDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
         })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+      console.log('Next game hook - filtered upcoming games:', upcomingGames.map(g => `${g.id}: ${g.date} ${g.homeTeamName} vs ${g.awayTeamName}`));
       return upcomingGames[0] || null;
     },
     enabled: !!currentTeamId,
