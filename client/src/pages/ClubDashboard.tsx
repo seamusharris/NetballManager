@@ -35,8 +35,8 @@ export default function ClubDashboard() {
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams', currentClubId],
-    queryFn: () => apiClient.get('/api/teams'),
+    queryKey: ['clubs', currentClubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
     enabled: !!currentClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
@@ -135,19 +135,24 @@ export default function ClubDashboard() {
 
   // Calculate club-wide metrics (memoized to prevent unnecessary recalculations)
   const { activeTeams, completedGames, upcomingGames, totalPlayers, activePlayers, clubWinRate } = useMemo(() => {
-    const activeTeams = teams.filter(team => team.isActive && team.name !== 'BYE');
-    const completedGames = games.filter(game => game.statusIsCompleted);
-    const upcomingGames = games.filter(game => !game.statusIsCompleted);
+    // Ensure all data is arrays before filtering
+    const safeTeams = Array.isArray(teams) ? teams : [];
+    const safeGames = Array.isArray(games) ? games : [];
+    const safePlayers = Array.isArray(players) ? players : [];
+
+    const activeTeams = safeTeams.filter(team => team.isActive && team.name !== 'BYE');
+    const completedGames = safeGames.filter(game => game.statusIsCompleted);
+    const upcomingGames = safeGames.filter(game => !game.statusIsCompleted);
 
     // Calculate club-wide win rate using official scores
-    const clubWinRateData = calculateClubWinRate(games, currentClubId!, officialScores);
+    const clubWinRateData = calculateClubWinRate(safeGames, currentClubId!, officialScores);
 
     return {
       activeTeams,
       completedGames,
       upcomingGames,
-      totalPlayers: players.length, // Count all players, not just active ones
-      activePlayers: players.filter(player => player.active),
+      totalPlayers: safePlayers.length, // Count all players, not just active ones
+      activePlayers: safePlayers.filter(player => player.active),
       clubWinRate: clubWinRateData
     };
   }, [teams, games, players, currentClubId, officialScores]);
