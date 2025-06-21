@@ -90,6 +90,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Basic clubs endpoint
+  app.get('/api/clubs', async (req, res) => {
+    try {
+      res.json([{ id: 1, name: 'Sample Club', location: 'Sample Location' }]);
+    } catch (error) {
+      console.error('Error fetching clubs:', error);
+      res.status(500).json({ error: 'Failed to fetch clubs' });
+    }
+  });
+
+  // Basic teams endpoint
+  app.get('/api/teams', async (req, res) => {
+    try {
+      res.json([]);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      res.status(500).json({ error: 'Failed to fetch teams' });
+    }
+  });
+
   const server = createServer(app);
   return server;
 }
