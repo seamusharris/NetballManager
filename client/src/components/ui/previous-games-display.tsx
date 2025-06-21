@@ -418,7 +418,7 @@ export default function PreviousGamesDisplay({
                   {/* Attack Unit */}
                   <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-800">Attack Unit vs {opponentName}</span>
+                      <span className="text-lg font-bold text-gray-800">Attack vs {opponentName}</span>
                       <span className="text-2xl font-bold text-green-600">{attackUnitPerformance.toFixed(1)}</span>
                     </div>
                     {gamesWithScores > 0 ? (
@@ -453,7 +453,7 @@ export default function PreviousGamesDisplay({
                   {/* Defense Unit */}
                   <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-800">Defense Unit vs {opponentName}</span>
+                      <span className="text-lg font-bold text-gray-800">Defense vs {opponentName}</span>
                       <span className="text-2xl font-bold text-red-600">{defenseUnitPerformance.toFixed(1)}</span>
                     </div>
                     {gamesWithScores > 0 ? (
