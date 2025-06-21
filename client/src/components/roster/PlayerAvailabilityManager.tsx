@@ -61,13 +61,6 @@ export default function PlayerAvailabilityManager({
         return;
       }
 
-      // Use provided players if available to avoid extra API calls
-      if (players && players.length > 0) {
-        console.log(`Using provided players (${players.length}) for game ${gameId}`);
-        setTeamPlayers(players);
-        return;
-      }
-
       const selectedGame = games.find(g => g.id === gameId);
       if (!selectedGame) {
         setTeamPlayers([]);
@@ -76,17 +69,14 @@ export default function PlayerAvailabilityManager({
 
       setIsLoadingTeamPlayers(true);
       try {
-        // Get current team context from URL or session storage
-        const urlParams = new URLSearchParams(window.location.search);
-        const teamFromUrl = urlParams.get('teamId');
-        const teamFromSession = sessionStorage.getItem('currentTeamId');
-        const currentTeamId = teamFromUrl || teamFromSession;
-
+        // Get current team context from Club context
+        const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
+        
         let teamToLoad = selectedGame.homeTeamId;
 
         // If we have current team context and it matches one of the teams in this game, use that
-        if (currentTeamId) {
-          const currentTeamIdNum = parseInt(currentTeamId);
+        if (currentTeamIdFromContext) {
+          const currentTeamIdNum = parseInt(currentTeamIdFromContext);
           if (currentTeamIdNum === selectedGame.homeTeamId || currentTeamIdNum === selectedGame.awayTeamId) {
             teamToLoad = currentTeamIdNum;
           }
@@ -99,19 +89,30 @@ export default function PlayerAvailabilityManager({
           console.log(`Loaded ${Array.isArray(response) ? response.length : 'unknown count'} team players for team ${teamToLoad}`);
           setTeamPlayers(Array.isArray(response) ? response : []);
         } catch (teamError) {
-          console.log('Team players endpoint failed, using fallback to props players');
-          setTeamPlayers(players);
+          console.log('Team players endpoint failed, filtering provided players by team');
+          // Filter provided players by the team if API call fails
+          if (players && players.length > 0) {
+            // Filter players that belong to the current team
+            const filteredPlayers = players.filter(player => {
+              // If player has teamId property, use it; otherwise include all (fallback)
+              return !player.teamId || player.teamId === teamToLoad;
+            });
+            console.log(`Filtered ${filteredPlayers.length} players from ${players.length} total for team ${teamToLoad}`);
+            setTeamPlayers(filteredPlayers);
+          } else {
+            setTeamPlayers([]);
+          }
         }
       } catch (error) {
         console.error('Error loading team players:', error);
-        setTeamPlayers(players);
+        setTeamPlayers([]);
       } finally {
         setIsLoadingTeamPlayers(false);
       }
     };
 
     loadTeamPlayers();
-  }, [gameId]); // Only depend on gameId to prevent excessive calls
+  }, [gameId, games]); // Depend on games as well to ensure we have game data
 
   // Invalidate and refetch availability data when gameId changes
   useEffect(() => {
