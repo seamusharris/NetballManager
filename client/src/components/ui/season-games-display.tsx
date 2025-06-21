@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Calendar } from 'lucide-react';
+import GameResultCard from '@/components/ui/game-result-card';
 
 interface Game {
   id: number;
@@ -52,7 +53,7 @@ export default function SeasonGamesDisplay({
         <CardHeader className="pb-6">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Season Games
+            Season
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -73,7 +74,7 @@ export default function SeasonGamesDisplay({
         <CardHeader className="pb-6">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Season Games ({seasonName || 'Current Season'})
+            Season ({seasonName || 'Current Season'})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -148,64 +149,29 @@ export default function SeasonGamesDisplay({
           {/* Games List */}
           <div className="space-y-3">
             {seasonGames.map((seasonGame, index) => {
-              // Check for special status games (e.g., forfeit, bye)
-              const isSpecialStatus = seasonGame.statusName === 'forfeit-win' || 
-                                    seasonGame.statusName === 'forfeit-loss' || 
-                                    seasonGame.statusName === 'bye' || 
-                                    seasonGame.statusName === 'abandoned' || 
-                                    seasonGame.statusDisplayName === 'Forfeit Loss' || 
-                                    seasonGame.statusDisplayName === 'Forfeit Win';
-
               const gameScores = batchScores?.[seasonGame.id] || [];
-              const homeScores = gameScores.filter(s => s.teamId === seasonGame.homeTeamId);
-              const awayScores = gameScores.filter(s => s.teamId === seasonGame.awayTeamId);
-              const homeScore = homeScores.reduce((sum, s) => sum + (s.score || 0), 0);
-              const awayScore = awayScores.reduce((sum, s) => sum + (s.score || 0), 0);
-
-              const isHomeTeam = seasonGame.homeTeamId === currentTeamId;
-              const opponentName = isHomeTeam ? seasonGame.awayTeamName : seasonGame.homeTeamName;
-              const ourScore = isHomeTeam ? homeScore : awayScore;
-              const theirScore = isHomeTeam ? awayScore : homeScore;
+              const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                id: score.id,
+                gameId: score.gameId,
+                teamId: score.teamId,
+                quarter: score.quarter,
+                score: score.score,
+                enteredBy: score.enteredBy,
+                enteredAt: score.enteredAt,
+                updatedAt: score.updatedAt,
+                notes: score.notes
+              })) : [];
 
               return (
-                <div key={seasonGame.id} className="flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">
-                          vs {opponentName || 'TBD'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(seasonGame.date).toLocaleDateString()} - Round {seasonGame.round}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Score Display */}
-                    {seasonGame.statusIsCompleted && !isSpecialStatus && gameScores.length > 0 && (
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          <span className={ourScore > theirScore ? 'text-green-600' : ourScore < theirScore ? 'text-red-600' : 'text-gray-600'}>
-                            {ourScore}
-                          </span>
-                          <span className="text-gray-400 mx-1">-</span>
-                          <span className={theirScore > ourScore ? 'text-green-600' : theirScore < ourScore ? 'text-red-600' : 'text-gray-600'}>
-                            {theirScore}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Status Badge */}
-                    <Badge 
-                      variant={seasonGame.statusIsCompleted ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {seasonGame.statusDisplayName || 'Unknown'}
-                    </Badge>
-                  </div>
+                <div key={seasonGame.id} className="relative">
+                  {/* Use the standard GameResultCard for consistent styling and scoring */}
+                  <GameResultCard
+                    game={seasonGame}
+                    currentTeamId={currentTeamId}
+                    centralizedScores={transformedScores}
+                    showLink={true}
+                    className="w-full"
+                  />
                 </div>
               );
             })}
