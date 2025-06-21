@@ -824,6 +824,7 @@ export default function GamePreparation() {
                     currentTeamId={currentTeamId!}
                     currentClubId={currentClubId!}
                     batchScores={batchScores || {}}
+                    batchStats={batchStats || {}}
                     opponentName={opponent}
                   />
 
