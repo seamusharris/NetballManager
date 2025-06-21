@@ -91,7 +91,7 @@ const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode;
   return (
     <div style={{ 
       border: '3px solid purple', 
-      backgroundColor: 'rgba(128, 0, 128, 0.1)`, 
+      backgroundColor: 'rgba(128, 0, 128, 0.1)', 
       padding: '12px',
       margin: '8px',
       position: 'relative'
@@ -120,7 +120,7 @@ const QuarterBoxDiagnostic = ({ children, quarter }: { children: React.ReactNode
   return (
     <div style={{ 
       border: '2px solid blue', 
-      backgroundColor: 'rgba(0, 0, 255, 0.05)`, 
+      backgroundColor: 'rgba(0, 0, 255, 0.05)', 
       padding: '4px',
       position: 'relative'
     }}>
@@ -147,7 +147,7 @@ const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) 
   return (
     <div style={{ 
       border: '2px solid orange', 
-      backgroundColor: 'rgba(255, 165, 0, 0.1)`, 
+      backgroundColor: 'rgba(255, 165, 0, 0.1)', 
       padding: '6px',
       position: 'relative'
     }}>
@@ -837,8 +837,7 @@ export default function GamePreparation() {
                               score: score.score,
                               enteredBy: score.enteredBy,
                               enteredAt: score.enteredAt,
-                              updatedAt: score.updated```text
-At,
+                              updatedAt: score.updatedAt,
                               notes: score.notes
                             })) : [];
 
@@ -1621,7 +1620,7 @@ At,
                                   </Badge>
                                 </div>
 
-                                                               <div className="space-y-1 mt-1">
+                                <div className="space-y-1 mt-1">
                                   <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
                                     {avgTeamScore.toFixed(1)}–{avgOpponentScore.toFixed(1)}
                                   </div>
