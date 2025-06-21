@@ -122,7 +122,7 @@ export default function TeamPreparation() {
               Team Matchup Analysis
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Compare {currentTeam.name} against other teams in {currentTeam.division}
+              Compare {currentTeam?.name} against other teams in {currentTeam?.division}
             </p>
           </CardHeader>
           <CardContent>
@@ -132,7 +132,7 @@ export default function TeamPreparation() {
                   <Badge variant="outline" className="bg-blue-50">
                     Your Team
                   </Badge>
-                  <span className="font-medium">{currentTeam.name}</span>
+                  <span className="font-medium">{currentTeam?.name}</span>
                 </div>
                 <span className="text-muted-foreground">vs</span>
                 <div className="flex-1">
@@ -156,7 +156,7 @@ export default function TeamPreparation() {
               
               {samesSectionTeams.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No other teams found in {currentTeam.division}
+                  No other teams found in {currentTeam?.division}
                 </p>
               )}
             </div>
@@ -223,8 +223,8 @@ export default function TeamPreparation() {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm">
-                                {game.homeTeamId === currentTeamId ? currentTeam.name : selectedOpponent.name} vs{' '}
-                                {game.awayTeamId === currentTeamId ? currentTeam.name : selectedOpponent.name}
+                                {game.homeTeamId === currentTeamId ? currentTeam?.name : selectedOpponent?.name} vs{' '}
+                                {game.awayTeamId === currentTeamId ? currentTeam?.name : selectedOpponent?.name}
                               </span>
                               {game.statusDisplayName && (
                                 <Badge variant={
@@ -259,7 +259,7 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <h4 className="font-semibold text-blue-600 mb-3">{currentTeam.name}</h4>
+                      <h4 className="font-semibold text-blue-600 mb-3">{currentTeam?.name}</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm">Games Played</span>
@@ -267,7 +267,7 @@ export default function TeamPreparation() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Division</span>
-                          <Badge variant="secondary">{currentTeam.division}</Badge>
+                          <Badge variant="secondary">{currentTeam?.division}</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Recent Form</span>
