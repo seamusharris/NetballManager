@@ -1450,9 +1450,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      // Parse request context from headers
+      // Parse request context from headers AND query parameters
       const isClubWide = req.headers['x-club-wide'] === 'true';
-      const teamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
+      // Check query parameters first, then fall back to headers for backward compatibility
+      const teamId = req.query.teamId ? parseInt(req.query.teamId as string, 10) : 
+                     (req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null);
       const clubId = req.user?.currentClubId;
 
       console.log(`Games endpoint: clubId=${clubId}, teamId=${teamId}, isClubWide=${isClubWide}`);
@@ -2999,7 +3001,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         homeTeamName: row.home_team_name,
         awayTeamName: row.away_team_name,
         seasonName: row.season_name,
-	      seasonId: row.season_id,
+              seasonId: row.season_id,
         homeClubName: row.home_club_name,
         awayClubName: row.away_club_name,
         statusName: row.status_name,

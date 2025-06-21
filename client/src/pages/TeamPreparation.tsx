@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -53,6 +53,7 @@ export default function TeamPreparation() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(currentTeamId);
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   // Update selected team when current team context changes
   useEffect(() => {
@@ -263,6 +264,10 @@ export default function TeamPreparation() {
                       console.log('Team selection changed:', value);
                       const teamId = value ? parseInt(value) : null;
                       console.log('Setting selectedTeamId to:', teamId);
+                      
+                      // Invalidate games cache to force refetch for new team
+                      queryClient.invalidateQueries({ queryKey: ['games'] });
+                      
                       setSelectedTeamId(teamId);
                       setSelectedOpponentId(null); // Reset opponent when team changes
                     }}
