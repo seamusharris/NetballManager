@@ -12,6 +12,7 @@ import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import { useLocation } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
+import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 interface Team {
   id: number;
@@ -50,17 +51,9 @@ interface Game {
 
 export default function TeamPreparation() {
   const { currentClubId, currentTeamId } = useClub();
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(currentTeamId);
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-
-  // Update selected team when current team context changes
-  useEffect(() => {
-    if (currentTeamId && !selectedTeamId) {
-      setSelectedTeamId(currentTeamId);
-    }
-  }, [currentTeamId, selectedTeamId]);
 
   // Get all teams from current club
   const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
@@ -70,15 +63,15 @@ export default function TeamPreparation() {
 
   // Get selected team details
   const { data: selectedTeam } = useQuery<Team>({
-    queryKey: ['/api/teams', selectedTeamId],
-    enabled: !!selectedTeamId,
+    queryKey: ['/api/teams', currentTeamId],
+    enabled: !!currentTeamId,
   });
 
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ['games', currentClubId, selectedTeamId],
-    queryFn: () => apiClient.get(`/api/games${selectedTeamId ? `?teamId=${selectedTeamId}` : ''}`),
-    enabled: !!currentClubId && !!selectedTeamId,
+    queryKey: ['games', currentClubId, currentTeamId],
+    queryFn: () => apiClient.get('/api/games'),
+    enabled: !!currentClubId && !!currentTeamId,
   });
 
   // Get all teams across all clubs to find opponent teams
@@ -94,7 +87,7 @@ export default function TeamPreparation() {
     teamsLoading,
     teamsError,
     dataLength: clubTeams?.length,
-    selectedTeamId,
+    currentTeamId,
     gamesCount: allGames?.length,
     gamesLoading,
     allGamesRaw: allGames
@@ -103,28 +96,28 @@ export default function TeamPreparation() {
   // Get teams that the selected team has played against
   const opponentTeamsFromGames = useMemo(() => {
     console.log('=== OPPONENT ANALYSIS START ===');
-    console.log('selectedTeamId:', selectedTeamId);
+    console.log('currentTeamId:', currentTeamId);
     console.log('allGames.length:', allGames.length);
     console.log('gamesLoading:', gamesLoading);
 
-    if (!selectedTeamId || !allGames.length || gamesLoading) {
+    if (!currentTeamId || !allGames.length || gamesLoading) {
       console.log('Early return - no team selected, no games, or still loading');
       return [];
     }
 
     const opponentIds = new Set<number>();
     const gamesForTeam = allGames.filter(game => 
-      game.homeTeamId === selectedTeamId || game.awayTeamId === selectedTeamId
+      game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
     );
 
     console.log('Games for selected team:', gamesForTeam.length);
     console.log('First few games for team:', gamesForTeam.slice(0, 3));
 
     gamesForTeam.forEach(game => {
-      if (game.homeTeamId === selectedTeamId && game.awayTeamId) {
+      if (game.homeTeamId === currentTeamId && game.awayTeamId) {
         opponentIds.add(game.awayTeamId);
         console.log('Found opponent (away):', game.awayTeamName, 'ID:', game.awayTeamId);
-      } else if (game.awayTeamId === selectedTeamId && game.homeTeamId) {
+      } else if (game.awayTeamId === currentTeamId && game.homeTeamId) {
         opponentIds.add(game.homeTeamId);
         console.log('Found opponent (home):', game.homeTeamName, 'ID:', game.homeTeamId);
       }
@@ -133,7 +126,7 @@ export default function TeamPreparation() {
     // Extract opponent teams directly from game data
     const opponents: Team[] = [];
     gamesForTeam.forEach(game => {
-      if (game.homeTeamId === selectedTeamId && game.awayTeamId && game.awayTeamName) {
+      if (game.homeTeamId === currentTeamId && game.awayTeamId && game.awayTeamName) {
         const opponentTeam = {
           id: game.awayTeamId,
           name: game.awayTeamName,
@@ -144,7 +137,7 @@ export default function TeamPreparation() {
         if (!opponents.find(t => t.id === opponentTeam.id)) {
           opponents.push(opponentTeam);
         }
-      } else if (game.awayTeamId === selectedTeamId && game.homeTeamId && game.homeTeamName) {
+      } else if (game.awayTeamId === currentTeamId && game.homeTeamId && game.homeTeamName) {
         const opponentTeam = {
           id: game.homeTeamId,
           name: game.homeTeamName,
@@ -164,7 +157,7 @@ export default function TeamPreparation() {
     console.log('=== OPPONENT ANALYSIS END ===');
 
     return opponents;
-  }, [selectedTeamId, allGames, gamesLoading]);
+  }, [currentTeamId, allGames, gamesLoading]);
 
   // Get scores for games
   const gameIds = allGames.map(game => game.id);
@@ -183,13 +176,13 @@ export default function TeamPreparation() {
 
   // Get historical games between selected team and opponent with score data
   const historicalGames = useMemo(() => {
-    if (!selectedOpponentId || !selectedTeamId) return [];
+    if (!selectedOpponentId || !currentTeamId) return [];
 
     const games = allGames.filter(game => {
       // Filter out upcoming games - only show completed games
       const isCompleted = (game as any).statusIsCompleted || (game as any).statusName === 'completed';
-      const isMatchup = (game.homeTeamId === selectedTeamId && game.awayTeamId === selectedOpponentId) ||
-                       (game.homeTeamId === selectedOpponentId && game.awayTeamId === selectedTeamId);
+      const isMatchup = (game.homeTeamId === currentTeamId && game.awayTeamId === selectedOpponentId) ||
+                       (game.homeTeamId === selectedOpponentId && game.awayTeamId === currentTeamId);
       
       return isCompleted && isMatchup;
     });
@@ -212,18 +205,18 @@ export default function TeamPreparation() {
         hasScores: scores.length > 0
       };
     });
-  }, [allGames, selectedTeamId, selectedOpponentId, scoresMap]);
+  }, [allGames, currentTeamId, selectedOpponentId, scoresMap]);
 
   // Get opponent team details
   const selectedOpponent = opponentTeamsFromGames.find(team => team.id === selectedOpponentId);
 
   // Get games for selected team (for season analysis)
   const selectedTeamGames = useMemo(() => {
-    if (!selectedTeamId) return [];
+    if (!currentTeamId) return [];
     return allGames.filter(game => 
-      game.homeTeamId === selectedTeamId || game.awayTeamId === selectedTeamId
+      game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
     );
-  }, [allGames, selectedTeamId]);
+  }, [allGames, currentTeamId]);
 
   // Get games for opponent team (for season analysis)
   const opponentGames = useMemo(() => {
@@ -259,11 +252,11 @@ export default function TeamPreparation() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Your Team</label>
                   <Select 
-                    value={selectedTeamId?.toString() || ""} 
+                    value={currentTeamId?.toString() || ""} 
                     onValueChange={(value) => {
                       console.log('Team selection changed:', value);
                       const teamId = value ? parseInt(value) : null;
-                      console.log('Setting selectedTeamId to:', teamId);
+                      console.log('Setting currentTeamId to:', teamId);
                       
                       // Invalidate games cache to force refetch for new team
                       queryClient.invalidateQueries({ queryKey: ['games'] });
@@ -290,12 +283,12 @@ export default function TeamPreparation() {
                   <Select 
                     value={selectedOpponentId?.toString() || ""} 
                     onValueChange={(value) => setSelectedOpponentId(value ? parseInt(value) : null)}
-                    disabled={!selectedTeamId || opponentTeamsFromGames.length === 0}
+                    disabled={!currentTeamId || opponentTeamsFromGames.length === 0}
                   >
                     <SelectTrigger>
                       <SelectValue 
                         placeholder={
-                          !selectedTeamId 
+                          !currentTeamId 
                             ? "Select a team first..." 
                             : opponentTeamsFromGames.length === 0 
                             ? "No opponents found..." 
@@ -314,7 +307,7 @@ export default function TeamPreparation() {
                 </div>
               </div>
 
-              {selectedTeamId && opponentTeamsFromGames.length === 0 && (
+              {currentTeamId && opponentTeamsFromGames.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   {selectedTeam?.name} hasn't played against any teams yet
                 </p>
@@ -342,7 +335,7 @@ export default function TeamPreparation() {
                 <CardContent>
                   <PreviousGamesDisplay
                     historicalGames={historicalGames}
-                    currentTeamId={selectedTeamId || 0}
+                    currentTeamId={currentTeamId || 0}
                     currentClubId={currentClubId || 0}
                     batchScores={scoresMap}
                     opponentName={selectedOpponent?.name || 'Unknown'}
@@ -508,7 +501,7 @@ export default function TeamPreparation() {
                             <div key={game.id} className="flex justify-between items-center p-2 rounded bg-blue-50">
                               <span className="text-sm">{game.date}</span>
                               <span className="text-sm font-medium">
-                                vs {game.homeTeamId === selectedTeamId ? game.awayTeamName : game.homeTeamName}
+                                vs {game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName}
                               </span>
                             </div>
                           ))
