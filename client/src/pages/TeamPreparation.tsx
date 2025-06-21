@@ -83,7 +83,8 @@ export default function TeamPreparation() {
     dataLength: clubTeams?.length,
     selectedTeamId,
     gamesCount: allGames?.length,
-    gamesLoading
+    gamesLoading,
+    allGamesRaw: allGames
   });
 
   // Get teams that the selected team has played against
@@ -150,7 +151,7 @@ export default function TeamPreparation() {
     console.log('=== OPPONENT ANALYSIS END ===');
 
     return opponents;
-  }, [selectedTeamId, allGames]);
+  }, [selectedTeamId, allGames, gamesLoading]);
 
   // Get historical games between selected team and opponent
   const historicalGames = useMemo(() => {
