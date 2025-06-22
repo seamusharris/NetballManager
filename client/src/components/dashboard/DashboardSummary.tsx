@@ -309,19 +309,7 @@ export default function DashboardSummary({
         )}
       </div>
 
-      {/* Games List */}
-      <div className="grid grid-cols-1 gap-6">
-        {isLoading ? (
-          <Skeleton className="h-[300px] w-full rounded-lg" />
-        ) : (
-          <GamesList 
-            games={filteredGames} 
-            className="w-full" 
-            centralizedStats={centralizedStats}
-            centralizedRosters={centralizedRosters}
-          />
-        )}
-      </div>
+      
 
       {/* Performance Charts */}
       {isLoading ? (
