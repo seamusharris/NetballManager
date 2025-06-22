@@ -274,14 +274,6 @@ export default function Dashboard() {
           />
           <QuickActionsWidget />
         </div>
-              <RecentGames 
-              games={games || []} 
-              centralizedScoresMap={gameScoresMap}
-            />
-            <UpcomingGames 
-              games={games || []} 
-              centralizedScoresMap={gameScoresMap}
-            />
       </div>
     </>
   );
