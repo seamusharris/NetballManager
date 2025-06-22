@@ -259,21 +259,6 @@ export default function Dashboard() {
           isBatchDataLoading={isLoadingBatchData}
           teams={clubTeams}
         />
-        {/* Right Column - Secondary Widgets */}
-        <div className="space-y-6">
-          <TeamPerformance 
-            games={games || []} 
-            centralizedScores={gameScoresMap}
-            centralizedStats={gameStatsMap}
-          />
-          <OpponentAnalysisWidget />
-          <TopPlayersWidget 
-            players={players || []} 
-            games={games || []} 
-            teamId={currentTeamId || undefined}
-          />
-          <QuickActionsWidget />
-        </div>
       </div>
     </>
   );
