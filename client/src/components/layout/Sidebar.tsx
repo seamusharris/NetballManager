@@ -71,6 +71,12 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         section: 'team'
       },
       { 
+        path: `/team-preparation`, 
+        label: 'Team Preparation', 
+        icon: <Target className="w-5 h-5" />,
+        section: 'team'
+      },
+      { 
         path: `/team-analysis`, 
         label: 'Team Analysis', 
         icon: <Trophy className="w-5 h-5" />,
@@ -107,11 +113,11 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         fallbackLabel: 'Game Preparation (Select Team First)'
       },
       { 
-        path: '/opponent-preparation-disabled', 
-        label: 'Opponent Preparation', 
+        path: '/team-preparation-disabled', 
+        label: 'Team Preparation', 
         icon: <Target className="w-5 h-5" />, 
         disabled: true,
-        fallbackLabel: 'Opponent Preparation (Select Team First)'
+        fallbackLabel: 'Team Preparation (Select Team First)'
       },
       { 
         path: '/team-analysis-disabled', 
