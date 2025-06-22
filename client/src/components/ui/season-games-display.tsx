@@ -151,89 +151,98 @@ export default function SeasonGamesDisplay({
                     className="w-full"
                   />
 
-                  {/* Right side - quarter breakdown for non-special games */}
-                  <div className="ml-4 flex-shrink-0">
-                    {!isSpecialStatus && hasQuarterData ? (
-                      (() => {
-                        // Calculate quarter scores for display
-                        const teamScores = [0, 0, 0, 0];
-                        const opponentScores = [0, 0, 0, 0];
+                  {/* Quarter breakdown overlay - now always shows both quarter and cumulative for consistency */}
+                  {!isSpecialStatus && hasQuarterData && (
+                    <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                      <div className="text-xs space-y-1">
+                        {/* Quarter-by-quarter scores on top (lighter) */}
+                        <div className="grid grid-cols-4 gap-1">
+                          {(() => {
+                            const teamScores = [0, 0, 0, 0];
+                            const opponentScores = [0, 0, 0, 0];
 
-                        transformedScores.forEach(score => {
-                          const quarterIndex = score.quarter - 1;
-                          if (quarterIndex >= 0 && quarterIndex < 4) {
-                            if (score.teamId === currentTeamId) {
-                              teamScores[quarterIndex] = score.score;
-                            } else {
-                              opponentScores[quarterIndex] = score.score;
+                            transformedScores.forEach(score => {
+                              const quarterIndex = score.quarter - 1;
+                              if (quarterIndex >= 0 && quarterIndex < 4) {
+                                if (score.teamId === currentTeamId) {
+                                  teamScores[quarterIndex] = score.score;
+                                } else {
+                                  opponentScores[quarterIndex] = score.score;
+                                }
+                              }
+                            });
+
+                            return teamScores.map((teamScore, qIndex) => {
+                              const opponentScore = opponentScores[qIndex];
+                              const quarterWin = teamScore > opponentScore;
+                              const quarterLoss = teamScore < opponentScore;
+
+                              const quarterClass = quarterWin 
+                                ? 'bg-green-100 text-green-800 border border-green-400' 
+                                : quarterLoss 
+                                  ? 'bg-red-100 text-red-800 border border-red-400'
+                                  : 'bg-amber-100 text-amber-800 border border-amber-400';
+
+                              return (
+                                <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
+                                  {teamScore}–{opponentScore}
+                                </span>
+                              );
+                            });
+                          })()}
+                        </div>
+                        {/* Cumulative scores underneath (darker) */}
+                        <div className="grid grid-cols-4 gap-1">
+                          {(() => {
+                            const teamScores = [0, 0, 0, 0];
+                            const opponentScores = [0, 0, 0, 0];
+
+                            transformedScores.forEach(score => {
+                              const quarterIndex = score.quarter - 1;
+                              if (quarterIndex >= 0 && quarterIndex < 4) {
+                                if (score.teamId === currentTeamId) {
+                                  teamScores[quarterIndex] = score.score;
+                                } else {
+                                  opponentScores[quarterIndex] = score.score;
+                                }
+                              }
+                            });
+
+                            // Calculate cumulative scores
+                            const teamCumulative = [];
+                            const opponentCumulative = [];
+                            let teamTotal = 0;
+                            let opponentTotal = 0;
+
+                            for (let i = 0; i < 4; i++) {
+                              teamTotal += teamScores[i];
+                              opponentTotal += opponentScores[i];
+                              teamCumulative.push(teamTotal);
+                              opponentCumulative.push(opponentTotal);
                             }
-                          }
-                        });
 
-                        // Calculate cumulative scores
-                        const teamCumulative = [];
-                        const opponentCumulative = [];
-                        let teamTotal = 0;
-                        let opponentTotal = 0;
+                            return teamCumulative.map((teamCum, qIndex) => {
+                              const opponentCum = opponentCumulative[qIndex];
+                              const cumulativeWin = teamCum > opponentCum;
+                              const cumulativeLoss = teamCum < opponentCum;
 
-                        for (let i = 0; i < 4; i++) {
-                          teamTotal += teamScores[i];
-                          opponentTotal += opponentScores[i];
-                          teamCumulative.push(teamTotal);
-                          opponentCumulative.push(opponentTotal);
-                        }
+                              const cumulativeClass = cumulativeWin 
+                                ? 'bg-green-200 text-green-800 border border-green-500' 
+                                : cumulativeLoss 
+                                  ? 'bg-red-200 text-red-800 border border-red-500'
+                                  : 'bg-amber-200 text-amber-800 border border-amber-500';
 
-                        return (
-                          <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
-                            <div className="text-xs space-y-1">
-                              {/* Quarter-by-quarter scores on top (lighter) */}
-                              <div className="grid grid-cols-4 gap-1">
-                                {teamScores.map((teamScore, qIndex) => {
-                                  const opponentScore = opponentScores[qIndex];
-                                  const quarterWin = teamScore > opponentScore;
-                                  const quarterLoss = teamScore < opponentScore;
-
-                                  const quarterClass = quarterWin 
-                                    ? 'bg-green-100 text-green-800 border border-green-400' 
-                                    : quarterLoss 
-                                      ? 'bg-red-100 text-red-800 border border-red-400'
-                                      : 'bg-amber-100 text-amber-800 border border-amber-400';
-
-                                  return (
-                                    <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                      {teamScore}–{opponentScore}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                              {/* Cumulative scores underneath (darker) */}
-                              <div className="grid grid-cols-4 gap-1">
-                                {teamCumulative.map((teamCum, qIndex) => {
-                                  const opponentCum = opponentCumulative[qIndex];
-                                  const cumulativeWin = teamCum > opponentCum;
-                                  const cumulativeLoss = teamCum < opponentCum;
-
-                                  const cumulativeClass = cumulativeWin 
-                                    ? 'bg-green-200 text-green-800 border border-green-500' 
-                                    : cumulativeLoss 
-                                      ? 'bg-red-200 text-red-800 border border-red-500'
-                                      : 'bg-amber-200 text-amber-800 border border-amber-500';
-
-                                  return (
-                                    <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
-                                      {teamCum}–{opponentCum}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()
-                    ) : (
-                      null
-                    )}
-                  </div>
+                              return (
+                                <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
+                                  {teamCum}–{opponentCum}
+                                </span>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
