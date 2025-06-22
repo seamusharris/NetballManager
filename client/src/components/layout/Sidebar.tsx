@@ -65,7 +65,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         section: 'team'
       },
       { 
-        path: nextGame ? `/game-preparation/${nextGame.id}` : `/game-preparation/1`, 
+        path: nextGame ? `/game-preparation/${nextGame.id}` : `/games/${currentTeamId}`, 
         label: 'Game Preparation', 
         icon: <Target className="w-5 h-5" />,
         section: 'team'
