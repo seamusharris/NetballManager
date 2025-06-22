@@ -220,6 +220,7 @@ export default function DashboardSummary({
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? 'current' : seasons.find(s => s.id.toString() === selectedSeasonId)} 
               centralizedStats={centralizedStats}
+              centralizedScores={centralizedScores}
             />
             <RecentGames 
               games={pastGames} 
