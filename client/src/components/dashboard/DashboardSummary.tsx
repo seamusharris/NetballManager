@@ -293,35 +293,6 @@ export default function DashboardSummary({
         )}
       </div>
 
-      {/* Position vs Opponent Analysis - Full Width */}
-      <div className="mb-6">
-        {isLoading ? (
-          <Skeleton className="h-[400px] w-full rounded-lg" />
-        ) : (
-          <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
-            <PositionOpponentAnalysis 
-              seasonId={selectedSeasonId === 'current' ? activeSeason?.id : 
-                       selectedSeasonId === 'all' ? undefined : 
-                       parseInt(selectedSeasonId)}
-              currentClubId={currentClub?.id}
-            />
-          </Suspense>
-        )}
-      </div>
-
-      
-
-      {/* Performance Charts */}
-      {isLoading ? (
-        <Skeleton className="h-[400px] w-full rounded-lg" />
-      ) : (
-        <PerformanceCharts 
-          games={pastGames} 
-          seasonFilter={selectedSeasonId} 
-          activeSeason={activeSeason}
-          centralizedStats={centralizedStats}
-        />
-      )}
       {/* Upcoming Game Recommendations Section */}
       {!isLoading && (
         <div className="mt-8">
