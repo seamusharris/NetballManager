@@ -1,3 +1,7 @@
+` tags.
+
+```text
+<replit_final_file>
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
@@ -78,10 +82,13 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
   const gameStatsMap = centralizedStats || {};
   const isLoading = false; // We don't need loading state when using centralized stats
 
-  // Calculate team performance metrics using official scores first, then fallback to stats
+  // Use the gameScoreService for consistent score calculation
   useEffect(() => {
     const calculatePerformance = async () => {
-      if (completedGameIds.length === 0) return;
+      if (completedGameIds.length === 0) {
+        console.log('TeamPerformance: No completed games for team', currentTeamId);
+        return;
+      }
 
       console.log('TeamPerformance: Calculating performance for team', currentTeamId, 'with', completedGameIds.length, 'completed games');
 
@@ -104,10 +111,16 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
       for (const gameId of completedGameIds) {
         try {
           const game = games.find(g => g.id === gameId);
-          if (!game) continue;
+          if (!game) {
+            console.log(`TeamPerformance: Game ${gameId} not found in games array`);
+            continue;
+          }
 
           // Skip bye games for scoring calculations
-          if (game.statusName === 'bye') continue;
+          if (game.statusName === 'bye') {
+            console.log(`TeamPerformance: Skipping bye game ${gameId}`);
+            continue;
+          }
 
           console.log(`TeamPerformance: Processing game ${gameId} - ${game.homeTeamName} vs ${game.awayTeamName}`);
 
@@ -121,7 +134,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
             const officialScores = centralizedScores?.[gameId] || [];
             // Get game stats for fallback
             const gameStats = gameStatsMap[gameId] || [];
-            
+
             console.log(`TeamPerformance: Processing game ${gameId} - Official scores count: ${officialScores.length}, Stats count: ${gameStats.length}`);
 
             // Use gameScoreService for consistent score calculation
@@ -149,31 +162,29 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
             });
 
             hasValidScores = (teamScore > 0 || opponentScore > 0) || gameScores.quarterScores.length > 0;
-            
+
             const scoreSource = officialScores.length > 0 ? 'official' : 
                               gameStats.length > 0 ? 'stats' :
                               (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? 'fixed' : 'none';
-            
+
             console.log(`TeamPerformance: Game ${gameId} scores (${scoreSource}) - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${gameScores.result}`);
           } catch (error) {
             console.error(`TeamPerformance: Error calculating scores for game ${gameId}:`, error);
             continue;
           }
 
-          // Only count games where we have valid scores
-          if (hasValidScores) {
-            actualGamesWithStats++;
-            totalTeamScore += teamScore;
-            totalOpponentScore += opponentScore;
+          // Count all completed games, even if scores are 0
+          actualGamesWithStats++;
+          totalTeamScore += teamScore;
+          totalOpponentScore += opponentScore;
 
-            // Determine outcome
-            const result = getWinLoseLabel(teamScore, opponentScore);
-            if (result === 'Win') wins++;
-            else if (result === 'Loss') losses++;
-            else draws++;
+          // Determine outcome
+          const result = getWinLoseLabel(teamScore, opponentScore);
+          if (result === 'Win') wins++;
+          else if (result === 'Loss') losses++;
+          else draws++;
 
-            console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
-          }
+          console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
         } catch (error) {
           console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
         }
@@ -193,7 +204,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
 
       // Calculate overall metrics using only games that have actual statistics
       const winRate = actualGamesWithStats > 0 ? Math.round((wins / actualGamesWithStats) * 100) : 0;
-      
+
       console.log(`TeamPerformance Win Rate Calculation for team ${currentTeamId}:`, {
         wins,
         losses,
