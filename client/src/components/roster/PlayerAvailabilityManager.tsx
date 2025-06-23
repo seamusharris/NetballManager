@@ -26,7 +26,6 @@ import { formatShortDate, positionLabels } from '@/lib/utils';
 import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { apiClient } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
