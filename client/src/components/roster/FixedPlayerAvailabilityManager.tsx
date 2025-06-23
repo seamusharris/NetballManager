@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -23,8 +23,6 @@ export default function FixedPlayerAvailabilityManager({
   games,
   hideGameSelection = false
 }: FixedPlayerAvailabilityManagerProps) {
-  const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
-  const [isInitialized, setIsInitialized] = useState(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,120 +35,40 @@ export default function FixedPlayerAvailabilityManager({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Initialize availability data when API data loads or when starting fresh
-  useEffect(() => {
-    console.log('FixedPlayerAvailabilityManager: useEffect triggered', {
-      gameId,
-      playersCount: players.length,
-      isLoading,
-      hasAvailabilityResponse: !!availabilityResponse,
-      availablePlayerIds: availabilityResponse?.availablePlayerIds,
-      currentAvailabilityDataKeys: Object.keys(availabilityData),
-      isInitialized
+  // Derive availability state directly from API response - no complex state management
+  const availabilityData: Record<number, boolean> = {};
+  if (availabilityResponse?.availablePlayerIds && players.length > 0) {
+    const availableIds = availabilityResponse.availablePlayerIds;
+    players.forEach(player => {
+      availabilityData[player.id] = availableIds.includes(player.id);
     });
-
-    if (!gameId || players.length === 0) {
-      console.log('FixedPlayerAvailabilityManager: Skipping initialization - no gameId or players', { gameId, playersCount: players.length });
-      return;
-    }
-
-    if (isLoading) {
-      console.log('FixedPlayerAvailabilityManager: Still loading availability data');
-      return;
-    }
-
-    // Only initialize if we don't have existing data or if the API data has changed
-    const currentlySelectedIds = Object.entries(availabilityData)
-      .filter(([_, isAvailable]) => isAvailable)
-      .map(([playerId, _]) => parseInt(playerId));
-    
-    const apiAvailableIds = availabilityResponse?.availablePlayerIds || [];
-    
-    // Check if current state matches API data AND we have data for all players
-    const hasDataForAllPlayers = players.every(player => player.id in availabilityData);
-    const stateMatchesApi = currentlySelectedIds.length === apiAvailableIds.length && 
-      currentlySelectedIds.every(id => apiAvailableIds.includes(id)) &&
-      apiAvailableIds.every(id => currentlySelectedIds.includes(id));
-    
-    if (hasDataForAllPlayers && stateMatchesApi && isInitialized) {
-      console.log('FixedPlayerAvailabilityManager: State already matches API data, skipping reinitalization');
-      return;
-    }
-
-    console.log('FixedPlayerAvailabilityManager: Proceeding with initialization');
-
-    let newAvailabilityData: Record<number, boolean> = {};
-
-    if (availabilityResponse?.availablePlayerIds) {
-      // Use API data if available
-      const availableIds = availabilityResponse.availablePlayerIds;
-      console.log('FixedPlayerAvailabilityManager: Using API data, available IDs:', availableIds);
-      players.forEach(player => {
-        newAvailabilityData[player.id] = availableIds.includes(player.id);
-      });
-      
-      console.log('FixedPlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
-      setAvailabilityData(newAvailabilityData);
-      setIsInitialized(true);
-
-      // Log the final state
-      const finalAvailableIds = Object.entries(newAvailabilityData)
-        .filter(([_, isAvailable]) => isAvailable)
-        .map(([playerId, _]) => parseInt(playerId));
-      
-      console.log('FixedPlayerAvailabilityManager: Initialization complete with available IDs:', finalAvailableIds);
-    } else {
-      // Default all active players to available 
-      console.log('FixedPlayerAvailabilityManager: No API data, defaulting all active players to available');
-      players.forEach(player => {
-        newAvailabilityData[player.id] = player.active !== false;
-      });
-      
-      console.log('FixedPlayerAvailabilityManager: Setting default availability data:', newAvailabilityData);
-      setAvailabilityData(newAvailabilityData);
-      setIsInitialized(true);
-    }
-  }, [gameId, players.length, availabilityResponse?.availablePlayerIds, isLoading]);
-
-  // Reset initialization flag when gameId changes
-  useEffect(() => {
-    console.log('FixedPlayerAvailabilityManager: Game ID changed to:', gameId);
-    setIsInitialized(false);
-    setAvailabilityData({});
-  }, [gameId]);
+  }
 
   // Handle individual player toggle
   const handlePlayerToggle = async (playerId: number) => {
-    const currentValue = availabilityData[playerId] || false;
-    const newValue = !currentValue;
-    
-    // Update local state immediately
-    const newAvailabilityData = {
-      ...availabilityData,
-      [playerId]: newValue
-    };
-    setAvailabilityData(newAvailabilityData);
+    if (!gameId) return;
 
-    // Get available player IDs for logging
+    // Calculate new state optimistically
+    const newAvailabilityData = { ...availabilityData };
+    newAvailabilityData[playerId] = !newAvailabilityData[playerId];
+    
     const availablePlayerIds = Object.entries(newAvailabilityData)
       .filter(([_, isAvailable]) => isAvailable)
       .map(([id, _]) => parseInt(id));
 
     console.log(`Player ${playerId} toggled. Now ${availablePlayerIds.length} players available`);
 
-    // Save to backend without cache invalidation
+    // Save to backend
     if (gameId) {
       try {
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds
         });
-        // No cache invalidation - let the component manage its own state
+        // Invalidate cache to trigger re-fetch
+        queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
         console.log(`Player ${playerId} availability saved successfully`);
       } catch (error) {
         console.error('Error saving player availability:', error);
-        // Revert state on error
-        setAvailabilityData(availabilityData);
-        
         toast({
           variant: "destructive",
           title: "Error saving",
@@ -162,12 +80,6 @@ export default function FixedPlayerAvailabilityManager({
 
   // Handle bulk operations
   const handleSelectAll = async () => {
-    const newData: Record<number, boolean> = {};
-    players.forEach(player => {
-      newData[player.id] = true;
-    });
-    
-    setAvailabilityData(newData);
     const availableIds = players.map(p => p.id);
     console.log(`Select all: ${availableIds.length} players now available`);
 
@@ -185,12 +97,6 @@ export default function FixedPlayerAvailabilityManager({
   };
 
   const handleClearAll = async () => {
-    const newData: Record<number, boolean> = {};
-    players.forEach(player => {
-      newData[player.id] = false;
-    });
-    
-    setAvailabilityData(newData);
     console.log('Clear all: 0 players now available');
 
     if (gameId) {
@@ -275,7 +181,6 @@ export default function FixedPlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
-                console.log(`FixedPlayerAvailabilityManager: Player ${player.displayName} (${player.id}) - isSelected: ${isSelected}, availabilityData:`, availabilityData[player.id]);
                 const playerColorHex = getPlayerColorHex(player.avatarColor);
                 const darkerTextColor = getDarkerColorHex(player.avatarColor);
 
