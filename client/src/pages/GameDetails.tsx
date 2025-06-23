@@ -1546,7 +1546,8 @@ export default function GameDetails() {
                   <CalendarRange className="mr-2 h-4 w-4" />
                   Manage Roster
                 </Link>
-              </Button            )}
+              </Button>
+            )}
 
             {/* Live Stats Button */}
             {!game.isBye && !game.completed &&(
