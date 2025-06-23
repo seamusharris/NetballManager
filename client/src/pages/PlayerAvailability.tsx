@@ -15,7 +15,7 @@ import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 export default function PlayerAvailability() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { currentClub } = useClub();
+  const { currentClub, isInitialized } = useClub();
 
   // Extract gameId and teamId from URL params
   const gameId = React.useMemo(() => {
@@ -43,14 +43,14 @@ export default function PlayerAvailability() {
     queryKey: ['games', currentClub?.id],
     queryFn: () => apiRequest('GET', '/api/games'),
     retry: 1,
-    enabled: !!currentClub?.id
+    enabled: !!currentClub?.id && isInitialized
   });
 
   // Fetch players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['players', currentClub?.id],
     queryFn: () => apiRequest('GET', '/api/players'),
-    enabled: !!currentClub?.id
+    enabled: !!currentClub?.id && isInitialized
   });
 
   const selectedGame = games.find(game => game.id === gameId);

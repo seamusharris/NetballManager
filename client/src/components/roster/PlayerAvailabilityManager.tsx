@@ -71,67 +71,43 @@ export default function PlayerAvailabilityManager({
     }
   });
 
-  // Load team players for the selected game (only when gameId changes)
+  // Load team players for the selected game - use provided players instead of API call
   useEffect(() => {
-    const loadTeamPlayers = async () => {
-      if (!gameId) {
-        setTeamPlayers([]);
-        return;
+    if (!gameId || !games?.length) {
+      setTeamPlayers([]);
+      return;
+    }
+
+    const selectedGame = games.find(g => g.id === gameId);
+    if (!selectedGame) {
+      setTeamPlayers([]);
+      return;
+    }
+
+    // Get current team context from localStorage
+    const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
+    let teamToLoad = selectedGame.homeTeamId;
+
+    // If we have current team context and it matches one of the teams in this game, use that
+    if (currentTeamIdFromContext) {
+      const currentTeamIdNum = parseInt(currentTeamIdFromContext);
+      if (currentTeamIdNum === selectedGame.homeTeamId || currentTeamIdNum === selectedGame.awayTeamId) {
+        teamToLoad = currentTeamIdNum;
       }
+    }
 
-      const selectedGame = games.find(g => g.id === gameId);
-      if (!selectedGame) {
-        setTeamPlayers([]);
-        return;
-      }
-
-      setIsLoadingTeamPlayers(true);
-      try {
-        // Get current team context from Club context
-        const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
-
-        let teamToLoad = selectedGame.homeTeamId;
-
-        // If we have current team context and it matches one of the teams in this game, use that
-        if (currentTeamIdFromContext) {
-          const currentTeamIdNum = parseInt(currentTeamIdFromContext);
-          if (currentTeamIdNum === selectedGame.homeTeamId || currentTeamIdNum === selectedGame.awayTeamId) {
-            teamToLoad = currentTeamIdNum;
-          }
-        }
-
-        console.log(`Loading team players for team ${teamToLoad} (game ${gameId})`);
-
-        try {
-          const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
-          console.log(`Successfully loaded ${Array.isArray(response) ? response.length : 'unknown count'} team players for team ${teamToLoad}`);
-          setTeamPlayers(Array.isArray(response) ? response : []);
-        } catch (teamError) {
-          console.error('Team players endpoint failed with error:', teamError);
-          console.log('Team players endpoint failed, filtering provided players by team');
-          // Filter provided players by the team if API call fails
-          if (players && players.length > 0) {
-            // Filter players that belong to the current team
-            const filteredPlayers = players.filter(player => {
-              // If player has teamId property, use it; otherwise include all (fallback)
-              return !player.teamId || player.teamId === teamToLoad;
-            });
-            console.log(`Filtered ${filteredPlayers.length} players from ${players.length} total for team ${teamToLoad}`);
-            setTeamPlayers(filteredPlayers);
-          } else {
-            setTeamPlayers([]);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading team players:', error);
-        setTeamPlayers([]);
-      } finally {
-        setIsLoadingTeamPlayers(false);
-      }
-    };
-
-    loadTeamPlayers();
-  }, [gameId, games]); // Depend on games as well to ensure we have game data
+    // Filter provided players by the team instead of making API call
+    if (players && players.length > 0) {
+      const filteredPlayers = players.filter(player => {
+        // If player has teamId property, use it; otherwise include all (fallback for club-wide data)
+        return !player.teamId || player.teamId === teamToLoad;
+      });
+      console.log(`Filtered ${filteredPlayers.length} players from ${players.length} total for team ${teamToLoad}`);
+      setTeamPlayers(filteredPlayers);
+    } else {
+      setTeamPlayers([]);
+    }
+  }, [gameId, games, players]); // Depend on all necessary data
 
   // Invalidate and refetch availability data when gameId changes
   useEffect(() => {
