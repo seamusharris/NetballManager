@@ -213,7 +213,7 @@ export const queryClient = new QueryClient({
       staleTime: 15 * 60 * 1000, // 15 minutes - increased for better navigation caching
       gcTime: 60 * 60 * 1000, // 1 hour - keep data longer in memory
       refetchOnWindowFocus: false,
-      refetchOnMount: true, // Changed back to true for proper cache invalidation
+      refetchOnMount: false, // Rely on staleTime and explicit invalidation instead of refetching on every mount
       refetchOnReconnect: false, // Changed to false to preserve cache across reconnects
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors (client errors)
