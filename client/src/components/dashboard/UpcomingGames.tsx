@@ -27,7 +27,18 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
-      return !isCompleted;
+      const gameDate = new Date(game.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset to start of day
+      
+      // Include games that are not completed and are today or in the future
+      const isUpcoming = !isCompleted && gameDate >= today && !game.isBye;
+      
+      if (currentTeam?.id === 123) { // Debug for Emus team
+        console.log(`Game ${game.id} (${game.date}): completed=${isCompleted}, upcoming=${isUpcoming}, isBye=${game.isBye}`);
+      }
+      
+      return isUpcoming;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games

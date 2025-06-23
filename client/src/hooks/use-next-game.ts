@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
@@ -20,9 +19,9 @@ export function useNextGame() {
     queryKey: ['next-game', currentTeamId],
     queryFn: async (): Promise<Game | null> => {
       if (!currentTeamId) return null;
-      
+
       const games = await apiClient.get<Game[]>(`/api/games`);
-      
+
       // Filter for upcoming games for the current team
       const upcomingGames = games
         .filter(game => {
@@ -30,9 +29,11 @@ export function useNextGame() {
           const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
           const gameDate = new Date(game.date);
           const now = new Date();
-          
+
           // Include games that are not completed and are today or in the future
-          return !isCompleted && isTeamGame && !game.isBye && gameDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+          return !isCompleted && isTeamGame && !game.isBye && gameDate >= today;
         })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
