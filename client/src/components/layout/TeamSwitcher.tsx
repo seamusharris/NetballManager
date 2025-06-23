@@ -44,25 +44,47 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
     console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
 
-    setCurrentTeamId(teamId);
-    onTeamChange?.(teamId);
-
     // Navigate to team-specific URL if we're on a team-dependent page
     if (teamId) {
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
+        // Force navigation even if it's the same team to trigger re-render
+        console.log('TeamSwitcher: Navigating to team dashboard:', `/team/${teamId}`);
         setLocation(`/team/${teamId}`);
+        // Set team context after navigation to ensure proper synchronization
+        setTimeout(() => {
+          setCurrentTeamId(teamId);
+          onTeamChange?.(teamId);
+        }, 0);
       } else if (location === '/games' || location.startsWith('/games')) {
         // Stay on games page but with team context - don't redirect to team dashboard
         // The Games component will handle the team filtering via currentTeamId context
+        setCurrentTeamId(teamId);
+        onTeamChange?.(teamId);
         return;
       } else if (location.startsWith('/preparation')) {
         setLocation(`/team/${teamId}/preparation`);
+        setTimeout(() => {
+          setCurrentTeamId(teamId);
+          onTeamChange?.(teamId);
+        }, 0);
       } else if (location.startsWith('/opponent-preparation')) {
         setLocation(`/team/${teamId}/analysis`);
+        setTimeout(() => {
+          setCurrentTeamId(teamId);
+          onTeamChange?.(teamId);
+        }, 0);
       }
       // If currently on club dashboard and selecting a team, navigate to team dashboard
       else if (location === '/') {
         setLocation(`/team/${teamId}`);
+        setTimeout(() => {
+          setCurrentTeamId(teamId);
+          onTeamChange?.(teamId);
+        }, 0);
+      } else {
+        // For other pages, just update context
+        setCurrentTeamId(teamId);
+        onTeamChange?.(teamId);
       }
     } else {
       // If no team selected and we're on a team-dependent page, go to teams page
@@ -70,6 +92,8 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
           location.startsWith('/preparation') || location.startsWith('/opponent-preparation')) {
         setLocation('/teams');
       }
+      setCurrentTeamId(teamId);
+      onTeamChange?.(teamId);
     }
   };
 
