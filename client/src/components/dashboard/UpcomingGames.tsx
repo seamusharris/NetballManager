@@ -24,9 +24,37 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
   // Filter for upcoming games using the new status system
   const upcomingGames = games
     .filter(game => {
+      // Debug logging for the upcoming game that should appear
+      if (game.id === 108) {
+        console.log('UpcomingGames: Filtering game 108:', {
+          gameId: game.id,
+          date: game.date,
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId,
+          homeTeamName: game.homeTeamName,
+          awayTeamName: game.awayTeamName,
+          statusIsCompleted: game.statusIsCompleted,
+          isBye: game.isBye,
+          currentTeamId: currentTeam?.id
+        });
+      }
+
+      // First check if this game involves the current team
+      const currentTeamId = currentTeam?.id;
+      if (currentTeamId) {
+        const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
+        if (!isTeamGame) {
+          if (game.id === 108) {
+            console.log('UpcomingGames: Game 108 filtered out - not involving current team');
+          }
+          return false;
+        }
+      }
+
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
+      
       // Parse the game date and normalize to start of day
       const gameDate = new Date(game.date);
       if (isNaN(gameDate.getTime())) {
@@ -36,21 +64,37 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      // Normalize game date to start of day for comparison
       const gameDateNormalized = new Date(gameDate);
       gameDateNormalized.setHours(0, 0, 0, 0);
 
-      // A game is upcoming if:
-      // 1. It's not completed (regardless of status)
-      // 2. The game date is today or in the future
-      // 3. It's not a bye game
       const isUpcoming = !isCompleted && gameDateNormalized >= today && !game.isBye;
+
+      if (game.id === 108) {
+        console.log('UpcomingGames: Game 108 final filter result:', {
+          isCompleted,
+          gameDateNormalized: gameDateNormalized.toISOString(),
+          today: today.toISOString(),
+          isInFuture: gameDateNormalized >= today,
+          isBye: game.isBye,
+          isUpcoming
+        });
+      }
 
       return isUpcoming;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games
+
+  // Debug logging for upcoming games
+  console.log('UpcomingGames: Final filtered upcoming games:', upcomingGames.map(g => ({
+    id: g.id,
+    date: g.date,
+    homeTeam: g.homeTeamName,
+    awayTeam: g.awayTeamName,
+    currentTeamId: currentTeam?.id,
+    isHome: g.homeTeamId === currentTeam?.id,
+    isAway: g.awayTeamId === currentTeam?.id
+  })));
 
   // Always show home vs away format
   const getOpponentName = (game: any) => {
