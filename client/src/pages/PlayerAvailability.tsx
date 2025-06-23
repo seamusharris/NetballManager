@@ -7,7 +7,8 @@ import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
 import FixedPlayerAvailabilityManager from '@/components/roster/FixedPlayerAvailabilityManager';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 

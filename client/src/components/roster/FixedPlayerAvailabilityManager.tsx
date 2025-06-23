@@ -163,8 +163,7 @@ export default function FixedPlayerAvailabilityManager({
     
     setAvailabilityData(newData);
     const availableIds = players.map(p => p.id);
-    onAvailabilityChange?.(availableIds);
-    onAvailabilityStateChange?.(newData);
+    console.log(`Select all: ${availableIds.length} players now available`);
 
     if (gameId) {
       try {
@@ -186,8 +185,7 @@ export default function FixedPlayerAvailabilityManager({
     });
     
     setAvailabilityData(newData);
-    onAvailabilityChange?.([]);
-    onAvailabilityStateChange?.(newData);
+    console.log('Clear all: 0 players now available');
 
     if (gameId) {
       try {
