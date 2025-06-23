@@ -83,15 +83,22 @@ export default function Dashboard() {
 
   // Fetch games with team context - use team-specific endpoint to completely avoid cache pollution
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: [`team-${currentTeamId}-games`, currentClubId, currentTeamId],
+    queryKey: [`team-games-${currentTeamId}`, currentClubId, currentTeamId, Date.now()], // Force cache invalidation
     queryFn: async () => {
       console.log(`Dashboard: Fetching games via team-specific endpoint for team ${currentTeamId}`);
+      if (!currentTeamId) {
+        throw new Error('No team ID available for games query');
+      }
       // Use team-specific endpoint to completely bypass club-wide cache
-      return apiClient.get(`/api/teams/${currentTeamId}/games`);
+      const result = await apiClient.get(`/api/teams/${currentTeamId}/games`);
+      console.log(`Dashboard: Received ${result?.length || 0} games for team ${currentTeamId}`);
+      return result;
     },
     enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache for better performance
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    staleTime: 0, // No cache for debugging
+    gcTime: 0, // No cache for debugging
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Opponents system has been completely removed
