@@ -16,7 +16,15 @@ export interface GameScores {
   finalScore: QuarterScore;
 }
 
-export function calculateGameScores(stats: GameStat[]): GameScores {
+// Interface for game score entries from the database
+export interface GameScoreEntry {
+  gameId: number;
+  teamId: number;
+  quarter: number;
+  score: number;
+}
+
+export function calculateGameScores(gameScores: GameScoreEntry[], currentTeamId: number): GameScores {
   const quarterScores: GameScores['quarterScores'] = {
     '1': { for: 0, against: 0 },
     '2': { for: 0, against: 0 },
@@ -24,7 +32,38 @@ export function calculateGameScores(stats: GameStat[]): GameScores {
     '4': { for: 0, against: 0 }
   };
 
-  // Calculate scores for each quarter
+  // Calculate scores for each quarter using actual game scores
+  for (let quarter = 1; quarter <= 4; quarter++) {
+    const quarterScoreEntries = gameScores.filter(score => score.quarter === quarter);
+    
+    quarterScoreEntries.forEach(scoreEntry => {
+      if (scoreEntry.teamId === currentTeamId) {
+        quarterScores[quarter as keyof typeof quarterScores].for = scoreEntry.score;
+      } else {
+        quarterScores[quarter as keyof typeof quarterScores].against = scoreEntry.score;
+      }
+    });
+  }
+
+  // Calculate final scores
+  const finalScore = {
+    for: Object.values(quarterScores).reduce((sum, quarter) => sum + quarter.for, 0),
+    against: Object.values(quarterScores).reduce((sum, quarter) => sum + quarter.against, 0)
+  };
+
+  return { quarterScores, finalScore };
+}
+
+// Legacy function for backward compatibility with player stats
+export function calculateGameScoresFromStats(stats: GameStat[]): GameScores {
+  const quarterScores: GameScores['quarterScores'] = {
+    '1': { for: 0, against: 0 },
+    '2': { for: 0, against: 0 },
+    '3': { for: 0, against: 0 },
+    '4': { for: 0, against: 0 }
+  };
+
+  // This should NOT be used for actual game scores, only for individual player goal tallies
   for (let quarter = 1; quarter <= 4; quarter++) {
     const quarterStats = stats.filter(stat => stat.quarter === quarter);
     
@@ -34,7 +73,6 @@ export function calculateGameScores(stats: GameStat[]): GameScores {
     };
   }
 
-  // Calculate final scores
   const finalScore = {
     for: Object.values(quarterScores).reduce((sum, quarter) => sum + quarter.for, 0),
     against: Object.values(quarterScores).reduce((sum, quarter) => sum + quarter.against, 0)
