@@ -241,8 +241,10 @@ export default function DashboardSummary({
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
             />
             <RecentFormWidget 
-              games={filteredGames} 
+              games={pastGames} 
+              opponents={[]} 
               centralizedStats={centralizedStats}
+              centralizedScores={centralizedScores}
             />
             <OpponentMatchups 
               games={filteredGames} 

@@ -16,13 +16,15 @@ interface RecentFormWidgetProps {
   games: Game[];
   opponents: Opponent[];
   centralizedStats?: Record<number, any[]>;
+  centralizedScores?: Record<number, any[]>;
   className?: string;
 }
 
 export default function RecentFormWidget({ 
   games, 
   opponents, 
-  centralizedStats, 
+  centralizedStats,
+  centralizedScores, 
   className 
 }: RecentFormWidgetProps) {
   // Debug: Log all games being processed
@@ -38,19 +40,43 @@ export default function RecentFormWidget({
 
   // Calculate form data
   const formData = completedGames.map(game => {
-    const stats = centralizedStats?.[game.id] || [];
-
-    // Debug: Log stats for this game
-    console.log(`RecentFormWidget - Game ${game.id} stats:`, stats.length, 'stats entries');
-
-    // Calculate scores from stats
+    // Priority 1: Use official scores from centralizedScores (batch API)
+    const officialScores = centralizedScores?.[game.id] || [];
     let teamScore = 0;
     let opponentScore = 0;
 
-    stats.forEach(stat => {
-      teamScore += stat.goalsFor || 0;
-      opponentScore += stat.goalsAgainst || 0;
-    });
+    if (officialScores.length > 0) {
+      // Calculate from official scores
+      const teamIds = [...new Set(officialScores.map(s => s.teamId))];
+      const homeTeamId = game.homeTeamId;
+      const awayTeamId = game.awayTeamId;
+      
+      // Sum scores for each team across all quarters
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const homeScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
+        const awayScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
+        
+        // Add to team totals based on whether our team is home or away
+        if (game.homeTeamId === game.homeTeamId) { // We are home team
+          teamScore += homeScore;
+          opponentScore += awayScore;
+        } else { // We are away team  
+          teamScore += awayScore;
+          opponentScore += homeScore;
+        }
+      }
+      
+      console.log(`RecentFormWidget - Game ${game.id} using official scores: ${teamScore}-${opponentScore}`);
+    } else {
+      // Fallback: Calculate from position stats
+      const stats = centralizedStats?.[game.id] || [];
+      stats.forEach(stat => {
+        teamScore += stat.goalsFor || 0;
+        opponentScore += stat.goalsAgainst || 0;
+      });
+      
+      console.log(`RecentFormWidget - Game ${game.id} using calculated scores: ${teamScore}-${opponentScore}`);
+    }
 
     const result = getWinLoseLabel(teamScore, opponentScore);
     // Find opponent team information from the game's away_team data
