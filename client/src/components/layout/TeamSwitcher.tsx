@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
@@ -15,16 +15,12 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 
-  // Sync internal value with context changes - debounced to prevent excessive updates
+  // Sync internal value with context changes
   useEffect(() => {
     const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
-    
-    // Only update if value actually changed to prevent unnecessary re-renders
-    if (internalValue !== newValue) {
-      console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
-      setInternalValue(newValue);
-    }
-  }, [currentTeamId, mode, internalValue]);
+    console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
+    setInternalValue(newValue);
+  }, [currentTeamId, mode]);
 
   // Don't render if hidden mode or only one team
   const validTeams = clubTeams.filter(team => team.isActive !== false);
@@ -48,50 +44,74 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
     console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
 
-    // Immediate navigation without context updates to prevent conflicts
+    setCurrentTeamId(teamId);
+    onTeamChange?.(teamId);
+
+    // Navigate to team-specific URL if we're on a team-dependent page
     if (teamId) {
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
-        console.log('TeamSwitcher: Navigating to team dashboard:', `/team/${teamId}/dashboard`);
-        setLocation(`/team/${teamId}/dashboard`);
-        return;
+        setLocation(`/team/${teamId}`);
       } else if (location === '/games' || location.startsWith('/games')) {
-        // For games page, update context directly (no URL change needed)
-        setCurrentTeamId(teamId);
-        onTeamChange?.(teamId);
+        // Stay on games page but with team context - don't redirect to team dashboard
+        // The Games component will handle the team filtering via currentTeamId context
         return;
       } else if (location.startsWith('/preparation')) {
         setLocation(`/team/${teamId}/preparation`);
-        return;
       } else if (location.startsWith('/opponent-preparation')) {
         setLocation(`/team/${teamId}/analysis`);
-        return;
-      } else if (location === '/') {
-        setLocation(`/team/${teamId}/dashboard`);
-        return;
+      }
+      // If currently on club dashboard and selecting a team, navigate to team dashboard
+      else if (location === '/') {
+        setLocation(`/team/${teamId}`);
       }
     } else {
       // If no team selected and we're on a team-dependent page, go to teams page
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location.startsWith('/games') || 
           location.startsWith('/preparation') || location.startsWith('/opponent-preparation')) {
         setLocation('/teams');
-        return;
       }
     }
-
-    // Fallback: update context if no navigation occurred
-    setCurrentTeamId(teamId);
-    onTeamChange?.(teamId);
   };
 
-  const handleTeamSelect = (value: string) => {
-    console.log('TeamSwitcher: Selecting team:', value);
-    
-    // Update internal value immediately for UI responsiveness
-    setInternalValue(value);
-    
-    // Handle the actual team change
-    handleTeamChange(value);
-  };
+  const handleTeamSelect = useCallback((teamId: string) => {
+    console.log('TeamSwitcher: Team selected:', teamId);
+    const numericTeamId = parseInt(teamId, 10);
+
+    // Check if this is actually a change
+    if (numericTeamId === currentTeamId) {
+      console.log('TeamSwitcher: Same team selected, no action needed');
+      return;
+    }
+
+    // Update context immediately but debounce navigation
+    setCurrentTeamId(numericTeamId);
+
+    // Get the team data to determine the navigation target
+    const selectedTeam = clubTeams?.find(t => t.id === numericTeamId);
+    if (selectedTeam) {
+      console.log('TeamSwitcher: Selected team:', selectedTeam.name);
+
+      // Debounce navigation to prevent rapid switches
+      setTimeout(() => {
+        // Navigate based on current page type
+        if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
+          setLocation(`/team/${numericTeamId}`);
+        } else if (location === '/games' || location.startsWith('/games')) {
+          // Stay on games page but with team context - don't redirect to team dashboard
+          // The Games component will handle the team filtering via currentTeamId context
+          return;
+        } else if (location.startsWith('/preparation')) {
+          setLocation(`/team/${numericTeamId}/preparation`);
+        } else if (location.startsWith('/opponent-preparation')) {
+          setLocation(`/team/${numericTeamId}/analysis`);
+        }
+        // If currently on club dashboard and selecting a team, navigate to team dashboard
+        else if (location === '/') {
+          setLocation(`/team/${numericTeamId}`);
+        }
+      }, 50); // 50ms debounce
+    }
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation]);
 
 
   return (

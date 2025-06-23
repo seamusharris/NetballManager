@@ -32,10 +32,7 @@ export default function ClubDashboard() {
   // Get games data with proper club context
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, 'all-teams'],
-    queryFn: () => {
-      console.log('ClubDashboard: Fetching club-wide games for club:', currentClubId);
-      return apiClient.get('/api/games', undefined, { 'x-club-wide': 'true' });
-    },
+    queryFn: () => apiClient.get('/api/games', { 'x-club-wide': 'true' }),
     enabled: !!currentClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
     gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
@@ -176,40 +173,32 @@ export default function ClubDashboard() {
   );
 
   // Team performance metrics (memoized to prevent unnecessary recalculations)
-  const teamPerformance = useMemo(() => activeTeams.map(team => {
-    // Filter games for this specific team
-    const teamGames = games.filter(game => 
-      game.homeTeamId === team.id || game.awayTeamId === team.id
-    );
+  const teamPerformance = useMemo(() => {
+    if (!activeTeams.length || !games.length) return [];
+    
+    return activeTeams.map(team => {
+      // Filter games for this specific team
+      const teamGames = games.filter(game => 
+        game.homeTeamId === team.id || game.awayTeamId === team.id
+      );
 
-    console.log(`ClubDashboard: Team ${team.name} (ID: ${team.id}) filtering games:`, {
-      totalGames: games.length,
-      filteredGames: teamGames.length,
-      firstFewGames: games.slice(0, 3).map(g => ({ 
-        id: g.id, 
-        homeTeamId: g.homeTeamId, 
-        awayTeamId: g.awayTeamId,
-        homeTeamName: g.homeTeamName,
-        awayTeamName: g.awayTeamName
-      }))
+      // Use shared win rate calculator for consistent logic with official scores
+      const winRateData = calculateTeamWinRate(teamGames, team.id, currentClubId!, officialScores);
+
+      console.log(`Team ${team.name} (${team.id}): ${teamGames.length} games, win rate data:`, winRateData);
+
+      const teamPerf = {
+        ...team,
+        totalGames: winRateData.totalGames,
+        wins: winRateData.wins,
+        losses: winRateData.losses,
+        draws: winRateData.draws,
+        winRate: winRateData.winRate
+      };
+
+      return teamPerf;
     });
-
-    // Use shared win rate calculator for consistent logic with official scores
-    const winRateData = calculateTeamWinRate(teamGames, team.id, currentClubId!, officialScores);
-
-    console.log(`Team ${team.name} (${team.id}): ${teamGames.length} games, win rate data:`, winRateData);
-
-    const teamPerf = {
-      ...team,
-      totalGames: winRateData.totalGames,
-      wins: winRateData.wins,
-      losses: winRateData.losses,
-      draws: winRateData.draws,
-      winRate: winRateData.winRate
-    };
-
-    return teamPerf;
-  }), [activeTeams, games, currentClubId, officialScores]);
+  }, [activeTeams, gamesHashKey, scoresHashKey, currentClubId]);
 
   // Recent games across all teams (memoized)
   const recentGames = useMemo(() => 

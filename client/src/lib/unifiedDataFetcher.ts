@@ -14,8 +14,6 @@ interface BatchFetchOptions {
 export class UnifiedDataFetcher {
   private static instance: UnifiedDataFetcher;
   private pendingBatches = new Map<string, Promise<any>>();
-  private requestCache = new Map<string, { data: any; timestamp: number }>();
-  private readonly CACHE_DURATION = 30 * 1000; // 30 seconds cache
 
   static getInstance(): UnifiedDataFetcher {
     if (!UnifiedDataFetcher.instance) {
@@ -42,13 +40,6 @@ export class UnifiedDataFetcher {
     // Create batch key for deduplication
     const batchKey = `${clubId}-${teamId || 'all'}-${normalizedGameIds.join(',')}-${includeStats}-${includeRosters}-${includeScores}`;
 
-    // Check cache first
-    const cached = this.requestCache.get(batchKey);
-    if (cached && (Date.now() - cached.timestamp) < this.CACHE_DURATION) {
-      console.log(`UnifiedDataFetcher: Returning cached data for key: ${batchKey}`);
-      return Promise.resolve(cached.data);
-    }
-
     // Return existing promise if batch is already in progress
     if (this.pendingBatches.has(batchKey)) {
       console.log(`UnifiedDataFetcher: Returning existing batch request for key: ${batchKey}`);
@@ -59,14 +50,7 @@ export class UnifiedDataFetcher {
     this.pendingBatches.set(batchKey, batchPromise);
 
     // Clean up after completion with error handling
-    batchPromise.then(result => {
-      // Cache successful results
-      this.requestCache.set(batchKey, {
-        data: result,
-        timestamp: Date.now()
-      });
-      return result;
-    }).finally(() => {
+    batchPromise.finally(() => {
       this.pendingBatches.delete(batchKey);
     }).catch(error => {
       console.warn(`UnifiedDataFetcher: Batch request failed for key ${batchKey}:`, error);

@@ -64,15 +64,10 @@ class ApiClient {
     console.log('API Client: All headers being sent:', headers);
     console.log(`API Client: Final headers:`, headers);
 
-    // For GET/HEAD requests, don't include body even if data is provided
-    const shouldIncludeBody = method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD';
-    
-    if (data && shouldIncludeBody) {
+    if (data) {
       const dataString = JSON.stringify(data);
       console.log('API Client: Request data size:', dataString.length + ' bytes');
       console.log(`API Client: Request data:`, JSON.stringify(data, null, 2));
-    } else if (data && !shouldIncludeBody) {
-      console.log('API Client: Data provided but not included in body for GET/HEAD request:', data);
     } else {
       console.log('API Client: No request data.');
     }
@@ -83,7 +78,7 @@ class ApiClient {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method,
         headers,
-        body: (data && shouldIncludeBody) ? JSON.stringify(data) : undefined,
+        body: data ? JSON.stringify(data) : undefined,
       });
 
       console.log(`API Client: Response status: ${response.status} ${response.statusText} at ${new Date().toISOString()}`);
@@ -155,9 +150,8 @@ class ApiClient {
   }
 
   // HTTP method helpers
-  async get<T>(endpoint: string, queryParams?: any, additionalHeaders?: Record<string, string>): Promise<T> {
-    // For GET requests, don't pass queryParams as data since they shouldn't be in the body
-    return this.request<T>('GET', endpoint, undefined, additionalHeaders);
+  async get<T>(endpoint: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('GET', endpoint, undefined, customHeaders);
   }
 
   async post<T>(endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {

@@ -148,14 +148,8 @@ export default function Games() {
   });
 
   const handleCreate = async (game: Game) => {
-    let tempId = Math.random(); // Generate a temporary ID
-    game.id = tempId;
-
     try {
       console.log('Creating game with data:', game);
-
-      // Optimistically update the cache
-      queryClient.setQueryData(['games'], (oldGames: Game[] = []) => [...oldGames, game]);
 
       // Ensure game has season context - use active season if not specified
       if (!game.seasonId) {
@@ -168,30 +162,36 @@ export default function Games() {
         }
       }
 
-      const newGame = await apiRequest('POST', '/api/games', game) as Game;
+      await apiRequest('POST', '/api/games', game);
 
-      // Replace the optimistic game with the real one
-      queryClient.setQueryData(['games'], (oldGames: Game[] = []) => {
-        return oldGames.map(g => g.id === tempId ? newGame : g);
-      });
+      // Invalidate games queries using the correct query keys that match the actual queries
+      if (currentClubId) {
+        // Invalidate the specific games query for current team (matches the actual query key pattern)
+        queryClient.invalidateQueries({
+          queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId]
+        });
 
+        // Invalidate batch data for the games list
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key[0] === 'games-batch-data' && 
+                   key[1] === currentClubId;
+          }
+        });
+      }
       setIsDialogOpen(false);
       toast({
-        title: "Success",
-        description: "Game created successfully",
+        title: 'Success',
+        description: 'Game created successfully.',
       });
     } catch (error) {
       console.error('Failed to create game:', error);
-
-      // Remove the optimistic game on error
-      queryClient.setQueryData(['games'], (oldGames: Game[] = []) => {
-        return oldGames.filter(g => g.id !== tempId);
-      });
-
       toast({
-        title: "Error",
-        description: `Failed to create game: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create game.',
+        variant: 'destructive',
       });
     }
   };

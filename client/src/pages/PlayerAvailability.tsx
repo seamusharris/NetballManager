@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Users, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 
 export default function PlayerAvailability() {
   const params = useParams();
@@ -113,18 +113,11 @@ export default function PlayerAvailability() {
     );
   }
 
-  const breadcrumbs = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Games', href: '/games' },
-    { label: `Game ${selectedGame.round}`, href: `/games/${gameId}` },
-    { label: 'Player Availability' }
-  ];
-
   const pageActions = (
     <div className="flex gap-2">
       <Button
         variant="outline"
-        onClick={() => navigate(`/team/${selectedGame?.homeTeamId}/roster/${gameId}`)}
+        onClick={() => navigate(`/roster/game/${gameId}`)}
         className="flex items-center gap-2"
       >
         Roster Management
@@ -137,9 +130,10 @@ export default function PlayerAvailability() {
     <PageTemplate
       title="Player Availability"
       subtitle={`Set player availability for ${selectedGame.homeTeamName} vs ${selectedGame.awayTeamName || 'BYE'}`}
-      breadcrumbs={breadcrumbs}
       actions={pageActions}
     >
+      {/* Breadcrumbs */}
+      <DynamicBreadcrumbs />
       {selectedGame && (
         <Card className="mb-6">
           <CardContent className="pt-6">
@@ -183,7 +177,7 @@ export default function PlayerAvailability() {
                 </p>
               </div>
               <Button
-                onClick={() => navigate(`/team/${selectedGame?.homeTeamId}/roster/${gameId}`)}
+                onClick={() => navigate(`/roster/game/${gameId}`)}
                 className="flex items-center gap-2"
               >
                 Manage Roster

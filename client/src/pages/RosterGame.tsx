@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Users, Calendar } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 
 export default function RosterGame() {
   const params = useParams();
@@ -129,7 +129,7 @@ export default function RosterGame() {
 
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Games', href: '/games' },
+    { label: 'Games', href: `/team/${selectedGame?.homeTeamId}/games` },
     { label: `Game ${selectedGame.round}`, href: `/games/${gameId}` },
     { label: 'Roster Management' }
   ];
@@ -151,7 +151,7 @@ export default function RosterGame() {
     <PageTemplate
       title="Roster Management"
       subtitle={`Manage roster for ${selectedGame.homeTeamName} vs ${selectedGame.awayTeamName || 'BYE'}`}
-      breadcrumbs={breadcrumbs}
+      breadcrumbs={<DynamicBreadcrumbs />}
       actions={pageActions}
     >
       {selectedGame && (

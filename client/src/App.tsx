@@ -110,13 +110,7 @@ function Router() {
       <Switch>
         <Route path="/" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
         <Route path="/team/:teamId/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
-        <Route path="/team/:teamId">
-          {(params) => {
-            // Redirect to club dashboard for /team/:teamId without /dashboard
-            window.location.href = '/';
-            return null;
-          }}
-        </Route>
+        <Route path="/team/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/players/:clubId" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/player/:id" component={withErrorBoundary(PlayerDetails, 'PlayerDetails')} />
