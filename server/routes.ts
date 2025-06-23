@@ -2772,6 +2772,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to count club 54 home games
+  app.get('/api/debug/club-54-home-games-count', async (req, res) => {
+    try {
+      console.log('=== CLUB 54 HOME GAMES COUNT DEBUG ===');
+      
+      // Count games where club 54 teams are home team
+      const homeGamesCount = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM games g
+        JOIN teams ht ON g.home_team_id = ht.id
+        WHERE ht.club_id = 54
+      `);
+      
+      // Get all home games details for club 54
+      const homeGames = await db.execute(sql`
+        SELECT g.id, g.date, g.round, ht.name as home_team_name, at.name as away_team_name
+        FROM games g
+        JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE ht.club_id = 54
+        ORDER BY g.date DESC
+      `);
+
+      console.log(`Club 54 home games count: ${homeGamesCount.rows[0].count}`);
+      console.log('Home games details:', homeGames.rows);
+
+      res.json({
+        clubId: 54,
+        homeGamesCount: parseInt(homeGamesCount.rows[0].count),
+        homeGames: homeGames.rows,
+        message: `Found ${homeGamesCount.rows[0].count} games where Warrandyte teams are home team`
+      });
+    } catch (error) {
+      console.error('Error counting club 54 home games:', error);
+      res.status(500).json({ error: 'Failed to count club 54 home games' });
+    }
+  });
+
   // ----- CLUB-PLAYER RELATIONSHIPS API -----
 
   // Get all clubs for a specific player
