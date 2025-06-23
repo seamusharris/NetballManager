@@ -152,6 +152,14 @@ export type GameStat = typeof gameStats.$inferSelect;
 // Multi-club architecture tables
 
 // Clubs table - organizations that contain teams
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  name: text('name'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
@@ -349,6 +357,32 @@ export const importPlayerAvailabilitySchema = createInsertSchema(playerAvailabil
 export type InsertPlayerAvailability = z.infer<typeof insertPlayerAvailabilitySchema>;
 export type PlayerAvailability = typeof playerAvailability.$inferSelect;
 
+export const byeTeam = pgTable('bye_team', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().default('BYE'),
+  clubId: integer('club_id').references(() => clubs.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const teamGameNotes = pgTable('team_game_notes', {
+  id: serial('id').primaryKey(),
+  gameId: integer('game_id').references(() => games.id, { onDelete: 'cascade' }).notNull(),
+  teamId: integer('team_id').references(() => teams.id, { onDelete: 'cascade' }).notNull(),
+  notes: text('notes'),
+  enteredBy: integer('entered_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueGameTeam: unique().on(table.gameId, table.teamId),
+}));
+
+export type ByeTeam = typeof byeTeam.$inferSelect;
+export type NewByeTeam = typeof byeTeam.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type TeamGameNotes = typeof teamGameNotes.$inferSelect;
+export type NewTeamGameNotes = typeof teamGameNotes.$inferInsert;
+
 // Define relations
 export const gameStatusesRelations = relations(gameStatuses, ({ many }) => ({
   games: many(games)
@@ -381,19 +415,11 @@ export const gamesRelations = relations(games, ({ one }) => ({
   }),
 }));
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+  email: true,
+  name: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 
 
 
@@ -418,4 +444,3 @@ export const playerPlayingTimes = pgTable("player_playing_times", {
 export const insertPlayerPlayingTimeSchema = createInsertSchema(playerPlayingTimes).omit({ id: true });
 export type InsertPlayerPlayingTime = z.infer<typeof insertPlayerPlayingTimeSchema>;
 export type PlayerPlayingTime = typeof playerPlayingTimes.$inferSelect;
-

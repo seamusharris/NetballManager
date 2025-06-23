@@ -1097,12 +1097,16 @@ export default function GameDetails() {
     });
 
   // Fetch game data
-  const { data: game } = useQuery({
+  const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
     queryKey: ['/api/games', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}`),
-    enabled: !isNaN(gameId),
-    refetchOnMount: true, // Override global setting for game data
-    staleTime: 0 // Ensure fresh game data after updates
+    queryFn: () => apiClient.get<Game>(`/api/games/${gameId}`),
+    enabled: !!gameId,
+  });
+
+  const { data: teamGameNotes } = useQuery({
+    queryKey: ['/api/games', gameId, 'team-notes'],
+    queryFn: () => apiClient.get<{ notes: string; enteredBy: number; createdAt: string; updatedAt: string }>(`/api/games/${gameId}/team-notes`),
+    enabled: !!gameId,
   });
 
   // Fetch players
@@ -1546,7 +1550,7 @@ export default function GameDetails() {
                         });
 
                         toast({
-                          title: "Game deleted",
+                          title: "Gamedeleted",
                           description: "Game has been deleted successfully",
                         });
 
@@ -1930,17 +1934,17 @@ export default function GameDetails() {
                 </CardContent>
               </Card>
 
-              {/* Game Notes Card */}
+              {/* Team Game Notes Card */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xl font-bold">Game Notes</CardTitle>
+                  <CardTitle className="text-xl font-bold">Coaching Notes</CardTitle>
                                     {!isEditingNotes ? (
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => {
                         setIsEditingNotes(true);
-                        setGameNotes(game.notes || '');
+                        setGameNotes(teamGameNotes?.notes || '');
                       }}
                     >
                       <Edit className="mr-2 h-4 w-4" />
@@ -1962,21 +1966,23 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
-                            await apiClient.patch(`/api/games/${gameId}`, { notes: gameNotes });
-
-                            // Invalidate the game query to refresh the data
+                            await apiClient.post(`/api/games/${gameId}/team-notes`, { 
+                              notes: gameNotes 
+                            });
+                            // Invalidate the queries to refresh the data
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'team-notes'] });
                             setIsEditingNotes(false);
                             toast({
                               title: "Notes saved",
-                              description: "Game notes have been updated successfully.",
+                              description: "Coaching notes have been updated successfully.",
                             });
                           } catch (error) {
-                            console.error('Error saving game notes:', error);
+                            console.error('Error saving team notes:', error);
                             toast({
                               variant: "destructive",
                               title: "Error",
-                              description: "Failed to save game notes. Please try again.",
+                              description: "Failed to save coaching notes. Please try again.",
                             });
                           }
                         }}
@@ -1992,14 +1998,14 @@ export default function GameDetails() {
                       className="w-full h-64 p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={gameNotes}
                       onChange={(e) => setGameNotes(e.target.value)}
-                      placeholder="Enter game notes here... (observations, player performances, areas for improvement, etc.)"
+                      placeholder="Enter coaching notes here... (observations, player performances, areas for improvement, etc.)"
                     />
                   ) : (
-                    <div className="min-h-[200px] p-4 bg-gray-50 rounded-md">
-                      {game.notes ? (
-                        <div className="whitespace-pre-wrap">{game.notes}</div>
+                    <div className="min-h-64 p-3 bg-gray-50 rounded-md">
+                      {teamGameNotes?.notes ? (
+                        <p className="whitespace-pre-wrap">{teamGameNotes.notes}</p>
                       ) : (
-                        <div className="text-gray-500 italic">No notes have been added for this game yet.</div>
+                        <p className="text-gray-500 italic">No coaching notes recorded</p>
                       )}
                     </div>
                   )}
