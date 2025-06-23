@@ -613,62 +613,7 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get all players assigned to a specific team
-  app.get('/api/teams/:teamId/players', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
-    try {
-      const teamId = parseInt(req.params.teamId);
-      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
 
-      // Get team details to check club access
-      const team = await db.execute(sql`
-        SELECT club_id FROM teams WHERE id = ${teamId}
-      `);
-
-      if (team.rows.length === 0) {
-        return res.status(404).json({ error: 'Team not found' });
-      }
-
-      const teamClubId = team.rows[0].club_id;
-
-      // Check if user has access to this team's club
-      if (!userClubs.includes(teamClubId)) {
-        return res.status(403).json({ error: 'Access denied to this team' });
-      }
-
-      console.log(`Getting players for team ${teamId}`);
-
-      // Get all players assigned to this team
-      const teamPlayers = await db.execute(sql`
-        SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
-               p.position_preferences, p.active, p.avatar_color
-        FROM players p
-        JOIN team_players tp ON p.id = tp.player_id
-        WHERE tp.team_id = ${teamId}
-          AND p.active = true
-        ORDER BY p.display_name
-      `);
-
-      console.log(`Found ${teamPlayers.rows.length} players for team ${teamId}`);
-
-      const mappedPlayers = teamPlayers.rows.map(row => ({
-        id: row.id,
-        displayName: row.display_name,
-        firstName: row.first_name,
-        lastName: row.last_name,
-        dateOfBirth: row.date_of_birth,
-        positionPreferences: typeof row.position_preferences === 'string'
-          ? JSON.parse(row.position_preferences)
-          : row.position_preferences || [],
-        active: row.active,
-        avatarColor: row.avatar_color
-      }));
-
-      res.json(mappedPlayers);
-    } catch (error) {
-      console.error('Error fetching team players:', error);
-      res.status(500).json({ error: 'Failed to fetch team players' });
-    }
-  });
 
   // Get team statistics (aggregated across all games)
   app.get('/api/teams/:teamId/stats', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
