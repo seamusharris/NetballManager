@@ -1150,8 +1150,18 @@ export default function GameDetails() {
       });
     },
     onSuccess: () => {
+      // Targeted invalidation for immediate responsiveness
       queryClient.invalidateQueries({ queryKey: ['teamAwards', gameId, currentTeam?.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      
+      // Also invalidate games list to update award winner display
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && key[0] === '/api/games' && key.length === 1;
+        }
+      });
+      
       toast({
         title: "Success",
         description: "Player of the match updated successfully"
@@ -2056,9 +2066,11 @@ export default function GameDetails() {
                               teamId: teamId
                             });
 
-                            // Invalidate the queries to refresh the data
-                            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                            // Targeted invalidation for immediate UI updates
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'team-notes'] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                            
+                            // Update UI state immediately
                             setIsEditingNotes(false);
                             toast({
                               title: "Notes saved",
