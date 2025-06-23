@@ -5,7 +5,7 @@ import { apiRequest } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
-import SimplePlayerAvailabilityManager from '@/components/roster/SimplePlayerAvailabilityManager';
+import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Users, ArrowRight } from 'lucide-react';
@@ -173,7 +173,7 @@ export default function PlayerAvailability() {
         </Card>
       )}
 
-      <SimplePlayerAvailabilityManager
+      <PlayerAvailabilityManager
         gameId={gameId}
         players={players}
         games={[selectedGame]}
