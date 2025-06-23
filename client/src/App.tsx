@@ -103,8 +103,7 @@ import TeamPreparation from './pages/TeamPreparation';
 // Mock components for PlayerAvailability and RosterGame
 const PlayerAvailability = () => <div>Player Availability Component</div>;
 const RosterGame = () => <div>Roster Game Component</div>;
-const RosterWithGameId = () => <div>Roster with Game ID Component</div>; // Assuming you have or will have this component
-const Roster = () => <div>Roster Component</div>;
+const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 
 function Router() {
   return (
