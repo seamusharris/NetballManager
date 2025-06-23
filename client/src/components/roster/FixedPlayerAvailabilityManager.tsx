@@ -237,7 +237,8 @@ export default function FixedPlayerAvailabilityManager({
   const selectedGame = games.find(game => game.id === gameId);
   const availableCount = Object.values(availabilityData).filter(isAvailable => isAvailable === true).length;
 
-  if (isLoading && !isInitialized) {
+  // Don't render until we have both players data and availability data initialized
+  if (isLoading || !isInitialized || Object.keys(availabilityData).length === 0) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
