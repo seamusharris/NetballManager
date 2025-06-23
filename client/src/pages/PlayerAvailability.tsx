@@ -67,17 +67,20 @@ export default function PlayerAvailability() {
 
   // Initialize available players from existing availability data when it loads
   useEffect(() => {
-    if (existingAvailability?.availablePlayerIds) {
+    if (existingAvailability?.availablePlayerIds && existingAvailability.availablePlayerIds.length > 0) {
+      console.log('PlayerAvailability: Setting initial available players from API:', existingAvailability.availablePlayerIds);
       setAvailablePlayerIds(existingAvailability.availablePlayerIds);
-    } else if (players.length > 0 && availablePlayerIds.length === 0) {
-      // Fallback: set all active players as available if no existing data
+    } else if (players.length > 0 && availablePlayerIds.length === 0 && !availabilityLoading) {
+      // Fallback: set all active players as available if no existing data and not loading
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+      console.log('PlayerAvailability: No existing data, defaulting to all active players:', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
     }
-  }, [existingAvailability, players, availablePlayerIds.length]);
+  }, [existingAvailability?.availablePlayerIds, players, availabilityLoading]);
 
   // Memoized callback to prevent infinite re-renders
   const handleAvailabilityChange = useCallback((newAvailablePlayerIds: number[]) => {
+    console.log('PlayerAvailability: Received availability change:', newAvailablePlayerIds);
     setAvailablePlayerIds(newAvailablePlayerIds);
   }, []);
 
