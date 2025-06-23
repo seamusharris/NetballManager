@@ -216,7 +216,7 @@ function Router() {
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading Match Timeline Examples..." />}>
                 <MatchTimelineExamples />
-              </Suspse>
+              </Suspense>
             </ErrorBoundary>
           )}
         </Route>
