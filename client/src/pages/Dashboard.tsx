@@ -25,6 +25,7 @@ import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisW
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import RecentGamesWidget from '@/components/ui/recent-games-widget';
 import UpcomingGamesWidget from '@/components/ui/upcoming-games-widget';
+import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
 import { cacheKeys } from '@/lib/cacheKeys';
 
@@ -265,17 +266,13 @@ export default function Dashboard() {
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
 
         {/* Recent Form Section */}
-        <RecentGamesWidget
+        <RecentFormWidget
           games={games || []}
-          teamId={currentTeamId}
-          clubId={currentClubId}
-          limit={5}
-          title="Recent Form"
+          currentTeamId={currentTeamId}
+          currentClubId={currentClubId}
+          gameScoresMap={gameScoresMap}
+          gameStatsMap={gameStatsMap}
           className="mb-8"
-          centralizedScores={gameScoresMap}
-          gameStats={gameStatsMap}
-          clubTeams={clubTeams || []}
-          showQuarterScores={false}
         />
 
       {/* Upcoming Games Section - Full Width */}
