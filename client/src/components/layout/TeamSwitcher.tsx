@@ -15,12 +15,16 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 
-  // Sync internal value with context changes
+  // Sync internal value with context changes - debounced to prevent excessive updates
   useEffect(() => {
     const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
-    console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
-    setInternalValue(newValue);
-  }, [currentTeamId, mode]);
+    
+    // Only update if value actually changed to prevent unnecessary re-renders
+    if (internalValue !== newValue) {
+      console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
+      setInternalValue(newValue);
+    }
+  }, [currentTeamId, mode, internalValue]);
 
   // Don't render if hidden mode or only one team
   const validTeams = clubTeams.filter(team => team.isActive !== false);
@@ -44,12 +48,11 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
     console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
 
-    // Navigate FIRST to ensure URL changes before context updates
+    // Immediate navigation without context updates to prevent conflicts
     if (teamId) {
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
         console.log('TeamSwitcher: Navigating to team dashboard:', `/team/${teamId}/dashboard`);
         setLocation(`/team/${teamId}/dashboard`);
-        // Context will be updated by Dashboard component's useEffect when URL changes
         return;
       } else if (location === '/games' || location.startsWith('/games')) {
         // For games page, update context directly (no URL change needed)
@@ -82,6 +85,11 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
   const handleTeamSelect = (value: string) => {
     console.log('TeamSwitcher: Selecting team:', value);
+    
+    // Update internal value immediately for UI responsiveness
+    setInternalValue(value);
+    
+    // Handle the actual team change
     handleTeamChange(value);
   };
 
