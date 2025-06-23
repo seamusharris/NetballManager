@@ -145,7 +145,7 @@ export default function TopPlayersWidget({
     });
 
     setPlayerStatsMap(newPlayerStatsMap);
-  }, [gameStatsMap, gameRostersMap, players, validGames, teamId]);
+  }, [gameStatsMap, gameRostersMap, players, teamId]);
 
   // Get players with their stats and sort by performance
   const playersWithStats = players

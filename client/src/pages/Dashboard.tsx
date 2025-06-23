@@ -81,13 +81,13 @@ export default function Dashboard() {
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
-  // Fetch games with team context
+  // Fetch games with team context - force fresh data on team switch
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['clubs', currentClubId, 'teams', currentTeamId, 'games'],
+    queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId,
-    staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    enabled: !!currentClubId && !!currentTeamId,
+    staleTime: 0, // Force fresh data for team switching
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
   });
 
   // Opponents system has been completely removed
@@ -112,9 +112,9 @@ export default function Dashboard() {
   const gameIdsArray = games?.map(g => g.id).sort() || [];
   const gameIds = gameIdsArray.join(',');
 
-  // Use unified data fetcher with aggressive caching for team switching
+  // Use unified data fetcher with proper team switching
   const { data: batchData, isLoading: isLoadingBatchData, error: batchDataError } = useQuery({
-    queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
+    queryKey: ['batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
