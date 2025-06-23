@@ -151,6 +151,8 @@ function Router() {
         <Route path="/opponent-preparation" component={OpponentPreparation} />
         <Route path="/preparation" component={Preparation} />
         <Route path="/preparation-2" component={Preparation2} />
+        <Route path="/game-preparation/:gameId" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
+        <Route path="/game-preparation" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
         <Route path="/team-analysis" component={TeamAnalysis} />
         <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
         <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
