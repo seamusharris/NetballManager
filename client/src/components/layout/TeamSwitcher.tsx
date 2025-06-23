@@ -47,8 +47,8 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     // Navigate FIRST to ensure URL changes before context updates
     if (teamId) {
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
-        console.log('TeamSwitcher: Navigating to team dashboard:', `/team/${teamId}`);
-        setLocation(`/team/${teamId}`);
+        console.log('TeamSwitcher: Navigating to team dashboard:', `/team/${teamId}/dashboard`);
+        setLocation(`/team/${teamId}/dashboard`);
         // Context will be updated by Dashboard component's useEffect when URL changes
         return;
       } else if (location === '/games' || location.startsWith('/games')) {
@@ -63,7 +63,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         setLocation(`/team/${teamId}/analysis`);
         return;
       } else if (location === '/') {
-        setLocation(`/team/${teamId}`);
+        setLocation(`/team/${teamId}/dashboard`);
         return;
       }
     } else {
