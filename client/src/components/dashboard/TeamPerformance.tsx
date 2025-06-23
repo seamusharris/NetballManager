@@ -302,34 +302,45 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
           <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-100">
             <p className="text-gray-600 text-sm font-medium mb-3">Goals Performance (Average)</p>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 min-w-[50px]">For</span>
-                <div className="flex-1 mx-3">
-                  <div className="bg-gray-200 rounded-full h-3 relative overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min(100, (quarterPerformance.avgTeamScore / 20) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-                <span className="text-lg font-bold text-green-600 min-w-[40px] text-right">
-                  {quarterPerformance.avgTeamScore}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 min-w-[50px]">Against</span>
-                <div className="flex-1 mx-3">
-                  <div className="bg-gray-200 rounded-full h-3 relative overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-red-400 to-red-600 h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min(100, (quarterPerformance.avgOpponentScore / 20) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-                <span className="text-lg font-bold text-red-600 min-w-[40px] text-right">
-                  {quarterPerformance.avgOpponentScore}
-                </span>
-              </div>
+              {(() => {
+                // Calculate dynamic scale based on the higher of the two scores to show relative difference
+                const maxScore = Math.max(quarterPerformance.avgTeamScore, quarterPerformance.avgOpponentScore, 1);
+                const teamPercentage = (quarterPerformance.avgTeamScore / maxScore) * 100;
+                const opponentPercentage = (quarterPerformance.avgOpponentScore / maxScore) * 100;
+                
+                return (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 min-w-[50px]">For</span>
+                      <div className="flex-1 mx-3">
+                        <div className="bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                          <div 
+                            className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-1000"
+                            style={{ width: `${teamPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-green-600 min-w-[40px] text-right">
+                        {quarterPerformance.avgTeamScore}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 min-w-[50px]">Against</span>
+                      <div className="flex-1 mx-3">
+                        <div className="bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                          <div 
+                            className="bg-gradient-to-r from-red-400 to-red-600 h-full rounded-full transition-all duration-1000"
+                            style={{ width: `${opponentPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-red-600 min-w-[40px] text-right">
+                        {quarterPerformance.avgOpponentScore}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
               <div className="flex items-center justify-between pt-2 border-t border-orange-200">
                 <span className="text-sm text-gray-600">Goal Ratio</span>
                 <span className="text-lg font-bold text-orange-600">
