@@ -77,21 +77,31 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
         return false;
       }
 
+      // Get current date in local timezone, normalized to start of day
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const gameDateNormalized = new Date(gameDate);
-      gameDateNormalized.setHours(0, 0, 0, 0);
+      const todayString = today.getFullYear() + '-' + 
+                         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(today.getDate()).padStart(2, '0');
+      const todayNormalized = new Date(todayString + 'T00:00:00');
+      
+      // Normalize game date to start of day in local timezone
+      const gameDateString = game.date.split('T')[0]; // Get just the date part
+      const gameDateNormalized = new Date(gameDateString + 'T00:00:00');
 
-      const isUpcoming = !isCompleted && gameDateNormalized >= today && !game.isBye;
+      const isUpcoming = !isCompleted && gameDateNormalized >= todayNormalized && !game.isBye;
 
       if (game.id === 108) {
         console.log('Game 108 final check:', {
-          isCompleted,
+          originalDate: game.date,
+          gameDateString,
           gameDateNormalized: gameDateNormalized.toISOString(),
-          today: today.toISOString(),
-          isInFuture: gameDateNormalized >= today,
+          todayString,
+          todayNormalized: todayNormalized.toISOString(),
+          isInFuture: gameDateNormalized >= todayNormalized,
+          isCompleted,
           isBye: game.isBye,
-          isUpcoming
+          isUpcoming,
+          dateComparison: `${gameDateNormalized.getTime()} >= ${todayNormalized.getTime()}`
         });
       }
 
