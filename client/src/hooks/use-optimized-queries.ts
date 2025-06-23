@@ -27,19 +27,38 @@ const STALE_TIMES = {
  * Get the appropriate stale time based on the API endpoint
  */
 function getStaleTime(endpoint: string): number {
-  if (endpoint.includes('/players')) {
-    return STALE_TIMES.PLAYERS;
-  } else if (endpoint.includes('/games') && endpoint.includes('/stats')) {
-    return STALE_TIMES.GAME_STATS;
-  } else if (endpoint.includes('/games') && endpoint.includes('/rosters')) {
-    return STALE_TIMES.ROSTERS;
-  } else if (endpoint.includes('/games')) {
-    return STALE_TIMES.GAMES;
-  } else if (endpoint.includes('/opponents')) {
-    return STALE_TIMES.OPPONENTS;
+  // Live stats and scores - very fresh data needed
+  if (endpoint.includes('/stats') || endpoint.includes('/scores')) {
+    return 30 * 1000; // 30 seconds
   }
 
-  return STALE_TIMES.DEFAULT;
+  // Games data changes during match day but not constantly
+  if (endpoint.includes('/games')) {
+    return 5 * 60 * 1000; // 5 minutes
+  }
+
+  // Roster data changes during team selection
+  if (endpoint.includes('/rosters')) {
+    return 2 * 60 * 1000; // 2 minutes
+  }
+
+  // Player data changes less frequently
+  if (endpoint.includes('/players')) {
+    return 15 * 60 * 1000; // 15 minutes
+  }
+
+  // Team data is relatively stable
+  if (endpoint.includes('/teams')) {
+    return 30 * 60 * 1000; // 30 minutes
+  }
+
+  // Seasons and clubs are very stable
+  if (endpoint.includes('/seasons') || endpoint.includes('/clubs')) {
+    return 60 * 60 * 1000; // 1 hour
+  }
+
+  // Default for other endpoints
+  return 5 * 60 * 1000; // 5 minutes
 }
 
 /**

@@ -110,12 +110,12 @@ export default function Games() {
       }
     },
     enabled: !!currentClubId && !!(teamIdFromUrl || currentTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    staleTime: 2 * 60 * 1000, // 2 minutes - shorter for dynamic game data
+    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    retry: false,
+    retry: 1, // Allow one retry
   });
 
   const gameStatsMap = batchData?.stats || {};

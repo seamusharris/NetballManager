@@ -28,17 +28,17 @@ export default function SimplifiedStatsForm({
       playerId: playerId as number,
       position
     }));
-  
+
   // State for stats values
   const [values, setValues] = useState<Record<number, Record<string, string>>>({});
-  
+
   // Handle input change
   const handleChange = (playerId: number, field: string, value: string) => {
     // Only allow numbers
     if (value !== '' && !/^\d+$/.test(value)) {
       return;
     }
-    
+
     setValues(prev => {
       const newValues = { ...prev };
       if (!newValues[playerId]) {
@@ -48,14 +48,14 @@ export default function SimplifiedStatsForm({
       return newValues;
     });
   };
-  
+
   // Handle save
   const handleSave = () => {
     const stats = [];
-    
+
     for (const playerId in values) {
       const playerStats = values[Number(playerId)];
-      
+
       // Create a stat object for this player
       const stat = {
         gameId,
@@ -70,18 +70,18 @@ export default function SimplifiedStatsForm({
         handlingError: parseInt(playerStats.handlingError || '0'),
         infringement: parseInt(playerStats.infringement || '0')
       };
-      
+
       stats.push(stat);
     }
-    
+
     onSave(stats);
   };
-  
+
   // Find player details
   const getPlayer = (playerId: number) => {
     return players.find(p => p.id === playerId);
   };
-  
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end mb-4">
@@ -89,7 +89,7 @@ export default function SimplifiedStatsForm({
           <Save className="w-4 h-4 mr-2" /> Save Statistics
         </Button>
       </div>
-      
+
       {rosterPlayers.length === 0 ? (
         <Card>
           <CardContent className="p-4">
@@ -100,7 +100,7 @@ export default function SimplifiedStatsForm({
         rosterPlayers.map(({ playerId, position }) => {
           const player = getPlayer(playerId);
           if (!player) return null;
-          
+
           return (
             <Card key={playerId} className="mb-4">
               <CardContent className="p-4">
@@ -113,7 +113,7 @@ export default function SimplifiedStatsForm({
                     <p className="text-sm text-gray-500">{position}</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatInput 
                     label="Goals For"

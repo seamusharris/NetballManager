@@ -1445,10 +1445,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
-      // Add cache-busting headers
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
+      // Set appropriate cache headers for games data
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=300'); // 5 minutes
+      res.set('ETag', `games-${req.user?.currentClubId}-${Date.now()}`);
+      res.set('Vary', 'x-current-club-id, x-current-team-id');
 
       // Parse request context from headers AND query parameters
       const isClubWide = req.headers['x-club-wide'] === 'true';
