@@ -95,11 +95,10 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
 
 import PlayerBorrowing from '@/pages/PlayerBorrowing';
 import TeamAnalysis from './pages/TeamAnalysis';
-import Preparation from './pages/Preparation';
-import Preparation2 from './pages/Preparation2';
-import GamePreparation from './pages/GamePreparation';
+import Preparation from '@/pages/Preparation';
+import GamePreparation from '@/pages/GamePreparation';
 import TeamPreparation from './pages/TeamPreparation';
-
+import Preparation2 from './pages/Preparation2';
 // Import actual components for PlayerAvailability and RosterGame
 import PlayerAvailability from '@/pages/PlayerAvailability';
 import RosterGame from '@/pages/RosterGame';
@@ -124,8 +123,8 @@ function Router() {
         <Route path="/team/:teamId/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/team/:teamId/games/:gameId/edit" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/team/:teamId/games/:gameId" component={withErrorBoundary(GameDetails, 'GameDetails')} />
-        <Route path="/team/:teamId/preparation/:gameId" component={withErrorBoundary(Preparation, 'Preparation')} />
-        <Route path="/team/:teamId/preparation" component={withErrorBoundary(Preparation, 'Preparation')} />
+        <Route path="/team/:teamId/preparation/:gameId" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
+        <Route path="/team/:teamId/preparation" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
         <Route path="/team/:teamId/analysis" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />
         <Route path="/team/:teamId/analysis/:opponentId" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />
         <Route path="/club-dashboard" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
