@@ -1870,9 +1870,9 @@ export default function GameDetails() {
   {isEditingAward ? (
   <div className="space-y-4">
   <Select
-  value={selectedAwardWinner?.toString() || ""}
+  value={selectedAwardWinner?.toString() || "no-selection"}
   onValueChange={(value) => {
-  const playerId = value ? parseInt(value) : null;
+  const playerId = (value && value !== "no-selection") ? parseInt(value) : null;
   setSelectedAwardWinner(playerId);
   }}
   >
@@ -1880,7 +1880,7 @@ export default function GameDetails() {
   <SelectValue placeholder="Select player of the match..." />
   </SelectTrigger>
   <SelectContent>
-  <SelectItem value="">No selection</SelectItem>
+  <SelectItem value="no-selection">No selection</SelectItem>
   {roster && roster.length > 0 ? (
   // Get unique players from roster
   Array.from(new Set(roster.map(r => r.playerId)))
