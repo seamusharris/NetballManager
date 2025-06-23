@@ -150,8 +150,8 @@ class ApiClient {
   }
 
   // HTTP method helpers
-  async get<T>(endpoint: string, customHeaders?: Record<string, string>): Promise<T> {
-    return this.request<T>('GET', endpoint, undefined, customHeaders);
+  async get<T>(endpoint: string, data?: any, additionalHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('GET', endpoint, data, additionalHeaders);
   }
 
   async post<T>(endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
