@@ -670,6 +670,174 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
+  // Get team statistics (aggregated across all games)
+  app.get('/api/teams/:teamId/stats', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Get aggregated team statistics
+      const stats = await db.execute(sql`
+        SELECT 
+          COUNT(DISTINCT g.id) as total_games,
+          COUNT(DISTINCT CASE WHEN g.status_id = 3 THEN g.id END) as completed_games,
+          SUM(CASE WHEN gs.team_id = ${teamId} THEN gs.goals_for ELSE 0 END) as total_goals_for,
+          SUM(CASE WHEN gs.team_id = ${teamId} THEN gs.goals_against ELSE 0 END) as total_goals_against,
+          AVG(CASE WHEN gs.team_id = ${teamId} THEN gs.goals_for END) as avg_goals_for,
+          AVG(CASE WHEN gs.team_id = ${teamId} THEN gs.goals_against END) as avg_goals_against
+        FROM games g
+        LEFT JOIN game_stats gs ON g.id = gs.game_id
+        WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+      `);
+
+      res.json(stats.rows[0] || {});
+    } catch (error) {
+      console.error('Error fetching team stats:', error);
+      res.status(500).json({ error: 'Failed to fetch team stats' });
+    }
+  });
+
+  // Get team roster for a specific game
+  app.get('/api/teams/:teamId/roster/:gameId', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Verify the team is actually playing in this game
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ${gameId} AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Team is not playing in this game' });
+      }
+
+      // Get roster entries for this team's game
+      const roster = await db.execute(sql`
+        SELECT 
+          r.id,
+          r.game_id,
+          r.quarter,
+          r.position,
+          r.player_id,
+          p.display_name,
+          p.first_name,
+          p.last_name,
+          p.avatar_color
+        FROM rosters r
+        JOIN players p ON r.player_id = p.id
+        WHERE r.game_id = ${gameId}
+        ORDER BY r.quarter, r.position
+      `);
+
+      const mappedRoster = roster.rows.map(row => ({
+        id: row.id,
+        gameId: row.game_id,
+        quarter: row.quarter,
+        position: row.position,
+        playerId: row.player_id,
+        playerName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        avatarColor: row.avatar_color
+      }));
+
+      res.json(mappedRoster);
+    } catch (error) {
+      console.error('Error fetching team roster:', error);
+      res.status(500).json({ error: 'Failed to fetch team roster' });
+    }
+  });
+
+  // Get team player availability for a specific game
+  app.get('/api/teams/:teamId/availability/:gameId', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Get availability data for team players for this specific game
+      const availability = await db.execute(sql`
+        SELECT 
+          p.id as player_id,
+          p.display_name,
+          COALESCE(pa.is_available, true) as is_available
+        FROM players p
+        JOIN team_players tp ON p.id = tp.player_id
+        LEFT JOIN player_availability pa ON p.id = pa.player_id AND pa.game_id = ${gameId}
+        WHERE tp.team_id = ${teamId} AND p.active = true
+        ORDER BY p.display_name
+      `);
+
+      const mappedAvailability = availability.rows.map(row => ({
+        playerId: row.player_id,
+        playerName: row.display_name,
+        isAvailable: row.is_available
+      }));
+
+      res.json(mappedAvailability);
+    } catch (error) {
+      console.error('Error fetching team availability:', error);
+      res.status(500).json({ error: 'Failed to fetch team availability' });
+    }
+  });
+
   // Get available players for a team (not assigned to any team in the season)
   app.get('/api/teams/:teamId/available-players', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
