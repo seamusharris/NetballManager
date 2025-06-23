@@ -3158,10 +3158,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           LEFT JOIN teams ht ON g.home_team_id = ht.id
           LEFT JOIN teams at ON g.away_team_id = at.id
           LEFT JOIN seasons s ON g.season_id = s.id
-          LEFT JOIN clubs hc ON g.home_club_id = hc.id
-          LEFT JOIN clubs ac ON g.away_club_id = ac.id
+          LEFT JOIN clubs hc ON ht.club_id = hc.id
+          LEFT JOIN clubs ac ON at.club_id = ac.id
           LEFT JOIN game_statuses gs ON g.status_id = gs.id
-          WHERE g.home_club_id = ${req.user.currentClubId} OR g.away_club_id = ${req.user.currentClubId}
+          WHERE (ht.club_id = ${req.user.currentClubId} OR at.club_id = ${req.user.currentClubId})
           ORDER BY g.date DESC, g.time DESC
         `;
       } else if (currentTeamId && currentTeamId !== 'null' && currentTeamId !== 'undefined') {
