@@ -1944,7 +1944,9 @@ export default function GameDetails() {
                       size="sm" 
                       onClick={() => {
                         setIsEditingNotes(true);
-                        setGameNotes(teamGameNotes?.notes || '');
+                        // Check both team notes and old game notes for existing content
+                        const existingNotes = teamGameNotes?.notes || game?.notes || '';
+                        setGameNotes(existingNotes);
                       }}
                     >
                       <Edit className="mr-2 h-4 w-4" />
@@ -1966,9 +1968,18 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
+                            // Determine which team to save notes for
+                            const teamId = currentTeam?.id || (game?.homeTeamId && teams.some(t => t.id === game.homeTeamId) ? game.homeTeamId : game?.awayTeamId);
+                            
+                            if (!teamId) {
+                              throw new Error('Unable to determine team context for notes');
+                            }
+
                             await apiClient.post(`/api/games/${gameId}/team-notes`, { 
-                              notes: gameNotes 
+                              notes: gameNotes,
+                              teamId: teamId
                             });
+                            
                             // Invalidate the queries to refresh the data
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'team-notes'] });
@@ -2002,10 +2013,20 @@ export default function GameDetails() {
                     />
                   ) : (
                     <div className="min-h-64 p-3 bg-gray-50 rounded-md">
-                      {teamGameNotes?.notes ? (
-                        <p className="whitespace-pre-wrap">{teamGameNotes.notes}</p>
-                      ) : (
-                        <p className="text-gray-500 italic">No coaching notes recorded</p>
+                      {(() => {
+                        // Display team notes if available, otherwise fall back to old game notes
+                        const displayNotes = teamGameNotes?.notes || game?.notes;
+                        
+                        if (displayNotes) {
+                          return <p className="whitespace-pre-wrap">{displayNotes}</p>;
+                        } else {
+                          return <p className="text-gray-500 italic">No coaching notes recorded</p>;
+                        }
+                      })()}
+                      {game?.notes && !teamGameNotes?.notes && (
+                        <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                          Note: These are legacy game notes. They will be converted to team-specific notes when you edit them.
+                        </div>
                       )}
                     </div>
                   )}

@@ -2518,8 +2518,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
-  // Register game scores routes
-  // Register game scores routes
+  // Team Game Notes endpoints
+  app.get('/api/games/:gameId/team-notes', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const currentTeamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string) : null;
+      
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+
+      // Get the game to determine team context if no current team
+      const gameResult = await db.execute(sql`
+        SELECT home_team_id, away_team_id FROM games WHERE id = ${gameId}
+      `);
+
+      if (gameResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      const game = gameResult.rows[0];
+      
+      // Determine which team to get notes for
+      let teamId = currentTeamId;
+      if (!teamId) {
+        // Default to home team if no current team context
+        teamId = game.home_team_id;
+      }
+
+      // Get team notes for this game and team
+      const notesResult = await db.execute(sql`
+        SELECT notes, entered_by, created_at, updated_at 
+        FROM team_game_notes 
+        WHERE game_id = ${gameId} AND team_id = ${teamId}
+      `);
+
+      if (notesResult.rows.length === 0) {
+        return res.status(404).json({ error: 'No notes found for this game and team' });
+      }
+
+      const notes = notesResult.rows[0];
+      res.json({
+        notes: notes.notes,
+        enteredBy: notes.entered_by,
+        createdAt: notes.created_at,
+        updatedAt: notes.updated_at
+      });
+    } catch (error) {
+      console.error('Error fetching team game notes:', error);
+      res.status(500).json({ error: 'Failed to fetch team game notes' });
+    }
+  });
+
+  app.post('/api/games/:gameId/team-notes', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const { notes, teamId: bodyTeamId } = req.body;
+      const currentTeamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string) : null;
+      
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+
+      // Get the game to determine team context
+      const gameResult = await db.execute(sql`
+        SELECT home_team_id, away_team_id FROM games WHERE id = ${gameId}
+      `);
+
+      if (gameResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      const game = gameResult.rows[0];
+      
+      // Determine which team to save notes for
+      let teamId = bodyTeamId || currentTeamId;
+      if (!teamId) {
+        // Default to home team if no team context
+        teamId = game.home_team_id;
+      }
+
+      // Insert or update team notes
+      const result = await db.execute(sql`
+        INSERT INTO team_game_notes (game_id, team_id, notes, entered_by, created_at, updated_at)
+        VALUES (${gameId}, ${teamId}, ${notes}, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (game_id, team_id)
+        DO UPDATE SET 
+          notes = EXCLUDED.notes,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `);
+
+      res.json({ success: true, notes: result.rows[0] });
+    } catch (error) {
+      console.error('Error saving team game notes:', error);
+      res.status(500).json({ error: 'Failed to save team game notes' });
+    }
+  });
+
   // Register game scores routes
   const { registerGameScoresRoutes } = await import('./game-scores-routes');
   registerGameScoresRoutes(app);
