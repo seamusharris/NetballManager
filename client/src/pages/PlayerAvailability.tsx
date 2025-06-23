@@ -124,7 +124,7 @@ export default function PlayerAvailability() {
     <div className="flex gap-2">
       <Button
         variant="outline"
-        onClick={() => navigate(`/roster/game/${gameId}`)}
+        onClick={() => navigate(`/team/${selectedGame?.homeTeamId}/roster/${gameId}`)}
         className="flex items-center gap-2"
       >
         Roster Management
@@ -183,7 +183,7 @@ export default function PlayerAvailability() {
                 </p>
               </div>
               <Button
-                onClick={() => navigate(`/roster/game/${gameId}`)}
+                onClick={() => navigate(`/team/${selectedGame?.homeTeamId}/roster/${gameId}`)}
                 className="flex items-center gap-2"
               >
                 Manage Roster
