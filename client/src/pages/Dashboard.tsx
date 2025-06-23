@@ -240,7 +240,14 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TeamSwitcher mode="required" />
+            <TeamSwitcher 
+              mode="required" 
+              onTeamChange={(teamId) => {
+                if (teamId && teamId !== currentTeamId) {
+                  setLocation(`/team/${teamId}`);
+                }
+              }}
+            />
           </div>
         </div>
 

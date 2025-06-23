@@ -59,7 +59,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         section: 'team'
       },
       { 
-        path: nextGame ? `/team/${currentTeamId}/player-availability/${nextGame.id}` : `/team/${currentTeamId}/player-availability`,
+        path: nextGame ? `/team/${currentTeamId}/availability/${nextGame.id}` : `/team/${currentTeamId}/availability`,
         label: 'Availability Management', 
         icon: <Users className="w-5 h-5" />,
         section: 'team'
