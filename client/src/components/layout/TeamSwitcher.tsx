@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
@@ -73,10 +73,45 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     }
   };
 
-  const handleTeamSelect = (value: string) => {
-    console.log('TeamSwitcher: Selecting team:', value);
-    handleTeamChange(value);
-  };
+  const handleTeamSelect = useCallback((teamId: string) => {
+    console.log('TeamSwitcher: Team selected:', teamId);
+    const numericTeamId = parseInt(teamId, 10);
+
+    // Check if this is actually a change
+    if (numericTeamId === currentTeamId) {
+      console.log('TeamSwitcher: Same team selected, no action needed');
+      return;
+    }
+
+    // Update context immediately but debounce navigation
+    setCurrentTeamId(numericTeamId);
+
+    // Get the team data to determine the navigation target
+    const selectedTeam = clubTeams?.find(t => t.id === numericTeamId);
+    if (selectedTeam) {
+      console.log('TeamSwitcher: Selected team:', selectedTeam.name);
+
+      // Debounce navigation to prevent rapid switches
+      setTimeout(() => {
+        // Navigate based on current page type
+        if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
+          setLocation(`/team/${numericTeamId}`);
+        } else if (location === '/games' || location.startsWith('/games')) {
+          // Stay on games page but with team context - don't redirect to team dashboard
+          // The Games component will handle the team filtering via currentTeamId context
+          return;
+        } else if (location.startsWith('/preparation')) {
+          setLocation(`/team/${numericTeamId}/preparation`);
+        } else if (location.startsWith('/opponent-preparation')) {
+          setLocation(`/team/${numericTeamId}/analysis`);
+        }
+        // If currently on club dashboard and selecting a team, navigate to team dashboard
+        else if (location === '/') {
+          setLocation(`/team/${numericTeamId}`);
+        }
+      }, 50); // 50ms debounce
+    }
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation]);
 
 
   return (
