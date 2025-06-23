@@ -380,8 +380,10 @@ export default function TeamMatchups({
                     <span className="text-xs w-16 truncate">{matchup.teamName.slice(0, 8)}</span>
                     <div className="flex-1 relative h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div 
-                        className={`absolute top-0 h-full rounded-full ${
-                          matchup.scoreDifferential >= 0 ? 'bg-blue-500' : 'bg-red-400'
+                        className={`absolute top-0 h-full ${
+                          matchup.scoreDifferential >= 0 
+                            ? 'bg-blue-500 rounded-r-full' 
+                            : 'bg-red-400 rounded-l-full'
                         }`}
                         style={{
                           width: `${(Math.abs(matchup.scoreDifferential) / maxAbsDifferential) * 50}%`,
