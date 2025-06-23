@@ -46,9 +46,11 @@ export default function Dashboard() {
       const targetTeamId = Number(teamIdFromUrl);
       // Check if the team exists in the current club
       const teamExists = clubTeams?.some(team => team.id === targetTeamId);
-      if (teamExists && currentTeamId !== targetTeamId) {
-        console.log(`Dashboard: Setting team ${targetTeamId} from URL`);
-        setCurrentTeamId(targetTeamId);
+      if (teamExists) {
+        if (currentTeamId !== targetTeamId) {
+          console.log(`Dashboard: Setting team ${targetTeamId} from URL`);
+          setCurrentTeamId(targetTeamId);
+        }
       } else if (!teamExists && clubTeams.length > 0) {
         console.log(`Dashboard: Team ${targetTeamId} not found, redirecting to teams page`);
         // Team doesn't exist, redirect to teams page
@@ -61,7 +63,7 @@ export default function Dashboard() {
       setLocation('/teams');
       return;
     }
-  }, [params.teamId, clubTeams, setLocation, setCurrentTeamId]); // Removed currentTeamId from dependencies to prevent loops
+  }, [params.teamId, clubTeams, setLocation, setCurrentTeamId, currentTeamId])
 
   // Debug team switching
   useEffect(() => {
@@ -240,14 +242,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TeamSwitcher 
-              mode="required" 
-              onTeamChange={(teamId) => {
-                if (teamId && teamId !== currentTeamId) {
-                  setLocation(`/team/${teamId}`);
-                }
-              }}
-            />
+            <TeamSwitcher mode="required" />
           </div>
         </div>
 
