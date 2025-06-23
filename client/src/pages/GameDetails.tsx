@@ -1544,7 +1544,7 @@ export default function GameDetails() {
 
           <div className="flex flex-wrap gap-2 mt-4 mb-4">
 
-            {/* Roster Button */}
+            {/* Player Availability Button */}
             {!game.isBye && (
               <Button 
                 variant="outline" 
@@ -1552,9 +1552,9 @@ export default function GameDetails() {
                 asChild
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900"
               >
-                <Link to={`/roster/${gameId}`}>
+                <Link to={`/availability/game/${gameId}`}>
                   <CalendarRange className="mr-2 h-4 w-4" />
-                  Manage Roster
+                  Player Availability
                 </Link>
               </Button>
             )}
@@ -1800,9 +1800,9 @@ export default function GameDetails() {
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                       <Button asChild>
-                        <Link to={`/roster/${gameId}`}>
+                        <Link to={`/availability/game/${gameId}`}>
                           <Edit className="mr-2 h-4 w-4" />
-                          Set Up Roster
+                          Set Player Availability
                         </Link>
                       </Button>
                     </div>
@@ -2148,11 +2148,11 @@ export default function GameDetails() {
                 </p>
                 <Button asChild>
                   <Link to={!roster || roster.length === 0 
-                    ? `/roster/${gameId}`
+                    ? `/availability/game/${gameId}`
                     : `/games/${gameId}/stats`}>
                     <Edit className="mr-2 h-4 w-4" />
                     {!roster || roster.length === 0 
-                      ? "Set Up Roster" 
+                      ? "Set Player Availability" 
                       : "Record Statistics"}
                   </Link>
                 </Button>
@@ -2173,9 +2173,9 @@ export default function GameDetails() {
                 <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                 <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                 <Button asChild>
-                  <Link to={`/roster/${gameId}`}>
+                  <Link to={`/availability/game/${gameId}`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    Set Up Roster
+                    Set Player Availability
                   </Link>
                 </Button>
               </div>

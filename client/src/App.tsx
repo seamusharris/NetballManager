@@ -100,9 +100,9 @@ import Preparation2 from './pages/Preparation2';
 import GamePreparation from './pages/GamePreparation';
 import TeamPreparation from './pages/TeamPreparation';
 
-// Mock components for PlayerAvailability and RosterGame
-const PlayerAvailability = () => <div>Player Availability Component</div>;
-const RosterGame = () => <div>Roster Game Component</div>;
+// Import actual components for PlayerAvailability and RosterGame
+import PlayerAvailability from '@/pages/PlayerAvailability';
+import RosterGame from '@/pages/RosterGame';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 
 function Router() {
