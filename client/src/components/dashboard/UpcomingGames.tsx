@@ -36,7 +36,7 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
     }))
   });
 
-  // Filter for upcoming games using the new status system
+  // Filter for upcoming games using the new status system - include BYE games
   const upcomingGames = games
     .filter(game => {
       // Debug specific game
@@ -51,6 +51,7 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
           awayTeamName: game.awayTeamName,
           statusIsCompleted: game.statusIsCompleted,
           isBye: game.isBye,
+          statusName: game.statusName,
           currentTeamId: currentTeam?.id
         });
       }
@@ -66,7 +67,7 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
         if (isTargetGame) console.log('Game 108 passed: is team game');
       }
 
-      // Only filter by completion status - let the database handle date logic
+      // Only filter by completion status - include both regular games and BYEs that aren't completed
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
@@ -77,10 +78,12 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
           isCompleted,
           statusIsCompleted: game.statusIsCompleted,
           statusName: game.statusName,
-          isBye: game.isBye
+          isBye: game.isBye,
+          willShow: !isCompleted
         });
       }
 
+      // Show all non-completed games (including BYEs)
       return !isCompleted;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
