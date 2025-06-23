@@ -134,6 +134,7 @@ function Router() {
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
         <Route path="/seasons" component={withErrorBoundary(Seasons, 'Seasons')} />
+        <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
         <Route path="/game/:id/details" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
         <Route path="/game/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />

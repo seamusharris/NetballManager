@@ -1567,7 +1567,7 @@ export default function GameDetails() {
                 asChild 
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900"
               >
-                <Link to={`/game/${gameId}/livestats`}>
+                <Link to={`/game/${gameId}/details`}>
                   <ActivitySquare className="mr-2 h-4 w-4" />
                   Live Stats
                 </Link>
