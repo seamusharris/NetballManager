@@ -218,6 +218,14 @@ const examples: ExampleSection[] = [
 
   // Patterns
   {
+    title: 'Dashboard Examples',
+    description: 'Creative dashboard layouts that consolidate team metrics and provide actionable insights for coaches.',
+    path: '/dashboard-examples',
+    icon: <BarChart3 className="h-5 w-5" />,
+    category: 'Patterns',
+    status: 'Complete'
+  },
+  {
     title: 'Dashboard Widgets',
     description: 'Standardized widget patterns for dashboards with consistent backgrounds and styling.',
     path: '/widget-examples',
