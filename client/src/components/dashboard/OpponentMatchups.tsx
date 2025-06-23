@@ -30,6 +30,7 @@ interface TeamMatchupsProps {
   games: Game[];
   currentClubId: number;
   centralizedStats?: Record<number, any[]>;
+  centralizedScores?: Record<number, any[]>;
   className?: string;
 }
 
@@ -37,6 +38,7 @@ export default function TeamMatchups({
   games, 
   currentClubId,
   centralizedStats = {},
+  centralizedScores = {},
   className 
 }: TeamMatchupsProps) {
   const [matchups, setMatchups] = useState<TeamMatchup[]>([]);
@@ -122,16 +124,41 @@ export default function TeamMatchups({
         );
 
         sortedGames.forEach((game, index) => {
-          const gameStats = centralizedStats[game.id] || [];
+          // Priority 1: Use official scores from centralizedScores (batch API)
+          const officialScores = centralizedScores[game.id] || [];
+          let ourScore = 0;
+          let opposingScore = 0;
 
-          // Debug: Log stats for this game
-          console.log(`OpponentMatchups - Game ${game.id} stats:`, gameStats.length, 'stats entries');
-
-          const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
-
-          // Calculate our team and opposing team scores from stats
-          const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-          const opposingScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+          if (officialScores.length > 0) {
+            // Calculate from official scores
+            const isHomeTeamOurs = game.homeClubId === currentClubId;
+            const homeTeamId = game.homeTeamId;
+            const awayTeamId = game.awayTeamId;
+            
+            // Sum scores for each team across all quarters
+            for (let quarter = 1; quarter <= 4; quarter++) {
+              const homeScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
+              const awayScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
+              
+              // Add to totals based on whether our team is home or away
+              if (isHomeTeamOurs) {
+                ourScore += homeScore;
+                opposingScore += awayScore;
+              } else {
+                ourScore += awayScore;
+                opposingScore += homeScore;
+              }
+            }
+            
+            console.log(`OpponentMatchups - Game ${game.id} using official scores: ${ourScore}-${opposingScore}`);
+          } else {
+            // Fallback: Calculate from position stats
+            const gameStats = centralizedStats[game.id] || [];
+            ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+            opposingScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+            
+            console.log(`OpponentMatchups - Game ${game.id} using calculated scores: ${ourScore}-${opposingScore}`);
+          }
 
           totalScoreFor += ourScore;
           totalScoreAgainst += opposingScore;
@@ -240,10 +267,35 @@ export default function TeamMatchups({
         );
       }
 
-      // Calculate scores for this game
-      const gameStats = centralizedStats[game.id] || [];
-      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      // Calculate scores for this game using official scores first
+      const officialScores = centralizedScores[game.id] || [];
+      let teamScore = 0;
+      let opponentScore = 0;
+
+      if (officialScores.length > 0) {
+        // Use official scores
+        const isHomeTeamOurs = game.homeClubId === currentClubId;
+        const homeTeamId = game.homeTeamId;
+        const awayTeamId = game.awayTeamId;
+        
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          const homeScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
+          const awayScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
+          
+          if (isHomeTeamOurs) {
+            teamScore += homeScore;
+            opponentScore += awayScore;
+          } else {
+            teamScore += awayScore;
+            opponentScore += homeScore;
+          }
+        }
+      } else {
+        // Fallback to calculated scores
+        const gameStats = centralizedStats[game.id] || [];
+        teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      }
 
       return (
         <div key={index} className="relative group mx-0.5">

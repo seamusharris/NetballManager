@@ -250,6 +250,7 @@ export default function DashboardSummary({
               games={filteredGames} 
               currentClubId={currentClub?.id || 0}
               centralizedStats={centralizedStats}
+              centralizedScores={centralizedScores}
             />
             <TopPlayersWidget 
               players={players} 
