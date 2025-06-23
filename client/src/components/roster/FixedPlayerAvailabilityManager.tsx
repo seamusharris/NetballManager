@@ -220,22 +220,14 @@ export default function FixedPlayerAvailabilityManager({
     <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CardTitle className="text-xl">
-              Player Availability 
-              {selectedGame && (
-                <span className="font-normal text-gray-600 ml-2">
-                  for {selectedGame.date}
-                </span>
-              )}
-            </CardTitle>
-            {pendingSaves.size > 0 && (
-              <div className="flex items-center gap-2 text-sm text-blue-600">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Saving...</span>
-              </div>
+          <CardTitle className="text-xl">
+            Player Availability 
+            {selectedGame && (
+              <span className="font-normal text-gray-600 ml-2">
+                for {selectedGame.date}
+              </span>
             )}
-          </div>
+          </CardTitle>
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
