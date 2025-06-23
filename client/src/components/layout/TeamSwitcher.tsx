@@ -49,22 +49,22 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
     // Navigate to team-specific URL if we're on a team-dependent page
     if (teamId) {
-      if (location.startsWith('/team-dashboard') || location === '/dashboard') {
-        setLocation(`/team-dashboard/${teamId}`);
+      if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
+        setLocation(`/team/${teamId}`);
       } else if (location.startsWith('/games')) {
-        setLocation(`/games/${teamId}`);
+        setLocation(`/team/${teamId}/games`);
       } else if (location.startsWith('/preparation')) {
-        setLocation(`/preparation/${teamId}`);
+        setLocation(`/team/${teamId}/preparation`);
       } else if (location.startsWith('/opponent-preparation')) {
-        setLocation(`/opponent-preparation/${teamId}`);
+        setLocation(`/team/${teamId}/analysis`);
       }
       // If currently on club dashboard and selecting a team, navigate to team dashboard
       else if (location === '/') {
-        setLocation(`/team-dashboard/${teamId}`);
+        setLocation(`/team/${teamId}`);
       }
     } else {
       // If no team selected and we're on a team-dependent page, go to teams page
-      if (location.startsWith('/team-dashboard') || location.startsWith('/games') || 
+      if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location.startsWith('/games') || 
           location.startsWith('/preparation') || location.startsWith('/opponent-preparation')) {
         setLocation('/teams');
       }

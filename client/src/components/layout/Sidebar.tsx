@@ -47,39 +47,33 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     // Team-specific links following proposed architecture
     const teamLinks = currentTeamId ? [
       { 
-        path: `/team-dashboard/${currentTeamId}`, 
+        path: `/team/${currentTeamId}`, 
         label: 'Team Dashboard', 
         icon: <Home className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: `/games/${currentTeamId}`, 
+        path: `/team/${currentTeamId}/games`, 
         label: 'Team Games', 
         icon: <Calendar className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/roster/${nextGame.id}` : `/roster`,
+        path: nextGame ? `/team/${currentTeamId}/roster/${nextGame.id}` : `/team/${currentTeamId}/roster`,
         label: 'Roster Management', 
         icon: <ClipboardList className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/game-preparation/${nextGame.id}` : `/games/${currentTeamId}`, 
+        path: nextGame ? `/team/${currentTeamId}/preparation/${nextGame.id}` : `/team/${currentTeamId}/games`, 
         label: 'Game Preparation', 
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: currentTeamId ? `/teams/${currentTeamId}/analysis` : '#', 
+        path: `/team/${currentTeamId}/analysis`, 
         label: 'Opponent Analysis', 
         icon: <Target className="w-5 h-5" />,
-        section: 'team'
-      },
-      { 
-        path: `/team-analysis`, 
-        label: 'Team Analysis', 
-        icon: <Trophy className="w-5 h-5" />,
         section: 'team'
       },
     ] : [
@@ -148,7 +142,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
 
   const renderNavSection = (sectionName: string, links: any[]) => {
     if (!links.length) return null;
-    
+
     return (
       <div key={sectionName} className="mb-6">
         <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-3 px-2">
