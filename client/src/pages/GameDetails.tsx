@@ -1114,18 +1114,24 @@ export default function GameDetails() {
 
   // Set initial award winner from team awards
   useEffect(() => {
-    if (teamAwards && teamAwards.length > 0) {
-      const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
-      setSelectedAwardWinner(playerOfMatch?.playerId || null);
-    } else if (teamAwards && teamAwards.length === 0) {
-      // Clear selection if no awards exist
-      setSelectedAwardWinner(null);
+    console.log('Team awards effect triggered:', { teamAwards, gameId, currentTeamId: currentTeam?.id });
+    
+    if (teamAwards !== undefined) {
+      if (teamAwards.length > 0) {
+        const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
+        const winnerId = playerOfMatch?.playerId || null;
+        console.log('Setting award winner from team awards:', winnerId);
+        setSelectedAwardWinner(winnerId);
+      } else {
+        // Clear selection if no awards exist
+        console.log('No team awards found, clearing selection');
+        setSelectedAwardWinner(null);
+      }
     }
-  }, [teamAwards]);
+  }, [teamAwards, gameId, currentTeam?.id]);
 
-  // Reset award winner state when game changes
+  // Reset editing state when game changes (but don't reset the award winner here)
   useEffect(() => {
-    setSelectedAwardWinner(null);
     setIsEditingAward(false);
   }, [gameId]);
 
