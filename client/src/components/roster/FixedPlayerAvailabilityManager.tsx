@@ -37,6 +37,9 @@ export default function FixedPlayerAvailabilityManager({
 
   // Optimistic state for instant UI updates
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<number, boolean>>({});
+  
+  // Track pending save operations
+  const [pendingSaves, setPendingSaves] = useState<Set<number>>(new Set());
 
   // Derive availability state from API response + optimistic updates
   const availabilityData: Record<number, boolean> = {};
@@ -79,6 +82,9 @@ export default function FixedPlayerAvailabilityManager({
 
     console.log(`Player ${playerId} toggled. Now ${newAvailablePlayerIds.length} players available`);
 
+    // Track this save as pending
+    setPendingSaves(prev => new Set(prev).add(gameId));
+
     // Save to backend
     try {
       await apiClient.post(`/api/games/${gameId}/availability`, {
@@ -101,6 +107,13 @@ export default function FixedPlayerAvailabilityManager({
         title: "Error saving",
         description: "Failed to save player availability. Please try again."
       });
+    } finally {
+      // Remove from pending saves
+      setPendingSaves(prev => {
+        const updated = new Set(prev);
+        updated.delete(gameId);
+        return updated;
+      });
     }
   };
 
@@ -118,6 +131,9 @@ export default function FixedPlayerAvailabilityManager({
     });
     setOptimisticUpdates(optimisticUpdates);
 
+    // Track this save as pending
+    setPendingSaves(prev => new Set(prev).add(gameId));
+
     try {
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: availableIds
@@ -129,6 +145,13 @@ export default function FixedPlayerAvailabilityManager({
       // Revert optimistic updates on error
       setOptimisticUpdates({});
       toast({ variant: "destructive", title: "Error saving availability" });
+    } finally {
+      // Remove from pending saves
+      setPendingSaves(prev => {
+        const updated = new Set(prev);
+        updated.delete(gameId);
+        return updated;
+      });
     }
   };
 
@@ -144,6 +167,9 @@ export default function FixedPlayerAvailabilityManager({
     });
     setOptimisticUpdates(optimisticUpdates);
 
+    // Track this save as pending
+    setPendingSaves(prev => new Set(prev).add(gameId));
+
     try {
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: []
@@ -155,6 +181,13 @@ export default function FixedPlayerAvailabilityManager({
       // Revert optimistic updates on error
       setOptimisticUpdates({});
       toast({ variant: "destructive", title: "Error saving availability" });
+    } finally {
+      // Remove from pending saves
+      setPendingSaves(prev => {
+        const updated = new Set(prev);
+        updated.delete(gameId);
+        return updated;
+      });
     }
   };
 
