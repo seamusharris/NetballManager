@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
