@@ -370,27 +370,33 @@ export default function TeamMatchups({
               <span className="text-xs text-gray-500 font-medium">Scoring Differential</span>
             </div>
             <div className="space-y-2">
-              {matchups.slice(0, 4).map(matchup => (
-                <div key={matchup.teamId} className="flex items-center space-x-2">
-                  <span className="text-xs w-16 truncate">{matchup.teamName.slice(0, 8)}</span>
-                  <div className="flex-1 relative h-4 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`absolute top-0 h-full ${
-                        matchup.scoreDifferential >= 0 ? 'bg-blue-500' : 'bg-red-400'
-                      }`}
-                      style={{
-                        width: `${Math.min(50, Math.abs(matchup.scoreDifferential) * 5)}%`,
-                        ...(matchup.scoreDifferential >= 0 
-                          ? { left: '50%' }
-                          : { right: '50%' }
-                        )
-                      }}
-                    />
-                    <div className="absolute left-1/2 top-0 w-px h-full bg-gray-400 transform -translate-x-1/2" />
+              {(() => {
+                // Calculate the maximum absolute differential for scaling
+                const displayedMatchups = matchups.slice(0, 4);
+                const maxAbsDifferential = Math.max(...displayedMatchups.map(m => Math.abs(m.scoreDifferential)), 1);
+                
+                return displayedMatchups.map(matchup => (
+                  <div key={matchup.teamId} className="flex items-center space-x-2">
+                    <span className="text-xs w-16 truncate">{matchup.teamName.slice(0, 8)}</span>
+                    <div className="flex-1 relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`absolute top-0 h-full ${
+                          matchup.scoreDifferential >= 0 ? 'bg-blue-500' : 'bg-red-400'
+                        }`}
+                        style={{
+                          width: `${(Math.abs(matchup.scoreDifferential) / maxAbsDifferential) * 50}%`,
+                          ...(matchup.scoreDifferential >= 0 
+                            ? { left: '50%' }
+                            : { right: '50%' }
+                          )
+                        }}
+                      />
+                      <div className="absolute left-1/2 top-0 w-px h-full bg-gray-400 transform -translate-x-1/2" />
+                    </div>
+                    <span className="text-xs w-8">{matchup.scoreDifferential > 0 ? '+' : ''}{matchup.scoreDifferential}</span>
                   </div>
-                  <span className="text-xs w-8">{matchup.scoreDifferential > 0 ? '+' : ''}{matchup.scoreDifferential}</span>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
 
