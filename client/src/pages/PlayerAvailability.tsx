@@ -46,25 +46,35 @@ export default function PlayerAvailability() {
     enabled: !!currentClub?.id && isInitialized
   });
 
-  // Fetch players
+  // Fetch team players (not club-wide players)
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
-    queryKey: ['players', currentClub?.id],
-    queryFn: () => apiRequest('GET', '/api/players'),
-    enabled: !!currentClub?.id && isInitialized
+    queryKey: ['teams', teamId, 'players'],
+    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`),
+    enabled: !!teamId && isInitialized
+  });
+
+  // Fetch existing player availability for this game
+  const { data: existingAvailability, isLoading: availabilityLoading } = useQuery({
+    queryKey: ['games', gameId, 'availability'],
+    queryFn: () => apiRequest('GET', `/api/games/${gameId}/availability`),
+    enabled: !!gameId && isInitialized
   });
 
   const selectedGame = games.find(game => game.id === gameId);
 
-  const isLoading = playersLoading || gamesLoading;
+  const isLoading = playersLoading || gamesLoading || availabilityLoading;
   const hasError = playersError || gamesError;
 
-  // Initialize available players to all active players when players load (fallback)
+  // Initialize available players from existing availability data when it loads
   useEffect(() => {
-    if (players.length > 0 && availablePlayerIds.length === 0) {
+    if (existingAvailability?.availablePlayerIds) {
+      setAvailablePlayerIds(existingAvailability.availablePlayerIds);
+    } else if (players.length > 0 && availablePlayerIds.length === 0) {
+      // Fallback: set all active players as available if no existing data
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
       setAvailablePlayerIds(activePlayerIds);
     }
-  }, [players, availablePlayerIds.length]);
+  }, [existingAvailability, players, availablePlayerIds.length]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
