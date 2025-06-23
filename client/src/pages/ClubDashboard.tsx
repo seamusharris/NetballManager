@@ -346,9 +346,15 @@ export default function ClubDashboard() {
               {teamPerformance.map((team) => (
                 <div 
                   key={team.id} 
-                  onClick={() => {
+                  onClick={async () => {
                     // First set the team in context, then navigate
+                    console.log(`ClubDashboard: Setting team context to ${team.id} (${team.name})`);
                     setCurrentTeamId(team.id);
+                    
+                    // Small delay to ensure context is set before navigation
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    
+                    console.log(`ClubDashboard: Navigating to team ${team.id} dashboard`);
                     navigate(`/team/${team.id}/dashboard`);
                   }}
                   className="flex items-center justify-between p-6 border-2 rounded-xl cursor-pointer transform transition-all duration-300 ease-in-out bg-gradient-to-r from-white to-slate-50 hover:from-blue-50 hover:to-blue-100 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 active:scale-[0.98]"

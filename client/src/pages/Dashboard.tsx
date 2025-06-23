@@ -95,8 +95,8 @@ export default function Dashboard() {
       return apiClient.get('/api/games');
     },
     enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 0, // Force fresh data for team switching
-    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    staleTime: 2 * 60 * 1000, // 2 minutes cache for better performance
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
   });
 
   // Opponents system has been completely removed
