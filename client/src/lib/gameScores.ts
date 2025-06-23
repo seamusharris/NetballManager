@@ -38,9 +38,9 @@ export function calculateGameScores(gameScores: GameScoreEntry[], currentTeamId:
     
     quarterScoreEntries.forEach(scoreEntry => {
       if (scoreEntry.teamId === currentTeamId) {
-        quarterScores[quarter as keyof typeof quarterScores].for = scoreEntry.score;
+        quarterScores[quarter.toString() as keyof typeof quarterScores].for = scoreEntry.score;
       } else {
-        quarterScores[quarter as keyof typeof quarterScores].against = scoreEntry.score;
+        quarterScores[quarter.toString() as keyof typeof quarterScores].against = scoreEntry.score;
       }
     });
   }
@@ -67,7 +67,7 @@ export function calculateGameScoresFromStats(stats: GameStat[]): GameScores {
   for (let quarter = 1; quarter <= 4; quarter++) {
     const quarterStats = stats.filter(stat => stat.quarter === quarter);
     
-    quarterScores[quarter as keyof typeof quarterScores] = {
+    quarterScores[quarter.toString() as keyof typeof quarterScores] = {
       for: quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
       against: quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
     };

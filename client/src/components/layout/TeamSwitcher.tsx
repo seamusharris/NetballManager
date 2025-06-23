@@ -39,39 +39,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     }
   }, [mode, currentTeamId, validTeams, setCurrentTeamId, onTeamChange]);
 
-  const handleTeamChange = (value: string) => {
-    const teamId = value === 'all' ? null : parseInt(value, 10);
 
-    console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
-
-    setCurrentTeamId(teamId);
-    onTeamChange?.(teamId);
-
-    // Navigate to team-specific URL if we're on a team-dependent page
-    if (teamId) {
-      if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
-        setLocation(`/team/${teamId}`);
-      } else if (location === '/games' || location.startsWith('/games')) {
-        // Stay on games page but with team context - don't redirect to team dashboard
-        // The Games component will handle the team filtering via currentTeamId context
-        return;
-      } else if (location.startsWith('/preparation')) {
-        setLocation(`/team/${teamId}/preparation`);
-      } else if (location.startsWith('/opponent-preparation')) {
-        setLocation(`/team/${teamId}/analysis`);
-      }
-      // If currently on club dashboard and selecting a team, navigate to team dashboard
-      else if (location === '/') {
-        setLocation(`/team/${teamId}`);
-      }
-    } else {
-      // If no team selected and we're on a team-dependent page, go to teams page
-      if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location.startsWith('/games') || 
-          location.startsWith('/preparation') || location.startsWith('/opponent-preparation')) {
-        setLocation('/teams');
-      }
-    }
-  };
 
   const handleTeamSelect = useCallback((teamId: string) => {
     console.log('TeamSwitcher: Team selected:', teamId);
@@ -83,35 +51,35 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
       return;
     }
 
-    // Update context immediately but debounce navigation
+    // Update internal value immediately
+    setInternalValue(teamId);
+    
+    // Update context immediately
     setCurrentTeamId(numericTeamId);
+    
+    // Call external handler if provided
+    onTeamChange?.(numericTeamId);
 
     // Get the team data to determine the navigation target
     const selectedTeam = clubTeams?.find(t => t.id === numericTeamId);
     if (selectedTeam) {
       console.log('TeamSwitcher: Selected team:', selectedTeam.name);
 
-      // Debounce navigation to prevent rapid switches
-      setTimeout(() => {
-        // Navigate based on current page type
-        if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
-          setLocation(`/team/${numericTeamId}`);
-        } else if (location === '/games' || location.startsWith('/games')) {
-          // Stay on games page but with team context - don't redirect to team dashboard
-          // The Games component will handle the team filtering via currentTeamId context
-          return;
-        } else if (location.startsWith('/preparation')) {
-          setLocation(`/team/${numericTeamId}/preparation`);
-        } else if (location.startsWith('/opponent-preparation')) {
-          setLocation(`/team/${numericTeamId}/analysis`);
-        }
-        // If currently on club dashboard and selecting a team, navigate to team dashboard
-        else if (location === '/') {
-          setLocation(`/team/${numericTeamId}`);
-        }
-      }, 50); // 50ms debounce
+      // Navigate immediately without debouncing
+      if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
+        setLocation(`/team/${numericTeamId}`);
+      } else if (location === '/games' || location.startsWith('/games')) {
+        // Stay on games page but with team context
+        return;
+      } else if (location.startsWith('/preparation')) {
+        setLocation(`/team/${numericTeamId}/preparation`);
+      } else if (location.startsWith('/opponent-preparation')) {
+        setLocation(`/team/${numericTeamId}/analysis`);
+      } else if (location === '/') {
+        setLocation(`/team/${numericTeamId}`);
+      }
     }
-  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation]);
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, setInternalValue]);
 
 
   return (
