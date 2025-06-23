@@ -1,6 +1,3 @@
-The change involves passing the teamId prop to the SharedPlayerAvailability component.
-```
-```replit_final_file
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,7 +71,7 @@ export default function PlayerAvailabilityManager({
       try {
         // Get current team context from Club context
         const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
-
+        
         let teamToLoad = selectedGame.homeTeamId;
 
         // If we have current team context and it matches one of the teams in this game, use that
@@ -382,4 +379,3 @@ export default function PlayerAvailabilityManager({
     </Card>
   );
 }
-`

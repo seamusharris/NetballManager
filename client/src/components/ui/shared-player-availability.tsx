@@ -20,7 +20,6 @@ interface SharedPlayerAvailabilityProps {
   showQuickActions?: boolean;
   className?: string;
   gameId?: number;
-  teamId?: number;
   variant?: 'compact' | 'detailed';
 }
 
@@ -32,7 +31,6 @@ export default function SharedPlayerAvailability({
   showQuickActions = true,
   className,
   gameId,
-  teamId,
   variant = 'detailed'
 }: SharedPlayerAvailabilityProps) {
   const [isSaving, setIsSaving] = useState(false);
@@ -130,23 +128,11 @@ export default function SharedPlayerAvailability({
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between gap-2 mt-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="mr-1">
-              {availableCount}
-            </Badge>
-            <span className="text-sm text-gray-600">Available Players</span>
-          </div>
-          {gameId && teamId && availableCount > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.href = `/team/${teamId}/roster/${gameId}`}
-              className="text-xs"
-            >
-              Manage Roster
-            </Button>
-          )}
+        <div className="flex items-center gap-2 mt-2">
+          <Badge variant="outline" className="mr-1">
+            {availableCount}
+          </Badge>
+          <span className="text-sm text-gray-600">Available Players</span>
         </div>
       </CardHeader>
 
