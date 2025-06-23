@@ -23,6 +23,10 @@ import TeamPerformance from '@/components/dashboard/TeamPerformance';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
 import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisWidget';
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import RecentGamesWidget from '@/components/ui/recent-games-widget';
+import UpcomingGamesWidget from '@/components/ui/upcoming-games-widget';
+import { cn } from '@/lib/utils';
+import { cacheKeys } from '@/lib/cacheKeys';
 
 export default function Dashboard() {
   const params = useParams();
@@ -261,33 +265,34 @@ export default function Dashboard() {
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
 
         {/* Recent Form Section */}
-        {(() => {
-          // Get the last 5 completed games
-          const completedGames = games?.filter(game => 
-            game.statusIsCompleted && 
-            !game.isBye && 
-            game.statusName !== 'bye'
-          ) || [];
-          
-          // Sort by date descending and take last 5
-          const recentGames = completedGames
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, 5);
+        <RecentGamesWidget
+          games={games || []}
+          teamId={currentTeamId}
+          clubId={currentClubId}
+          limit={5}
+          title="Recent Form"
+          className="mb-8"
+          centralizedScores={gameScoresMap}
+          gameStats={gameStatsMap}
+          clubTeams={clubTeams || []}
+          showQuarterScores={false}
+        />
 
-          if (recentGames.length === 0) return null;
-
-          return (
-            <PreviousGamesDisplay
-              historicalGames={recentGames}
-              currentTeamId={currentTeamId || 0}
-              currentClubId={currentClubId || 0}
-              batchScores={gameScoresMap}
-              batchStats={gameStatsMap}
-              opponentName="Recent Form"
-              className="mb-8"
-            />
-          );
-        })()}
+      {/* Upcoming Games Section - Full Width */}
+        <UpcomingGamesWidget
+          games={games || []}
+          teamId={currentTeamId}
+          clubId={currentClubId}
+          limit={5}
+          title="Upcoming Games"
+          className="mb-8"
+          centralizedScores={gameScoresMap}
+          gameStats={gameStatsMap}
+          clubTeams={clubTeams || []}
+          showDate={true}
+          showRound={true}
+          showScore={false}
+        />
 
       <DashboardSummary 
           players={players || []} 
