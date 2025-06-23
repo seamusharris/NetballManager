@@ -14,19 +14,13 @@ interface FixedPlayerAvailabilityManagerProps {
   gameId: number | null;
   players: Player[];
   games: Game[];
-  onAvailabilityChange?: (availablePlayerIds: number[]) => void;
-  onAvailabilityStateChange?: (availabilityState: Record<number, boolean>) => void;
-  onGameChange?: (gameId: number) => void;
   hideGameSelection?: boolean;
-  onComplete?: () => void;
 }
 
 export default function FixedPlayerAvailabilityManager({
   gameId,
   players,
   games,
-  onAvailabilityChange,
-  onAvailabilityStateChange,
   hideGameSelection = false
 }: FixedPlayerAvailabilityManagerProps) {
   const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
@@ -104,14 +98,12 @@ export default function FixedPlayerAvailabilityManager({
     setAvailabilityData(newAvailabilityData);
     setIsInitialized(true);
 
-    // Notify parent
+    // Log the final state
     const availableIds = Object.entries(newAvailabilityData)
       .filter(([_, isAvailable]) => isAvailable)
       .map(([playerId, _]) => parseInt(playerId));
     
-    console.log('FixedPlayerAvailabilityManager: Notifying parent with available IDs:', availableIds);
-    onAvailabilityChange?.(availableIds);
-    onAvailabilityStateChange?.(newAvailabilityData);
+    console.log('FixedPlayerAvailabilityManager: Initialization complete with available IDs:', availableIds);
   }, [gameId, players.length, availabilityResponse?.availablePlayerIds, isLoading]);
 
   // Reset initialization flag when gameId changes
@@ -133,14 +125,12 @@ export default function FixedPlayerAvailabilityManager({
     };
     setAvailabilityData(newAvailabilityData);
 
-    // Get available player IDs
+    // Get available player IDs for logging
     const availablePlayerIds = Object.entries(newAvailabilityData)
       .filter(([_, isAvailable]) => isAvailable)
       .map(([id, _]) => parseInt(id));
 
-    // Notify parent immediately
-    onAvailabilityChange?.(availablePlayerIds);
-    onAvailabilityStateChange?.(newAvailabilityData);
+    console.log(`Player ${playerId} toggled. Now ${availablePlayerIds.length} players available`);
 
     // Save to backend without cache invalidation
     if (gameId) {
@@ -154,11 +144,6 @@ export default function FixedPlayerAvailabilityManager({
         console.error('Error saving player availability:', error);
         // Revert state on error
         setAvailabilityData(availabilityData);
-        const revertedIds = Object.entries(availabilityData)
-          .filter(([_, isAvailable]) => isAvailable)
-          .map(([id, _]) => parseInt(id));
-        onAvailabilityChange?.(revertedIds);
-        onAvailabilityStateChange?.(availabilityData);
         
         toast({
           variant: "destructive",
