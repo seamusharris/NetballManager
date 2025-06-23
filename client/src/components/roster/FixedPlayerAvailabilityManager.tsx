@@ -37,8 +37,8 @@ export default function FixedPlayerAvailabilityManager({
 
   // Derive availability state directly from API response - no complex state management
   const availabilityData: Record<number, boolean> = {};
-  if (availabilityResponse?.availablePlayerIds && players.length > 0) {
-    const availableIds = availabilityResponse.availablePlayerIds;
+  if (players.length > 0) {
+    const availableIds = availabilityResponse?.availablePlayerIds || [];
     players.forEach(player => {
       availabilityData[player.id] = availableIds.includes(player.id);
     });
@@ -48,33 +48,36 @@ export default function FixedPlayerAvailabilityManager({
   const handlePlayerToggle = async (playerId: number) => {
     if (!gameId) return;
 
-    // Calculate new state optimistically
-    const newAvailabilityData = { ...availabilityData };
-    newAvailabilityData[playerId] = !newAvailabilityData[playerId];
+    // Calculate new state based on current API response, not derived state
+    const currentAvailableIds = availabilityResponse?.availablePlayerIds || [];
+    const isCurrentlyAvailable = currentAvailableIds.includes(playerId);
     
-    const availablePlayerIds = Object.entries(newAvailabilityData)
-      .filter(([_, isAvailable]) => isAvailable)
-      .map(([id, _]) => parseInt(id));
+    let newAvailablePlayerIds: number[];
+    if (isCurrentlyAvailable) {
+      // Remove player from available list
+      newAvailablePlayerIds = currentAvailableIds.filter(id => id !== playerId);
+    } else {
+      // Add player to available list
+      newAvailablePlayerIds = [...currentAvailableIds, playerId];
+    }
 
-    console.log(`Player ${playerId} toggled. Now ${availablePlayerIds.length} players available`);
+    console.log(`Player ${playerId} toggled. Now ${newAvailablePlayerIds.length} players available`);
 
     // Save to backend
-    if (gameId) {
-      try {
-        await apiClient.post(`/api/games/${gameId}/availability`, {
-          availablePlayerIds
-        });
-        // Invalidate cache to trigger re-fetch
-        queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
-        console.log(`Player ${playerId} availability saved successfully`);
-      } catch (error) {
-        console.error('Error saving player availability:', error);
-        toast({
-          variant: "destructive",
-          title: "Error saving",
-          description: "Failed to save player availability. Please try again."
-        });
-      }
+    try {
+      await apiClient.post(`/api/games/${gameId}/availability`, {
+        availablePlayerIds: newAvailablePlayerIds
+      });
+      // Invalidate cache to trigger re-fetch
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
+      console.log(`Player ${playerId} availability saved successfully`);
+    } catch (error) {
+      console.error('Error saving player availability:', error);
+      toast({
+        variant: "destructive",
+        title: "Error saving",
+        description: "Failed to save player availability. Please try again."
+      });
     }
   };
 
