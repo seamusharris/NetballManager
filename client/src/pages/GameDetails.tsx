@@ -1426,7 +1426,7 @@ export default function GameDetails() {
       const awayTeamTotals = {
         teamId: game.awayTeamId,
         goalsFor: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
-        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0)
+        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
       };
 
       // Get reconciled scores using the validation service
