@@ -21,7 +21,7 @@ interface UpcomingGamesProps {
 
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
   const { currentTeam } = useClub();
-  
+
   console.log('UpcomingGames render:', {
     totalGames: games?.length || 0,
     currentTeamId: currentTeam?.id,
@@ -69,7 +69,7 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
-      
+
       // Parse the game date and normalize to start of day
       const gameDate = new Date(game.date);
       if (isNaN(gameDate.getTime())) {
@@ -83,12 +83,12 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
                          String(today.getMonth() + 1).padStart(2, '0') + '-' + 
                          String(today.getDate()).padStart(2, '0');
       const todayNormalized = new Date(todayString + 'T00:00:00');
-      
+
       // Normalize game date to start of day in local timezone
       const gameDateString = game.date.split('T')[0]; // Get just the date part
       const gameDateNormalized = new Date(gameDateString + 'T00:00:00');
 
-      const isUpcoming = !isCompleted && gameDateNormalized >= todayNormalized && !game.isBye;
+      const isUpcoming = !isCompleted && gameDateNormalized >= todayNormalized;
 
       if (game.id === 108) {
         console.log('Game 108 final check:', {
@@ -196,3 +196,4 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
 // Export both as default and named export to handle different import styles
 export default UpcomingGames;
 export { UpcomingGames };
+```
