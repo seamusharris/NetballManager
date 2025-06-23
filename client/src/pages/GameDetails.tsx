@@ -1129,38 +1129,25 @@ export default function GameDetails() {
         throw new Error("Removing awards not yet implemented");
       }
 
-      const response = await fetch(`/api/games/${gameId}/team-awards`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-current-club-id': currentClub?.id?.toString() || '',
-          'x-current-team-id': currentTeam?.id?.toString() || '',
-        },
-        body: JSON.stringify({
-          playerId,
-          awardType: 'player_of_match',
-          teamId: currentTeam.id
-        })
+      return await apiClient.post(`/api/games/${gameId}/team-awards`, {
+        playerId,
+        awardType: 'player_of_match',
+        teamId: currentTeam.id
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update award winner');
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teamAwards', gameId, currentTeam?.id] });
-      queryClient.invalidateQueries({ queryKey: ['game', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
       toast({
         title: "Success",
         description: "Player of the match updated successfully"
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Award winner update error:', error);
       toast({
         title: "Error",
-        description: `Failed to update player of the match: ${error.message}`,
+        description: `Failed to update player of the match: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }
@@ -1830,27 +1817,15 @@ export default function GameDetails() {
                       <Button 
                         variant="default" 
                         size="sm" 
-                        onClick={async () => {
-                          try {
-                            if (selectedAwardWinner) {
-                              updateAwardWinner.mutate(selectedAwardWinner);
-                            }
-                            setIsEditingAward(false);
-                            toast({
-                              title: "Award Winner saved",
-                              description: "Player of the match has been updated successfully.",
-                            });
-                          } catch (error) {
-                            console.error('Error saving award winner:', error);
-                            toast({
-                              variant: "destructive",
-                              title: "Error",
-                              description: "Failed to save award winner. Please try again.",
-                            });
+                        onClick={() => {
+                          if (selectedAwardWinner) {
+                            updateAwardWinner.mutate(selectedAwardWinner);
                           }
+                          setIsEditingAward(false);
                         }}
+                        disabled={updateAwardWinner.isPending}
                       >
-                        Save
+                        {updateAwardWinner.isPending ? 'Saving...' : 'Save'}
                       </Button>
                     </div>
                   )}
