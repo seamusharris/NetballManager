@@ -64,6 +64,22 @@ export default function FixedPlayerAvailabilityManager({
       return;
     }
 
+    // Only initialize if we don't have existing data or if the API data has changed
+    const currentlySelectedIds = Object.entries(availabilityData)
+      .filter(([_, isAvailable]) => isAvailable)
+      .map(([playerId, _]) => parseInt(playerId));
+    
+    const apiAvailableIds = availabilityResponse?.availablePlayerIds || [];
+    
+    // Check if current state matches API data
+    const stateMatchesApi = currentlySelectedIds.length === apiAvailableIds.length && 
+      currentlySelectedIds.every(id => apiAvailableIds.includes(id));
+    
+    if (Object.keys(availabilityData).length > 0 && stateMatchesApi) {
+      console.log('FixedPlayerAvailabilityManager: State already matches API data, skipping reinitalization');
+      return;
+    }
+
     console.log('FixedPlayerAvailabilityManager: Proceeding with initialization');
 
     let newAvailabilityData: Record<number, boolean> = {};
