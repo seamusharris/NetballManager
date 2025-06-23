@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, unique, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, unique, date, varchar, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -366,14 +366,27 @@ export const byeTeam = pgTable('bye_team', {
 
 export const teamGameNotes = pgTable('team_game_notes', {
   id: serial('id').primaryKey(),
-  gameId: integer('game_id').references(() => games.id, { onDelete: 'cascade' }).notNull(),
-  teamId: integer('team_id').references(() => teams.id, { onDelete: 'cascade' }).notNull(),
+  gameId: integer('game_id').notNull().references(() => games.id, { onDelete: 'cascade' }),
+  teamId: integer('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
   notes: text('notes'),
-  enteredBy: integer('entered_by').references(() => users.id),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  enteredBy: integer('entered_by').default(1),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({
-  uniqueGameTeam: unique().on(table.gameId, table.teamId),
+  uniqueGameTeam: uniqueIndex('unique_game_team_notes').on(table.gameId, table.teamId),
+}));
+
+export const teamGameAwards = pgTable('team_game_awards', {
+  id: serial('id').primaryKey(),
+  gameId: integer('game_id').notNull().references(() => games.id, { onDelete: 'cascade' }),
+  teamId: integer('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
+  playerId: integer('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+  awardType: varchar('award_type', { length: 50 }).default('player_of_match').notNull(),
+  enteredBy: integer('entered_by').default(1),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  uniqueGameTeamAward: uniqueIndex('unique_game_team_award').on(table.gameId, table.teamId, table.awardType),
 }));
 
 export type ByeTeam = typeof byeTeam.$inferSelect;

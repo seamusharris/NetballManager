@@ -2518,6 +2518,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
+  // Team Game Awards endpoints
+  app.get('/api/games/:gameId/team-awards', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const currentTeamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string) : null;
+      const currentClubId = req.headers['x-current-club-id'] ? parseInt(req.headers['x-current-club-id'] as string) : null;
+      
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+
+      // Get the game to determine team context
+      const gameResult = await db.execute(sql`
+        SELECT g.home_team_id, g.away_team_id, ht.club_id as home_club_id, at.club_id as away_club_id
+        FROM games g
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE g.id = ${gameId}
+      `);
+
+      if (gameResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      const game = gameResult.rows[0];
+      
+      // Determine which team to get awards for
+      let teamId = currentTeamId;
+      
+      if (!teamId && currentClubId) {
+        // If no specific team, use the team from current club that's playing in this game
+        if (game.home_club_id === currentClubId) {
+          teamId = game.home_team_id;
+        } else if (game.away_club_id === currentClubId) {
+          teamId = game.away_team_id;
+        } else {
+          teamId = game.home_team_id; // Fallback to home team
+        }
+      } else if (!teamId) {
+        // Final fallback to home team
+        teamId = game.home_team_id;
+      }
+
+      // Get team awards for this game and team
+      const awardsResult = await db.execute(sql`
+        SELECT tga.*, p.display_name, p.first_name, p.last_name 
+        FROM team_game_awards tga
+        JOIN players p ON tga.player_id = p.id
+        WHERE tga.game_id = ${gameId} AND tga.team_id = ${teamId}
+      `);
+
+      res.json(awardsResult.rows.map(row => ({
+        id: row.id,
+        gameId: row.game_id,
+        teamId: row.team_id,
+        playerId: row.player_id,
+        awardType: row.award_type,
+        playerName: row.display_name,
+        enteredBy: row.entered_by,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      })));
+    } catch (error) {
+      console.error('Error fetching team game awards:', error);
+      res.status(500).json({ error: 'Failed to fetch team game awards' });
+    }
+  });
+
+  app.post('/api/games/:gameId/team-awards', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const { playerId, awardType = 'player_of_match', teamId: bodyTeamId } = req.body;
+      const currentTeamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string) : null;
+      const currentClubId = req.headers['x-current-club-id'] ? parseInt(req.headers['x-current-club-id'] as string) : null;
+      
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+
+      if (!playerId) {
+        return res.status(400).json({ error: 'Player ID is required' });
+      }
+
+      // Get the game to determine team context
+      const gameResult = await db.execute(sql`
+        SELECT g.home_team_id, g.away_team_id, ht.club_id as home_club_id, at.club_id as away_club_id
+        FROM games g
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE g.id = ${gameId}
+      `);
+
+      if (gameResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      const game = gameResult.rows[0];
+      
+      // Determine which team to save awards for
+      let teamId = bodyTeamId || currentTeamId;
+      
+      if (!teamId && currentClubId) {
+        // If no specific team, use the team from current club that's playing in this game
+        if (game.home_club_id === currentClubId) {
+          teamId = game.home_team_id;
+        } else if (game.away_club_id === currentClubId) {
+          teamId = game.away_team_id;
+        } else {
+          teamId = game.home_team_id; // Fallback to home team
+        }
+      } else if (!teamId) {
+        // Final fallback to home team
+        teamId = game.home_team_id;
+      }
+
+      if (!teamId) {
+        return res.status(400).json({ error: 'Unable to determine team for award' });
+      }
+
+      // Insert or update team award
+      const result = await db.execute(sql`
+        INSERT INTO team_game_awards (game_id, team_id, player_id, award_type, entered_by, created_at, updated_at)
+        VALUES (${gameId}, ${teamId}, ${playerId}, ${awardType}, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (game_id, team_id, award_type)
+        DO UPDATE SET 
+          player_id = EXCLUDED.player_id,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `);
+
+      res.json({ success: true, award: result.rows[0] });
+    } catch (error) {
+      console.error('Error saving team game award:', error);
+      res.status(500).json({ error: 'Failed to save team game award' });
+    }
+  });
+
   // Team Game Notes endpoints
   app.get('/api/games/:gameId/team-notes', async (req, res) => {
     try {

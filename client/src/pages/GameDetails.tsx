@@ -10,7 +10,7 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
   BreadcrumbPage,
-} from '@/components/ui/breadcrumb';
+  } from '@/components/ui/breadcrumb';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
 import { PositionBox } from '@/components/games/PositionBox';
@@ -25,14 +25,14 @@ import {
   CardDescription, 
   CardHeader, 
   CardTitle 
-} from '@/components/ui/card';
+  } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare, Trash2,
   FileText, Printer
-} from 'lucide-react';
+  } from 'lucide-react';
 import BackButton from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from '@/lib/utils';
@@ -122,7 +122,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+  } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -133,18 +133,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  } from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+  } from '@/components/ui/select';
 import { 
   calculateGameScores, 
   getGameStatusColor 
-} from '@/lib/statisticsService';
+  } from '@/lib/statisticsService';
 import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
@@ -1086,7 +1086,85 @@ export default function GameDetails() {
 
   // State for award winner
   const [isEditingAward, setIsEditingAward] = useState<boolean>(false);
+  // Team Awards Management
   const [selectedAwardWinner, setSelectedAwardWinner] = useState<number | null>(null);
+
+  // Fetch team awards
+  const { data: teamAwards } = useQuery({
+    queryKey: ['teamAwards', gameId, currentTeam?.id],
+    queryFn: async () => {
+      if (!gameId) return [];
+
+      const response = await fetch(`/api/games/${gameId}/team-awards`, {
+        headers: {
+          'x-current-club-id': currentClub?.id?.toString() || '',
+          'x-current-team-id': currentTeam?.id?.toString() || '',
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) return [];
+        throw new Error('Failed to fetch team awards');
+      }
+
+      return response.json();
+    },
+    enabled: !!gameId && !!currentTeam?.id
+  });
+
+  // Set initial award winner from team awards
+  useEffect(() => {
+    if (teamAwards && teamAwards.length > 0) {
+      const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
+      setSelectedAwardWinner(playerOfMatch?.playerId || null);
+    }
+  }, [teamAwards]);
+
+  const updateAwardWinner = useMutation({
+    mutationFn: async (playerId: number | null) => {
+      if (!game || !currentTeam) throw new Error("No game or team selected");
+
+      if (!playerId) {
+        // Handle removing award - we'd need a DELETE endpoint for this
+        throw new Error("Removing awards not yet implemented");
+      }
+
+      const response = await fetch(`/api/games/${gameId}/team-awards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-current-club-id': currentClub?.id?.toString() || '',
+          'x-current-team-id': currentTeam?.id?.toString() || '',
+        },
+        body: JSON.stringify({
+          playerId,
+          awardType: 'player_of_match',
+          teamId: currentTeam.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update award winner');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teamAwards', gameId, currentTeam?.id] });
+      queryClient.invalidateQueries({ queryKey: ['game', gameId] });
+      toast({
+        title: "Success",
+        description: "Player of the match updated successfully"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update player of the match: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
 
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -1471,7 +1549,7 @@ export default function GameDetails() {
             )}
 
             {/* Live Stats Button */}
-            {!game.isBye && !game.completed && (
+            {!game.isBye && !game.completed &&(
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -1733,7 +1811,6 @@ export default function GameDetails() {
                       size="sm" 
                       onClick={() => {
                         setIsEditingAward(true);
-                        setSelectedAwardWinner(game.awardWinnerId || null);
                       }}
                     >
                       <Edit className="mr-2 h-4 w-4" />
@@ -1755,10 +1832,9 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
-                            await apiClient.patch(`/api/games/${gameId}`, { awardWinnerId: selectedAwardWinner });
-
-                            // Invalidate the game query to refresh the data
-                            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                            if (selectedAwardWinner) {
+                              updateAwardWinner.mutate(selectedAwardWinner);
+                            }
                             setIsEditingAward(false);
                             toast({
                               title: "Award Winner saved",
@@ -1780,157 +1856,168 @@ export default function GameDetails() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  {isEditingAward ? (
-                    <div className="space-y-4">
-                      <Select
-                        value={selectedAwardWinner ? selectedAwardWinner.toString() : "none"}
-                        onValueChange={(value) => {
-                          if (value === "none") {
-                            setSelectedAwardWinner(null);
-                          } else {
-                            setSelectedAwardWinner(parseInt(value, 10));
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-[250px]">
-                          <SelectValue placeholder="Select player..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No award winner</SelectItem>
-                          {roster && roster.length > 0 ? (
-                            // Get unique players from roster
-                            Array.from(new Set(roster.map(r => r.playerId)))
-                              .map(playerId => {
-                                const player = players?.find(p => p.id === playerId);
-                                return player ? (
-                                  <SelectItem key={player.id} value={player.id.toString()}>
-                                    {player.displayName || `${player.firstName} ${player.lastName}`}
-                                  </SelectItem>
-                                ) : null;
-                              })
-                          ) : (
-                            <SelectItem value="no-players" disabled>No players in roster</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ) : (
-                    <div className="min-h-[80px] p-2">
-                      {/* Award winner display with real stats from database */}
-                      {(() => {
-                        // Find the award winner from the players array
-                        const awardWinner = players?.find(p => p.id === game.awardWinnerId);
+{currentTeam && roster ? (
+  <div className="space-y-4">
+  <h3 className="text-lg font-semibold">
+  Player of the Match
+  {currentTeam && (
+  <span className="text-sm font-normal text-gray-600 ml-2">
+  (for {currentTeam.name})
+  </span>
+  )}
+  </h3>
 
-                        if (!awardWinner) {
-                          return (
-                            <div className="flex items-center justify-center h-full py-6 text-gray-500 italic">
-                              No award winner has been selected for this game.
-                            </div>
-                          );
-                        }
+  {isEditingAward ? (
+  <div className="space-y-4">
+  <Select
+  value={selectedAwardWinner?.toString() || ""}
+  onValueChange={(value) => {
+  const playerId = value ? parseInt(value) : null;
+  setSelectedAwardWinner(playerId);
+  }}
+  >
+  <SelectTrigger className="w-full">
+  <SelectValue placeholder="Select player of the match..." />
+  </SelectTrigger>
+  <SelectContent>
+  <SelectItem value="">No selection</SelectItem>
+  {roster && roster.length > 0 ? (
+  // Get unique players from roster
+  Array.from(new Set(roster.map(r => r.playerId)))
+  .map(playerId => {
+  const player = players?.find(p => p.id === playerId);
+  return player ? (
+  <SelectItem key={player.id} value={player.id.toString()}>
+  {player.displayName || `${player.firstName} ${player.lastName}`}
+  </SelectItem>
+  ) : null;
+  })
+  ) : (
+  <SelectItem value="no-players" disabled>No players in roster</SelectItem>
+  )}
+  </SelectContent>
+  </Select>
+  </div>
+  ) : (
+  <div className="min-h-[80px] p-2">
+  {(() => {
+  // Find the award winner from the players array
+  const awardWinner = players?.find(p => p.id === selectedAwardWinner);
 
-                        // Find positions played by this player in this game
-                        const playerPositions = roster?.filter(r => r.playerId === awardWinner.id) || [];
+  if (!awardWinner) {
+  return (
+  <div className="flex items-center justify-center h-full py-6 text-gray-500 italic">
+  No award winner has been selected for this game.
+  </div>
+  );
+  }
 
-                        // Initialize stat counters
-                        let goals = 0;
-                        let intercepts = 0; 
-                        let rebounds = 0;
+  // Find positions played by this player in this game
+  const playerPositions = roster?.filter(r => r.playerId === awardWinner.id) || [];
 
-                        // Sum up stats from all positions this player played
-                        playerPositions.forEach(rosterEntry => {
-                          const stat = gameStats?.find(s => 
-                            s.position === rosterEntry.position && 
-                            s.quarter === rosterEntry.quarter
-                          );
+  // Initialize stat counters
+  let goals = 0;
+  let intercepts = 0; 
+  let rebounds = 0;
 
-                          if (stat) {
-                            goals += stat.goalsFor || 0;
-                            intercepts += stat.intercepts || 0;
-                            rebounds += stat.rebounds || 0;
-                          }
-                        });
+  // Sum up stats from all positions this player played
+  playerPositions.forEach(rosterEntry => {
+  const stat = gameStats?.find(s => 
+  s.position === rosterEntry.position && 
+  s.quarter === rosterEntry.quarter
+  );
 
-                        return (
-                          <div className="flex items-center space-x-4">
-                            {/* Player Avatar */}
-                            <div 
-                              className={`h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md ${awardWinner.avatarColor || 'bg-indigo-500'}`}
-                            >
-                              {getInitials(awardWinner.firstName, awardWinner.lastName)}
-                            </div>
+  if (stat) {
+  goals += stat.goalsFor || 0;
+  intercepts += stat.intercepts || 0;
+  rebounds += stat.rebounds || 0;
+  }
+  });
 
-                            {/* Player Stats Box - With colors matching player's avatar */}
-                            <div 
-                              className="flex-1 flex items-center p-3 rounded-lg border-2"
-                              style={{ 
-                                backgroundColor: awardWinner.avatarColor ? `${tailwindToHex(awardWinner.avatarColor)}10` : '#f5ff3ff',
-                                borderColor: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed'
-                                                            }}
-                            >
-                              <div className="flex-1">
-                                <div 
-                                  className="text-lg font-bold"
-                                  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                >
-                                  {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
-                                </div>                                <div 
-                                  className="text-sm"
-                                  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                >
-                                  Player of the Match
-                                </div>
-                              </div>
+  return (
+  <div className="flex items-center space-x-4">
+  {/* Player Avatar */}
+  <div 
+  className={`h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md ${awardWinner.avatarColor || 'bg-indigo-500'}`}
+  >
+  {getInitials(awardWinner.firstName, awardWinner.lastName)}
+  </div>
 
-                              <div className="flex space-x-6"><div className="text-center">
-                                  <div 
-                                    className="text-2xl font-bold"
-                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                  >
-                                    {goals}
-                                  </div>
-                                  <div 
-                                    className="text-xs"
-                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                  >
-                                    Goals
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <div 
-                                    className="text-2xl font-bold"
-                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                  >
-                                    {intercepts}
-                                  </div>
-                                  <div 
-                                    className="text-xs"
-                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                  >
-                                    Intercepts
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <div 
-                                    className="text-2xl font-bold"
-                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                  >
-                                    {rebounds}
-                                  </div>
-                                  <div 
-                                    className="text-xs"
-                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
-                                  >
-                                    Rebounds
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
+  {/* Player Stats Box - With colors matching player's avatar */}
+  <div 
+  className="flex-1 flex items-center p-3 rounded-lg border-2"
+  style={{ 
+  backgroundColor: awardWinner.avatarColor ? `${tailwindToHex(awardWinner.avatarColor)}10` : '#f5ff3ff',
+  borderColor: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed'
+  }}
+  >
+  <div className="flex-1">
+  <div 
+  className="text-lg font-bold"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
+  </div>                                <div 
+  className="text-sm"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  Player of the Match
+  </div>
+  </div>
+
+  <div className="flex space-x-6"><div className="text-center">
+  <div 
+  className="text-2xl font-bold"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  {goals}
+  </div>
+  <div 
+  className="text-xs"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  Goals
+  </div>
+  </div>
+  <div className="text-center">
+  <div 
+  className="text-2xl font-bold"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  {intercepts}
+  </div>
+  <div 
+  className="text-xs"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  Intercepts
+  </div>
+  </div>
+  <div className="text-center">
+  <div 
+  className="text-2xl font-bold"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  {rebounds}
+  </div>
+  <div 
+  className="text-xs"
+  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+  >
+  Rebounds
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  );
+  })()}
+  </div>
+  )}
+  </div>
+) : (
+  <div>Loading...</div>
+)}
                 </CardContent>
               </Card>
 
@@ -1970,7 +2057,7 @@ export default function GameDetails() {
                           try {
                             // Determine which team to save notes for
                             const teamId = currentTeam?.id || (game?.homeTeamId && teams.some(t => t.id === game.homeTeamId) ? game.homeTeamId : game?.awayTeamId);
-                            
+
                             if (!teamId) {
                               throw new Error('Unable to determine team context for notes');
                             }
@@ -1979,7 +2066,7 @@ export default function GameDetails() {
                               notes: gameNotes,
                               teamId: teamId
                             });
-                            
+
                             // Invalidate the queries to refresh the data
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'team-notes'] });
@@ -2016,7 +2103,7 @@ export default function GameDetails() {
                       {(() => {
                         // Display team notes if available, otherwise fall back to old game notes
                         const displayNotes = teamGameNotes?.notes || game?.notes;
-                        
+
                         if (displayNotes) {
                           return <p className="whitespace-pre-wrap">{displayNotes}</p>;
                         } else {
