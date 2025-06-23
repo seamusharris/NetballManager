@@ -85,6 +85,11 @@ interface BreadcrumbsProps {
 function Breadcrumbs({ items }: BreadcrumbsProps) {
   const [, navigate] = useLocation();
 
+  // Safety check to ensure items is an array
+  if (!items || !Array.isArray(items)) {
+    return null;
+  }
+
   return (
     <Breadcrumb className="mb-6">
       <BreadcrumbList>
