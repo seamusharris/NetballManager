@@ -66,46 +66,22 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
         if (isTargetGame) console.log('Game 108 passed: is team game');
       }
 
+      // Only filter by completion status - let the database handle date logic
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
 
-      // Parse the game date and normalize to start of day
-      const gameDate = new Date(game.date);
-      if (isNaN(gameDate.getTime())) {
-        console.warn('Invalid game date for game ' + game.id + ': ' + game.date);
-        return false;
-      }
-
-      // Get current date in local timezone, normalized to start of day
-      const today = new Date();
-      const todayString = today.getFullYear() + '-' + 
-                         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-                         String(today.getDate()).padStart(2, '0');
-      const todayNormalized = new Date(todayString + 'T00:00:00');
-
-      // Normalize game date to start of day in local timezone
-      const gameDateString = game.date.split('T')[0]; // Get just the date part
-      const gameDateNormalized = new Date(gameDateString + 'T00:00:00');
-
-      const isUpcoming = !isCompleted && gameDateNormalized >= todayNormalized;
-
       if (game.id === 108) {
         console.log('Game 108 final check:', {
-          originalDate: game.date,
-          gameDateString,
-          gameDateNormalized: gameDateNormalized.toISOString(),
-          todayString,
-          todayNormalized: todayNormalized.toISOString(),
-          isInFuture: gameDateNormalized >= todayNormalized,
+          date: game.date,
           isCompleted,
-          isBye: game.isBye,
-          isUpcoming,
-          dateComparison: `${gameDateNormalized.getTime()} >= ${todayNormalized.getTime()}`
+          statusIsCompleted: game.statusIsCompleted,
+          statusName: game.statusName,
+          isBye: game.isBye
         });
       }
 
-      return isUpcoming;
+      return !isCompleted;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games
@@ -177,12 +153,7 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
           </div>
         )}
 
-        {games.filter(game => {
-          const isCompleted = game.statusIsCompleted === true || 
-                             game.gameStatus?.isCompleted === true || 
-                             game.completed === true;
-          return !isCompleted;
-        }).length > 5 ? (
+        {upcomingGames.length > 5 ? (
           <ViewMoreButton href={`/games/${currentTeam?.id}?status=upcoming`}>
             View more →
           </ViewMoreButton>
