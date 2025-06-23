@@ -39,11 +39,20 @@ export default function RosterGame() {
     enabled: !!currentClub?.id
   });
 
-  // Fetch players
+  // Extract teamId from URL params
+  const teamId = React.useMemo(() => {
+    if (params && 'teamId' in params && params.teamId) {
+      const id = parseInt(params.teamId as string);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+
+  // Fetch team-specific players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
-    queryKey: [CACHE_KEYS.players, currentClub?.id],
-    queryFn: () => apiRequest('GET', '/api/players'),
-    enabled: !!currentClub?.id
+    queryKey: [CACHE_KEYS.teamPlayers, teamId],
+    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`),
+    enabled: !!teamId
   });
 
   // Load availability for this game

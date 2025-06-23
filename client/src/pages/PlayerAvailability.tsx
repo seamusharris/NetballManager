@@ -177,7 +177,7 @@ export default function PlayerAvailability() {
                 </p>
               </div>
               <Button
-                onClick={() => navigate(`/roster/game/${gameId}`)}
+                onClick={() => navigate(`/team/${teamId}/roster/${gameId}`)}
                 className="flex items-center gap-2"
               >
                 Manage Roster

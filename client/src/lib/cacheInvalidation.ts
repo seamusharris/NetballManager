@@ -48,6 +48,13 @@ export function invalidateTeamData(teamId: number) {
   queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/players`] });
 }
 
+// Invalidate availability data when player availability changes
+export function invalidateAvailability(queryClient: any, gameId: number) {
+  console.log(`Invalidating availability cache for game ${gameId}`);
+  queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/availability`] });
+  queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'availability'] });
+}
+
 // Smart invalidation that only updates what's necessary
 export function invalidateAfterScoreUpdate(gameId: number, teamId?: number) {
   invalidateGameData(gameId);

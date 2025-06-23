@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { invalidateAvailability } from '@/lib/cacheInvalidation';
 import { usePlayerAvailability, useSetPlayerAvailability } from '@/hooks/use-player-availability';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
