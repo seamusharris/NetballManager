@@ -1457,7 +1457,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                      (req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null);
       const clubId = req.user?.currentClubId;
 
-      console.log(`Games endpoint: clubId=${clubId}, teamId=${teamId}, isClubWide=${isClubWide}`);
+      console.log(`Games endpoint: clubId=${clubId}, teamId=${teamId}, isClubWide=${isClubWide}, headers:`, {
+        'x-current-team-id': req.headers['x-current-team-id'],
+        'x-club-wide': req.headers['x-club-wide']
+      });
 
       if (!clubId) {
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
@@ -1466,7 +1469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use parameterized queries for better security and consistency
       let result;
 
-      if (!isClubWide && teamId) {
+      // If we have a team ID and it's not a club-wide request, filter by team
+      if (teamId && !isClubWide) {
+        console.log(`Filtering games for specific team: ${teamId}`);
         // Team-specific query
         result = await db.execute(sql`
           SELECT 
@@ -1498,13 +1503,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           LEFT JOIN teams at ON g.away_team_id = at.id
           LEFT JOIN clubs hc ON ht.club_id = hc.id
           LEFT JOIN clubs ac ON at.club_id = ac.id
-          WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
-            SELECT 1 FROM game_permissions gp 
-            WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-          )) AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+          WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
           ORDER BY g.date DESC, g.time DESC
         `);
       } else {
+        console.log(`Showing club-wide games for club: ${clubId}`);
         // Club-wide query
         result = await db.execute(sql`
           SELECT 
@@ -1544,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       }
 
-      console.log(`Found ${result.rows.length} games for club ${clubId}${!isClubWide && teamId ? `, team ${teamId}` : ' (club-wide)'}`);
+      console.log(`Found ${result.rows.length} games for club ${clubId}${teamId && !isClubWide ? `, team ${teamId}` : ' (club-wide)'}`);
 
       // UNIFIED TRANSFORMATION - guarantees consistent camelCase format including statusIsCompleted
       const games = result.rows.map(transformGameRow);
