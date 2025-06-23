@@ -60,8 +60,11 @@ export class PlayerAvailabilityStorage {
         WHERE game_id = ${gameId} AND is_available = true
       `);
 
-      console.log(`Returning ${result.rows.length} available players for game ${gameId}`);
-      return result.rows.map(row => row.player_id as number);
+      const playerIds = result.rows.map(row => row.player_id as number);
+      // Deduplicate player IDs to prevent frontend issues
+      const uniquePlayerIds = [...new Set(playerIds)];
+      console.log(`Returning ${uniquePlayerIds.length} available players for game ${gameId}`);
+      return uniquePlayerIds;
 
     } catch (error) {
       console.error('Error fetching player availability:', error);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export default function FixedPlayerAvailabilityManager({
 }: FixedPlayerAvailabilityManagerProps) {
   const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
   const [isInitialized, setIsInitialized] = useState(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -237,8 +238,8 @@ export default function FixedPlayerAvailabilityManager({
   const selectedGame = games.find(game => game.id === gameId);
   const availableCount = Object.values(availabilityData).filter(isAvailable => isAvailable === true).length;
 
-  // Don't render until we have both players data and availability data initialized
-  if (isLoading || !isInitialized || Object.keys(availabilityData).length === 0) {
+  // Only show loading if we're actually loading data
+  if (isLoading || (gameId && players.length === 0)) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
