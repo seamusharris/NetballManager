@@ -80,7 +80,8 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
       hasUserClubs: Array.isArray(userClubs) && userClubs.length > 0,
       currentClubId,
       isInitialized,
-      isLoadingClubs
+      isLoadingClubs,
+      userClubsLength: userClubs.length
     });
 
     // Only run if we have user clubs, haven't initialized yet, and aren't currently loading
@@ -240,7 +241,10 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
     hasCurrentClub: !!currentClub,
     userClubsCount: userClubs.length,
     isLoading: contextValue.isLoading,
-    isInitialized
+    isInitialized,
+    isLoadingClubs,
+    isLoadingClub,
+    isLoadingTeams
   });
 
   return (
