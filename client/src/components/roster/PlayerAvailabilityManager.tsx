@@ -102,9 +102,10 @@ export default function PlayerAvailabilityManager({
 
         try {
           const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
-          console.log(`Loaded ${Array.isArray(response) ? response.length : 'unknown count'} team players for team ${teamToLoad}`);
+          console.log(`Successfully loaded ${Array.isArray(response) ? response.length : 'unknown count'} team players for team ${teamToLoad}`);
           setTeamPlayers(Array.isArray(response) ? response : []);
         } catch (teamError) {
+          console.error('Team players endpoint failed with error:', teamError);
           console.log('Team players endpoint failed, filtering provided players by team');
           // Filter provided players by the team if API call fails
           if (players && players.length > 0) {
