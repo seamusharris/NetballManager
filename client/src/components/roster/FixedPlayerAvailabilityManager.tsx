@@ -121,27 +121,8 @@ export default function FixedPlayerAvailabilityManager({
     setAvailabilityData({});
   }, [gameId]);
 
-  // Debounced save function
-  const debouncedSave = useCallback(async (gameId: number, availablePlayerIds: number[]) => {
-    try {
-      await apiClient.post(`/api/games/${gameId}/availability`, {
-        availablePlayerIds
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: CACHE_KEYS.playerAvailability(gameId)
-      });
-    } catch (error) {
-      console.error('Error saving player availability:', error);
-      toast({
-        variant: "destructive",
-        title: "Error saving availability",
-        description: "Failed to save player availability. Please try again."
-      });
-    }
-  }, [apiClient, queryClient, toast]);
-
   // Handle individual player toggle
-  const handlePlayerToggle = (playerId: number) => {
+  const handlePlayerToggle = async (playerId: number) => {
     const currentValue = availabilityData[playerId] || false;
     const newValue = !currentValue;
     
@@ -161,15 +142,22 @@ export default function FixedPlayerAvailabilityManager({
     onAvailabilityChange?.(availablePlayerIds);
     onAvailabilityStateChange?.(newAvailabilityData);
 
-    // Debounce the API call to reduce save delays
+    // Save immediately without debouncing
     if (gameId) {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
+      try {
+        await apiClient.post(`/api/games/${gameId}/availability`, {
+          availablePlayerIds
+        });
+        // Don't invalidate cache to avoid unnecessary re-renders
+      } catch (error) {
+        console.error('Error saving player availability:', error);
+        // Revert state on error
+        setAvailabilityData(availabilityData);
+        onAvailabilityChange?.(Object.entries(availabilityData)
+          .filter(([_, isAvailable]) => isAvailable)
+          .map(([id, _]) => parseInt(id)));
+        onAvailabilityStateChange?.(availabilityData);
       }
-      
-      debounceTimeoutRef.current = setTimeout(() => {
-        debouncedSave(gameId, availablePlayerIds);
-      }, 800); // 800ms debounce - enough time for rapid selections
     }
   };
 
