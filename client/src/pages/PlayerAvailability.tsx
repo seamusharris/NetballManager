@@ -115,7 +115,7 @@ export default function PlayerAvailability() {
 
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Games', href: '/games' },
+    { label: 'Games', href: `/team/${selectedGame?.homeTeamId}/games` },
     { label: `Game ${selectedGame.round}`, href: `/games/${gameId}` },
     { label: 'Player Availability' }
   ];
@@ -124,7 +124,7 @@ export default function PlayerAvailability() {
     <div className="flex gap-2">
       <Button
         variant="outline"
-        onClick={() => navigate(`/team/${selectedGame?.homeTeamId}/roster/${gameId}`)}
+        onClick={() => navigate(`/roster/game/${gameId}`)}
         className="flex items-center gap-2"
       >
         Roster Management
@@ -183,7 +183,7 @@ export default function PlayerAvailability() {
                 </p>
               </div>
               <Button
-                onClick={() => navigate(`/team/${selectedGame?.homeTeamId}/roster/${gameId}`)}
+                onClick={() => navigate(`/roster/game/${gameId}`)}
                 className="flex items-center gap-2"
               >
                 Manage Roster

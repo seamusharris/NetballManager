@@ -129,7 +129,7 @@ export default function RosterGame() {
 
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Games', href: '/games' },
+    { label: 'Games', href: `/team/${selectedGame?.homeTeamId}/games` },
     { label: `Game ${selectedGame.round}`, href: `/games/${gameId}` },
     { label: 'Roster Management' }
   ];
