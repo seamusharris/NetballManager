@@ -84,7 +84,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Only run if we have user clubs, haven't initialized yet, and aren't currently loading
-    if (Array.isArray(userClubs) && userClubs.length > 0 && !isInitialized && !isLoadingClubs) {
+    if (Array.isArray(userClubs) && userClubs.length > 0 && !isInitialized && !isLoadingClubs && currentClubId === null) {
       console.log('ClubContext: Starting initialization...');
 
       let targetClubId: number;
@@ -110,17 +110,15 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
         console.log('ClubContext: No stored club, selecting:', targetClubId);
       }
 
-      // Set everything synchronously
+      // Set everything immediately without transitions to avoid loops
       localStorage.setItem('currentClubId', targetClubId.toString());
       apiClient.setClubContext({ currentClubId: targetClubId });
-      startTransition(() => {
-        setCurrentClubId(targetClubId);
-      });
+      setCurrentClubId(targetClubId);
       setIsInitialized(true);
 
       console.log('ClubContext: Initialization completed with club:', targetClubId);
     }
-  }, [userClubs, isLoadingClubs, isInitialized]);
+  }, [userClubs, isLoadingClubs, isInitialized, currentClubId]);
 
   // Load saved team from localStorage when teams are available
   useEffect(() => {
@@ -155,27 +153,17 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Store old club for cache management
-    const oldClubId = currentClubId;
-
-    // Update everything synchronously
+    // Update everything immediately without transitions
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
-    startTransition(() => {
-      setCurrentClubId(clubId);
-    });
+    setCurrentClubId(clubId);
 
     // Clear team selection when switching clubs
-    startTransition(() => {
-      setCurrentTeamId(null);
-    });
+    setCurrentTeamId(null);
     localStorage.removeItem('current-team-id');
 
-    // Cache invalidation disabled to prevent race conditions
-    // Let React Query handle cache naturally through query key changes
-
     console.log('ClubContext: Club switch completed to:', clubId);
-  }, [currentClubId, userClubs]);
+  }, [userClubs]);
 
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId);
