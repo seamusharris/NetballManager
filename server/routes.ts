@@ -1439,7 +1439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       awayClubCode: row.away_club_code,
 
       // Legacy fields for backward compatibility
-      isBye: row.away_team_name === 'Bye'
+      isBye: row.away_team_name === 'Bye' || row.away_team_id === null
     };
   }
 

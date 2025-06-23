@@ -182,6 +182,18 @@ export default function ClubDashboard() {
       game.homeTeamId === team.id || game.awayTeamId === team.id
     );
 
+    console.log(`ClubDashboard: Team ${team.name} (ID: ${team.id}) filtering games:`, {
+      totalGames: games.length,
+      filteredGames: teamGames.length,
+      firstFewGames: games.slice(0, 3).map(g => ({ 
+        id: g.id, 
+        homeTeamId: g.homeTeamId, 
+        awayTeamId: g.awayTeamId,
+        homeTeamName: g.homeTeamName,
+        awayTeamName: g.awayTeamName
+      }))
+    });
+
     // Use shared win rate calculator for consistent logic with official scores
     const winRateData = calculateTeamWinRate(teamGames, team.id, currentClubId!, officialScores);
 
