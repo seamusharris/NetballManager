@@ -82,6 +82,12 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
+      { 
+        path: `/team/${currentTeamId}/players`, 
+        label: 'Player Management', 
+        icon: <Users className="w-5 h-5" />,
+        section: 'team'
+      },
     ] : [];
 
     // Return organized navigation structure
