@@ -101,8 +101,8 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
 
   // Always show home vs away format
   const getOpponentName = (game: any) => {
-    // Handle BYE games
-    if (game.awayTeamName === 'Bye' || game.awayTeamName === null) {
+    // Handle BYE games - check game status, not null away team
+    if (game.statusName === 'bye') {
       return 'BYE';
     }
 
