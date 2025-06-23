@@ -59,15 +59,15 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         section: 'team'
       },
       { 
-        path: nextGame ? `/team/${currentTeamId}/roster/${nextGame.id}` : `/team/${currentTeamId}/roster`,
-        label: 'Roster Management', 
-        icon: <ClipboardList className="w-5 h-5" />,
+        path: nextGame ? `/team/${currentTeamId}/player-availability/${nextGame.id}` : `/team/${currentTeamId}/player-availability`,
+        label: 'Availability Management', 
+        icon: <Users className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/player-availability/${nextGame.id}` : '/player-availability',
-        label: 'Availability Management', 
-        icon: <Users className="w-5 h-5" />,
+        path: nextGame ? `/team/${currentTeamId}/roster/${nextGame.id}` : `/team/${currentTeamId}/roster`,
+        label: 'Roster Management', 
+        icon: <ClipboardList className="w-5 h-5" />,
         section: 'team'
       },
       { 
