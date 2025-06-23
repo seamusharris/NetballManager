@@ -33,7 +33,6 @@ import {
   MapPin,
   Timer,
   Flame,
-  TrendingFlat,
   ChevronUp,
   ChevronDown,
   Circle,
@@ -445,7 +444,7 @@ export default function DashboardExamples() {
                         <div className="text-right">
                           {player.trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
                           {player.trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
-                          {player.trend === 'same' && <TrendingFlat className="h-4 w-4 text-gray-500" />}
+                          {player.trend === 'same' && <Minus className="h-4 w-4 text-gray-500" />}
                         </div>
                       </div>
                       <div className="space-y-2">
