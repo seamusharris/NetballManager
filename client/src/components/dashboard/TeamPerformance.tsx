@@ -2,13 +2,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { gameScoreService } from '@/lib/gameScoreService';
 import { useClub } from '@/contexts/ClubContext';
+import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
 
 interface TeamPerformanceProps {
   games: Game[];
@@ -22,6 +23,7 @@ interface TeamPerformanceProps {
 // Team Performance Component
 const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats, centralizedScores }: TeamPerformanceProps) => {
   const { currentTeamId } = useClub();
+  const { metrics, trackCacheHit, trackCacheMiss } = usePerformanceMonitor('TeamPerformance');
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -52,25 +54,22 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
   // Add a key to force refresh when seasons change
   const [statsKey, setStatsKey] = useState(0);
 
+  // Create memoized cache key for performance calculations
+  const performanceCacheKey = useMemo(() => {
+    const gameIds = completedGamesArray.map(g => g.id).sort().join(',');
+    const seasonKey = selectedSeason?.id || activeSeason?.id || 'none';
+    const statsHash = centralizedStats ? Object.keys(centralizedStats).length : 0;
+    const scoresHash = centralizedScores ? Object.keys(centralizedScores).length : 0;
+    return `${currentTeamId}-${seasonKey}-${gameIds}-${statsHash}-${scoresHash}`;
+  }, [completedGamesArray, selectedSeason, activeSeason, currentTeamId, centralizedStats, centralizedScores]);
+
   // Force refresh when selectedSeason or activeSeason changes
   useEffect(() => {
-    // Reset component state
-    setQuarterPerformance({
-      avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
-      avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
-      teamWinRate: 0,
-      avgTeamScore: 0,
-      avgOpponentScore: 0,
-      totalTeamScore: 0,
-      totalOpponentScore: 0,
-      goalsPercentage: 0
-    });
-
-    // Use a timestamp to ensure uniqueness
+    // Only reset if the cache key actually changed
     const newKey = Date.now();
     setStatsKey(newKey);
-    console.log(`TeamPerformance refreshed with key ${newKey} for season: ${selectedSeason?.name || 'current'}`);
-  }, [selectedSeason, activeSeason]);
+    console.log(`TeamPerformance cache key changed: ${performanceCacheKey}`);
+  }, [performanceCacheKey]);
 
   // Get game IDs for completed games 
   const completedGameIds = completedGamesArray.map(game => game.id);
@@ -79,9 +78,8 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
   const gameStatsMap = centralizedStats || {};
   const isLoading = false; // We don't need loading state when using centralized stats
 
-  // Use the gameScoreService for consistent score calculation
-  useEffect(() => {
-    const calculatePerformance = async () => {
+  // Memoized performance calculation to prevent redundant recalculations
+  const calculatePerformance = useCallback(async () => {
       if (completedGameIds.length === 0) {
         console.log('TeamPerformance: No completed games for team', currentTeamId);
         return;
@@ -250,8 +248,12 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
     };
 
     calculatePerformance();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameStatsMap, games, completedGameIds]);
+  }, [currentTeamId, completedGameIds, centralizedStats, centralizedScores, games]);
+
+  // Use the memoized calculation with cache key dependency
+  useEffect(() => {
+    calculatePerformance();
+  }, [calculatePerformance, performanceCacheKey]);
 
   return (
     <BaseWidget 

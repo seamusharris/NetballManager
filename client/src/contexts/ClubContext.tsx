@@ -51,6 +51,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
   const [currentClubId, setCurrentClubId] = useState<number | null>(null);
   const [currentTeamId, setCurrentTeamId] = useState<number | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const teamChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -180,29 +181,35 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId);
 
-    if (teamId === currentTeamId) {
-      return; // No change needed
+    // Clear any pending team change
+    if (teamChangeTimeoutRef.current) {
+      clearTimeout(teamChangeTimeoutRef.current);
     }
 
-    // Update localStorage first
-    if (teamId !== null) {
-      localStorage.setItem('current-team-id', teamId.toString());
-    } else {
-      localStorage.removeItem('current-team-id');
-    }
+    // Debounce team changes by 100ms to prevent rapid successive updates
+    teamChangeTimeoutRef.current = setTimeout(() => {
+      // Update localStorage first
+      if (teamId !== null) {
+        localStorage.setItem('current-team-id', teamId.toString());
+      } else {
+        localStorage.removeItem('current-team-id');
+      }
 
-    // Update API client context with the NEW team ID immediately
-    // This ensures API calls use the correct context before React re-renders
-    apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+      // Update API client context with the NEW team ID immediately
+      // This ensures API calls use the correct context before React re-renders
+      apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
 
-    // Update state after API client is set
-    setCurrentTeamId(teamId);
+      // Update state after API client is set
+      startTransition(() => {
+          setCurrentTeamId(teamId);
+      });
 
-    // Cache invalidation disabled to prevent race conditions
-    // Let React Query handle cache naturally through query key changes
+      // Cache invalidation disabled to prevent race conditions
+      // Let React Query handle cache naturally through query key changes
 
-    console.log('ClubContext: Team context updated to:', teamId);
-  }, [currentClubId, currentTeamId]);
+      console.log('ClubContext: Team context updated to:', teamId);
+    }, 100);
+  }, [currentClubId]);
 
   const hasPermission = useCallback((permission: keyof UserClubAccess['permissions']) => {
     if (!currentClubId || !Array.isArray(userClubs)) return false;
