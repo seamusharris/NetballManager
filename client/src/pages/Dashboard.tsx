@@ -260,7 +260,7 @@ export default function Dashboard() {
       {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
 
-        {/* Recent Games Section */}
+        {/* Recent Form Section */}
         {(() => {
           // Get the last 5 completed games
           const completedGames = games?.filter(game => 
@@ -277,24 +277,15 @@ export default function Dashboard() {
           if (recentGames.length === 0) return null;
 
           return (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  Recent Games
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PreviousGamesDisplay
-                  historicalGames={recentGames}
-                  currentTeamId={currentTeamId || 0}
-                  currentClubId={currentClubId || 0}
-                  batchScores={gameScoresMap}
-                  batchStats={gameStatsMap}
-                  opponentName="Recent Opponents"
-                  className=""
-                />
-              </CardContent>
-            </Card>
+            <PreviousGamesDisplay
+              historicalGames={recentGames}
+              currentTeamId={currentTeamId || 0}
+              currentClubId={currentClubId || 0}
+              batchScores={gameScoresMap}
+              batchStats={gameStatsMap}
+              opponentName="Recent Form"
+              className="mb-8"
+            />
           );
         })()}
 

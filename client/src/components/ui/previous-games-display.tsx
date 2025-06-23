@@ -58,7 +58,7 @@ export default function PreviousGamesDisplay({
     <Card className={className}>
       <CardHeader className="pb-6">
         <CardTitle>
-          Previous Games vs {opponentName}
+          {opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`}
         </CardTitle>
       </CardHeader>
       <CardContent>
