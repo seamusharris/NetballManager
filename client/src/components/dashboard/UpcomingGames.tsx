@@ -21,16 +21,49 @@ interface UpcomingGamesProps {
 
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
   const { currentTeam } = useClub();
+  
+  console.log('UpcomingGames render:', {
+    totalGames: games?.length || 0,
+    currentTeamId: currentTeam?.id,
+    gamesArray: games?.slice(0, 3).map(g => ({
+      id: g.id,
+      date: g.date,
+      homeTeam: g.homeTeamName,
+      awayTeam: g.awayTeamName,
+      statusIsCompleted: g.statusIsCompleted,
+      homeTeamId: g.homeTeamId,
+      awayTeamId: g.awayTeamId
+    }))
+  });
+
   // Filter for upcoming games using the new status system
   const upcomingGames = games
     .filter(game => {
+      // Debug specific game
+      const isTargetGame = game.id === 108;
+      if (isTargetGame) {
+        console.log('Processing Game 108:', {
+          id: game.id,
+          date: game.date,
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId,
+          homeTeamName: game.homeTeamName,
+          awayTeamName: game.awayTeamName,
+          statusIsCompleted: game.statusIsCompleted,
+          isBye: game.isBye,
+          currentTeamId: currentTeam?.id
+        });
+      }
+
       // First check if this game involves the current team
       const currentTeamId = currentTeam?.id;
       if (currentTeamId) {
         const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
         if (!isTeamGame) {
+          if (isTargetGame) console.log('Game 108 filtered out: not team game');
           return false;
         }
+        if (isTargetGame) console.log('Game 108 passed: is team game');
       }
 
       const isCompleted = game.statusIsCompleted === true || 
@@ -51,10 +84,31 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
 
       const isUpcoming = !isCompleted && gameDateNormalized >= today && !game.isBye;
 
+      if (game.id === 108) {
+        console.log('Game 108 final check:', {
+          isCompleted,
+          gameDateNormalized: gameDateNormalized.toISOString(),
+          today: today.toISOString(),
+          isInFuture: gameDateNormalized >= today,
+          isBye: game.isBye,
+          isUpcoming
+        });
+      }
+
       return isUpcoming;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games
+
+  console.log('UpcomingGames final result:', {
+    filteredCount: upcomingGames.length,
+    games: upcomingGames.map(g => ({
+      id: g.id,
+      date: g.date,
+      homeTeam: g.homeTeamName,
+      awayTeam: g.awayTeamName
+    }))
+  });
 
   // Always show home vs away format
   const getOpponentName = (game: any) => {
