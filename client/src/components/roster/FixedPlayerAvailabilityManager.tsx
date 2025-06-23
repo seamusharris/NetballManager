@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Player, Game } from '@shared/schema';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { apiClient } from '@/lib/apiClient';
+import { Loader2 } from 'lucide-react';
 
 interface FixedPlayerAvailabilityManagerProps {
   gameId: number | null;
@@ -219,19 +220,28 @@ export default function FixedPlayerAvailabilityManager({
     <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">
-            Player Availability 
-            {selectedGame && (
-              <span className="font-normal text-gray-600 ml-2">
-                for {selectedGame.date}
-              </span>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-xl">
+              Player Availability 
+              {selectedGame && (
+                <span className="font-normal text-gray-600 ml-2">
+                  for {selectedGame.date}
+                </span>
+              )}
+            </CardTitle>
+            {pendingSaves.size > 0 && (
+              <div className="flex items-center gap-2 text-sm text-blue-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </div>
             )}
-          </CardTitle>
+          </div>
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleSelectAll}
+              disabled={pendingSaves.size > 0}
             >
               Select All
             </Button>
@@ -239,6 +249,7 @@ export default function FixedPlayerAvailabilityManager({
               variant="outline" 
               size="sm" 
               onClick={handleClearAll}
+              disabled={pendingSaves.size > 0}
             >
               Clear All
             </Button>
