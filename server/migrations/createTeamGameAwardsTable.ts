@@ -41,7 +41,7 @@ export async function createTeamGameAwardsTable() {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   createTeamGameAwardsTable()
     .then(() => process.exit(0))
     .catch((error) => {
