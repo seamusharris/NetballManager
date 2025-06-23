@@ -262,6 +262,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Export queryClient for use in other components
+export { queryClient };
+
 // Initialize cache manager
 initializeCacheManager(queryClient);
 
