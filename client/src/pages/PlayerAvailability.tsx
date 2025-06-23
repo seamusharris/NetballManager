@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
@@ -75,6 +75,11 @@ export default function PlayerAvailability() {
       setAvailablePlayerIds(activePlayerIds);
     }
   }, [existingAvailability, players, availablePlayerIds.length]);
+
+  // Memoized callback to prevent infinite re-renders
+  const handleAvailabilityChange = useCallback((newAvailablePlayerIds: number[]) => {
+    setAvailablePlayerIds(newAvailablePlayerIds);
+  }, []);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
