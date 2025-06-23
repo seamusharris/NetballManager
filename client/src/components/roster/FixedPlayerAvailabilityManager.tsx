@@ -44,6 +44,16 @@ export default function FixedPlayerAvailabilityManager({
 
   // Initialize availability data when API data loads or when starting fresh
   useEffect(() => {
+    console.log('FixedPlayerAvailabilityManager: useEffect triggered', {
+      gameId,
+      playersCount: players.length,
+      isLoading,
+      hasAvailabilityResponse: !!availabilityResponse,
+      availablePlayerIds: availabilityResponse?.availablePlayerIds,
+      currentAvailabilityDataKeys: Object.keys(availabilityData),
+      isInitialized
+    });
+
     if (!gameId || players.length === 0) {
       console.log('FixedPlayerAvailabilityManager: Skipping initialization - no gameId or players', { gameId, playersCount: players.length });
       return;
@@ -54,13 +64,7 @@ export default function FixedPlayerAvailabilityManager({
       return;
     }
 
-    console.log('FixedPlayerAvailabilityManager: Initializing availability data', {
-      gameId,
-      playersCount: players.length,
-      availabilityResponse,
-      isInitialized,
-      isLoading
-    });
+    console.log('FixedPlayerAvailabilityManager: Proceeding with initialization');
 
     let newAvailabilityData: Record<number, boolean> = {};
 
