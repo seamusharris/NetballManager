@@ -121,8 +121,27 @@ export default function FixedPlayerAvailabilityManager({
     setAvailabilityData({});
   }, [gameId]);
 
+  // Debounced save function
+  const debouncedSave = useCallback(async (gameId: number, availablePlayerIds: number[]) => {
+    try {
+      await apiClient.post(`/api/games/${gameId}/availability`, {
+        availablePlayerIds
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: CACHE_KEYS.playerAvailability(gameId)
+      });
+    } catch (error) {
+      console.error('Error saving player availability:', error);
+      toast({
+        variant: "destructive",
+        title: "Error saving availability",
+        description: "Failed to save player availability. Please try again."
+      });
+    }
+  }, [apiClient, queryClient, toast]);
+
   // Handle individual player toggle
-  const handlePlayerToggle = async (playerId: number) => {
+  const handlePlayerToggle = (playerId: number) => {
     const currentValue = availabilityData[playerId] || false;
     const newValue = !currentValue;
     
@@ -142,38 +161,15 @@ export default function FixedPlayerAvailabilityManager({
     onAvailabilityChange?.(availablePlayerIds);
     onAvailabilityStateChange?.(newAvailabilityData);
 
-    // Save to API
+    // Debounce the API call to reduce save delays
     if (gameId) {
-      try {
-        await apiClient.post(`/api/games/${gameId}/availability`, {
-          availablePlayerIds
-        });
-
-        // Invalidate cache
-        queryClient.invalidateQueries({ 
-          queryKey: CACHE_KEYS.playerAvailability(gameId)
-        });
-
-        toast({
-          title: "Availability updated",
-          description: `${players.find(p => p.id === playerId)?.displayName} ${newValue ? 'added to' : 'removed from'} available players.`,
-        });
-      } catch (error) {
-        console.error("Failed to save player availability:", error);
-        
-        // Revert on error
-        setAvailabilityData(availabilityData);
-        onAvailabilityChange?.(Object.entries(availabilityData)
-          .filter(([_, isAvailable]) => isAvailable)
-          .map(([id, _]) => parseInt(id)));
-        onAvailabilityStateChange?.(availabilityData);
-
-        toast({
-          variant: "destructive",
-          title: "Error saving availability",
-          description: "Failed to save player availability. Please try again.",
-        });
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
       }
+      
+      debounceTimeoutRef.current = setTimeout(() => {
+        debouncedSave(gameId, availablePlayerIds);
+      }, 800); // 800ms debounce - enough time for rapid selections
     }
   };
 
