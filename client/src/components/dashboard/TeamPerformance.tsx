@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
@@ -245,9 +244,6 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
         totalOpponentScore,
         goalsPercentage
       });
-    };
-
-    calculatePerformance();
   }, [currentTeamId, completedGameIds, centralizedStats, centralizedScores, games]);
 
   // Use the memoized calculation with cache key dependency
@@ -309,7 +305,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                 const maxScore = Math.max(quarterPerformance.avgTeamScore, quarterPerformance.avgOpponentScore, 1);
                 const teamPercentage = (quarterPerformance.avgTeamScore / maxScore) * 100;
                 const opponentPercentage = (quarterPerformance.avgOpponentScore / maxScore) * 100;
-                
+
                 return (
                   <>
                     <div className="flex items-center justify-between">
