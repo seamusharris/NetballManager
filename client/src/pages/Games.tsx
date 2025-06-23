@@ -259,28 +259,35 @@ export default function Games() {
     : 'Manage and view game schedules and results';
 
   // Generate breadcrumbs
-  const pageActions = (
-    <>
-      <div className="text-sm text-muted-foreground">
-        Team Filter (Optional):
-      </div>
-      <TeamSwitcher />
-      <ActionButton 
-        action="create" 
-        onClick={() => setIsDialogOpen(true)}
-        icon={Plus}
-      >
-        Add Game
-      </ActionButton>
-    </>
-  );
+  const breadcrumbs = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Games' }
+  ];
 
   return (
     <>
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
-        actions={pageActions}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Games' }
+        ]}
+        actions={
+          <>
+            <div className="text-sm text-muted-foreground">
+              Team Filter (Optional):
+            </div>
+            <TeamSwitcher />
+            <ActionButton 
+              action="create" 
+              onClick={() => setIsDialogOpen(true)}
+              icon={Plus}
+            >
+              Add Game
+            </ActionButton>
+          </>
+        }
       >
         <ContentBox>
           <GamesList 

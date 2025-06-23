@@ -1469,10 +1469,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use parameterized queries for better security and consistency
       let result;
 
-      // ALWAYS filter by team when team context is provided - don't return all club data
+      // If we have a team ID and it's not a club-wide request, filter by team
       if (teamId && !isClubWide) {
-        console.log(`API filtering games for specific team: ${teamId} - ONLY returning team games`);
-        // Team-specific query - ONLY return games for this team
+        console.log(`Filtering games for specific team: ${teamId}`);
+        // Team-specific query
         result = await db.execute(sql`
           SELECT 
             g.*,
@@ -1547,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       }
 
-      console.log(`API returned ${result.rows.length} games for club ${clubId}${teamId && !isClubWide ? `, team ${teamId}` : ' (club-wide)'}`);
+      console.log(`Found ${result.rows.length} games for club ${clubId}${teamId && !isClubWide ? `, team ${teamId}` : ' (club-wide)'}`);
 
       // UNIFIED TRANSFORMATION - guarantees consistent camelCase format including statusIsCompleted
       const games = result.rows.map(transformGameRow);

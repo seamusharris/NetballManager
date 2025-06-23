@@ -4,7 +4,6 @@ import { Home, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BackButton from '@/components/ui/back-button';
 import { PAGE_STRUCTURE, SPACING_STANDARDS } from '@/components/dashboard/widget-standards';
-import { DynamicBreadcrumbs } from './DynamicBreadcrumbs';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -56,11 +55,7 @@ function PageTemplate({
         />
       )}
 
-      {breadcrumbs ? (
-        <Breadcrumbs items={breadcrumbs} />
-      ) : (
-        <DynamicBreadcrumbs />
-      )}
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
 
       <div className={PAGE_STRUCTURE.headerSection}>
         <div className="flex items-start justify-between">
@@ -89,11 +84,6 @@ interface BreadcrumbsProps {
 
 function Breadcrumbs({ items }: BreadcrumbsProps) {
   const [, navigate] = useLocation();
-
-  // Safety check to ensure items is an array
-  if (!items || !Array.isArray(items)) {
-    return null;
-  }
 
   return (
     <Breadcrumb className="mb-6">

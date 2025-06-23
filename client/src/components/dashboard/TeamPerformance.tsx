@@ -1,7 +1,8 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
@@ -21,7 +22,6 @@ interface TeamPerformanceProps {
 // Team Performance Component
 const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats, centralizedScores }: TeamPerformanceProps) => {
   const { currentTeamId } = useClub();
-  const [isCalculating, setIsCalculating] = useState(false);
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -42,237 +42,220 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
     goalsPercentage: 0
   });
 
-  // Calculate basic performance metrics - games are already filtered by API
+  // Calculate basic performance metrics
   const totalGames = games.length;
   const completedGamesArray = games.filter(game => 
     game.statusIsCompleted && game.statusAllowsStatistics
   );
   const completedGamesCount = completedGamesArray.length;
 
-  // Create stable cache key for memoization
-  const seasonKey = selectedSeason?.id || activeSeason?.id || 'current';
-  const gamesKey = useMemo(() => 
-    games.map(g => `${g.id}-${g.statusId}`).join(','), 
-    [games]
-  );
+  // Add a key to force refresh when seasons change
+  const [statsKey, setStatsKey] = useState(0);
+
+  // Force refresh when selectedSeason or activeSeason changes
+  useEffect(() => {
+    // Reset component state
+    setQuarterPerformance({
+      avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      teamWinRate: 0,
+      avgTeamScore: 0,
+      avgOpponentScore: 0,
+      totalTeamScore: 0,
+      totalOpponentScore: 0,
+      goalsPercentage: 0
+    });
+
+    // Use a timestamp to ensure uniqueness
+    const newKey = Date.now();
+    setStatsKey(newKey);
+    console.log(`TeamPerformance refreshed with key ${newKey} for season: ${selectedSeason?.name || 'current'}`);
+  }, [selectedSeason, activeSeason]);
 
   // Get game IDs for completed games 
   const completedGameIds = completedGamesArray.map(game => game.id);
 
-  // Use centralized stats with proper cache key awareness
-  const gameStatsMap = useMemo(() => centralizedStats || {}, [centralizedStats]);
-  const gameScoresMap = useMemo(() => centralizedScores || {}, [centralizedScores]);
+  // Use centralized stats if available, otherwise fall back to empty object
+  const gameStatsMap = centralizedStats || {};
   const isLoading = false; // We don't need loading state when using centralized stats
 
   // Use the gameScoreService for consistent score calculation
   useEffect(() => {
-    let isCanceled = false;
-    let timeoutId: NodeJS.Timeout;
-
     const calculatePerformance = async () => {
-      // Debounce rapid changes
-      return new Promise<void>((resolve) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(async () => {
-          if (isCanceled) return resolve();
+      if (completedGameIds.length === 0) {
+        console.log('TeamPerformance: No completed games for team', currentTeamId);
+        return;
+      }
 
-          setIsCalculating(true);
+      console.log('TeamPerformance: Calculating performance for team', currentTeamId, 'with', completedGameIds.length, 'completed games');
 
-          if (completedGameIds.length === 0) {
-            console.log('TeamPerformance: No completed games for team', currentTeamId);
-            setIsCalculating(false);
-            return resolve();
+      // Initialize counters
+      const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
+        1: { team: 0, opponent: 0, count: 0 },
+        2: { team: 0, opponent: 0, count: 0 },
+        3: { team: 0, opponent: 0, count: 0 },
+        4: { team: 0, opponent: 0, count: 0 }
+      };
+
+      let totalTeamScore = 0;
+      let totalOpponentScore = 0;
+      let wins = 0;
+      let losses = 0;
+      let draws = 0;
+      let actualGamesWithStats = 0;
+
+      // Process each completed game
+      for (const gameId of completedGameIds) {
+        try {
+          const game = games.find(g => g.id === gameId);
+          if (!game) {
+            console.log(`TeamPerformance: Game ${gameId} not found in games array`);
+            continue;
           }
 
-          console.log('TeamPerformance: Calculating performance for team', currentTeamId, 'with', completedGameIds.length, 'completed games');
-
-          // Initialize counters
-          const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
-            1: { team: 0, opponent: 0, count: 0 },
-            2: { team: 0, opponent: 0, count: 0 },
-            3: { team: 0, opponent: 0, count: 0 },
-            4: { team: 0, opponent: 0, count: 0 }
-          };
-
-          let totalTeamScore = 0;
-          let totalOpponentScore = 0;
-          let wins = 0;
-          let losses = 0;
-          let draws = 0;
-          let actualGamesWithStats = 0;
-
-          // Process games in smaller batches to avoid blocking UI
-          const batchSize = 3;
-          const batches = [];
-          for (let i = 0; i < completedGameIds.length; i += batchSize) {
-            batches.push(completedGameIds.slice(i, i + batchSize));
+          // Skip bye games for scoring calculations
+          if (game.statusName === 'bye') {
+            console.log(`TeamPerformance: Skipping bye game ${gameId}`);
+            continue;
           }
 
-          for (const batch of batches) {
-            if (isCanceled) return resolve();
+          console.log(`TeamPerformance: Processing game ${gameId} - ${game.homeTeamName} vs ${game.awayTeamName}`);
 
-            // Process batch
-            for (const gameId of batch) {
-              try {
-                const game = games.find(g => g.id === gameId);
-                if (!game) {
-                  console.log(`TeamPerformance: Game ${gameId} not found in games array`);
-                  continue;
-                }
+          // Use the gameScoreService for consistent score calculation
+          let teamScore = 0;
+          let opponentScore = 0;
+          let hasValidScores = false;
 
-                // Skip bye games for scoring calculations
-                if (game.statusName === 'bye') {
-                  console.log(`TeamPerformance: Skipping bye game ${gameId}`);
-                  continue;
-                }
+          try {
+            // Get official scores from centralized data
+            const officialScores = centralizedScores?.[gameId] || [];
+            // Get game stats for fallback
+            const gameStats = gameStatsMap[gameId] || [];
 
-                // Use the gameScoreService for consistent score calculation
-                let teamScore = 0;
-                let opponentScore = 0;
+            console.log(`TeamPerformance: Processing game ${gameId} - Official scores count: ${officialScores.length}, Stats count: ${gameStats.length}`);
 
-                try {
-                  // Get official scores from centralized data
-                  const officialScores = centralizedScores?.[gameId] || [];
-                  // Get game stats for fallback
-                  const gameStats = gameStatsMap[gameId] || [];
+            // Use gameScoreService for consistent score calculation
+            const gameScores = gameScoreService.calculateGameScoresSync(
+              gameStats, // Include game stats for fallback
+              game.statusName, // game status
+              { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
+              game.isInterClub, // is inter club
+              game.homeTeamId, // proper home team ID
+              game.awayTeamId, // proper away team ID
+              currentTeamId, // current team context
+              officialScores.length > 0 ? officialScores : undefined // official scores
+            );
 
-                  // Use gameScoreService for consistent score calculation
-                  const gameScores = gameScoreService.calculateGameScoresSync(
-                    gameStats, // Include game stats for fallback
-                    game.statusName, // game status
-                    { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
-                    game.isInterClub, // is inter club
-                    game.homeTeamId, // proper home team ID
-                    game.awayTeamId, // proper away team ID
-                    currentTeamId, // current team context
-                    officialScores.length > 0 ? officialScores : undefined // official scores
-                  );
+            teamScore = gameScores.totalTeamScore;
+            opponentScore = gameScores.totalOpponentScore;
 
-                  teamScore = gameScores.totalTeamScore;
-                  opponentScore = gameScores.totalOpponentScore;
-
-                  // Add quarter-by-quarter data from gameScores
-                  gameScores.quarterScores.forEach(qScore => {
-                    if (qScore.quarter >= 1 && qScore.quarter <= 4) {
-                      quarterScores[qScore.quarter].team += qScore.teamScore;
-                      quarterScores[qScore.quarter].opponent += qScore.opponentScore;
-                      quarterScores[qScore.quarter].count += 1;
-                    }
-                  });
-
-                  const scoreSource = officialScores.length > 0 ? 'official' : 
-                                    gameStats.length > 0 ? 'stats' :
-                                    (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? 'fixed' : 'none';
-
-                  console.log(`TeamPerformance: Game ${gameId} scores (${scoreSource}) - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${gameScores.result}`);
-                } catch (error) {
-                  console.error(`TeamPerformance: Error calculating scores for game ${gameId}:`, error);
-                  continue;
-                }
-
-                // Count all completed games, even if scores are 0
-                actualGamesWithStats++;
-                totalTeamScore += teamScore;
-                totalOpponentScore += opponentScore;
-
-                // Determine outcome
-                const result = getWinLoseLabel(teamScore, opponentScore);
-                if (result === 'Win') wins++;
-                else if (result === 'Loss') losses++;
-                else draws++;
-
-                console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
-              } catch (error) {
-                console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
+            // Add quarter-by-quarter data from gameScores
+            gameScores.quarterScores.forEach(qScore => {
+              if (qScore.quarter >= 1 && qScore.quarter <= 4) {
+                quarterScores[qScore.quarter].team += qScore.teamScore;
+                quarterScores[qScore.quarter].opponent += qScore.opponentScore;
+                quarterScores[qScore.quarter].count += 1;
               }
-            }
-
-            // Yield to browser between batches
-            await new Promise(resolve => setTimeout(resolve, 0));
-          }
-
-    if (isCanceled) return resolve();
-
-          // Calculate averages
-          const avgTeamScoreByQuarter: Record<number, number> = {};
-          const avgOpponentScoreByQuarter: Record<number, number> = {};
-
-          Object.keys(quarterScores).forEach(quarterStr => {
-            const quarter = parseInt(quarterStr);
-            const count = quarterScores[quarter].count || 1; // Avoid division by zero
-
-            avgTeamScoreByQuarter[quarter] = Math.round((quarterScores[quarter].team / count) * 10) / 10;
-            avgOpponentScoreByQuarter[quarter] = Math.round((quarterScores[quarter].opponent / count) * 10) / 10;
-          });
-
-          // Calculate overall metrics using only games that have actual statistics
-          const winRate = actualGamesWithStats > 0 ? Math.round((wins / actualGamesWithStats) * 100) : 0;
-
-          console.log(`TeamPerformance Win Rate Calculation for team ${currentTeamId}:`, {
-            wins,
-            losses,
-            draws,
-            actualGamesWithStats,
-            calculatedWinRate: winRate,
-            totalCompletedGames: completedGameIds.length
-          });
-
-          // Calculate dynamic average team score from actual game data
-          const avgTeamScore = actualGamesWithStats > 0 
-            ? Math.round((totalTeamScore / actualGamesWithStats) * 10) / 10 
-            : 0;
-
-          // Calculate average opponent score
-          const avgOpponentScore = actualGamesWithStats > 0
-            ? Math.round((totalOpponentScore / actualGamesWithStats) * 10) / 10
-            : 0;
-
-          // Calculate performance percentage as (goals for / goals against) * 100
-          const goalsPercentage = totalOpponentScore > 0
-            ? Math.round((totalTeamScore / totalOpponentScore) * 100)
-            : 0;
-
-          // Performance calculation completed
-
-          console.log(`TeamPerformance Final State Update for team ${currentTeamId}:`, {
-            teamWinRate: winRate,
-            totalTeamScore,
-            totalOpponentScore,
-            avgTeamScore,
-            avgOpponentScore,
-            actualGamesWithStats
-          });
-
-          if (!isCanceled) {
-            setQuarterPerformance({
-              avgTeamScoreByQuarter,
-              avgOpponentScoreByQuarter,
-              teamWinRate: winRate,
-              avgTeamScore,
-              avgOpponentScore,
-              totalTeamScore,
-              totalOpponentScore,
-              goalsPercentage
             });
-            setIsCalculating(false);
+
+            hasValidScores = (teamScore > 0 || opponentScore > 0) || gameScores.quarterScores.length > 0;
+
+            const scoreSource = officialScores.length > 0 ? 'official' : 
+                              gameStats.length > 0 ? 'stats' :
+                              (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? 'fixed' : 'none';
+
+            console.log(`TeamPerformance: Game ${gameId} scores (${scoreSource}) - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${gameScores.result}`);
+          } catch (error) {
+            console.error(`TeamPerformance: Error calculating scores for game ${gameId}:`, error);
+            continue;
           }
 
-          resolve();
-        }, 100); // 100ms debounce
+          // Count all completed games, even if scores are 0
+          actualGamesWithStats++;
+          totalTeamScore += teamScore;
+          totalOpponentScore += opponentScore;
+
+          // Determine outcome
+          const result = getWinLoseLabel(teamScore, opponentScore);
+          if (result === 'Win') wins++;
+          else if (result === 'Loss') losses++;
+          else draws++;
+
+          console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
+        } catch (error) {
+          console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
+        }
+      }
+
+    // Calculate averages
+      const avgTeamScoreByQuarter: Record<number, number> = {};
+      const avgOpponentScoreByQuarter: Record<number, number> = {};
+
+      Object.keys(quarterScores).forEach(quarterStr => {
+        const quarter = parseInt(quarterStr);
+        const count = quarterScores[quarter].count || 1; // Avoid division by zero
+
+        avgTeamScoreByQuarter[quarter] = Math.round((quarterScores[quarter].team / count) * 10) / 10;
+        avgOpponentScoreByQuarter[quarter] = Math.round((quarterScores[quarter].opponent / count) * 10) / 10;
+      });
+
+      // Calculate overall metrics using only games that have actual statistics
+      const winRate = actualGamesWithStats > 0 ? Math.round((wins / actualGamesWithStats) * 100) : 0;
+
+      console.log(`TeamPerformance Win Rate Calculation for team ${currentTeamId}:`, {
+        wins,
+        losses,
+        draws,
+        actualGamesWithStats,
+        calculatedWinRate: winRate,
+        totalCompletedGames: completedGameIds.length
+      });
+
+      // Calculate dynamic average team score from actual game data
+      const avgTeamScore = actualGamesWithStats > 0 
+        ? Math.round((totalTeamScore / actualGamesWithStats) * 10) / 10 
+        : 0;
+
+      // Calculate average opponent score
+      const avgOpponentScore = actualGamesWithStats > 0
+        ? Math.round((totalOpponentScore / actualGamesWithStats) * 10) / 10
+        : 0;
+
+      // Calculate performance percentage as (goals for / goals against) * 100
+      const goalsPercentage = totalOpponentScore > 0
+        ? Math.round((totalTeamScore / totalOpponentScore) * 100)
+        : 0;
+
+      // Performance calculation completed
+
+      console.log(`TeamPerformance Final State Update for team ${currentTeamId}:`, {
+        teamWinRate: winRate,
+        totalTeamScore,
+        totalOpponentScore,
+        avgTeamScore,
+        avgOpponentScore,
+        actualGamesWithStats
+      });
+
+      setQuarterPerformance({
+        avgTeamScoreByQuarter,
+        avgOpponentScoreByQuarter,
+        teamWinRate: winRate,
+        avgTeamScore,
+        avgOpponentScore,
+        totalTeamScore,
+        totalOpponentScore,
+        goalsPercentage
       });
     };
 
     calculatePerformance();
-
-    return () => {
-      isCanceled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [currentTeamId, seasonKey, gamesKey, centralizedStats, centralizedScores]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStatsMap, games, completedGameIds]);
 
   return (
     <BaseWidget 
-      title={`Team Performance ${isCalculating ? '(Calculating...)' : ''}`}
+      title="Team Performance" 
       className={className}
       contentClassName="px-4 py-6 pb-2"
     >
@@ -324,7 +307,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                 const maxScore = Math.max(quarterPerformance.avgTeamScore, quarterPerformance.avgOpponentScore, 1);
                 const teamPercentage = (quarterPerformance.avgTeamScore / maxScore) * 100;
                 const opponentPercentage = (quarterPerformance.avgOpponentScore / maxScore) * 100;
-
+                
                 return (
                   <>
                     <div className="flex items-center justify-between">
