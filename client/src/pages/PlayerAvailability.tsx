@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
@@ -6,9 +6,8 @@ import { Game, Player } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
 import FixedPlayerAvailabilityManager from '@/components/roster/FixedPlayerAvailabilityManager';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, Users, ArrowRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 
@@ -36,12 +35,10 @@ export default function PlayerAvailability() {
     return null;
   }, [params]);
 
-  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
-
   // Fetch games
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
     queryKey: ['games', currentClub?.id],
-    queryFn: () => apiRequest('GET', '/api/games'),
+    queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
     retry: 1,
     enabled: !!currentClub?.id && isInitialized
   });
@@ -49,40 +46,14 @@ export default function PlayerAvailability() {
   // Fetch team players (not club-wide players)
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['teams', teamId, 'players'],
-    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`),
+    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`) as Promise<Player[]>,
     enabled: !!teamId && isInitialized
   });
 
-  // Fetch existing player availability for this game
-  const { data: existingAvailability, isLoading: availabilityLoading } = useQuery({
-    queryKey: ['games', gameId, 'availability'],
-    queryFn: () => apiRequest('GET', `/api/games/${gameId}/availability`),
-    enabled: !!gameId && isInitialized
-  });
+  const selectedGame = games.find((game: Game) => game.id === gameId);
 
-  const selectedGame = games.find(game => game.id === gameId);
-
-  const isLoading = playersLoading || gamesLoading || availabilityLoading;
+  const isLoading = playersLoading || gamesLoading;
   const hasError = playersError || gamesError;
-
-  // Initialize available players from existing availability data when it loads
-  useEffect(() => {
-    if (existingAvailability?.availablePlayerIds && existingAvailability.availablePlayerIds.length > 0) {
-      console.log('PlayerAvailability: Setting initial available players from API:', existingAvailability.availablePlayerIds);
-      setAvailablePlayerIds(existingAvailability.availablePlayerIds);
-    } else if (players.length > 0 && availablePlayerIds.length === 0 && !availabilityLoading) {
-      // Fallback: set all active players as available if no existing data and not loading
-      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      console.log('PlayerAvailability: No existing data, defaulting to all active players:', activePlayerIds);
-      setAvailablePlayerIds(activePlayerIds);
-    }
-  }, [existingAvailability?.availablePlayerIds, players, availabilityLoading]);
-
-  // Memoized callback to prevent infinite re-renders
-  const handleAvailabilityChange = useCallback((newAvailablePlayerIds: number[]) => {
-    console.log('PlayerAvailability: Received availability change:', newAvailablePlayerIds);
-    setAvailablePlayerIds(newAvailablePlayerIds);
-  }, []);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
@@ -179,40 +150,9 @@ export default function PlayerAvailability() {
       <FixedPlayerAvailabilityManager
         gameId={gameId}
         players={players}
-        games={[selectedGame]}
-        onAvailabilityChange={setAvailablePlayerIds}
+        games={[selectedGame].filter(Boolean)}
         hideGameSelection={true}
       />
-
-      {availablePlayerIds.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Next Steps
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  {availablePlayerIds.length} players are available for this game.
-                </p>
-                <p className="text-sm text-gray-500">
-                  Ready to manage the roster for this game?
-                </p>
-              </div>
-              <Button
-                onClick={() => navigate(`/team/${teamId}/roster/${gameId}`)}
-                className="flex items-center gap-2"
-              >
-                Manage Roster
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </PageTemplate>
   );
 }

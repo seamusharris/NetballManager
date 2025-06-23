@@ -142,21 +142,29 @@ export default function FixedPlayerAvailabilityManager({
     onAvailabilityChange?.(availablePlayerIds);
     onAvailabilityStateChange?.(newAvailabilityData);
 
-    // Save immediately without debouncing
+    // Save to backend without cache invalidation
     if (gameId) {
       try {
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds
         });
-        // Don't invalidate cache to avoid unnecessary re-renders
+        // No cache invalidation - let the component manage its own state
+        console.log(`Player ${playerId} availability saved successfully`);
       } catch (error) {
         console.error('Error saving player availability:', error);
         // Revert state on error
         setAvailabilityData(availabilityData);
-        onAvailabilityChange?.(Object.entries(availabilityData)
+        const revertedIds = Object.entries(availabilityData)
           .filter(([_, isAvailable]) => isAvailable)
-          .map(([id, _]) => parseInt(id)));
+          .map(([id, _]) => parseInt(id));
+        onAvailabilityChange?.(revertedIds);
         onAvailabilityStateChange?.(availabilityData);
+        
+        toast({
+          variant: "destructive",
+          title: "Error saving",
+          description: "Failed to save player availability. Please try again."
+        });
       }
     }
   };

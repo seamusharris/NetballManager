@@ -105,31 +105,46 @@ export class PlayerAvailabilityStorage {
       await db.execute(sql`BEGIN`);
 
       try {
-        // Get all active players to determine who should be marked as unavailable
-        const allPlayersResult = await db.execute(sql`
-          SELECT id FROM players WHERE active = true
+        // Get team players for this game (not all club players)
+        const gameResult = await db.execute(sql`
+          SELECT home_team_id, away_team_id FROM games WHERE id = ${gameId}
         `);
-        const allActivePlayerIds = allPlayersResult.rows.map(row => row.id as number);
-        console.log(`Found ${allActivePlayerIds.length} active players total`);
+        
+        if (gameResult.rows.length === 0) {
+          throw new Error(`Game ${gameId} not found`);
+        }
 
-        // Clear existing availability for this game
-        const deleteResult = await db.execute(sql`
-          DELETE FROM player_availability WHERE game_id = ${gameId}
+        const game = gameResult.rows[0] as any;
+        const homeTeamId = game.home_team_id;
+        const awayTeamId = game.away_team_id;
+
+        // Get players for the home team (assuming we're managing home team availability)
+        const teamPlayersResult = await db.execute(sql`
+          SELECT p.id 
+          FROM players p
+          JOIN team_players tp ON p.id = tp.player_id
+          WHERE tp.team_id = ${homeTeamId} AND p.active = true
         `);
-        console.log(`Deleted ${deleteResult.rowCount || 0} existing availability records for game ${gameId}`);
+        
+        const teamPlayerIds = teamPlayersResult.rows.map(row => row.id as number);
+        console.log(`Found ${teamPlayerIds.length} team players for team ${homeTeamId}`);
 
-        // Insert records for all active players
-        let insertedCount = 0;
-        for (const playerId of allActivePlayerIds) {
+        // Use efficient UPSERT for only the team players
+        let upsertedCount = 0;
+        for (const playerId of teamPlayerIds) {
           const isAvailable = availablePlayerIds.includes(playerId);
           await db.execute(sql`
             INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
             VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
+            ON CONFLICT (game_id, player_id) 
+            DO UPDATE SET 
+              is_available = EXCLUDED.is_available,
+              updated_at = NOW()
           `);
-          insertedCount++;
+          upsertedCount++;
         }
 
-        console.log(`Inserted ${insertedCount} availability records for game ${gameId}`);
+        console.log(`Upserted ${upsertedCount} availability records for game ${gameId}`);
 
         // Commit transaction
         await db.execute(sql`COMMIT`);
