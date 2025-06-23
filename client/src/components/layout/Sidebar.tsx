@@ -76,58 +76,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
-    ] : [
-      // Disabled links when no team selected
-      { 
-        path: '/teams-dashboard-disabled', 
-        label: 'Team Dashboard', 
-        icon: <Home className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Select Team First'
-      },
-      { 
-        path: '/games-disabled', 
-        label: 'Games', 
-        icon: <Calendar className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Games (Select Team First)'
-      },
-      { 
-        path: '/roster-disabled', 
-        label: 'Roster', 
-        icon: <ClipboardList className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Roster (Select Team First)'
-      },
-      { 
-        path: '/game-preparation-disabled', 
-        label: 'Game Preparation', 
-        icon: <Target className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Game Preparation (Select Team First)'
-      },
-      { 
-        path: '/team-preparation-disabled', 
-        label: 'Team Preparation', 
-        icon: <Target className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Team Preparation (Select Team First)'
-      },
-      { 
-        path: '/team-analysis-disabled', 
-        label: 'Team Analysis', 
-        icon: <Trophy className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Team Analysis (Select Team First)'
-      },
-      { 
-        path: '/team-analysis-disabled', 
-        label: 'Team Analysis', 
-        icon: <Trophy className="w-5 h-5" />, 
-        disabled: true,
-        fallbackLabel: 'Team Analysis (Select Team First)'
-      },
-    ];
+    ] : [];
 
     // Return organized navigation structure
     return {
