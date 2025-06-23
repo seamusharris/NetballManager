@@ -747,8 +747,7 @@ const StatisticsByPosition = ({ gameStats }) => {
         acc[stat.position] = {};
       }
 
-      if (!acc[stat.position][stat.quarter]) {
-        acc[stat.position][stat.quarter] = {};
+      if (!acc[stat.position][stat.quarter]) {        acc[stat.position][stat.quarter] = {};
       }
 
       acc[stat.position][stat.quarter] = stat;
@@ -1115,7 +1114,7 @@ export default function GameDetails() {
   // Set initial award winner from team awards
   useEffect(() => {
     console.log('Team awards effect triggered:', { teamAwards, gameId, currentTeamId: currentTeam?.id });
-    
+
     if (teamAwards !== undefined) {
       if (teamAwards.length > 0) {
         const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
@@ -1427,7 +1426,7 @@ export default function GameDetails() {
       const awayTeamTotals = {
         teamId: game.awayTeamId,
         goalsFor: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
-        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0)
       };
 
       // Get reconciled scores using the validation service
@@ -1547,8 +1546,7 @@ export default function GameDetails() {
                   <CalendarRange className="mr-2 h-4 w-4" />
                   Manage Roster
                 </Link>
-              </Button>
-            )}
+              </Button            )}
 
             {/* Live Stats Button */}
             {!game.isBye && !game.completed &&(
@@ -1763,8 +1761,6 @@ export default function GameDetails() {
           </div>
         )}
 
-
-
         {/* Hidden Official Score Entry for dialog functionality */}
         {game && !game.isBye && (
           <div style={{ display: 'none' }}>
@@ -1947,7 +1943,8 @@ export default function GameDetails() {
   style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
   >
   {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
-  </div>                                <div 
+  </div>
+  <div 
   className="text-sm"
   style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
   >
@@ -1955,7 +1952,8 @@ export default function GameDetails() {
   </div>
   </div>
 
-  <div className="flex space-x-6"><div className="text-center">
+  <div className="flex space-x-6">
+  <div className="text-center">
   <div 
   className="text-2xl font-bold"
   style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
@@ -2015,7 +2013,7 @@ export default function GameDetails() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-xl font-bold">Coaching Notes</CardTitle>
-                                    {!isEditingNotes ? (
+                  {!isEditingNotes ? (
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -2094,13 +2092,13 @@ export default function GameDetails() {
                         // Display team notes if available, otherwise fall back to old game notes
                         const displayNotes = teamGameNotes?.notes || game?.notes;
 
-                        if (displayNotes) {
+                        if (displayNotes && displayNotes.trim() !== '') {
                           return <p className="whitespace-pre-wrap">{displayNotes}</p>;
                         } else {
                           return <p className="text-gray-500 italic">No coaching notes recorded</p>;
                         }
                       })()}
-                      {game?.notes && !teamGameNotes?.notes && (
+                      {game?.notes && game.notes.trim() !== '' && (!teamGameNotes?.notes || teamGameNotes.notes.trim() === '') && (
                         <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
                           Note: These are legacy game notes. They will be converted to team-specific notes when you edit them.
                         </div>
@@ -2111,8 +2109,6 @@ export default function GameDetails() {
               </Card>
             </div>
           </TabsContent>
-
-
 
           <TabsContent value="players" className="mt-6">
             {isForfeitGame ? (
@@ -2180,8 +2176,6 @@ export default function GameDetails() {
               players={players || []}
             />
           </TabsContent>
-
-
         </Tabs>
       </div>
     </div>
