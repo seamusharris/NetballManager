@@ -1559,6 +1559,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Team-specific games endpoint - completely separate from club-wide queries
+  app.get("/api/teams/:teamId/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId, 10);
+      const clubId = req.user?.currentClubId;
+
+      console.log(`Team-specific games endpoint: teamId=${teamId}, clubId=${clubId}`);
+
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+
+      if (!clubId) {
+        return res.status(400).json({ error: 'Club context required' });
+      }
+
+      // Set cache headers for team-specific data
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+      res.set('ETag', `team-${teamId}-games-${Date.now()}`);
+      res.set('Vary', 'x-current-club-id, x-current-team-id');
+
+      // Query for team-specific games only
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.name as status, 
+          gs.display_name as status_display_name, 
+          gs.is_completed, 
+          gs.allows_statistics, 
+          gs.team_goals, 
+          gs.opponent_goals,
+          s.name as season_name, 
+          s.start_date as season_start, 
+          s.end_date as season_end, 
+          s.is_active as season_active,
+          ht.name as home_team_name, 
+          ht.division as home_team_division, 
+          ht.club_id as home_club_id,
+          at.name as away_team_name, 
+          at.division as away_team_division, 
+          at.club_id as away_club_id,
+          hc.name as home_club_name, 
+          hc.code as home_club_code,
+          ac.name as away_club_name, 
+          ac.code as away_club_code
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
+        LEFT JOIN clubs ac ON at.club_id = ac.id
+        WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+        ORDER BY g.date DESC, g.time DESC
+      `);
+
+      console.log(`Found ${result.rows.length} games for team ${teamId}`);
+
+      // Use same transformation as main games endpoint
+      const games = result.rows.map(transformGameRow);
+
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching team games:', error);
+      res.status(500).json({ message: "Failed to fetch team games" });
+    }
+  });
+
   app.get("/api/games/:id", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.id);
