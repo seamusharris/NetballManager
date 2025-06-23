@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -35,12 +35,20 @@ export default function FixedPlayerAvailabilityManager({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Derive availability state directly from API response - no complex state management
+  // Optimistic state for instant UI updates
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<number, boolean>>({});
+
+  // Derive availability state from API response + optimistic updates
   const availabilityData: Record<number, boolean> = {};
   if (players.length > 0) {
     const availableIds = availabilityResponse?.availablePlayerIds || [];
     players.forEach(player => {
-      availabilityData[player.id] = availableIds.includes(player.id);
+      // Use optimistic update if available, otherwise use API data
+      if (player.id in optimisticUpdates) {
+        availabilityData[player.id] = optimisticUpdates[player.id];
+      } else {
+        availabilityData[player.id] = availableIds.includes(player.id);
+      }
     });
   }
 
@@ -48,17 +56,25 @@ export default function FixedPlayerAvailabilityManager({
   const handlePlayerToggle = async (playerId: number) => {
     if (!gameId) return;
 
-    // Calculate new state based on current API response, not derived state
+    // Get current state (including optimistic updates)
+    const isCurrentlyAvailable = availabilityData[playerId] === true;
+    const newState = !isCurrentlyAvailable;
+
+    // Apply optimistic update for instant UI response
+    setOptimisticUpdates(prev => ({
+      ...prev,
+      [playerId]: newState
+    }));
+
+    // Calculate new available player IDs for API call
     const currentAvailableIds = availabilityResponse?.availablePlayerIds || [];
-    const isCurrentlyAvailable = currentAvailableIds.includes(playerId);
-    
     let newAvailablePlayerIds: number[];
-    if (isCurrentlyAvailable) {
+    if (newState) {
+      // Add player to available list
+      newAvailablePlayerIds = [...currentAvailableIds.filter(id => id !== playerId), playerId];
+    } else {
       // Remove player from available list
       newAvailablePlayerIds = currentAvailableIds.filter(id => id !== playerId);
-    } else {
-      // Add player to available list
-      newAvailablePlayerIds = [...currentAvailableIds, playerId];
     }
 
     console.log(`Player ${playerId} toggled. Now ${newAvailablePlayerIds.length} players available`);
@@ -68,11 +84,23 @@ export default function FixedPlayerAvailabilityManager({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: newAvailablePlayerIds
       });
-      // Invalidate cache to trigger re-fetch
+      
+      // Clear optimistic update and invalidate cache
+      setOptimisticUpdates(prev => {
+        const updated = { ...prev };
+        delete updated[playerId];
+        return updated;
+      });
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
       console.log(`Player ${playerId} availability saved successfully`);
     } catch (error) {
       console.error('Error saving player availability:', error);
+      // Revert optimistic update on error
+      setOptimisticUpdates(prev => {
+        const updated = { ...prev };
+        delete updated[playerId];
+        return updated;
+      });
       toast({
         variant: "destructive",
         title: "Error saving",
@@ -83,35 +111,57 @@ export default function FixedPlayerAvailabilityManager({
 
   // Handle bulk operations
   const handleSelectAll = async () => {
+    if (!gameId) return;
+    
     const availableIds = players.map(p => p.id);
     console.log(`Select all: ${availableIds.length} players now available`);
 
-    if (gameId) {
-      try {
-        await apiClient.post(`/api/games/${gameId}/availability`, {
-          availablePlayerIds: availableIds
-        });
-        queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
-        toast({ title: "All players selected" });
-      } catch (error) {
-        toast({ variant: "destructive", title: "Error saving availability" });
-      }
+    // Apply optimistic updates for all players
+    const optimisticUpdates: Record<number, boolean> = {};
+    players.forEach(player => {
+      optimisticUpdates[player.id] = true;
+    });
+    setOptimisticUpdates(optimisticUpdates);
+
+    try {
+      await apiClient.post(`/api/games/${gameId}/availability`, {
+        availablePlayerIds: availableIds
+      });
+      // Clear optimistic updates and refresh
+      setOptimisticUpdates({});
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
+      toast({ title: "All players selected" });
+    } catch (error) {
+      // Revert optimistic updates on error
+      setOptimisticUpdates({});
+      toast({ variant: "destructive", title: "Error saving availability" });
     }
   };
 
   const handleClearAll = async () => {
+    if (!gameId) return;
+    
     console.log('Clear all: 0 players now available');
 
-    if (gameId) {
-      try {
-        await apiClient.post(`/api/games/${gameId}/availability`, {
-          availablePlayerIds: []
-        });
-        queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
-        toast({ title: "All players cleared" });
-      } catch (error) {
-        toast({ variant: "destructive", title: "Error saving availability" });
-      }
+    // Apply optimistic updates for all players
+    const optimisticUpdates: Record<number, boolean> = {};
+    players.forEach(player => {
+      optimisticUpdates[player.id] = false;
+    });
+    setOptimisticUpdates(optimisticUpdates);
+
+    try {
+      await apiClient.post(`/api/games/${gameId}/availability`, {
+        availablePlayerIds: []
+      });
+      // Clear optimistic updates and refresh
+      setOptimisticUpdates({});
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
+      toast({ title: "All players cleared" });
+    } catch (error) {
+      // Revert optimistic updates on error
+      setOptimisticUpdates({});
+      toast({ variant: "destructive", title: "Error saving availability" });
     }
   };
 
@@ -186,6 +236,8 @@ export default function FixedPlayerAvailabilityManager({
                 const isSelected = availabilityData[player.id] === true;
                 const playerColorHex = getPlayerColorHex(player.avatarColor);
                 const darkerTextColor = getDarkerColorHex(player.avatarColor);
+                const lighterBgColor = getLighterColorHex(player.avatarColor);
+                const mediumBgColor = getMediumColorHex(player.avatarColor);
 
                 return (
                   <div key={player.id} className="relative">
@@ -205,6 +257,10 @@ export default function FixedPlayerAvailabilityManager({
                       showPositions={true}
                       hasSelect={true}
                       className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                      style={{
+                        backgroundColor: isSelected ? mediumBgColor : lighterBgColor,
+                        opacity: isSelected ? 1 : 0.7
+                      }}
                       onClick={() => handlePlayerToggle(player.id)}
                     />
                   </div>
