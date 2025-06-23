@@ -173,7 +173,7 @@ export default function PlayerAvailability() {
         </Card>
       )}
 
-      <PlayerAvailabilityManager
+      <SimplePlayerAvailabilityManager
         gameId={gameId}
         players={players}
         games={[selectedGame]}

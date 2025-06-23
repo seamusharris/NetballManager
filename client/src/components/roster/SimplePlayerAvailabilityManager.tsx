@@ -156,10 +156,9 @@ export default function SimplePlayerAvailabilityManager({
                 key={player.id}
                 player={player}
                 isSelected={selectedPlayers.has(player.id)}
-                onToggle={(isSelected) => handlePlayerToggle(player.id, isSelected)}
+                onSelectionChange={(playerId, isSelected) => handlePlayerToggle(playerId, isSelected)}
                 size="md"
                 showPositions={true}
-                disabled={isSaving}
               />
             ))}
           </div>
