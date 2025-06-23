@@ -1502,7 +1502,7 @@ export default function GameDetails() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/games">Games</Link>
+                <Link href={currentTeam ? `/team/${currentTeam.id}/games` : "/games"}>Games</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -1526,7 +1526,7 @@ export default function GameDetails() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <BackButton 
-              fallbackPath="/games"
+              fallbackPath={currentTeam ? `/team/${currentTeam.id}/games` : "/games"}
               variant="outline" 
               size="sm"
               className="border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -1645,7 +1645,7 @@ export default function GameDetails() {
                         });
 
                         // Redirect to games list
-                        setLocation('/games');
+                        setLocation(currentTeam ? `/team/${currentTeam.id}/games` : '/games');
                       } catch (error) {
                         console.error("Error deleting game:", error);
                         toast({
