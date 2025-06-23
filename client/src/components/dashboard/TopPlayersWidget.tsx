@@ -15,6 +15,8 @@ interface TopPlayersWidgetProps {
   seasonFilter?: string;
   activeSeason?: any;
   teamId?: number; // Optional team ID for filtering
+  centralizedStats?: Record<number, any[]>;
+  centralizedRosters?: Record<number, any[]>;
 }
 
 interface PlayerStats {
@@ -32,7 +34,9 @@ export default function TopPlayersWidget({
   className, 
   seasonFilter, 
   activeSeason,
-  teamId 
+  teamId,
+  centralizedStats,
+  centralizedRosters
 }: TopPlayersWidgetProps): JSX.Element {
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
 

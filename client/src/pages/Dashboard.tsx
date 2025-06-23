@@ -145,6 +145,7 @@ export default function Dashboard() {
     refetchOnMount: false, // Don't refetch on mount to use cached data when possible
     refetchOnReconnect: false, // Don't refetch on reconnect
     retry: false, // Don't retry failed requests to prevent cache thrashing
+    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading states
   });
 
   const gameStatsMap = batchData?.stats || {};
