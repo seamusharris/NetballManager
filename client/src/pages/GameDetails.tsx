@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
 import { 
