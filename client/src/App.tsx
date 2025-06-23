@@ -100,6 +100,12 @@ import Preparation2 from './pages/Preparation2';
 import GamePreparation from './pages/GamePreparation';
 import TeamPreparation from './pages/TeamPreparation';
 
+// Mock components for PlayerAvailability and RosterGame
+const PlayerAvailability = () => <div>Player Availability Component</div>;
+const RosterGame = () => <div>Roster Game Component</div>;
+const RosterWithGameId = () => <div>Roster with Game ID Component</div>; // Assuming you have or will have this component
+const Roster = () => <div>Roster Component</div>;
+
 function Router() {
   return (
     <Layout>
@@ -113,8 +119,10 @@ function Router() {
         <Route path="/teams" component={withErrorBoundary(Teams, 'Teams')} />
         <Route path="/teams/:clubId" component={withErrorBoundary(Teams, 'Teams')} />
         <Route path="/teams/:teamId/players" component={withErrorBoundary(Players, 'TeamPlayers')} />
+        <Route path="/availability/game/:gameId" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
+        <Route path="/roster/game/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />
+        <Route path="/roster/:gameId" component={withErrorBoundary(RosterWithGameId, 'RosterWithGameId')} />
         <Route path="/roster" component={withErrorBoundary(Roster, 'Roster')} />
-        <Route path="/roster/:gameId" component={withErrorBoundary(Roster, 'Roster')} />
         <Route path="/games/:teamId" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
@@ -209,7 +217,7 @@ function Router() {
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading Match Timeline Examples..." />}>
                 <MatchTimelineExamples />
-              </Suspense>
+              </Suspse>
             </ErrorBoundary>
           )}
         </Route>
