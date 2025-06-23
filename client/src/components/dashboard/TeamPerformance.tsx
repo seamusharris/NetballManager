@@ -49,34 +49,19 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
   );
   const completedGamesCount = completedGamesArray.length;
 
-  // Add a key to force refresh when seasons change
-  const [statsKey, setStatsKey] = useState(0);
-
-  // Force refresh when selectedSeason or activeSeason changes
-  useEffect(() => {
-    // Reset component state
-    setQuarterPerformance({
-      avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
-      avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
-      teamWinRate: 0,
-      avgTeamScore: 0,
-      avgOpponentScore: 0,
-      totalTeamScore: 0,
-      totalOpponentScore: 0,
-      goalsPercentage: 0
-    });
-
-    // Use a timestamp to ensure uniqueness
-    const newKey = Date.now();
-    setStatsKey(newKey);
-    console.log(`TeamPerformance refreshed with key ${newKey} for season: ${selectedSeason?.name || 'current'}`);
-  }, [selectedSeason, activeSeason]);
+  // Create stable cache key for memoization
+  const seasonKey = selectedSeason?.id || activeSeason?.id || 'current';
+  const gamesKey = useMemo(() => 
+    games.map(g => `${g.id}-${g.statusId}`).join(','), 
+    [games]
+  );
 
   // Get game IDs for completed games 
   const completedGameIds = completedGamesArray.map(game => game.id);
 
-  // Use centralized stats if available, otherwise fall back to empty object
-  const gameStatsMap = centralizedStats || {};
+  // Use centralized stats with proper cache key awareness
+  const gameStatsMap = useMemo(() => centralizedStats || {}, [centralizedStats]);
+  const gameScoresMap = useMemo(() => centralizedScores || {}, [centralizedScores]);
   const isLoading = false; // We don't need loading state when using centralized stats
 
   // Use the gameScoreService for consistent score calculation
@@ -250,8 +235,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
     };
 
     calculatePerformance();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameStatsMap, games, completedGameIds]);
+  }, [currentTeamId, seasonKey, gamesKey, centralizedStats, centralizedScores]);
 
   return (
     <BaseWidget 

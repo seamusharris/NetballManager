@@ -51,9 +51,13 @@ export const CACHE_KEYS = {
   officialScores: (clubId: number, gameIds: number[]) =>
     ['official-scores', clubId, normalizeGameIds(gameIds)],
 
-  // Dashboard aggregations
-  dashboardData: (clubId: number, teamId: number | null) => 
-    ['dashboard', clubId, teamId || 'all-teams'],
+  // Dashboard aggregations with season context
+  dashboardData: (clubId: number, teamId: number | null, seasonId?: number) => 
+    ['dashboard', clubId, teamId || 'all-teams', seasonId || 'current'],
+    
+  // Team performance specific cache
+  teamPerformance: (clubId: number, teamId: number, seasonId: number, gameIds: number[]) =>
+    ['team-performance', clubId, teamId, seasonId, normalizeGameIds(gameIds)],
 };
 
 // Helper to ensure consistent gameIds sorting
