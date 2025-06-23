@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -26,6 +26,7 @@ interface SimpleRosterManagerProps {
   onRosterSaved?: () => void;
   onRosterChanged?: (quarter: string, position: string, playerId: number | null) => void;
   localRosterState?: Record<string, Record<string, number | null>>;
+  currentTeam?: any;
 }
 
 export default function SimpleRosterManager({
@@ -38,7 +39,8 @@ export default function SimpleRosterManager({
   availablePlayerIds = [],
   onRosterSaved,
   onRosterChanged,
-  localRosterState: initialRosterState
+  localRosterState: initialRosterState,
+  currentTeam
 }: SimpleRosterManagerProps) {
   const [pendingChanges, setPendingChanges] = useState<Array<{quarter: number, position: Position, playerId: number}>>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -620,6 +622,50 @@ export default function SimpleRosterManager({
     );
   }
 
+  // Get the team ID for this game to filter players
+  const gameTeamId = useMemo(() => {
+    if (!selectedGame || !currentTeam) return null;
+
+    // Check if current team is home or away team in this game
+    if (selectedGame.homeTeamId === currentTeam.id) {
+      return currentTeam.id;
+    } else if (selectedGame.awayTeamId === currentTeam.id) {
+      return currentTeam.id;
+    }
+
+    return null;
+  }, [selectedGame, currentTeam]);
+
+  // Query to get players specifically assigned to this team
+  const { data: teamPlayers = [] } = useQuery({
+    queryKey: ['teamPlayers', gameTeamId],
+    queryFn: async () => {
+      if (!gameTeamId) return [];
+      const response = await fetch(`/api/teams/${gameTeamId}/players`);
+      if (!response.ok) {
+        // Fallback to filtering club players if team endpoint fails
+        return players.filter(player => player.active);
+      }
+      return response.json();
+    },
+    enabled: !!gameTeamId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Get available players for assignment - only players from the team playing in this game
+  const availablePlayers = useMemo(() => {
+    if (!gameTeamId) {
+      // If we can't determine team context, fall back to all active club players
+      return players.filter(player => player.active);
+    }
+
+    // Use team-specific players if available, otherwise filter club players
+    const playersToUse = teamPlayers.length > 0 ? teamPlayers : players;
+    return playersToUse.filter(player => player.active);
+  }, [gameTeamId, teamPlayers, players]);
+
+  console.log(`SimpleRosterManager: ${availablePlayers.length} available players for assignment (team ${gameTeamId})`);
+
   return (
     <div>
     <Card className="mb-6 shadow-md">
@@ -789,7 +835,7 @@ export default function SimpleRosterManager({
                           quarterKey === '4' ? localRosterState['4'][position] : null;
 
                         // Filter available players by those not already selected in this quarter and are active/available
-                        const availablePlayers = players.filter(player => 
+                        const availablePlayersFiltered = availablePlayers.filter(player => 
                           player.active && 
                           availablePlayerIds.includes(player.id) &&
                           (!selectedPlayers.has(player.id) || player.id === currentPlayerId)
@@ -818,7 +864,7 @@ export default function SimpleRosterManager({
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="0">-- None --</SelectItem>
-                                {availablePlayers.map(player => {
+                                {availablePlayersFiltered.map(player => {
                                   const preferenceRank = getPreferenceRank(player, position);
                                   const displayText = preferenceRank 
                                     ? `${player.displayName} (Pref: #${preferenceRank})`
@@ -844,7 +890,7 @@ export default function SimpleRosterManager({
 
                     {quarters.map(quarter => {
                       const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
-                      const playersNotInQuarter = players
+                      const playersNotInQuarter = availablePlayers
                         .filter(player => player.active)
                         .filter(player => availablePlayerIds.includes(player.id))
                         .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id))
