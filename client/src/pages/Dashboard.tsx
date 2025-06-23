@@ -83,8 +83,17 @@ export default function Dashboard() {
 
   // Fetch games with team context - force fresh data on team switch
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, currentTeamId],
-    queryFn: () => apiClient.get('/api/games'),
+    queryKey: ['games', currentClubId, currentTeamId, 'team-dashboard'],
+    queryFn: async () => {
+      // Ensure API client has the current team context before making the call
+      apiClient.setClubContext({ 
+        currentClubId: currentClubId!, 
+        currentTeamId: currentTeamId! 
+      });
+      
+      console.log(`Dashboard: Fetching games for team ${currentTeamId} in club ${currentClubId}`);
+      return apiClient.get('/api/games');
+    },
     enabled: !!currentClubId && !!currentTeamId,
     staleTime: 0, // Force fresh data for team switching
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
@@ -125,7 +134,7 @@ export default function Dashboard() {
         const result = await dataFetcher.batchFetchGameData({
           gameIds: gameIdsArray,
           clubId: currentClubId!,
-          teamId: currentTeamId,
+          teamId: currentTeamId ?? undefined,
           includeStats: true,
           includeRosters: true,
           includeScores: true
