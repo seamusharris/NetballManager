@@ -51,8 +51,10 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     if (teamId) {
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
         setLocation(`/team/${teamId}`);
-      } else if (location.startsWith('/games')) {
-        setLocation(`/team/${teamId}/games`);
+      } else if (location === '/games' || location.startsWith('/games')) {
+        // Stay on games page but with team context - don't redirect to team dashboard
+        // The Games component will handle the team filtering via currentTeamId context
+        return;
       } else if (location.startsWith('/preparation')) {
         setLocation(`/team/${teamId}/preparation`);
       } else if (location.startsWith('/opponent-preparation')) {
