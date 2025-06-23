@@ -85,14 +85,9 @@ export default function FixedPlayerAvailabilityManager({
         availablePlayerIds: newAvailablePlayerIds
       });
       
-      // Clear optimistic update and invalidate cache
-      setOptimisticUpdates(prev => {
-        const updated = { ...prev };
-        delete updated[playerId];
-        return updated;
-      });
-      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
       console.log(`Player ${playerId} availability saved successfully`);
+      console.log('Invalidating cache for game', gameId);
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
     } catch (error) {
       console.error('Error saving player availability:', error);
       // Revert optimistic update on error
@@ -127,10 +122,9 @@ export default function FixedPlayerAvailabilityManager({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: availableIds
       });
-      // Clear optimistic updates and refresh
-      setOptimisticUpdates({});
-      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
+      
       toast({ title: "All players selected" });
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
     } catch (error) {
       // Revert optimistic updates on error
       setOptimisticUpdates({});
@@ -154,10 +148,9 @@ export default function FixedPlayerAvailabilityManager({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: []
       });
-      // Clear optimistic updates and refresh
-      setOptimisticUpdates({});
-      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
+      
       toast({ title: "All players cleared" });
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
     } catch (error) {
       // Revert optimistic updates on error
       setOptimisticUpdates({});
