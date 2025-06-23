@@ -32,7 +32,7 @@ export default function ClubDashboard() {
   // Get games data with proper club context
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, 'all-teams'],
-    queryFn: () => apiClient.get('/api/games', { 'x-club-wide': 'true' }),
+    queryFn: () => apiClient.get('/api/games', {}, { 'x-club-wide': 'true' }),
     enabled: !!currentClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
     gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
