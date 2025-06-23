@@ -266,14 +266,33 @@ export default function Dashboard() {
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
 
         {/* Recent Form Section */}
-        <RecentFormWidget
-          games={games || []}
-          currentTeamId={currentTeamId}
-          currentClubId={currentClubId}
-          gameScoresMap={gameScoresMap}
-          gameStatsMap={gameStatsMap}
-          className="mb-8"
-        />
+        {(() => {
+          // Get the last 5 completed games
+          const completedGames = games?.filter(game => 
+            game.statusIsCompleted && 
+            !game.isBye && 
+            game.statusName !== 'bye'
+          ) || [];
+          
+          // Sort by date descending and take last 5
+          const recentGames = completedGames
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 5);
+
+          if (recentGames.length === 0) return null;
+
+          return (
+            <PreviousGamesDisplay
+              historicalGames={recentGames}
+              currentTeamId={currentTeamId || 0}
+              currentClubId={currentClubId || 0}
+              batchScores={gameScoresMap}
+              batchStats={gameStatsMap}
+              opponentName="Recent Form"
+              className="mb-8"
+            />
+          );
+        })()}
 
       {/* Upcoming Games Section - Full Width */}
         <UpcomingGamesWidget
