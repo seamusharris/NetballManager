@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, Link } from 'wouter';
+import { useParams, Link, useLocation } from 'wouter';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
@@ -1075,6 +1075,7 @@ export default function GameDetails() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { currentTeam } = useClub();
+  const [, setLocation] = useLocation();
 
   // State for edit game dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -1644,7 +1645,7 @@ export default function GameDetails() {
                         });
 
                         // Redirect to games list
-                        window.location.href = '/games';
+                        setLocation('/games');
                       } catch (error) {
                         console.error("Error deleting game:", error);
                         toast({
