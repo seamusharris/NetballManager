@@ -44,32 +44,40 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
     console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
 
-    // Update context first
-    setCurrentTeamId(teamId);
-    onTeamChange?.(teamId);
-
-    // Navigate to team-specific URL if we're on a team-dependent page
+    // Navigate FIRST to ensure URL changes before context updates
     if (teamId) {
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
         console.log('TeamSwitcher: Navigating to team dashboard:', `/team/${teamId}`);
         setLocation(`/team/${teamId}`);
+        // Context will be updated by Dashboard component's useEffect when URL changes
+        return;
       } else if (location === '/games' || location.startsWith('/games')) {
-        // Stay on games page - context already updated
+        // For games page, update context directly (no URL change needed)
+        setCurrentTeamId(teamId);
+        onTeamChange?.(teamId);
         return;
       } else if (location.startsWith('/preparation')) {
         setLocation(`/team/${teamId}/preparation`);
+        return;
       } else if (location.startsWith('/opponent-preparation')) {
         setLocation(`/team/${teamId}/analysis`);
+        return;
       } else if (location === '/') {
         setLocation(`/team/${teamId}`);
+        return;
       }
     } else {
       // If no team selected and we're on a team-dependent page, go to teams page
       if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location.startsWith('/games') || 
           location.startsWith('/preparation') || location.startsWith('/opponent-preparation')) {
         setLocation('/teams');
+        return;
       }
     }
+
+    // Fallback: update context if no navigation occurred
+    setCurrentTeamId(teamId);
+    onTeamChange?.(teamId);
   };
 
   const handleTeamSelect = (value: string) => {

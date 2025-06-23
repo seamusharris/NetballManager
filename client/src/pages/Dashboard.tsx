@@ -63,7 +63,7 @@ export default function Dashboard() {
       setLocation('/teams');
       return;
     }
-  }, [params.teamId, clubTeams, setLocation, setCurrentTeamId, currentTeamId])
+  }, [params.teamId, clubTeams, setLocation, setCurrentTeamId])
 
   // Debug team switching
   useEffect(() => {
