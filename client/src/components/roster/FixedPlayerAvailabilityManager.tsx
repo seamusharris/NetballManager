@@ -58,7 +58,8 @@ export default function FixedPlayerAvailabilityManager({
       gameId,
       playersCount: players.length,
       availabilityResponse,
-      isInitialized
+      isInitialized,
+      isLoading
     });
 
     let newAvailabilityData: Record<number, boolean> = {};
@@ -70,15 +71,12 @@ export default function FixedPlayerAvailabilityManager({
       players.forEach(player => {
         newAvailabilityData[player.id] = availableIds.includes(player.id);
       });
-    } else if (!isLoading) {
-      // Default all active players to available (only if not loading)
+    } else {
+      // Default all active players to available 
       console.log('FixedPlayerAvailabilityManager: No API data, defaulting all active players to available');
       players.forEach(player => {
         newAvailabilityData[player.id] = player.active !== false;
       });
-    } else {
-      console.log('FixedPlayerAvailabilityManager: No data available and still loading, skipping');
-      return;
     }
 
     console.log('FixedPlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
@@ -93,7 +91,7 @@ export default function FixedPlayerAvailabilityManager({
     console.log('FixedPlayerAvailabilityManager: Notifying parent with available IDs:', availableIds);
     onAvailabilityChange?.(availableIds);
     onAvailabilityStateChange?.(newAvailabilityData);
-  }, [gameId, players, availabilityResponse, isLoading]);
+  }, [gameId, players.length, availabilityResponse?.availablePlayerIds, isLoading]);
 
   // Reset initialization flag when gameId changes
   useEffect(() => {
