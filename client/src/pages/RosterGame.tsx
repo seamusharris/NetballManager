@@ -127,13 +127,6 @@ export default function RosterGame() {
     );
   }
 
-  const breadcrumbs = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Games', href: `/team/${selectedGame?.homeTeamId}/games` },
-    { label: `Game ${selectedGame.round}`, href: `/games/${gameId}` },
-    { label: 'Roster Management' }
-  ];
-
   const pageActions = (
     <div className="flex gap-2">
       <Button
@@ -151,7 +144,6 @@ export default function RosterGame() {
     <PageTemplate
       title="Roster Management"
       subtitle={`Manage roster for ${selectedGame.homeTeamName} vs ${selectedGame.awayTeamName || 'BYE'}`}
-      breadcrumbs={<DynamicBreadcrumbs />}
       actions={pageActions}
     >
       {selectedGame && (
