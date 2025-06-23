@@ -22,6 +22,7 @@ import TopPlayersWidget from '@/components/dashboard/TopPlayersWidget';
 import TeamPerformance from '@/components/dashboard/TeamPerformance';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
 import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisWidget';
+import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 
 export default function Dashboard() {
   const params = useParams();
@@ -258,6 +259,44 @@ export default function Dashboard() {
 
       {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
+
+        {/* Recent Games Section */}
+        {(() => {
+          // Get the last 5 completed games
+          const completedGames = games?.filter(game => 
+            game.statusIsCompleted && 
+            !game.isBye && 
+            game.statusName !== 'bye'
+          ) || [];
+          
+          // Sort by date descending and take last 5
+          const recentGames = completedGames
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 5);
+
+          if (recentGames.length === 0) return null;
+
+          return (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Recent Games
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PreviousGamesDisplay
+                  historicalGames={recentGames}
+                  currentTeamId={currentTeamId || 0}
+                  currentClubId={currentClubId || 0}
+                  batchScores={gameScoresMap}
+                  batchStats={gameStatsMap}
+                  opponentName="Recent Opponents"
+                  className=""
+                />
+              </CardContent>
+            </Card>
+          );
+        })()}
 
       <DashboardSummary 
           players={players || []} 
