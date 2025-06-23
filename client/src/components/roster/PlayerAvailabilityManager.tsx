@@ -20,10 +20,11 @@ import ExportButtons from '@/components/common/ExportButtons';
 import { PlayerBox } from '@/components/ui/player-box';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Badge } from '@/components/ui/badge';
-import { Player, Game, Opponent, Roster, Position } from '@shared/schema';
-import { formatShortDate, allPositions, positionLabels } from '@/lib/utils';
+import { Player, Game, Roster, Position } from '@shared/schema';
+import { formatShortDate, positionLabels } from '@/lib/utils';
 import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { apiClient } from '@/lib/queryClient';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;

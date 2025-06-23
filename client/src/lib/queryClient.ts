@@ -1,5 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Re-export apiClient for convenience
+export { apiClient } from './apiClient';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     try {
