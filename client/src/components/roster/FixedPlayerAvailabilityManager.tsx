@@ -97,6 +97,7 @@ export default function FixedPlayerAvailabilityManager({
 
   // Reset initialization flag when gameId changes
   useEffect(() => {
+    console.log('FixedPlayerAvailabilityManager: Game ID changed to:', gameId);
     setIsInitialized(false);
     setAvailabilityData({});
   }, [gameId]);
@@ -273,6 +274,7 @@ export default function FixedPlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
+                console.log(`FixedPlayerAvailabilityManager: Player ${player.displayName} (${player.id}) - isSelected: ${isSelected}, availabilityData:`, availabilityData[player.id]);
                 const playerColorHex = getPlayerColorHex(player.avatarColor);
                 const darkerTextColor = getDarkerColorHex(player.avatarColor);
 
