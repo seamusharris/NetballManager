@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { Player, Game } from '@shared/schema';
 import { apiRequest } from '@/lib/apiClient';
-import { Game, Player } from '@shared/schema';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
@@ -32,7 +33,7 @@ export default function RosterGame() {
 
   // Fetch games
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', currentClub?.id],
+    queryKey: [CACHE_KEYS.games, currentClub?.id],
     queryFn: () => apiRequest('GET', '/api/games'),
     retry: 1,
     enabled: !!currentClub?.id
@@ -40,14 +41,14 @@ export default function RosterGame() {
 
   // Fetch players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
-    queryKey: ['players', currentClub?.id],
+    queryKey: [CACHE_KEYS.players, currentClub?.id],
     queryFn: () => apiRequest('GET', '/api/players'),
     enabled: !!currentClub?.id
   });
 
   // Load availability for this game
   const { data: availabilityData, isLoading: availabilityLoading } = useQuery({
-    queryKey: ['availability', gameId],
+    queryKey: [CACHE_KEYS.availability, gameId],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/games/${gameId}/availability`);
       return response;

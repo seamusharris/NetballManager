@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { CACHE_KEYS, invalidateAvailability } from '@/lib/cacheKeys';
 import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 
@@ -40,14 +41,18 @@ export default function PlayerAvailabilityManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Use centralized data loading for availability
+  // Use cached query for availability
   const { 
     data: availabilityResponse, 
     isLoading, 
     error: availabilityError,
     refetch: refetchAvailability
-  } = useDataLoader<{availablePlayerIds: number[]}>(`/api/games/${gameId}/availability`, {
+  } = useQuery<{availablePlayerIds: number[]}>({
+    queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/availability`),
     enabled: !!gameId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
     onError: (error) => {
       console.log('Player availability API error, falling back to all active players:', error);
     }
@@ -119,7 +124,7 @@ export default function PlayerAvailabilityManager({
     if (gameId) {
       console.log('PlayerAvailabilityManager: gameId changed, refetching availability for game:', gameId);
       queryClient.invalidateQueries({ 
-        queryKey: [`/api/games/${gameId}/availability`] 
+        queryKey: CACHE_KEYS.playerAvailability(gameId)
       });
       refetchAvailability();
     }
@@ -200,6 +205,9 @@ export default function PlayerAvailabilityManager({
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds
         });
+
+        // Invalidate availability caches
+        invalidateAvailability(queryClient, gameId);
 
         toast({
           title: "Availability updated",

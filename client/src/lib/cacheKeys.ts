@@ -58,6 +58,14 @@ export const CACHE_KEYS = {
   // Team performance specific cache
   teamPerformance: (clubId: number, teamId: number, seasonId: number, gameIds: number[]) =>
     ['team-performance', clubId, teamId, seasonId, normalizeGameIds(gameIds)],
+
+  // Player availability
+  playerAvailability: (gameId: number) => ['availability', gameId],
+  teamAvailability: (teamId: number, gameId: number) => ['team-availability', teamId, gameId],
+  
+  // Batch availability for multiple games
+  batchAvailability: (clubId: number, gameIds: number[]) => 
+    ['batch-availability', clubId, normalizeGameIds(gameIds)],
 };
 
 // Helper to ensure consistent gameIds sorting
@@ -123,4 +131,25 @@ export const invalidateScoresOnly = (queryClient: any, gameId: number, clubId: n
              (key[2] === 'all-teams' || key[2] === 'club-wide');
     }
   });
+};
+
+// Invalidate availability-related caches
+export const invalidateAvailability = (queryClient: any, gameId: number, teamId?: number, clubId?: number) => {
+  // Invalidate specific game availability
+  queryClient.invalidateQueries({ queryKey: ['availability', gameId] });
+  
+  // Invalidate team-specific availability if teamId provided
+  if (teamId) {
+    queryClient.invalidateQueries({ queryKey: ['team-availability', teamId, gameId] });
+  }
+  
+  // Invalidate batch availability caches if clubId provided
+  if (clubId) {
+    queryClient.invalidateQueries({
+      predicate: (query: any) => {
+        const key = query.queryKey;
+        return Array.isArray(key) && key[0] === 'batch-availability' && key[1] === clubId;
+      }
+    });
+  }
 };

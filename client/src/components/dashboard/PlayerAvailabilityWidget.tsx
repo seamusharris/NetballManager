@@ -8,6 +8,8 @@ import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
+import { useQueries } from '@tanstack/react-query';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 interface PlayerAvailabilityWidgetProps {
   games: Game[];
@@ -70,53 +72,53 @@ export default function PlayerAvailabilityWidget({
     fetchTeamPlayers();
   }, [currentTeamId, players]);
 
-  // Fetch availability data for upcoming games
+  // Use cached queries for availability data
+  const availabilityQueries = useQueries({
+    queries: upcomingGames.map(game => ({
+      queryKey: CACHE_KEYS.playerAvailability(game.id),
+      queryFn: () => apiClient.get(`/api/games/${game.id}/availability`),
+      enabled: teamPlayers.length > 0,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 30 * 60 * 1000, // 30 minutes
+      retry: 1
+    }))
+  });
+
+  // Process availability query results
   useEffect(() => {
-    const fetchAvailability = async () => {
-      if (upcomingGames.length === 0 || teamPlayers.length === 0) return;
+    if (teamPlayers.length === 0) return;
 
-      setLoading(true);
-      const newAvailabilityData: Record<number, GameAvailability> = {};
-      const totalActiveTeamPlayers = teamPlayers.filter(p => p.active).length;
+    const totalActiveTeamPlayers = teamPlayers.filter(p => p.active).length;
+    const teamPlayerIds = teamPlayers.map(p => p.id);
+    const newAvailabilityData: Record<number, GameAvailability> = {};
 
-      try {
-        for (const game of upcomingGames) {
-          try {
-            console.log(`Fetching availability for game ${game.id} with team ${currentTeamId}`);
+    upcomingGames.forEach((game, index) => {
+      const query = availabilityQueries[index];
+      
+      if (query.data) {
+        // Handle different response formats
+        const availablePlayerIds = Array.isArray(query.data) ? query.data : (query.data.availablePlayerIds || []);
+        // Filter to only include team players
+        const availableTeamPlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-            const response = await apiClient.get(`/api/games/${game.id}/availability`);
-            // Handle different response formats
-            const availablePlayerIds = Array.isArray(response) ? response : (response.availablePlayerIds || []);
-            // Filter to only include team players
-            const teamPlayerIds = teamPlayers.map(p => p.id);
-            const availableTeamPlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
-
-            newAvailabilityData[game.id] = {
-              gameId: game.id,
-              availableCount: availableTeamPlayerIds.length || totalActiveTeamPlayers,
-              totalPlayers: totalActiveTeamPlayers
-            };
-          } catch (error) {
-            console.error(`Error fetching availability for game ${game.id}:`, error);
-            // On error, assume all team players are available
-            newAvailabilityData[game.id] = {
-              gameId: game.id,
-              availableCount: totalActiveTeamPlayers,
-              totalPlayers: totalActiveTeamPlayers
-            };
-          }
-        }
-
-        setAvailabilityData(newAvailabilityData);
-      } catch (error) {
-        console.error('Error fetching player availability:', error);
-      } finally {
-        setLoading(false);
+        newAvailabilityData[game.id] = {
+          gameId: game.id,
+          availableCount: availableTeamPlayerIds.length,
+          totalPlayers: totalActiveTeamPlayers
+        };
+      } else {
+        // Default to all players available if no data
+        newAvailabilityData[game.id] = {
+          gameId: game.id,
+          availableCount: totalActiveTeamPlayers,
+          totalPlayers: totalActiveTeamPlayers
+        };
       }
-    };
+    });
 
-    fetchAvailability();
-  }, [upcomingGames.length, teamPlayers.length, currentTeamId]);
+    setAvailabilityData(newAvailabilityData);
+    setLoading(availabilityQueries.some(q => q.isLoading));
+  }, [availabilityQueries, teamPlayers, upcomingGames]);
 
   const getAvailabilityStatus = (available: number, total: number) => {
     const percentage = total > 0 ? (available / total) * 100 : 0;

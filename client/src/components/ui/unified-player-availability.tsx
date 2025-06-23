@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 import { Zap, RotateCcw } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { invalidateAvailability } from '@/lib/cacheKeys';
 
 interface UnifiedPlayerAvailabilityProps {
   players: Player[];
@@ -35,6 +37,7 @@ export default function UnifiedPlayerAvailability({
 }: UnifiedPlayerAvailabilityProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+    const queryClient = useQueryClient();
 
   const getPlayerColorHex = (player: Player) => {
     const colorMap: Record<string, string> = {
@@ -125,6 +128,9 @@ export default function UnifiedPlayerAvailability({
         title: "Availability updated",
         description: "Player availability saved successfully.",
       });
+            if (gameId) {
+                await queryClient.invalidateQueries(invalidateAvailability(gameId));
+            }
     } catch (error) {
       console.error("Failed to save player availability:", error);
       toast({
@@ -152,6 +158,9 @@ export default function UnifiedPlayerAvailability({
           title: "Availability updated",
           description: `Player availability updated successfully.`,
         });
+                if (gameId) {
+                    await queryClient.invalidateQueries(invalidateAvailability(gameId));
+                }
       } catch (error) {
         console.error("Failed to update player availability:", error);
         toast({
@@ -288,4 +297,3 @@ export default function UnifiedPlayerAvailability({
     </Card>
   );
 }
-
