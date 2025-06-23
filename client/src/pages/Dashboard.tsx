@@ -81,11 +81,11 @@ export default function Dashboard() {
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
-  // Fetch games with team context
-  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery({
+  // Fetch games with team context - API filters by team automatically
+  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !!currentTeamId,
     staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection
   });

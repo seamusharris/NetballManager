@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
@@ -43,7 +42,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
     goalsPercentage: 0
   });
 
-  // Calculate basic performance metrics
+  // Calculate basic performance metrics - games are already filtered by API
   const totalGames = games.length;
   const completedGamesArray = games.filter(game => 
     game.statusIsCompleted && game.statusAllowsStatistics
@@ -69,16 +68,16 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
   useEffect(() => {
     let isCanceled = false;
     let timeoutId: NodeJS.Timeout;
-    
+
     const calculatePerformance = async () => {
       // Debounce rapid changes
       return new Promise<void>((resolve) => {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(async () => {
           if (isCanceled) return resolve();
-          
+
           setIsCalculating(true);
-          
+
           if (completedGameIds.length === 0) {
             console.log('TeamPerformance: No completed games for team', currentTeamId);
             setIsCalculating(false);
@@ -111,7 +110,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
 
           for (const batch of batches) {
             if (isCanceled) return resolve();
-            
+
             // Process batch
             for (const gameId of batch) {
               try {
@@ -187,7 +186,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                 console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
               }
             }
-            
+
             // Yield to browser between batches
             await new Promise(resolve => setTimeout(resolve, 0));
           }
@@ -264,7 +263,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
     };
 
     calculatePerformance();
-    
+
     return () => {
       isCanceled = true;
       clearTimeout(timeoutId);
@@ -325,7 +324,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                 const maxScore = Math.max(quarterPerformance.avgTeamScore, quarterPerformance.avgOpponentScore, 1);
                 const teamPercentage = (quarterPerformance.avgTeamScore / maxScore) * 100;
                 const opponentPercentage = (quarterPerformance.avgOpponentScore / maxScore) * 100;
-                
+
                 return (
                   <>
                     <div className="flex items-center justify-between">
