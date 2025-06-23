@@ -1117,8 +1117,17 @@ export default function GameDetails() {
     if (teamAwards && teamAwards.length > 0) {
       const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
       setSelectedAwardWinner(playerOfMatch?.playerId || null);
+    } else if (teamAwards && teamAwards.length === 0) {
+      // Clear selection if no awards exist
+      setSelectedAwardWinner(null);
     }
   }, [teamAwards]);
+
+  // Reset award winner state when game changes
+  useEffect(() => {
+    setSelectedAwardWinner(null);
+    setIsEditingAward(false);
+  }, [gameId]);
 
   const updateAwardWinner = useMutation({
     mutationFn: async (playerId: number | null) => {
