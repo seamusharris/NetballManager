@@ -24,29 +24,11 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
   // Filter for upcoming games using the new status system
   const upcomingGames = games
     .filter(game => {
-      // Debug logging for the upcoming game that should appear
-      if (game.id === 108) {
-        console.log('UpcomingGames: Filtering game 108:', {
-          gameId: game.id,
-          date: game.date,
-          homeTeamId: game.homeTeamId,
-          awayTeamId: game.awayTeamId,
-          homeTeamName: game.homeTeamName,
-          awayTeamName: game.awayTeamName,
-          statusIsCompleted: game.statusIsCompleted,
-          isBye: game.isBye,
-          currentTeamId: currentTeam?.id
-        });
-      }
-
       // First check if this game involves the current team
       const currentTeamId = currentTeam?.id;
       if (currentTeamId) {
         const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
         if (!isTeamGame) {
-          if (game.id === 108) {
-            console.log('UpcomingGames: Game 108 filtered out - not involving current team');
-          }
           return false;
         }
       }
@@ -69,32 +51,10 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
 
       const isUpcoming = !isCompleted && gameDateNormalized >= today && !game.isBye;
 
-      if (game.id === 108) {
-        console.log('UpcomingGames: Game 108 final filter result:', {
-          isCompleted,
-          gameDateNormalized: gameDateNormalized.toISOString(),
-          today: today.toISOString(),
-          isInFuture: gameDateNormalized >= today,
-          isBye: game.isBye,
-          isUpcoming
-        });
-      }
-
       return isUpcoming;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games
-
-  // Debug logging for upcoming games
-  console.log('UpcomingGames: Final filtered upcoming games:', upcomingGames.map(g => ({
-    id: g.id,
-    date: g.date,
-    homeTeam: g.homeTeamName,
-    awayTeam: g.awayTeamName,
-    currentTeamId: currentTeam?.id,
-    isHome: g.homeTeamId === currentTeam?.id,
-    isAway: g.awayTeamId === currentTeam?.id
-  })));
 
   // Always show home vs away format
   const getOpponentName = (game: any) => {
