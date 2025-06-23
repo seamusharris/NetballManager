@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
@@ -52,9 +52,20 @@ interface Game {
 
 export default function TeamPreparation() {
   const { currentClubId, currentTeamId } = useClub();
+  const params = useParams();
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+
+  // Parse opponent ID from URL parameters
+  useEffect(() => {
+    if (params.opponentId) {
+      const opponentId = parseInt(params.opponentId);
+      if (!isNaN(opponentId)) {
+        setSelectedOpponentId(opponentId);
+      }
+    }
+  }, [params.opponentId]);
 
   // Get all teams from current club
   const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
@@ -275,7 +286,13 @@ export default function TeamPreparation() {
                   <label className="text-sm font-medium">Select Opponent</label>
                   <Select 
                     value={selectedOpponentId?.toString() || ""} 
-                    onValueChange={(value) => setSelectedOpponentId(value ? parseInt(value) : null)}
+                    onValueChange={(value) => {
+                      const opponentId = value ? parseInt(value) : null;
+                      setSelectedOpponentId(opponentId);
+                      if (opponentId && currentTeamId) {
+                        setLocation(`/teams/${currentTeamId}/analysis/${opponentId}`);
+                      }
+                    }}
                     disabled={!currentTeamId || opponentTeamsFromGames.length === 0}
                   >
                     <SelectTrigger>
