@@ -45,29 +45,43 @@ export default function FixedPlayerAvailabilityManager({
   // Initialize availability data when API data loads or when starting fresh
   useEffect(() => {
     if (!gameId || players.length === 0) {
+      console.log('FixedPlayerAvailabilityManager: Skipping initialization - no gameId or players', { gameId, playersCount: players.length });
       return;
     }
 
-    // Only initialize once per gameId change
-    if (isInitialized && availabilityData && Object.keys(availabilityData).length > 0) {
+    if (isLoading) {
+      console.log('FixedPlayerAvailabilityManager: Still loading availability data');
       return;
     }
+
+    console.log('FixedPlayerAvailabilityManager: Initializing availability data', {
+      gameId,
+      playersCount: players.length,
+      availabilityResponse,
+      isInitialized
+    });
 
     let newAvailabilityData: Record<number, boolean> = {};
 
     if (availabilityResponse?.availablePlayerIds) {
       // Use API data if available
       const availableIds = availabilityResponse.availablePlayerIds;
+      console.log('FixedPlayerAvailabilityManager: Using API data, available IDs:', availableIds);
       players.forEach(player => {
         newAvailabilityData[player.id] = availableIds.includes(player.id);
       });
-    } else {
-      // Default all active players to available
+    } else if (!isLoading) {
+      // Default all active players to available (only if not loading)
+      console.log('FixedPlayerAvailabilityManager: No API data, defaulting all active players to available');
       players.forEach(player => {
         newAvailabilityData[player.id] = player.active !== false;
       });
+    } else {
+      console.log('FixedPlayerAvailabilityManager: No data available and still loading, skipping');
+      return;
     }
 
+    console.log('FixedPlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
     setAvailabilityData(newAvailabilityData);
     setIsInitialized(true);
 
@@ -76,9 +90,10 @@ export default function FixedPlayerAvailabilityManager({
       .filter(([_, isAvailable]) => isAvailable)
       .map(([playerId, _]) => parseInt(playerId));
     
+    console.log('FixedPlayerAvailabilityManager: Notifying parent with available IDs:', availableIds);
     onAvailabilityChange?.(availableIds);
     onAvailabilityStateChange?.(newAvailabilityData);
-  }, [gameId, players, availabilityResponse, isInitialized]);
+  }, [gameId, players, availabilityResponse, isLoading]);
 
   // Reset initialization flag when gameId changes
   useEffect(() => {
