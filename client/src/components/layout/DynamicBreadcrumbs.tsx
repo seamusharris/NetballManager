@@ -24,7 +24,7 @@ interface DynamicBreadcrumbsProps {
 
 export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBreadcrumbsProps) {
   const [location, navigate] = useLocation();
-  const { currentClub } = useClub();
+  const { currentClub, currentTeam } = useClub();
 
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     if (customItems) {
@@ -34,9 +34,15 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
     const pathSegments = location.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [];
 
-    // Handle root paths
-    if (pathSegments.length === 0 || location === '/') {
-      return [{ label: 'Club Dashboard' }];
+    // Always start with Club Dashboard
+    breadcrumbs.push({ 
+      label: 'Club Dashboard', 
+      href: '/dashboard' 
+    });
+
+    // Handle root paths - just club dashboard
+    if (pathSegments.length === 0 || location === '/' || location === '/dashboard') {
+      return breadcrumbs.slice(0, 1); // Remove href to make it current page
     }
 
     let currentPath = '';
@@ -48,31 +54,63 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
       // Skip if this is the last segment (current page)
       const isLastSegment = i === pathSegments.length - 1;
 
+      // Handle team routes like /team/123 or /team/123/games
       if (segment === 'team' && pathSegments[i + 1]) {
-        // Handle team routes like /team/123/games
         const teamId = pathSegments[i + 1];
         const nextSegment = pathSegments[i + 2];
         
-        if (nextSegment === 'games') {
-          breadcrumbs.push({ label: 'Games', href: isLastSegment ? undefined : `/team/${teamId}/games` });
-        } else if (nextSegment === 'preparation') {
-          breadcrumbs.push({ label: 'Game Preparation', href: isLastSegment ? undefined : `/team/${teamId}/preparation` });
-        } else if (nextSegment === 'roster') {
-          breadcrumbs.push({ label: 'Roster Management', href: isLastSegment ? undefined : `/team/${teamId}/roster` });
-        } else {
-          breadcrumbs.push({ label: 'Team Dashboard', href: isLastSegment ? undefined : `/team/${teamId}` });
+        // Add Team Dashboard breadcrumb
+        if (nextSegment) {
+          breadcrumbs.push({ 
+            label: 'Team Dashboard', 
+            href: `/team/${teamId}` 
+          });
         }
         
-        // Skip the team ID segment
+        // Handle team sub-routes
+        if (nextSegment === 'games') {
+          breadcrumbs.push({ 
+            label: 'Games', 
+            href: isLastSegment ? undefined : `/team/${teamId}/games` 
+          });
+        } else if (nextSegment === 'preparation') {
+          breadcrumbs.push({ 
+            label: 'Game Preparation', 
+            href: isLastSegment ? undefined : `/team/${teamId}/preparation` 
+          });
+        } else if (nextSegment === 'roster') {
+          breadcrumbs.push({ 
+            label: 'Roster Management', 
+            href: isLastSegment ? undefined : `/team/${teamId}/roster` 
+          });
+        } else if (!nextSegment) {
+          // Just /team/123 - this is the team dashboard page
+          breadcrumbs.push({ label: 'Team Dashboard' });
+        }
+        
+        // Skip the team ID segment and next segment if it exists
         i += 1;
         if (nextSegment) i += 1;
         currentPath = `/team/${teamId}${nextSegment ? `/${nextSegment}` : ''}`;
         continue;
       }
 
-      // Handle game routes
+      // Handle game routes without team context
       if (segment === 'games' && pathSegments[i + 1] && !isNaN(Number(pathSegments[i + 1]))) {
-        breadcrumbs.push({ label: 'Games', href: '/games' });
+        // Add team dashboard if we have current team context
+        if (currentTeam) {
+          breadcrumbs.push({ 
+            label: 'Team Dashboard', 
+            href: `/team/${currentTeam.id}` 
+          });
+          breadcrumbs.push({ 
+            label: 'Games', 
+            href: `/team/${currentTeam.id}/games` 
+          });
+        } else {
+          breadcrumbs.push({ label: 'Games', href: '/games' });
+        }
+        
         const gameId = pathSegments[i + 1];
         const subRoute = pathSegments[i + 2];
         
@@ -91,7 +129,18 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
       // Handle roster with game ID
       if (segment === 'roster' && pathSegments[i + 1] === 'game' && pathSegments[i + 2]) {
         const gameId = pathSegments[i + 2];
-        breadcrumbs.push({ label: 'Games', href: '/games' });
+        if (currentTeam) {
+          breadcrumbs.push({ 
+            label: 'Team Dashboard', 
+            href: `/team/${currentTeam.id}` 
+          });
+          breadcrumbs.push({ 
+            label: 'Games', 
+            href: `/team/${currentTeam.id}/games` 
+          });
+        } else {
+          breadcrumbs.push({ label: 'Games', href: '/games' });
+        }
         breadcrumbs.push({ label: `Game ${gameId}`, href: `/games/${gameId}` });
         breadcrumbs.push({ label: 'Roster Management' });
         break;
@@ -100,15 +149,39 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
       // Handle player availability routes
       if (segment === 'player-availability' && pathSegments[i + 1]) {
         const gameId = pathSegments[i + 1];
-        breadcrumbs.push({ label: 'Games', href: '/games' });
+        if (currentTeam) {
+          breadcrumbs.push({ 
+            label: 'Team Dashboard', 
+            href: `/team/${currentTeam.id}` 
+          });
+          breadcrumbs.push({ 
+            label: 'Games', 
+            href: `/team/${currentTeam.id}/games` 
+          });
+        } else {
+          breadcrumbs.push({ label: 'Games', href: '/games' });
+        }
         breadcrumbs.push({ label: `Game ${gameId}`, href: `/games/${gameId}` });
         breadcrumbs.push({ label: 'Player Availability' });
         break;
       }
 
+      // Handle standalone /games route
+      if (segment === 'games' && pathSegments.length === 1) {
+        // Add team dashboard if we have current team context
+        if (currentTeam) {
+          breadcrumbs.push({ 
+            label: 'Team Dashboard', 
+            href: `/team/${currentTeam.id}` 
+          });
+        }
+        breadcrumbs.push({ label: 'Games' });
+        break;
+      }
+
       // Handle standard routes
       const routeLabels: Record<string, string> = {
-        'dashboard': 'Team Dashboard',
+        'dashboard': 'Club Dashboard',
         'team-dashboard': 'Team Dashboard',
         'games': 'Games',
         'players': 'Players',
@@ -141,24 +214,18 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
   return (
     <Breadcrumb className="mb-6">
       <BreadcrumbList>
-        {!hideHome && (
-          <>
-            <BreadcrumbItem>
+        {breadcrumbItems.map((item, index) => [
+          index > 0 && <BreadcrumbSeparator key={`separator-${index}`} />,
+          <BreadcrumbItem key={`item-${index}`}>
+            {index === 0 && !hideHome ? (
               <BreadcrumbLink 
                 onClick={() => navigate('/dashboard')}
                 className="cursor-pointer flex items-center"
               >
-                <Home className="h-4 w-4" />
+                <Home className="h-4 w-4 mr-1" />
+                {item.label}
               </BreadcrumbLink>
-            </BreadcrumbItem>
-            {breadcrumbItems.length > 0 && <BreadcrumbSeparator />}
-          </>
-        )}
-        
-        {breadcrumbItems.map((item, index) => [
-          index > 0 && <BreadcrumbSeparator key={`separator-${index}`} />,
-          <BreadcrumbItem key={`item-${index}`}>
-            {index === breadcrumbItems.length - 1 ? (
+            ) : index === breadcrumbItems.length - 1 ? (
               <BreadcrumbPage>{item.label}</BreadcrumbPage>
             ) : (
               <BreadcrumbLink 
