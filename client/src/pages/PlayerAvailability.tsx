@@ -17,12 +17,20 @@ export default function PlayerAvailability() {
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
 
-  // Extract gameId from URL params
+  // Extract gameId and teamId from URL params
   const gameId = React.useMemo(() => {
     console.log('PlayerAvailability URL params:', params);
     if (params && 'gameId' in params && params.gameId) {
       const id = parseInt(params.gameId as string);
       console.log('Extracted gameId from URL:', id);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+
+  const teamId = React.useMemo(() => {
+    if (params && 'teamId' in params && params.teamId) {
+      const id = parseInt(params.teamId as string);
       return isNaN(id) ? null : id;
     }
     return null;

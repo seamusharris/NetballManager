@@ -25,7 +25,7 @@ import { Player, Game, Roster, Position } from '@shared/schema';
 import { formatShortDate, positionLabels } from '@/lib/utils';
 import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
-import { apiClient } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
