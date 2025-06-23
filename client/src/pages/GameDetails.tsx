@@ -1545,14 +1545,14 @@ export default function GameDetails() {
           <div className="flex flex-wrap gap-2 mt-4 mb-4">
 
             {/* Player Availability Button */}
-            {!game.isBye && (
+            {!game.isBye && currentTeam && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 asChild
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900"
               >
-                <Link to={`/availability/game/${gameId}`}>
+                <Link to={`/team/${currentTeam.id}/availability/${gameId}`}>
                   <CalendarRange className="mr-2 h-4 w-4" />
                   Player Availability
                 </Link>
