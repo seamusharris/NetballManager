@@ -196,4 +196,3 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
 // Export both as default and named export to handle different import styles
 export default UpcomingGames;
 export { UpcomingGames };
-```
