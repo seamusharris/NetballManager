@@ -66,11 +66,13 @@ export default function FixedPlayerAvailabilityManager({
     
     const apiAvailableIds = availabilityResponse?.availablePlayerIds || [];
     
-    // Check if current state matches API data
+    // Check if current state matches API data AND we have data for all players
+    const hasDataForAllPlayers = players.every(player => player.id in availabilityData);
     const stateMatchesApi = currentlySelectedIds.length === apiAvailableIds.length && 
-      currentlySelectedIds.every(id => apiAvailableIds.includes(id));
+      currentlySelectedIds.every(id => apiAvailableIds.includes(id)) &&
+      apiAvailableIds.every(id => currentlySelectedIds.includes(id));
     
-    if (Object.keys(availabilityData).length > 0 && stateMatchesApi) {
+    if (hasDataForAllPlayers && stateMatchesApi && isInitialized) {
       console.log('FixedPlayerAvailabilityManager: State already matches API data, skipping reinitalization');
       return;
     }
@@ -86,24 +88,28 @@ export default function FixedPlayerAvailabilityManager({
       players.forEach(player => {
         newAvailabilityData[player.id] = availableIds.includes(player.id);
       });
+      
+      console.log('FixedPlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
+      setAvailabilityData(newAvailabilityData);
+      setIsInitialized(true);
+
+      // Log the final state
+      const finalAvailableIds = Object.entries(newAvailabilityData)
+        .filter(([_, isAvailable]) => isAvailable)
+        .map(([playerId, _]) => parseInt(playerId));
+      
+      console.log('FixedPlayerAvailabilityManager: Initialization complete with available IDs:', finalAvailableIds);
     } else {
       // Default all active players to available 
       console.log('FixedPlayerAvailabilityManager: No API data, defaulting all active players to available');
       players.forEach(player => {
         newAvailabilityData[player.id] = player.active !== false;
       });
+      
+      console.log('FixedPlayerAvailabilityManager: Setting default availability data:', newAvailabilityData);
+      setAvailabilityData(newAvailabilityData);
+      setIsInitialized(true);
     }
-
-    console.log('FixedPlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
-    setAvailabilityData(newAvailabilityData);
-    setIsInitialized(true);
-
-    // Log the final state
-    const availableIds = Object.entries(newAvailabilityData)
-      .filter(([_, isAvailable]) => isAvailable)
-      .map(([playerId, _]) => parseInt(playerId));
-    
-    console.log('FixedPlayerAvailabilityManager: Initialization complete with available IDs:', availableIds);
   }, [gameId, players.length, availabilityResponse?.availablePlayerIds, isLoading]);
 
   // Reset initialization flag when gameId changes
