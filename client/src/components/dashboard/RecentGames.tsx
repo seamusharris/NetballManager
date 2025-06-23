@@ -95,23 +95,21 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
             <p className="text-gray-500 text-center py-4">No recent games to display</p>
           ) : (
             recentGames.map(game => (
-              <Link key={game.id} href={`/team/${currentTeam?.id}/game/${game.id}`}>
-                <GameResultCard
-                  key={game.id}
-                  game={game}
-                  layout="medium"
-                  gameStats={centralizedStats?.[game.id] || []}
-                  centralizedScores={transformedScores[game.id] || []}
-                  useOfficialPriority={true}
-                  showDate={true}
-                  showRound={true}
-                  showScore={true}
-                  className="mb-4"
-                  currentTeamId={clubWide ? null : currentTeam?.id}
-                  clubTeams={teams || []}
-                  showLink={false}
-                />
-              </Link>
+              <GameResultCard
+                key={game.id}
+                game={game}
+                layout="medium"
+                gameStats={centralizedStats?.[game.id] || []}
+                centralizedScores={transformedScores[game.id] || []}
+                useOfficialPriority={true}
+                showDate={true}
+                showRound={true}
+                showScore={true}
+                className="mb-4"
+                currentTeamId={clubWide ? null : currentTeam?.id}
+                clubTeams={teams || []}
+                showLink={true}
+              />
             ))
           )}
         </div>
