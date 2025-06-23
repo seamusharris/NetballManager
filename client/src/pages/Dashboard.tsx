@@ -81,9 +81,9 @@ export default function Dashboard() {
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
-  // Fetch games with team context - force fresh data on team switch
+  // Fetch games with team context - use explicit team filtering to avoid club-wide cache pollution
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, currentTeamId, 'team-dashboard'],
+    queryKey: ['team-games', currentClubId, currentTeamId, 'filtered'],
     queryFn: async () => {
       // Ensure API client has the current team context before making the call
       apiClient.setClubContext({ 
@@ -91,8 +91,9 @@ export default function Dashboard() {
         currentTeamId: currentTeamId! 
       });
       
-      console.log(`Dashboard: Fetching games for team ${currentTeamId} in club ${currentClubId}`);
-      return apiClient.get('/api/games');
+      console.log(`Dashboard: Fetching TEAM-SPECIFIC games for team ${currentTeamId} in club ${currentClubId}`);
+      // Make request with explicit team filtering - no club-wide header
+      return apiClient.get('/api/games', { 'x-team-specific': 'true' });
     },
     enabled: !!currentClubId && !!currentTeamId,
     staleTime: 2 * 60 * 1000, // 2 minutes cache for better performance
