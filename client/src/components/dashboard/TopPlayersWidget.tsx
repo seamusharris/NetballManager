@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Player, GameStat } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
@@ -117,12 +117,12 @@ export default function TopPlayersWidget({
 
           if (playerGameStats.length > 0) {
             gamesPlayed++;
-            
+
             playerGameStats.forEach((stat: any) => {
               totalGoals += stat.goalsFor || 0;
               totalRebounds += stat.rebounds || 0;
               totalIntercepts += stat.intercepts || 0;
-              
+
               if (stat.rating && stat.rating > 0) {
                 totalRatings += stat.rating;
                 ratingsCount++;
@@ -182,7 +182,7 @@ export default function TopPlayersWidget({
             const stats = player.stats;
             const rank = index + 1;
             const totalContributions = stats.goals + stats.rebounds + stats.intercepts;
-            
+
             return (
               <PlayerBox
                 key={player.id}
@@ -199,6 +199,139 @@ export default function TopPlayersWidget({
                   <span>{stats.rebounds}R</span>
                   <span>{stats.intercepts}I</span>
                   {stats.rating > 0 && <span>{stats.rating.toFixed(1)}★</span>}
+                </div>
+              </PlayerBox>
+            );
+          })
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No player statistics available</p>
+            <p className="text-sm mt-1">Complete some games to see top performers</p>
+          </div>
+        )}
+      </div>
+    </BaseWidget>
+  );
+}
+const calculatePlayerPerformance = (players: Player[], centralizedStats: Record<number, any[]>, games: Game[]) => {
+  const playerPerformanceMap: Record<number, { gamesPlayed: number; performanceScore: number }> = {};
+
+  if (!centralizedStats || !players || players.length === 0) return playerPerformanceMap;
+
+    // Create a map of game IDs to easily check if a game is valid
+  const validGameIds = games.filter(game => game.statusIsCompleted === true && game.statusAllowsStatistics === true).map(game => game.id);
+
+  players.forEach(player => {
+      let gamesPlayed = 0;
+      let totalGoals = 0;
+      let totalRebounds = 0;
+      let totalIntercepts = 0;
+
+      validGameIds.forEach(gameId => {
+          const gameStats = centralizedStats[gameId] || [];
+          const playerGameStats = gameStats.filter((stat: any) => stat.playerId === player.id);
+
+          if (playerGameStats.length > 0) {
+              gamesPlayed++;
+              playerGameStats.forEach((stat: any) => {
+                  totalGoals += stat.goalsFor || 0;
+                  totalRebounds += stat.rebounds || 0;
+                  totalIntercepts += stat.intercepts || 0;
+              });
+          }
+      });
+
+      if (gamesPlayed > 0) {
+          const performanceScore = totalGoals + totalRebounds + totalIntercepts; // Simple performance score
+          playerPerformanceMap[player.id] = {
+              gamesPlayed,
+              performanceScore,
+          };
+      }
+  });
+
+  return playerPerformanceMap;
+};
+
+interface Props {
+  players: Player[];
+  games: Game[];
+  limit: number;
+  className?: string;
+  seasonFilter?: string;
+  activeSeason?: any;
+  teamId?: number;
+  centralizedStats?: Record<number, any[]>;
+  centralizedRosters?: Record<number, any[]>;
+}
+
+export function TopPlayersWidgetMemo({
+  players,
+  games,
+  limit,
+  className,
+  seasonFilter,
+  activeSeason,
+  teamId,
+  centralizedStats,
+  centralizedRosters,
+}: Props): JSX.Element {
+  
+  const topPlayers = useMemo(() => {
+    if (!players || !centralizedStats || !games) return [];
+
+    const playerPerformanceMap = calculatePlayerPerformance(
+      players,
+      centralizedStats,
+      games
+    );
+
+    return Object.entries(playerPerformanceMap)
+      .map(([playerId, stats]) => ({
+        player: players.find(p => p.id === parseInt(playerId)),
+        ...stats
+      }))
+      .filter(item => item.player && item.gamesPlayed > 0)
+      .sort((a, b) => b.performanceScore - a.performanceScore)
+      .slice(0, limit);
+  }, [players, centralizedStats, games, limit]);
+
+  return (
+    <BaseWidget
+      title="Top Players"
+      icon="Trophy"
+      className={cn("", className)}
+      actions={
+        <ViewMoreButton 
+          href="/players" 
+          label="View All Players"
+        />
+      }
+    >
+      <div className="space-y-3">
+        {topPlayers.length > 0 ? (
+          topPlayers.map((item: any, index) => {
+            const player = item.player;
+            const stats = item;
+            const rank = index + 1;
+            const totalContributions = stats.performanceScore;
+
+            return (
+              <PlayerBox
+                key={player.id}
+                playerId={player.id}
+                playerName={player.displayName || `${player.firstName} ${player.lastName}`}
+                playerColor={player.avatarColor || 'bg-gray-500'}
+                displayName={`#${rank} ${player.displayName}`}
+                subtitle={`${totalContributions} contributions in ${stats.gamesPlayed} games`}
+                onClick={() => `/players/${player.id}`}
+                className="transition-all duration-200 hover:scale-[1.02]"
+              >
+                <div className="flex justify-between items-center text-xs text-muted-foreground">
+                  {/* <span>{stats.goals}G</span>
+                  <span>{stats.rebounds}R</span>
+                  <span>{stats.intercepts}I</span> */}
+                  {/* {stats.rating > 0 && <span>{stats.rating.toFixed(1)}★</span>} */}
                 </div>
               </PlayerBox>
             );
