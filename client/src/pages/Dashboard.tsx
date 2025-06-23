@@ -74,7 +74,7 @@ export default function Dashboard() {
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
-    queryKey: ['players', currentClubId, currentTeamId],
+    queryKey: ['clubs', currentClubId, 'players'],
     queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId && !!currentTeamId,
     staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
@@ -82,8 +82,8 @@ export default function Dashboard() {
   });
 
   // Fetch games with team context
-  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery({
-    queryKey: ['games', currentClubId, currentTeamId],
+  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
+    queryKey: ['clubs', currentClubId, 'teams', currentTeamId, 'games'],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId,
     staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates
