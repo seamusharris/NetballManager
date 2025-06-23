@@ -234,11 +234,8 @@ export const queryClient = new QueryClient({
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       networkMode: 'online',
-      // Optimistic updates for better UX
-      onMutate: async () => {
-        // Cancel outgoing refetches to avoid optimistic update conflicts
-        await queryClient.cancelQueries();
-      },
+      // Remove aggressive query cancellation that was causing cache thrashing
+      // Individual mutations should handle their own cache invalidation specifically
     },
   },
 });

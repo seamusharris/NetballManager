@@ -158,30 +158,26 @@ export function GamesList({
     .map(game => game.id);
 
   const { data: allRosterData, isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['allRosters', ...nonByeGameIds],
+    queryKey: ['batchRosters', ...nonByeGameIds],
     queryFn: async () => {
       if (nonByeGameIds.length === 0) {
         return {};
       }
 
-      // Create a map to store rosters by game ID
-      const rostersMap: Record<number, any[]> = {};
-
-      // Fetch rosters for each game
-      const rosterPromises = nonByeGameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/rosters`);
-        const rosters = await response.json();
-        return { gameId, rosters };
+      // Use batch endpoint instead of individual calls
+      const response = await fetch('/api/games/rosters/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameIds: nonByeGameIds }),
       });
 
-      const results = await Promise.all(rosterPromises);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch rosters: ${response.statusText}`);
+      }
 
-      // Organize rosters by game ID
-      results.forEach(result => {
-        rostersMap[result.gameId] = result.rosters;
-      });
-
-      return rostersMap;
+      return await response.json();
     },
     enabled: nonByeGameIds.length > 0 && !isDashboard && !centralizedScores, // Only fetch if no centralized data
     staleTime: 5 * 60 * 1000,

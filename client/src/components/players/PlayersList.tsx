@@ -106,27 +106,29 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const gameRostersMap = batchData?.rosters || {};
   const isLoadingStats = isLoadingBatchData;
 
-  // Use Team Dashboard's exact cache keys to share roster data
+  // Use batch endpoint for roster data with improved caching
   const { data: gameRostersMapOld, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['centralized-rosters', currentClubId, gameIds.sort().join(',')],
+    queryKey: ['batchRosters', currentClubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
 
-      console.log(`PlayersList: Using individual requests for roster fetch of ${gameIds.length} games`);
-      const rostersMap: Record<number, any[]> = {};
+      console.log(`PlayersList: Using batch endpoint for roster fetch of ${gameIds.length} games`);
+      
+      // Use batch endpoint instead of individual calls
+      const response = await fetch('/api/games/rosters/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameIds }),
+      });
 
-      // Fetch rosters for all games
-      for (const gameId of gameIds) {
-        try {
-          const roster = await apiClient.get(`/api/games/${gameId}/rosters`);
-          rostersMap[gameId] = roster || [];
-        } catch (error) {
-          console.error(`PlayersList: Error fetching roster for game ${gameId}:`, error);
-          rostersMap[gameId] = [];
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch rosters: ${response.statusText}`);
       }
 
-      console.log(`PlayersList: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
+      const rostersMap = await response.json();
+      console.log(`PlayersList: Batch roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
     enabled: enableQuery && !!currentClubId,
