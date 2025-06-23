@@ -31,12 +31,12 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset to start of day
       
-      // Include games that are not completed and are today or in the future
-      const isUpcoming = !isCompleted && gameDate >= today && !game.isBye;
+      // Set game date to start of day for fair comparison
+      const gameDateNormalized = new Date(gameDate);
+      gameDateNormalized.setHours(0, 0, 0, 0);
       
-      if (currentTeam?.id === 123) { // Debug for Emus team
-        console.log(`Game ${game.id} (${game.date}): completed=${isCompleted}, upcoming=${isUpcoming}, isBye=${game.isBye}`);
-      }
+      // Include games that are not completed and are today or in the future
+      const isUpcoming = !isCompleted && gameDateNormalized >= today && !game.isBye;
       
       return isUpcoming;
     })
