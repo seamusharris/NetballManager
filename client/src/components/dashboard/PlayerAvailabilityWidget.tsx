@@ -94,7 +94,7 @@ export default function PlayerAvailabilityWidget({
 
     upcomingGames.forEach((game, index) => {
       const query = availabilityQueries[index];
-      
+
       if (query.data) {
         // Handle different response formats
         const availablePlayerIds = Array.isArray(query.data) ? query.data : (query.data.availablePlayerIds || []);

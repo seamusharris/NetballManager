@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check } from 'lucide-react';
-import { Player, Game } from '@shared/schema';
-import { formatShortDate } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useDataLoader } from '@/hooks/use-data-loader';
-import { apiClient } from '@/lib/apiClient';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { CACHE_KEYS, invalidateAvailability } from '@/lib/cacheKeys';
-import { PlayerBox } from '@/components/ui/player-box';
-import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { usePlayerAvailability, useSetPlayerAvailability } from '@/hooks/use-player-availability';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Wand2, Copy, Save, Trash2 } from 'lucide-react';
+import QuarterRoster from './QuarterRoster';
+import ExportButtons from '@/components/common/ExportButtons';
+import { Player, Game, Opponent, Roster, Position } from '@shared/schema';
+import { formatShortDate, allPositions, positionLabels } from '@/lib/utils';
+import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
@@ -76,7 +83,7 @@ export default function PlayerAvailabilityManager({
       try {
         // Get current team context from Club context
         const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
-        
+
         let teamToLoad = selectedGame.homeTeamId;
 
         // If we have current team context and it matches one of the teams in this game, use that

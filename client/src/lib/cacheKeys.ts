@@ -54,7 +54,7 @@ export const CACHE_KEYS = {
   // Dashboard aggregations with season context
   dashboardData: (clubId: number, teamId: number | null, seasonId?: number) => 
     ['dashboard', clubId, teamId || 'all-teams', seasonId || 'current'],
-    
+
   // Team performance specific cache
   teamPerformance: (clubId: number, teamId: number, seasonId: number, gameIds: number[]) =>
     ['team-performance', clubId, teamId, seasonId, normalizeGameIds(gameIds)],
@@ -62,7 +62,7 @@ export const CACHE_KEYS = {
   // Player availability
   playerAvailability: (gameId: number) => ['availability', gameId],
   teamAvailability: (teamId: number, gameId: number) => ['team-availability', teamId, gameId],
-  
+
   // Batch availability for multiple games
   batchAvailability: (clubId: number, gameIds: number[]) => 
     ['batch-availability', clubId, normalizeGameIds(gameIds)],
@@ -137,12 +137,12 @@ export const invalidateScoresOnly = (queryClient: any, gameId: number, clubId: n
 export const invalidateAvailability = (queryClient: any, gameId: number, teamId?: number, clubId?: number) => {
   // Invalidate specific game availability
   queryClient.invalidateQueries({ queryKey: ['availability', gameId] });
-  
+
   // Invalidate team-specific availability if teamId provided
   if (teamId) {
     queryClient.invalidateQueries({ queryKey: ['team-availability', teamId, gameId] });
   }
-  
+
   // Invalidate batch availability caches if clubId provided
   if (clubId) {
     queryClient.invalidateQueries({
