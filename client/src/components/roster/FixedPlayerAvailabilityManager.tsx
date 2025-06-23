@@ -38,7 +38,7 @@ export default function FixedPlayerAvailabilityManager({
 
   // Optimistic state for instant UI updates
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<number, boolean>>({});
-  
+
   // Track pending save operations
   const [pendingSaves, setPendingSaves] = useState<Set<number>>(new Set());
 
@@ -91,7 +91,7 @@ export default function FixedPlayerAvailabilityManager({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: newAvailablePlayerIds
       });
-      
+
       console.log(`Player ${playerId} availability saved successfully`);
       console.log('Invalidating cache for game', gameId);
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
@@ -121,7 +121,7 @@ export default function FixedPlayerAvailabilityManager({
   // Handle bulk operations
   const handleSelectAll = async () => {
     if (!gameId) return;
-    
+
     const availableIds = players.map(p => p.id);
     console.log(`Select all: ${availableIds.length} players now available`);
 
@@ -139,7 +139,7 @@ export default function FixedPlayerAvailabilityManager({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: availableIds
       });
-      
+
       toast({ title: "All players selected" });
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
     } catch (error) {
@@ -158,7 +158,7 @@ export default function FixedPlayerAvailabilityManager({
 
   const handleClearAll = async () => {
     if (!gameId) return;
-    
+
     console.log('Clear all: 0 players now available');
 
     // Apply optimistic updates for all players
@@ -175,7 +175,7 @@ export default function FixedPlayerAvailabilityManager({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds: []
       });
-      
+
       toast({ title: "All players cleared" });
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
     } catch (error) {
@@ -191,6 +191,41 @@ export default function FixedPlayerAvailabilityManager({
       });
     }
   };
+
+  // Navigation protection when saves are pending
+  useEffect(() => {
+    const hasPendingSaves = pendingSaves.size > 0;
+
+    if (hasPendingSaves) {
+      // Prevent browser navigation/refresh
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved player availability changes. Are you sure you want to leave?';
+        return e.returnValue;
+      };
+
+      // Prevent navigation within the app
+      const handlePopState = (e: PopStateEvent) => {
+        const shouldStay = window.confirm('You have unsaved player availability changes. Are you sure you want to leave?');
+        if (!shouldStay) {
+          e.preventDefault();
+          // Push the current state back to prevent navigation
+          window.history.pushState(null, '', window.location.href);
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('popstate', handlePopState);
+
+      // Push current state to enable popstate detection
+      window.history.pushState(null, '', window.location.href);
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [pendingSaves.size]);
 
   if (!gameId) {
     return (
