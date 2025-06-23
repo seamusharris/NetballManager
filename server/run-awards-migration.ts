@@ -1,6 +1,4 @@
 
-#!/usr/bin/env tsx
-
 import { createTeamGameAwardsTable } from './migrations/createTeamGameAwardsTable';
 import { sql } from 'drizzle-orm';
 import { db } from './db';
