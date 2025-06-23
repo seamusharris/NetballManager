@@ -276,90 +276,91 @@ export default function Games() {
   );
 
   return (
-    <PageTemplate
-      title={pageTitle}
-      subtitle={pageSubtitle}
-      actions={pageActions}
-    >
-      <ContentBox>
-        <GamesList 
-          games={games} 
-          opponents={[]} // Legacy prop - no longer used but component expects it
-          isLoading={isLoadingGames || isLoadingBatchData}
-          onDelete={handleDelete} 
-          onEdit={setEditingGame}
-          onViewStats={handleViewStats}
-          isDashboard={false}
-          showFilters={true}
-          showActions={true}
-          teams={teams}
-          centralizedStats={gameStatsMap}
-          centralizedScores={gameScoresMap}
-        />
-      </ContentBox>
-    </PageTemplate>
+    <>
+      <PageTemplate
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        actions={pageActions}
+      >
+        <ContentBox>
+          <GamesList 
+            games={games} 
+            opponents={[]} // Legacy prop - no longer used but component expects it
+            isLoading={isLoadingGames || isLoadingBatchData}
+            onDelete={handleDelete} 
+            onEdit={setEditingGame}
+            onViewStats={handleViewStats}
+            isDashboard={false}
+            showFilters={true}
+            showActions={true}
+            teams={teams}
+            centralizedStats={gameStatsMap}
+            centralizedScores={gameScoresMap}
+          />
+        </ContentBox>
+      </PageTemplate>
 
-    <CrudDialog
-      isOpen={isDialogOpen}
-      setIsOpen={setIsDialogOpen}
-      title="Add Game"
-    >
-      {(isLoadingTeams || isLoadingGameStatuses) ? (
-        <div className="p-4 text-center">
-          <p className="text-gray-500 mb-4">
-            Loading {isLoadingTeams ? 'teams' : 'game status'} data...
-          </p>
-          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-            Cancel
-          </Button>
-        </div>
-      ) : (
-        <GameForm 
-          seasons={seasons}
-          activeSeason={activeSeason}
-          onSubmit={handleCreate}
-          isSubmitting={false}
-          onCancel={() => setIsDialogOpen(false)}
-          gameStatuses={gameStatuses}
-          teams={teams}
-          allTeams={allTeams}
-        />
-      )}
-    </CrudDialog>
+      <CrudDialog
+        isOpen={isDialogOpen}
+        setIsOpen={setIsDialogOpen}
+        title="Add Game"
+      >
+        {(isLoadingTeams || isLoadingGameStatuses) ? (
+          <div className="p-4 text-center">
+            <p className="text-gray-500 mb-4">
+              Loading {isLoadingTeams ? 'teams' : 'game status'} data...
+            </p>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <GameForm 
+            seasons={seasons}
+            activeSeason={activeSeason}
+            onSubmit={handleCreate}
+            isSubmitting={false}
+            onCancel={() => setIsDialogOpen(false)}
+            gameStatuses={gameStatuses}
+            teams={teams}
+            allTeams={allTeams}
+          />
+        )}
+      </CrudDialog>
 
-    <CrudDialog
-      isOpen={!!editingGame}
-      setIsOpen={(open) => !open && setEditingGame(null)}
-      title="Edit Game"
-    >
-      {editingGame && (
-        <>
-          {(teams.length === 0 || gameStatuses.length === 0) ? (
-            <div className="p-4 text-center">
-              <p className="text-gray-500 mb-4">
-                Loading {teams.length === 0 ? 'teams' : 'game status'} data...
-              </p>
-              <Button variant="outline" onClick={() => setEditingGame(null)}>
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <GameForm 
-              game={editingGame} 
-              seasons={seasons}
-              activeSeason={activeSeason}
-              onSubmit={handleUpdate}
-              isSubmitting={updateMutation.isPending}
-              onCancel={() => setEditingGame(null)}
-              gameStatuses={gameStatuses}
-              teams={teams}
-              allTeams={allTeams}
-              isEditing={true}
-            />
-          )}
-        </>
-      )}
-    </CrudDialog>
-  </>
+      <CrudDialog
+        isOpen={!!editingGame}
+        setIsOpen={(open) => !open && setEditingGame(null)}
+        title="Edit Game"
+      >
+        {editingGame && (
+          <>
+            {(teams.length === 0 || gameStatuses.length === 0) ? (
+              <div className="p-4 text-center">
+                <p className="text-gray-500 mb-4">
+                  Loading {teams.length === 0 ? 'teams' : 'game status'} data...
+                </p>
+                <Button variant="outline" onClick={() => setEditingGame(null)}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <GameForm 
+                game={editingGame} 
+                seasons={seasons}
+                activeSeason={activeSeason}
+                onSubmit={handleUpdate}
+                isSubmitting={updateMutation.isPending}
+                onCancel={() => setEditingGame(null)}
+                gameStatuses={gameStatuses}
+                teams={teams}
+                allTeams={allTeams}
+                isEditing={true}
+              />
+            )}
+          </>
+        )}
+      </CrudDialog>
+    </>
   );
 }
