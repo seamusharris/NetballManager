@@ -45,8 +45,18 @@ export default function CourtDisplay({
 
   // Helper to get player display name
   const getPlayerName = (playerId: number | null) => {
-    if (!players || !playerId) return null;
+    if (!players || !playerId) {
+      console.log('CourtDisplay getPlayerName: No players or playerId', { playersLength: players?.length, playerId });
+      return null;
+    }
     const player = players.find(p => p.id === playerId);
+    if (!player) {
+      console.log('CourtDisplay getPlayerName: Player not found', { 
+        playerId, 
+        availablePlayerIds: players.map(p => p.id),
+        firstPlayer: players[0]
+      });
+    }
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
 

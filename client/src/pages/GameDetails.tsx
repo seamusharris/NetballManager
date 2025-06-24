@@ -486,6 +486,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     if (!player) {
       console.log('getPlayerName: No player found for ID', playerId, 'in', players.length, 'players');
       console.log('Available player IDs:', players.map(p => p.id));
+      console.log('Searching for players with ID', playerId, 'in:', players.slice(0, 3).map(p => ({id: p.id, name: p.displayName || 'no display name'})));
+    } else {
+      console.log('getPlayerName: Found player', player.displayName || player.firstName, 'for ID', playerId);
     }
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
@@ -1848,7 +1851,8 @@ export default function GameDetails() {
                     firstRosterEntry: roster?.[0],
                     firstPlayer: players?.[0],
                     rosterPlayerIds: roster?.slice(0, 5)?.map(r => r.playerId),
-                    playerIds: players?.slice(0, 5)?.map(p => p.id)
+                    playerIds: players?.slice(0, 5)?.map(p => p.id),
+                    playersWithNames: players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName}))
                   })}
                   {isLoadingRoster ? (
                     <div className="text-center py-10">
