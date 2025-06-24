@@ -445,7 +445,8 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
   const [quarter, setQuarter] = useState(initialQuarter);
 
-  console.log('CourtPositionRoster received roster:', roster?.length, 'entries');
+  console.log('CourtPositionRoster received roster:', roster?.length, 'entries', roster?.slice(0, 3));
+  console.log('CourtPositionRoster received players:', players?.length, 'players', players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName})));
 
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
@@ -454,11 +455,15 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       return {};
     }
     
-    return roster.reduce((acc, entry) => {
+    const grouped = roster.reduce((acc, entry) => {
       if (!acc[entry.quarter]) acc[entry.quarter] = {};
       acc[entry.quarter][entry.position] = entry;
       return acc;
     }, {});
+    
+    console.log('Grouped roster by quarter:', grouped);
+    console.log('Quarter 1 positions:', Object.keys(grouped[1] || {}));
+    return grouped;
   }, [roster]);
 
   // Helper to get position coordinates on court diagram
