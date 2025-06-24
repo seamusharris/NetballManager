@@ -112,6 +112,11 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: Fixed club perspective calculation for game result colors
+  - Replaced complex club context loading with simple URL-based club ID extraction
+  - Implemented dynamic team fetching based on URL club ID for reliable perspective calculation
+  - Removed all hardcoded team IDs in favor of API-driven team identification
+  - Game result colors now display correctly from proper club perspective on club-wide games page
 - June 24, 2025: Fixed defensive statistics calculation from opponent perspective
   - Statistics system now properly generates missing team stats from opponent's defensive data
   - When Team A has no recorded stats but Team B has defensive stats, Team A's offensive performance is correctly calculated from Team B's goals conceded

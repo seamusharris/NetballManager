@@ -443,17 +443,17 @@ export class UnifiedGameScoreService {
       const homeIsOurs = clubTeamIds.includes(game.homeTeamId || 0);
       const awayIsOurs = clubTeamIds.includes(game.awayTeamId || 0);
       
-      // Debug logging for games involving Team 1 (Matrix)
-      if (game.homeTeamId === 1 || game.awayTeamId === 1) {
-        console.log(`🔍 UNIFIED SERVICE - Matrix game ${game.id} team perspective:`, {
+      // Debug logging for games involving our teams
+      if (clubTeamIds.length > 0 && (homeIsOurs || awayIsOurs)) {
+        console.log(`🔍 UNIFIED SERVICE - Game ${game.id} calculation:`, {
           homeTeamId: game.homeTeamId,
           awayTeamId: game.awayTeamId,
           clubTeamIds,
-          clubTeamIdsLength: clubTeamIds.length,
           homeIsOurs,
           awayIsOurs,
           perspective,
-          shouldUseMatrix: awayIsOurs && game.awayTeamId === 1
+          willUseHomePerspective: homeIsOurs,
+          willUseAwayPerspective: awayIsOurs
         });
       }
       

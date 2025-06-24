@@ -85,18 +85,18 @@ export default function GameResultCard({
     // Use URL-based club teams for reliable perspective calculation
     const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
     
-    // Debug logging for team perspective calculation
-    if (game.homeTeamId === 117 || game.awayTeamId === 117 || game.homeTeamId === 124 || game.awayTeamId === 124) {
-      console.log(`🔍 CLUB ${urlClubId} GAME ${game.id} - Team perspective calculation:`, {
+    // Debug logging for games where we need to verify perspective
+    if (clubTeamIds.length > 0 && (clubTeamIds.includes(game.homeTeamId || 0) || clubTeamIds.includes(game.awayTeamId || 0))) {
+      console.log(`🔍 GAME ${game.id} - Our team perspective:`, {
         perspective,
         clubTeamIds,
         urlClubId,
-        urlClubTeamsCount: urlClubTeams?.length || 0,
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
-        centralizedScoresCount: centralizedScores?.length || 0,
         homeIsOurs: clubTeamIds.includes(game.homeTeamId || 0),
-        awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0)
+        awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0),
+        calculatingFromPerspectiveOf: clubTeamIds.includes(game.homeTeamId || 0) ? 'home' : 
+                                     clubTeamIds.includes(game.awayTeamId || 0) ? 'away' : 'neither'
       });
     }
     
