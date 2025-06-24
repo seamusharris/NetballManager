@@ -114,7 +114,7 @@ export default function AllPlayersDesignExamples() {
 
   const togglePlayerSelection = (playerId) => {
     setSelectedPlayers(prev => {
-      const newSet = new Set(prev);
+      const newSet = new Set([...prev]);
       if (newSet.has(playerId)) {
         newSet.delete(playerId);
       } else {
@@ -126,7 +126,7 @@ export default function AllPlayersDesignExamples() {
 
     const toggleBatchSelection = (playerId) => {
     setBatchSelectedPlayers(prev => {
-      const newSet = new Set(prev);
+      const newSet = new Set([...prev]);
       if (newSet.has(playerId)) {
         newSet.delete(playerId);
       } else {
@@ -139,7 +139,7 @@ export default function AllPlayersDesignExamples() {
 
   const toggleTeamSelection = (playerId) => {
     setSelectedForTeam(prev => {
-      const newSet = new Set(prev);
+      const newSet = new Set([...prev]);
       if (newSet.has(playerId)) {
         newSet.delete(playerId);
       } else {
@@ -746,7 +746,7 @@ export default function AllPlayersDesignExamples() {
                       className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer z-10 text-white transition-all"
                       style={{ 
                         backgroundColor: batchSelectedPlayers.has(player.id) ? '#3b82f6' : 'transparent', 
-                        border: batchSelectedPlayers.has(player.id) ? 'none' : '2px solid #3b82f680' 
+                        border:batchSelectedPlayers.has(player.id) ? 'none' : '2px solid #3b82f680' 
                       }}
                       onClick={() => toggleBatchSelection(player.id)}
                     >
@@ -1114,3 +1114,4 @@ export default function AllPlayersDesignExamples() {
     </PageTemplate>
   );
 }
+</replit_final_file>
