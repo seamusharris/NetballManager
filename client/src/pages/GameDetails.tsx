@@ -478,13 +478,15 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
   // Helper to get player display name
   const getPlayerName = (playerId) => {
-    console.log('getPlayerName called with:', { playerId, playersArray: Array.isArray(players), playersLength: players?.length });
     if (!Array.isArray(players) || !playerId) {
-      console.log('getPlayerName: returning null - no players array or no playerId');
+      console.log('getPlayerName: returning null - players:', players?.length, 'playerId:', playerId);
       return null;
     }
     const player = players.find(p => p.id === playerId);
-    console.log('getPlayerName: found player:', player);
+    if (!player) {
+      console.log('getPlayerName: No player found for ID', playerId, 'in', players.length, 'players');
+      console.log('Available player IDs:', players.map(p => p.id));
+    }
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
 
