@@ -10,6 +10,7 @@ import { eq, and } from 'drizzle-orm';
  * /api/game/{gameId}/team/{teamId}/stats
  */
 export function registerGameStatsRoutes(app: Express) {
+  console.log('Registering game-centric stats routes...');
   
   // Get game data with team context
   app.get('/api/game/:gameId/team/:teamId', async (req: AuthenticatedRequest, res: Response) => {

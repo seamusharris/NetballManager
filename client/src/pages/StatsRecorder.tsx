@@ -273,8 +273,8 @@ export default function StatsRecorder() {
     );
   }
 
-  const teamName = game.homeTeamId === teamId ? game.homeTeamName : game.awayTeamName;
-  const opponentName = game.homeTeamId === teamId ? game.awayTeamName : game.homeTeamName;
+  const teamName = game.home_team_id === teamId ? game.home_team_name : game.away_team_name;
+  const opponentName = game.home_team_id === teamId ? game.away_team_name : game.home_team_name;
 
   return (
     <div className="container mx-auto p-6">
