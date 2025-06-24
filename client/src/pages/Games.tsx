@@ -71,10 +71,16 @@ export default function Games() {
     }
   }, []);
 
-  // Fetch teams first (needed for auto-select effect)
+  // Fetch teams - for club-wide view we need club teams, for team view we need all teams
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams', currentClubId],
-    queryFn: () => apiClient.get('/api/teams'),
+    queryKey: isClubWideGamesView ? ['clubs', currentClubId, 'teams'] : ['teams', currentClubId],
+    queryFn: () => {
+      if (isClubWideGamesView) {
+        return apiClient.get(`/api/clubs/${currentClubId}/teams`);
+      } else {
+        return apiClient.get('/api/teams');
+      }
+    },
     enabled: !!currentClubId,
   });
 
@@ -369,6 +375,8 @@ export default function Games() {
             showFilters={true}
             showActions={true}
             teams={teams}
+            centralizedStats={gameStatsMap}
+            centralizedScores={gameScoresMap}
             centralizedStats={gameStatsMap}
             centralizedScores={gameScoresMap}
             urlTeamId={effectiveTeamId} // Pass URL team ID for proper perspective
