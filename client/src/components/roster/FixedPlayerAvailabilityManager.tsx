@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 
 interface FixedPlayerAvailabilityManagerProps {
   gameId: number | null;
+  teamId?: number | null;
   players: Player[];
   games: Game[];
   hideGameSelection?: boolean;
@@ -20,6 +21,7 @@ interface FixedPlayerAvailabilityManagerProps {
 
 export default function FixedPlayerAvailabilityManager({
   gameId,
+  teamId,
   players,
   games,
   hideGameSelection = false
@@ -28,12 +30,16 @@ export default function FixedPlayerAvailabilityManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch availability data from API
+  // Fetch availability data from API using team-based endpoint when possible
   const { data: availabilityResponse, isLoading } = useQuery<{availablePlayerIds: number[]}>({
-    queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
+    queryKey: teamId ? ['availability', teamId, gameId] : CACHE_KEYS.playerAvailability(gameId || 0),
     queryFn: () => {
-      console.log('FixedPlayerAvailabilityManager: Fetching availability for game', gameId);
-      return apiClient.get(`/api/games/${gameId}/availability`);
+      console.log('FixedPlayerAvailabilityManager: Fetching availability for game', gameId, 'team', teamId);
+      if (teamId) {
+        return apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`);
+      } else {
+        return apiClient.get(`/api/games/${gameId}/availability`);
+      }
     },
     enabled: !!gameId,
     staleTime: 5 * 60 * 1000,
@@ -96,11 +102,17 @@ export default function FixedPlayerAvailabilityManager({
     // Track this save as pending
     setPendingSaves(prev => new Set(prev).add(gameId));
 
-    // Save to backend
+    // Save to backend using team-based endpoint when possible
     try {
-      await apiClient.post(`/api/games/${gameId}/availability`, {
-        availablePlayerIds: newAvailablePlayerIds
-      });
+      if (teamId) {
+        await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
+          availablePlayerIds: newAvailablePlayerIds
+        });
+      } else {
+        await apiClient.post(`/api/games/${gameId}/availability`, {
+          availablePlayerIds: newAvailablePlayerIds
+        });
+      }
 
       console.log(`Player ${playerId} availability saved successfully`);
       console.log('Invalidating cache for game', gameId);
@@ -146,9 +158,15 @@ export default function FixedPlayerAvailabilityManager({
     setPendingSaves(prev => new Set(prev).add(gameId));
 
     try {
-      await apiClient.post(`/api/games/${gameId}/availability`, {
-        availablePlayerIds: availableIds
-      });
+      if (teamId) {
+        await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
+          availablePlayerIds: availableIds
+        });
+      } else {
+        await apiClient.post(`/api/games/${gameId}/availability`, {
+          availablePlayerIds: availableIds
+        });
+      }
 
       toast({ title: "All players selected" });
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
@@ -182,9 +200,15 @@ export default function FixedPlayerAvailabilityManager({
     setPendingSaves(prev => new Set(prev).add(gameId));
 
     try {
-      await apiClient.post(`/api/games/${gameId}/availability`, {
-        availablePlayerIds: []
-      });
+      if (teamId) {
+        await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
+          availablePlayerIds: []
+        });
+      } else {
+        await apiClient.post(`/api/games/${gameId}/availability`, {
+          availablePlayerIds: []
+        });
+      }
 
       toast({ title: "All players cleared" });
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.playerAvailability(gameId) });
