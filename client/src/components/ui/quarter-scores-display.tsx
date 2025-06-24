@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 interface QuarterScore {
   quarter: number;
   teamScore: number;
-  opponentScore: number;
+  awayScore: number;
 }
 
 interface QuarterScoresDisplayProps {
@@ -14,7 +14,7 @@ interface QuarterScoresDisplayProps {
   size?: 'sm' | 'md' | 'lg';
   showCumulative?: boolean;
   teamName?: string;
-  opponentName?: string;
+  awayTeamName?: string;
 }
 
 export function QuarterScoresDisplay({
@@ -23,7 +23,7 @@ export function QuarterScoresDisplay({
   size = 'md',
   showCumulative = false,
   teamName = 'Team',
-  opponentName = 'Opponent'
+  awayTeamName = 'Away Team'
 }: QuarterScoresDisplayProps) {
   // Ensure we have 4 quarters
   const fullQuarterScores = [1, 2, 3, 4].map(quarter => {

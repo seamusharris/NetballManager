@@ -424,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await db.execute(sql`
             INSERT INTO game_statuses (
               id, name, display_name, points, opponent_points, team_goals, opponent_goals,
-              is_completed, allows_statistics, requires_opponent, color_class, sort_order, is_active
+              is_completed, allows_statistics, color_class, sort_order, is_active
             ) VALUES (
               ${status.id}, 
               ${status.name || "unknown"}, 
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ${status.opponentGoals || null}, 
               ${status.isCompleted !== false}, 
               ${status.allowsStatistics !== false}, 
-              ${status.requires_opponent !== false}, 
+              true, 
               ${status.colorClass || null}, 
               ${status.sortOrder || 0}, 
               ${status.isActive !== false}
@@ -655,7 +655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gameStatusesImported,
         teamsImported,
         playersImported,
-        opponentsImported,
+        // opponentsImported: removed
         gamesImported,
         rostersImported,
         statsImported,
@@ -675,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get all data from storage
       const players = await storage.getPlayers();
-      const opponents = await storage.getOpponents();
+      // Opponent system removed
       const games = await storage.getGames();
 
       // Get all rosters and game stats for each game
@@ -693,7 +693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the backup object
       const backupData = {
         players,
-        opponents,
+        // opponents: removed
         games,
         rosters,
         gameStats

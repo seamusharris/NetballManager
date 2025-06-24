@@ -176,7 +176,7 @@ export default function TeamAnalysis() {
 
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['opponents', currentClubId],
-    queryFn: () => apiClient.get('/api/opponents'),
+    // Opponent system removed - using away team data from games
     enabled: !!currentClubId,
   });
 
