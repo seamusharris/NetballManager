@@ -73,8 +73,8 @@ export default function OpponentPreparation() {
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', currentClubId],
-    queryFn: () => apiClient.get('/api/players'),
+    queryKey: ['players', currentClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
     enabled: !!currentClubId,
   });
 

@@ -78,10 +78,10 @@ export default function Dashboard() {
     });
   }, [currentTeamId, currentTeam, clubTeams]);
 
-  // Call ALL hooks first, before any conditional returns
+  // Players data using REST endpoint - Stage 4
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
-    queryKey: ['clubs', currentClubId, 'players'],
-    queryFn: () => apiClient.get('/api/players'),
+    queryKey: ['players', currentClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
     enabled: !!currentClubId && !!currentTeamId,
     staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
