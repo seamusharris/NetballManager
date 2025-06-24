@@ -489,9 +489,10 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     }
     const player = players.find(p => p.id === playerId);
     if (!player) {
-      console.log('getPlayerName: No player found for ID', playerId, 'in', players.length, 'players');
-      console.log('Available player IDs:', players.map(p => p.id));
-      console.log('Searching for players with ID', playerId, 'in:', players.slice(0, 3).map(p => ({id: p.id, name: p.displayName || 'no display name'})));
+      console.log('PLAYER NOT FOUND: ID', playerId, 'not in club players');
+      console.log('Available player IDs:', players.map(p => p.id).sort((a, b) => a - b));
+      console.log('Roster is requesting players:', [78, 61, 64], 'but club only has:', players.slice(0, 5).map(p => p.id));
+      return `Player ${playerId}`; // Show the ID when player not found
     } else {
       console.log('getPlayerName: Found player', player.displayName || player.firstName, 'for ID', playerId);
     }
@@ -1864,11 +1865,19 @@ export default function GameDetails() {
                       <p className="text-gray-500">Loading roster...</p>
                     </div>
                   ) : roster && roster.length > 0 ? (
-                    <CourtPositionRoster 
-                      roster={roster || []} 
-                      players={players || []}
-                      gameStats={gameStats || []}
-                    />
+                    <div>
+                      {console.log('About to render CourtPositionRoster with:', {
+                        rosterEntries: roster.length,
+                        playerCount: players.length,
+                        sampleRoster: roster.slice(0, 2),
+                        samplePlayers: players.slice(0, 2)
+                      })}
+                      <CourtPositionRoster 
+                        roster={roster || []} 
+                        players={players || []}
+                        gameStats={gameStats || []}
+                      />
+                    </div>
                   ) : (
                     <div className="text-center py-10 border rounded-lg bg-gray-50">
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
