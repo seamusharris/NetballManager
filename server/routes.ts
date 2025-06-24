@@ -25,6 +25,7 @@ import {
   requireClubAccess, 
   requireTeamAccess, 
   requireGameAccess,
+  requireTeamGameAccess,
   loadUserPermissions,
   requireAuth,
   standardAuth
@@ -2055,7 +2056,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- PLAYER AVAILABILITY API -----
 
-  // Get player availability for a specific game
+  // Team-based availability endpoint (NEW - Stage 5)
+  app.get("/api/teams/:teamId/games/:gameId/availability", requireTeamGameAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const teamId = Number(req.params.teamId);
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const availablePlayerIds = await playerAvailabilityStorage.getPlayerAvailabilityForGame(gameId, teamId);
+      res.json({ availablePlayerIds });
+    } catch (error) {
+      console.error('Error fetching team player availability:', error);
+      res.status(500).json({ message: "Failed to fetch player availability" });
+    }
+  });
+
+  // Get player availability for a specific game (LEGACY - will be deprecated)
   app.get("/api/games/:gameId/availability", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
@@ -2070,13 +2085,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Set player availability for a specific game
+  // Team-based set availability endpoint (NEW - Stage 5)
+  app.post("/api/teams/:teamId/games/:gameId/availability", requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const teamId = Number(req.params.teamId);
+      const { availablePlayerIds } = req.body;
+
+      if (!Array.isArray(availablePlayerIds)) {
+        return res.status(400).json({ message: "availablePlayerIds must be an array" });
+      }
+
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
+
+      if (success) {
+        res.json({ message: "Player availability updated successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to update player availability" });
+      }
+    } catch (error) {
+      console.error('Error setting team player availability:', error);
+      res.status(500).json({ message: "Failed to set player availability" });
+    }
+  });
+
+  // Set player availability for a specific game (LEGACY - will be deprecated)
   app.post("/api/games/:gameId/availability", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const { availablePlayerIds } = req.body;
 
-            if (!Array.isArray(availablePlayerIds)) {
+      if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
       }
 

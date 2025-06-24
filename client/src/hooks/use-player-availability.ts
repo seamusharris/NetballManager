@@ -14,10 +14,15 @@ interface SetAvailabilityData {
   availablePlayerIds: number[];
 }
 
-export function usePlayerAvailability(gameId: number) {
+export function usePlayerAvailability(gameId: number, teamId?: number) {
   return useQuery<PlayerAvailability>({
-    queryKey: CACHE_KEYS.availability(gameId),
-    queryFn: () => apiClient.get(`/api/games/${gameId}/availability`),
+    queryKey: ['availability', teamId, gameId],
+    queryFn: () => {
+      if (!teamId) {
+        return apiClient.get(`/api/games/${gameId}/availability`);
+      }
+      return apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`);
+    },
     ...CACHE_CONFIG.MEDIUM,
     enabled: !!gameId,
   });
@@ -32,24 +37,27 @@ export function useTeamAvailability(teamId: number, gameId: number) {
   });
 }
 
-export function useSetPlayerAvailability() {
+export function useSetPlayerAvailability(teamId?: number) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ gameId, data }: { gameId: number; data: SetAvailabilityData }) => {
-      return apiClient.post(`/api/games/${gameId}/availability`, data);
+      if (!teamId) {
+        return apiClient.post(`/api/games/${gameId}/availability`, data);
+      }
+      return apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data);
     },
     onSuccess: (_, { gameId }) => {
       // Invalidate availability cache for this game
-      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.availability(gameId) });
+      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
       
-      // Also invalidate any team-specific availability caches
+      // Also invalidate any related availability caches
       queryClient.invalidateQueries({
         predicate: (query) => {
           const key = query.queryKey;
           return Array.isArray(key) && 
-                 key[0] === 'team-availability' && 
+                 key[0] === 'availability' && 
                  key[2] === gameId;
         }
       });
