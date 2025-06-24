@@ -11,7 +11,7 @@ interface TeamSwitcherProps {
 }
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
-  const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
+  const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId, currentClub } = useClub();
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 
@@ -43,6 +43,28 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
   const handleTeamSelect = useCallback((teamId: string) => {
     console.log('TeamSwitcher: Team selected:', teamId);
+    
+    // Handle "all" selection
+    if (teamId === 'all') {
+      // Update internal value immediately
+      setInternalValue(teamId);
+      
+      // Clear team context
+      setCurrentTeamId(null);
+      
+      // Call external handler if provided
+      onTeamChange?.(null);
+      
+      // Navigate to club-wide view if currently on a team page
+      if (location.startsWith('/team/') && location.includes('/games')) {
+        const clubId = currentClub?.id;
+        if (clubId) {
+          setLocation(`/club/${clubId}/games`);
+        }
+      }
+      return;
+    }
+
     const numericTeamId = parseInt(teamId, 10);
 
     // Check if this is actually a change
@@ -79,7 +101,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         setLocation(`/team/${numericTeamId}`);
       }
     }
-  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, setInternalValue]);
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, setInternalValue, currentClub]);
 
 
   return (
@@ -95,7 +117,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         <SelectContent>
           {mode === 'optional' && (
             <SelectItem value="all">
-              <span className="text-muted-foreground">All teams (no filter)</span>
+              <span className="text-muted-foreground">All teams</span>
             </SelectItem>
           )}
           {validTeams.map((team) => (

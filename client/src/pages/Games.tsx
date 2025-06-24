@@ -307,22 +307,14 @@ export default function Games() {
         actions={
           <>
             {isClubWideGamesView ? (
-              <>
-                <div className="text-sm text-muted-foreground">
-                  Switch to Team View:
-                </div>
-                <TeamSwitcher 
-                  mode="optional" 
-                  onTeamChange={(teamId) => {
-                    if (teamId) {
-                      setLocation(`/team/${teamId}/games`);
-                    }
-                  }}
-                />
-                <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
-                  Showing all club games
-                </div>
-              </>
+              <TeamSwitcher 
+                mode="optional" 
+                onTeamChange={(teamId) => {
+                  if (teamId) {
+                    setLocation(`/team/${teamId}/games`);
+                  }
+                }}
+              />
             ) : (
               <>
                 <div className="text-sm text-muted-foreground">
