@@ -66,7 +66,7 @@ export default function GameResultCard({
     let perspective: number | 'club-wide' = currentTeamId || 'club-wide';
     
     // If we're in club-wide view but this game involves one of our teams, use that team's perspective
-    if (!currentTeamId && teams.length > 0) {
+    if (!currentTeamId && teams && teams.length > 0) {
       // Check if home team is from our club
       if (game.homeTeamId && teams.some(team => team.id === game.homeTeamId)) {
         perspective = game.homeTeamId;
