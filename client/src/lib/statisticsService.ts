@@ -145,6 +145,7 @@ class UnifiedStatisticsService {
    * Get stats for multiple games efficiently using batch endpoint
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
+    console.log(`🚀 BATCH STATS CALLED with games:`, gameIds);
     if (!gameIds || gameIds.length === 0) {
       return {};
     }
@@ -158,9 +159,9 @@ class UnifiedStatisticsService {
     try {
       // Use POST method with proper authentication via apiRequest
       const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
-      console.log(`Raw batch stats result:`, result);
+      console.log(`🔍 RAW BATCH STATS RESULT for games ${validIds}:`, JSON.stringify(result, null, 2));
       const processedResult = await this.processStatsWithOpponentPerspective(result || {});
-      console.log(`Processed batch stats result:`, processedResult);
+      console.log(`✅ PROCESSED BATCH STATS RESULT:`, JSON.stringify(processedResult, null, 2));
       return processedResult;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
@@ -173,6 +174,7 @@ class UnifiedStatisticsService {
    * Process stats to generate missing team perspectives from opponent data
    */
   private async processStatsWithOpponentPerspective(statsMap: Record<number, GameStat[]>): Promise<Record<number, GameStat[]>> {
+    console.log(`🎯 PROCESSING OPPONENT PERSPECTIVE for ${Object.keys(statsMap).length} games`);
     const processedStats: Record<number, GameStat[]> = {};
 
     for (const [gameIdStr, stats] of Object.entries(statsMap)) {
@@ -205,11 +207,12 @@ class UnifiedStatisticsService {
           teamStatsCompletion[teamId] = { hasOffensive, hasDefensive, total: teamStats.length };
         }
 
-        console.log(`Game ${gameId}: Team stats completion:`, teamStatsCompletion);
+        console.log(`🔍 Game ${gameId}: Team stats completion:`, teamStatsCompletion);
 
         // Generate missing stats for teams that have incomplete data
         for (const teamId of [homeTeamId, awayTeamId]) {
           const completion = teamStatsCompletion[teamId];
+          console.log(`📊 Team ${teamId}: hasOffensive=${completion.hasOffensive}, hasDefensive=${completion.hasDefensive}, total=${completion.total}`);
           if (!completion.hasOffensive || !completion.hasDefensive || completion.total < 8) {
             // This team needs opponent perspective stats
             const missingTeamId = teamId;

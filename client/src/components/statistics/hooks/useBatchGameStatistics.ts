@@ -30,8 +30,8 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     [sortedGameIds]
   );
 
-  // Include timestamp in key to force refresh when needed
-  const freshKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
+  // Include timestamp in key to force refresh when needed - updated version for opponent perspective
+  const freshKey = forceFresh ? `fresh-${Date.now()}` : 'cached-v3-opponent-perspective';
 
   // Fetch batch game statistics
   const { 
@@ -41,13 +41,16 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     refetch,
     isStale
   } = useQuery({
-    queryKey: ['batchGameStats', gameIdsKey, freshKey],
+    queryKey: ['batchGameStats-v3-opponent', gameIdsKey, freshKey],
     queryFn: async () => {
+      console.log('🎯 BATCH HOOK CALLING statisticsService.getBatchGameStats with:', sortedGameIds);
       if (!sortedGameIds || sortedGameIds.length === 0) {
         return {};
       }
 
-      return await statisticsService.getBatchGameStats(sortedGameIds);
+      const result = await statisticsService.getBatchGameStats(sortedGameIds);
+      console.log('🎯 BATCH HOOK RECEIVED RESULT:', result);
+      return result;
     },
     enabled: sortedGameIds.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
