@@ -431,7 +431,6 @@ export default function DragDropRosterManager({
       console.log('DragDropRosterManager: All roster entries saved successfully via batch');
 
       // Invalidate all related roster cache keys to ensure fresh data everywhere
-      console.log('Invalidating cache for game', gameId);
       queryClient.invalidateQueries({
         queryKey: ['rosters', gameId]
       });

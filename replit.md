@@ -112,6 +112,12 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: COMPLETED - Fixed roster synchronization between RosterGame and GamePreparation components
+  - Added proper roster data loading to GamePreparation using team-based endpoints `/api/teams/{teamId}/games/{gameId}/rosters`
+  - Fixed cache invalidation to update all related roster cache keys for proper UI synchronization
+  - Connected LineupTab to receive actual roster data instead of empty array
+  - Added refetch functionality to ensure UI stays synchronized after roster saves
+  - Roster changes now properly sync between roster management and lineup builder components
 - June 24, 2025: FIXED - Game preparation roster loading with consistent team-based endpoints
   - Made roster loading and saving endpoints fully consistent - both always use team-based approach
   - DragDropRosterManager requires teamId parameter and uses `/api/teams/{teamId}/games/{gameId}/rosters` for loading
