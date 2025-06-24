@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
+import { Helmet } from 'react-helmet'; // Added import
 
 export default function PlayerAvailability() {
   const params = useParams();
@@ -151,6 +152,9 @@ export default function PlayerAvailability() {
       subtitle={`Set player availability for ${selectedGame.homeTeamName} vs ${selectedGame.awayTeamName || 'BYE'}`}
       actions={pageActions}
     >
+      <Helmet>
+        <title>{`Player Availability - ${selectedGame?.homeTeamName || 'Team'} vs ${selectedGame?.awayTeamName || 'TBD'}`}</title>
+      </Helmet>
       {/* Breadcrumbs */}
       <DynamicBreadcrumbs />
       {selectedGame && (

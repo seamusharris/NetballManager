@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Users, Calendar } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
+import { Helmet } from 'react-helmet';
 
 export default function RosterGame() {
   const params = useParams();
@@ -164,6 +165,9 @@ export default function RosterGame() {
       breadcrumbs={<DynamicBreadcrumbs />}
       actions={pageActions}
     >
+      <Helmet>
+        <title>{`Roster Management - ${selectedGame?.homeTeamName || 'Team'} vs ${selectedGame?.awayTeamName || 'TBD'}`}</title>
+      </Helmet>
       {selectedGame && (
         <Card className="mb-6">
           <CardContent className="pt-6">

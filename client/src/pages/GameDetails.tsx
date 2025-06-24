@@ -1154,7 +1154,7 @@ export default function GameDetails() {
       // Targeted invalidation for immediate responsiveness
       queryClient.invalidateQueries({ queryKey: ['teamAwards', gameId, currentTeam?.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-      
+
       // Also invalidate games list to update award winner display
       queryClient.invalidateQueries({ 
         predicate: (query) => {
@@ -1162,7 +1162,7 @@ export default function GameDetails() {
           return Array.isArray(key) && key[0] === '/api/games' && key.length === 1;
         }
       });
-      
+
       toast({
         title: "Success",
         description: "Player of the match updated successfully"
@@ -1499,8 +1499,9 @@ export default function GameDetails() {
 
   return (
     <div className="container py-8 mx-auto">
-      <Helmet>
-        <title>Game Details | Netball Stats Tracker</title>
+      
+<Helmet>
+        <title>{`Game Details | Netball Stats Tracker`}</title>
       </Helmet>
 
       {/* Breadcrumbs */}
@@ -2083,7 +2084,7 @@ export default function GameDetails() {
                             // Targeted invalidation for immediate UI updates
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'team-notes'] });
                             queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-                            
+
                             // Update UI state immediately
                             setIsEditingNotes(false);
                             toast({
