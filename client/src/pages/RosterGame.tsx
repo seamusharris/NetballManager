@@ -35,16 +35,20 @@ export default function RosterGame() {
   // Fetch games using team-specific endpoint for roster context - Stage 5
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
     queryKey: ['games', teamId, 'team-specific'],
-    queryFn: () => {
+    queryFn: async () => {
       if (teamId) {
-        return apiRequest('GET', `/api/teams/${teamId}/games`) as Promise<Game[]>;
+        console.log(`RosterGame: Fetching games for team ${teamId}`);
+        const result = await apiRequest('GET', `/api/teams/${teamId}/games`) as Promise<Game[]>;
+        console.log(`RosterGame: Team ${teamId} games response:`, result?.length, 'games');
+        return result;
       } else {
         // Fallback to club games if no team context
+        console.log(`RosterGame: Fetching club games for club ${currentClub?.id}`);
         return apiClient.get(`/api/clubs/${currentClub?.id}/games`);
       }
     },
     retry: 2,
-    enabled: !!currentClub?.id,
+    enabled: !!currentClub?.id && !!teamId,
     staleTime: 30000 // 30 seconds
   });
 
