@@ -120,7 +120,7 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
         {upcomingGames.length > 0 ? (
           <div className="space-y-6">
             {upcomingGames.map((game, index) => (
-              <Link key={game.id} href={`/game/${game.id}`}>
+              <Link key={game.id} href={currentTeam?.id ? `/team/${currentTeam.id}/games/${game.id}` : `/game/${game.id}`}>
                 <div className={`flex justify-between items-center p-4 mb-6 mt-2 border-l-4 border-t border-r border-b rounded cursor-pointer hover:bg-blue-100 transition-colors ${
                     index === 0 ? 'border-blue-500 bg-blue-50 border-t-blue-500 border-r-blue-500 border-b-blue-500' : 'border-blue-400 bg-blue-50 border-t-blue-400 border-r-blue-400 border-b-blue-400'
                   }`}
@@ -150,14 +150,14 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
         ) : (
           <div className="text-center py-6">
             <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
-            <Link href={currentTeam ? `/games/${currentTeam.id}` : "/games"} className="text-accent hover:underline">
+            <Link href={currentTeam ? `/team/${currentTeam.id}/games` : "/games"} className="text-accent hover:underline">
               Go to Games List
             </Link>
           </div>
         )}
 
         {upcomingGames.length > 5 ? (
-          <ViewMoreButton href={`/games/${currentTeam?.id}?status=upcoming`}>
+          <ViewMoreButton href={currentTeam?.id ? `/team/${currentTeam.id}/games?status=upcoming` : "/games?status=upcoming"}>
             View more →
           </ViewMoreButton>
         ) : (

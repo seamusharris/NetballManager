@@ -198,7 +198,7 @@ export default function Statistics() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/games')}
+              onClick={() => navigate(currentTeamId ? `/team/${currentTeamId}/games` : '/games')}
               className="hidden sm:flex items-center"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -212,7 +212,7 @@ export default function Statistics() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate('/games')}
+                onClick={() => navigate(currentTeamId ? `/team/${currentTeamId}/games` : '/games')}
                 className="sm:hidden"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -251,7 +251,7 @@ export default function Statistics() {
               </p>
               <button 
                 className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
-                onClick={() => window.location.href = '/games'}
+                onClick={() => navigate(currentTeamId ? `/team/${currentTeamId}/games` : '/games')}
               >
                 Go to Games List
               </button>
