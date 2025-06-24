@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -66,22 +65,22 @@ export default function AllPlayersDesignExamples() {
       "Zara Ahmed", "Alice Cooper", "Beth Davis", "Claire Evans", "Diana Foster",
       "Elena Gonzalez", "Faith Harris", "Gina Jackson", "Hope Kelly", "Iris Lopez"
     ];
-    
+
     const positions = [
       ["GS"], ["GA"], ["WA"], ["C"], ["WD"], ["GD"], ["GK"],
       ["GS", "GA"], ["GA", "WA"], ["WA", "C"], ["C", "WD"], ["WD", "GD"], ["GD", "GK"],
       ["GS", "GA", "WA"], ["GA", "WA", "C"], ["WA", "C", "WD"], ["C", "WD", "GD"], ["WD", "GD", "GK"]
     ];
-    
+
     const colors = [
       "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-red-500",
       "bg-pink-500", "bg-indigo-500", "bg-teal-500", "bg-amber-500", "bg-emerald-500",
       "bg-cyan-500", "bg-rose-500", "bg-violet-500", "bg-lime-500", "bg-yellow-500"
     ];
-    
+
     const teams = ["Lightning Bolts", "Storm Eagles", "Fire Hawks", "Thunder Cats", "Ice Dragons", null];
     const statuses = ["Active", "Inactive", "Injured", "On Loan", "New"];
-    
+
     return Array.from({ length: count }, (_, i) => ({
       id: i + 1,
       displayName: names[i % names.length] + (i > names.length - 1 ? ` ${Math.floor(i / names.length) + 1}` : ''),
@@ -143,9 +142,102 @@ export default function AllPlayersDesignExamples() {
                          (filterStatus === 'inactive' && !player.active) ||
                          player.status.toLowerCase() === filterStatus.toLowerCase();
     const matchesTeam = filterTeam === 'all' || player.team === filterTeam;
-    
+
     return matchesSearch && matchesStatus && matchesTeam;
   });
+
+  // Helper functions to generate color variations
+  const getPlayerColorHex = (colorClass: string) => {
+    // Basic implementation - replace with a more robust color utility if needed
+    const colorName = colorClass.replace('bg-', '').replace('-500', '');
+    switch (colorName) {
+      case 'blue': return '#3b82f6';
+      case 'green': return '#10b981';
+      case 'purple': return '#8b5cf6';
+      case 'orange': return '#f97316';
+      case 'red': return '#ef4444';
+      case 'pink': return '#ec4899';
+      case 'indigo': return '#6366f1';
+      case 'teal': return '#14b8a6';
+      case 'amber': return '#f59e0b';
+      case 'emerald': return '#10b981';
+      case 'cyan': return '#06b6d4';
+      case 'rose': return '#f43f5e';
+      case 'violet': return '#8b5cf6';
+      case 'lime': return '#84cc16';
+      case 'yellow': return '#eab308';
+      default: return '#6b7280'; // Default gray
+    }
+  };
+
+  const getDarkerColorHex = (colorClass: string) => {
+    // Basic implementation - adjust as needed
+    const colorName = colorClass.replace('bg-', '').replace('-500', '');
+    switch (colorName) {
+      case 'blue': return '#2563eb';
+      case 'green': return '#059669';
+      case 'purple': return '#7c3aed';
+      case 'orange': return '#c2410c';
+      case 'red': return '#dc2626';
+      case 'pink': return '#db2777';
+      case 'indigo': return '#4f46e5';
+      case 'teal': return '#0e7490';
+      case 'amber': return '#d97706';
+      case 'emerald': return '#065f46';
+      case 'cyan': return '#0891b2';
+      case 'rose': return '#be123c';
+      case 'violet': return '#6d28d9';
+      case 'lime': return '#65a30d';
+      case 'yellow': return '#ca8a04';
+      default: return '#4b5563'; // Default darker gray
+    }
+  };
+
+  const getLighterColorHex = (colorClass: string) => {
+    // Basic implementation - adjust as needed
+    const colorName = colorClass.replace('bg-', '').replace('-500', '');
+    switch (colorName) {
+      case 'blue': return '#eff6ff';
+      case 'green': return '#f0fdf4';
+      case 'purple': return '#f5f3ff';
+      case 'orange': return '#fff7ed';
+      case 'red': return '#fee2e2';
+      case 'pink': return '#fdf2f8';
+      case 'indigo': return '#eef2ff';
+      case 'teal': return '#ccfbf1';
+      case 'amber': return '#fef3c7';
+      case 'emerald': return '#dcfce7';
+      case 'cyan': return '#e0f2fe';
+      case 'rose': return '#ffe4e6';
+      case 'violet': return '#ede9fe';
+      case 'lime': return '#f7fee7';
+      case 'yellow': return '#fefce8';
+      default: return '#f3f4f6'; // Default lighter gray
+    }
+  };
+
+  const getMediumColorHex = (colorClass: string) => {
+    // Basic implementation - adjust as needed
+    const colorName = colorClass.replace('bg-', '').replace('-500', '');
+    switch (colorName) {
+      case 'blue': return '#dbeafe';
+      case 'green': return '#bbf7d0';
+      case 'purple': return '#ddd6fe';
+      case 'orange': return '#fed7aa';
+      case 'red': return '#fecaca';
+      case 'pink': return '#f9a8d4';
+      case 'indigo': return '#c4b5fd';
+      case 'teal': return '#a7f3d0';
+      case 'amber': return '#fde68a';
+      case 'emerald': return '#a3e635';
+      case 'cyan': return '#7dd3fc';
+      case 'rose': return '#fda4af';
+      case 'violet': return '#c084fc';
+      case 'lime': return '#bef264';
+      case 'yellow': return '#fef08a';
+      default: return '#e5e7eb'; // Default medium gray
+    }
+  };
 
   return (
     <PageTemplate 
@@ -248,30 +340,38 @@ export default function AllPlayersDesignExamples() {
 
               {/* Player Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredPlayers.slice(0, 16).map((player) => (
-                  <div key={player.id} className="relative">
-                    <div 
-                      className="absolute top-2 right-2 w-5 h-5 rounded border-2 bg-white cursor-pointer z-10 flex items-center justify-center"
-                      style={{ borderColor: selectedPlayers.has(player.id) ? '#3b82f6' : '#d1d5db' }}
-                      onClick={() => togglePlayerSelection(player.id)}
-                    >
-                      {selectedPlayers.has(player.id) && (
-                        <CheckCircle2 className="h-3 w-3 text-blue-600" />
-                      )}
+                {filteredPlayers.slice(0, 16).map((player) => {
+                  const playerColorHex = getPlayerColorHex(player.avatarColor);
+                  const darkerBorderColor = getDarkerColorHex(player.avatarColor);
+                  const lightBackgroundColor = getLighterColorHex(player.avatarColor);
+                  const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
+
+                  return (
+                    <div key={player.id} className="relative">
+                      <div 
+                        className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer z-10 text-white transition-all"
+                        style={{ 
+                          backgroundColor: selectedPlayers.has(player.id) ? darkerBorderColor : 'transparent', 
+                          border: selectedPlayers.has(player.id) ? 'none' : `2px solid ${playerColorHex}80` 
+                        }}
+                        onClick={() => togglePlayerSelection(player.id)}
+                      >
+                        {selectedPlayers.has(player.id) && '✓'}
+                      </div>
+                      <PlayerBox
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="hover:shadow-lg transition-all duration-200 cursor-pointer"
+                        style={{
+                          borderColor: playerColorHex,
+                          backgroundColor: selectedPlayers.has(player.id) ? mediumBackgroundColor : lightBackgroundColor
+                        }}
+                        onClick={() => togglePlayerSelection(player.id)}
+                      />
                     </div>
-                    <PlayerBox
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="hover:shadow-lg transition-all duration-200 cursor-pointer"
-                      style={{
-                        borderColor: player.active ? '#10b981' : '#6b7280',
-                        backgroundColor: selectedPlayers.has(player.id) ? '#3b82f615' : '#ffffff'
-                      }}
-                      onClick={() => togglePlayerSelection(player.id)}
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {filteredPlayers.length > 16 && (
@@ -421,7 +521,7 @@ export default function AllPlayersDesignExamples() {
                     <h3 className="text-lg font-semibold">Available Players</h3>
                     <Badge variant="outline">{filteredPlayers.filter(p => !p.team).length} unassigned</Badge>
                   </div>
-                  
+
                   <div className="mb-4">
                     <Input
                       placeholder="Search available players..."
@@ -862,7 +962,7 @@ export default function AllPlayersDesignExamples() {
                           <div className="font-medium">{player.goals}</div>
                         </div>
                       </div>
-                      
+
                       <div className="pt-2 border-t">
                         <div className="flex items-center gap-2 text-xs text-gray-600">
                           <Mail className="h-3 w-3" />
