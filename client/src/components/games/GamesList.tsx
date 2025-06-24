@@ -470,6 +470,7 @@ export function GamesList({
                     showLink={true}
                     currentTeamId={urlTeamId || currentTeamId}
                     clubTeams={teams || []}
+                    currentClubId={currentClub?.id}
                   />
 
                   {/* Action buttons overlay */}

@@ -31,6 +31,7 @@ interface GameResultCardProps {
   compact?: boolean;
   currentTeamId?: number;
   clubTeams?: any[];
+  currentClubId?: number;
 }
 
 export default function GameResultCard({ 
@@ -47,17 +48,18 @@ export default function GameResultCard({
   showQuarterScores = false,
   compact = false,
   currentTeamId: propCurrentTeamId,
-  clubTeams = []
+  clubTeams = [],
+  currentClubId: propCurrentClubId
 }: GameResultCardProps) {
   const { currentTeamId, currentClubId, currentClubTeams } = useClub();
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
   
-  // Extract club ID from URL - more reliable than context
+  // Extract club ID from URL or use prop - more reliable than context
   const urlClubId = useMemo(() => {
     const clubMatch = location.match(/\/club\/(\d+)/);
-    return clubMatch ? parseInt(clubMatch[1]) : currentClubId;
-  }, [location, currentClubId]);
+    return clubMatch ? parseInt(clubMatch[1]) : (propCurrentClubId || currentClubId);
+  }, [location, propCurrentClubId, currentClubId]);
   const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data
