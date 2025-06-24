@@ -952,7 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Club CRUD routes - removed duplicate endpoint (enhanced version below includes statistics)
 
-  app.post("/api/clubs", async (req, res) => {
+  app.post("/api/club", async (req, res) => {
     try {
       const { 
         name, 
@@ -1003,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/clubs/:id", async (req, res) => {
+  app.patch("/api/club/:id", async (req, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
       const { 
@@ -1067,7 +1067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/clubs/:id", async (req, res) => {
+  app.delete("/api/club/:id", async (req, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
 
@@ -2523,7 +2523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Club details endpoint
-  app.get('/api/clubs/:clubId', async (req: any, res) => {
+  app.get('/api/club/:clubId', async (req: any, res) => {
     try {
       let clubId;
 
@@ -2854,7 +2854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }  });
 
   // Add player to a club
-  app.post("/api/clubs/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/club/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const playerId = parseInt(req.params.playerId);
@@ -2874,7 +2874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Remove player from a club
-  app.delete("/api/clubs/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/club/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const playerId = parseInt(req.params.playerId);
@@ -2893,7 +2893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all players directly associated with a club
-  app.get("/api/clubs/:clubId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/club/:clubId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const players = await storage.getPlayersByClub(clubId);

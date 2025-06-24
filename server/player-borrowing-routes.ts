@@ -16,7 +16,7 @@ const borrowPlayerSchema = z.object({
 
 export function registerPlayerBorrowingRoutes(app: Express) {
   // Get all borrowing requests within the current club
-  app.get('/api/clubs/:clubId/player-borrowing', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/club/:clubId/player-borrowing', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const clubId = parseInt(req.params.clubId);
       

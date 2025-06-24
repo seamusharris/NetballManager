@@ -155,7 +155,7 @@ export function registerGamePermissionsRoutes(app: Express) {
   });
 
   // Get all clubs that can be granted permissions
-  app.get('/api/clubs/available-for-permissions', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/club/available-for-permissions', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const currentClubId = req.user?.currentClubId;
       

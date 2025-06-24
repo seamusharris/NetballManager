@@ -28,7 +28,7 @@ const updateUserRoleSchema = z.object({
 
 export function registerUserManagementRoutes(app: Express) {
   // Get all users in the current club
-  app.get('/api/clubs/:clubId/users', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/club/:clubId/users', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const clubId = parseInt(req.params.clubId);
       
@@ -172,7 +172,7 @@ export function registerUserManagementRoutes(app: Express) {
   });
 
   // Get available users (not in current club)
-  app.get('/api/clubs/:clubId/users/available', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/club/:clubId/users/available', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const clubId = parseInt(req.params.clubId);
       
