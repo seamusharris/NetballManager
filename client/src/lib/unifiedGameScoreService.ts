@@ -277,10 +277,15 @@ export class UnifiedGameScoreService {
     // Sort quarter breakdown by quarter number
     quarterBreakdown.sort((a, b) => a.quarter - b.quarter);
 
+    const result = this.determineResult(ourTotalScore, theirTotalScore);
+    
+    // Debug logging for score calculation issues
+    console.log(`UnifiedGameScore DEBUG - Game ${game.id}, Team ${perspective}: ${ourTotalScore}-${theirTotalScore} = ${result}`);
+    
     return {
       ourScore: ourTotalScore,
       theirScore: theirTotalScore,
-      result: this.determineResult(ourTotalScore, theirTotalScore),
+      result,
       quarterBreakdown,
       hasValidScore: true,
       scoreSource: 'official'

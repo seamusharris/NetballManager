@@ -109,23 +109,8 @@ export default function GameResultCard({
     return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
-  const getGameResultFromPerspective = () => {
-    if (!scores || !scores.finalScore || !currentTeamId) {
-      return scores?.result || 'unknown';
-    }
-
-    // The memoized scores calculation already handles perspective correctly
-    // finalScore.for = our score, finalScore.against = their score
-    const ourScore = scores.finalScore.for;
-    const theirScore = scores.finalScore.against;
-
-    if (ourScore > theirScore) return 'win';
-    if (ourScore < theirScore) return 'loss';
-    return 'draw';
-  };
-
-  // Get result styling using perspective-aware calculation
-  const actualResult = getGameResultFromPerspective();
+  // Use the unified service result directly - it already handles perspective correctly
+  const actualResult = scoreResult.result;
   const isWin = actualResult === 'win';
   const isLoss = actualResult === 'loss';
   const isDraw = actualResult === 'draw';
