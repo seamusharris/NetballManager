@@ -242,6 +242,8 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
     currentTeamId,
     hasCurrentClub: !!currentClub,
     userClubsCount: userClubs.length,
+    clubTeamsCount: clubTeams?.length || 0,
+    clubTeams: clubTeams?.map(t => ({ id: t.id, name: t.name })) || [],
     isLoading: contextValue.isLoading,
     isInitialized,
     isLoadingClubs,

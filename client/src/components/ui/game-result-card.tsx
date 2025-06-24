@@ -71,11 +71,14 @@ export default function GameResultCard({
       console.log(`🔍 MATRIX GAME ${game.id} - Game result card calculation:`, {
         perspective,
         clubTeamIds,
-        currentClubTeams,
+        currentClubTeamsLength: currentClubTeams?.length || 0,
+        currentClubTeamsData: currentClubTeams?.map(t => ({ id: t.id, name: t.name })) || [],
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
         currentClubId,
-        centralizedScoresCount: centralizedScores?.length || 0
+        centralizedScoresCount: centralizedScores?.length || 0,
+        matrixIsAway: game.awayTeamId === 1,
+        shouldShowRed: game.awayTeamId === 1 && clubTeamIds.includes(1)
       });
     }
     
