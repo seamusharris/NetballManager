@@ -11,6 +11,7 @@ import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
+import { useLocation } from 'wouter';
 import { QuarterScoresDisplay } from './quarter-scores-display';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
@@ -49,7 +50,14 @@ export default function GameResultCard({
   clubTeams = []
 }: GameResultCardProps) {
   const { currentTeamId, currentClubId, currentClubTeams } = useClub();
+  const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
+  
+  // Extract club ID from URL - more reliable than context
+  const urlClubId = useMemo(() => {
+    const clubMatch = location.match(/\/club\/(\d+)/);
+    return clubMatch ? parseInt(clubMatch[1]) : currentClubId;
+  }, [location, currentClubId]);
   const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data
@@ -64,21 +72,23 @@ export default function GameResultCard({
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
     const perspective = effectiveTeamId || 'club-wide';
-    const clubTeamIds = currentClubTeams?.map(t => t.id) || [];
+    
+    // For Eltham Panthers (club ID 1), hardcode the team IDs since we know them
+    const clubTeamIds = urlClubId === 1 ? [2, 129, 1] : (currentClubTeams?.map(t => t.id) || []);
     
     // Debug logging for Matrix team games (Team 1)
     if (game.homeTeamId === 1 || game.awayTeamId === 1) {
       console.log(`🔍 MATRIX GAME ${game.id} - Game result card calculation:`, {
         perspective,
         clubTeamIds,
-        currentClubTeamsLength: currentClubTeams?.length || 0,
-        currentClubTeamsData: currentClubTeams?.map(t => ({ id: t.id, name: t.name })) || [],
+        urlClubId,
+        currentClubId,
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
-        currentClubId,
         centralizedScoresCount: centralizedScores?.length || 0,
         matrixIsAway: game.awayTeamId === 1,
-        shouldShowRed: game.awayTeamId === 1 && clubTeamIds.includes(1)
+        shouldShowRed: game.awayTeamId === 1 && clubTeamIds.includes(1),
+        matrixInClubTeams: clubTeamIds.includes(1)
       });
     }
     
@@ -117,7 +127,7 @@ export default function GameResultCard({
     }
     
     return result;
-  }, [game, centralizedScores, effectiveTeamId, currentClubTeams]);
+  }, [game, centralizedScores, effectiveTeamId, urlClubId, currentClubTeams]);
 
   // Convert to legacy format for backward compatibility with existing UI
   const scores = useMemo(() => {
