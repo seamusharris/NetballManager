@@ -213,6 +213,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
     currentClubId,
     currentTeamId,
     currentTeam,
+    currentClubTeams: clubTeams || [],
     userClubs,
     clubTeams,
     switchClub,

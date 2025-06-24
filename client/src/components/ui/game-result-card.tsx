@@ -71,6 +71,7 @@ export default function GameResultCard({
       console.log(`🔍 MATRIX GAME ${game.id} - Game result card calculation:`, {
         perspective,
         clubTeamIds,
+        currentClubTeams,
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
         currentClubId,

@@ -449,8 +449,11 @@ export class UnifiedGameScoreService {
           homeTeamId: game.homeTeamId,
           awayTeamId: game.awayTeamId,
           clubTeamIds,
+          clubTeamIdsLength: clubTeamIds.length,
           homeIsOurs,
-          awayIsOurs
+          awayIsOurs,
+          perspective,
+          shouldUseMatrix: awayIsOurs && game.awayTeamId === 1
         });
       }
       
