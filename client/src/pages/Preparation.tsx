@@ -263,6 +263,7 @@ const Preparation = () => {
                 availablePlayers={playersData.filter((p: any) => availablePlayerIds.includes(p.id))}
                 gameInfo={selectedGameInfo}
                 gameId={selectedGameId}
+                teamId={currentTeamId}
                 onRosterChange={setRosterAssignments}
                 onRosterSaved={() => {
                   toast({

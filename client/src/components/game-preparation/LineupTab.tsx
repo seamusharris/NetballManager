@@ -24,6 +24,7 @@ interface LineupTabProps {
   players: Player[];
   rosters: Roster[];
   onRosterUpdate: (rosters: Roster[]) => void;
+  teamId?: number;
 }
 
 // Using boolean-based availability format to match PlayerAvailabilityManager
@@ -42,7 +43,7 @@ interface LineupRecommendation {
 
 const POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabProps) {
+export function LineupTab({ game, players, rosters, onRosterUpdate, teamId }: LineupTabProps) {
   const [activeStep, setActiveStep] = useState<'availability' | 'recommendations' | 'builder' | 'assignments'>('availability');
   const [playerAvailability, setPlayerAvailability] = useState<PlayerAvailabilityData>({});
   const [recommendations, setRecommendations] = useState<LineupRecommendation[]>([]);
@@ -414,6 +415,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
                   time: game.time
                 }}
                 gameId={game.id}
+                teamId={teamId}
                 onRosterChange={setSelectedRoster}
                 onRosterSaved={() => {
                   toast({
