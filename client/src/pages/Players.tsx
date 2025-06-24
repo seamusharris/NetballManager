@@ -161,10 +161,28 @@ export default function Players() {
 
       return { previousTeamPlayers, previousAvailablePlayers };
     },
-    onSuccess: () => {
+    onSuccess: (data, playerId) => {
+      // Clear any optimistic state since the real update happened
+      setOptimisticallyAddedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+      setOptimisticallyRemovedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
       toast({ title: 'Success', description: 'Player added to team' });
     },
     onError: (error: any, variables, context) => {
+      // Clear optimistic state and revert cache
+      setOptimisticallyAddedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables);
+        return newSet;
+      });
+      
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
         queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
@@ -273,10 +291,28 @@ export default function Players() {
 
       return { previousTeamPlayers, previousAvailablePlayers };
     },
-    onSuccess: () => {
+    onSuccess: (data, playerId) => {
+      // Clear any optimistic state since the real update happened
+      setOptimisticallyRemovedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+      setOptimisticallyAddedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: (error: any, variables, context) => {
+      // Clear optimistic state and revert cache
+      setOptimisticallyRemovedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables);
+        return newSet;
+      });
+      
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
         queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
