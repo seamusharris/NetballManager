@@ -404,13 +404,21 @@ export class UnifiedGameScoreService {
       });
     }
 
+    // Check if this is an inter-club game
+    const isInterClubGame = clubTeamIds.length > 0 && 
+      clubTeamIds.includes(game.homeTeamId || 0) && 
+      clubTeamIds.includes(game.awayTeamId || 0);
+
+    const result = this.determineResult(ourScore, theirScore, isInterClubGame);
+    
     return {
       ourScore,
       theirScore,
-      result: this.determineResult(ourScore, theirScore),
+      result: isInterClubGame ? 'inter-club' : result,
       quarterBreakdown: [],
       hasValidScore: true,
-      scoreSource: 'status'
+      scoreSource: 'status',
+      isInterClubGame
     };
   }
 

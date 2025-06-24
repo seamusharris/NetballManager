@@ -250,9 +250,9 @@ export default function GameResultCard({
       let homeScore = 0;
       let awayScore = 0;
 
-      if (currentTeamId) {
+      if (effectiveTeamId) {
         // Team perspective: convert "for/against" to "home/away" display
-        if (game.homeTeamId === currentTeamId) {
+        if (game.homeTeamId === effectiveTeamId) {
           // Current team is home - for=home, against=away
           homeScore = scores.finalScore.for;
           awayScore = scores.finalScore.against;
