@@ -318,6 +318,19 @@ export class UnifiedGameScoreService {
     let ourScore = 0;
     let theirScore = 0;
 
+    // Debug logging for Team 128 (Wallabies)
+    if (perspective === 128) {
+      console.log(`🔍 UNIFIED SERVICE - Team 128 status scores for game ${game.id}:`, {
+        perspective,
+        homeTeamId: game.homeTeamId,
+        awayTeamId: game.awayTeamId,
+        statusTeamGoals: game.statusTeamGoals,
+        statusOpponentGoals: game.statusOpponentGoals,
+        isHomeTeam: game.homeTeamId === perspective,
+        isAwayTeam: game.awayTeamId === perspective
+      });
+    }
+
     if (typeof perspective === 'number') {
       // Team perspective - determine if we're home or away
       if (game.homeTeamId === perspective) {
@@ -344,6 +357,17 @@ export class UnifiedGameScoreService {
       // Club-wide perspective - use home/away format
       ourScore = game.statusTeamGoals;
       theirScore = game.statusOpponentGoals;
+    }
+
+    // Debug logging for Team 128 result
+    if (perspective === 128) {
+      const result = this.determineResult(ourScore, theirScore);
+      console.log(`🔍 UNIFIED SERVICE - Team 128 final calculation:`, {
+        ourScore,
+        theirScore,
+        result,
+        shouldBeRed: result === 'loss'
+      });
     }
 
     return {

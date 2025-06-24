@@ -63,28 +63,26 @@ export default function GameResultCard({
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
     const perspective = currentTeamId || 'club-wide';
-    // Use unified service that correctly handles team perspective
-    const result = UnifiedGameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
-    
-    // Convert to format expected by existing components
-    return {
-      finalScore: {
-        for: result.ourScore,
-        against: result.theirScore
-      },
-      result: result.result,
-      quarterScores: result.quarterBreakdown.map(q => ({
-        quarter: q.quarter,
-        teamScore: q.ourScore,
-        opponentScore: q.theirScore
-      })),
-      hasValidScore: result.hasValidScore,
-      scoreSource: result.scoreSource
-    };
+    return UnifiedGameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
   }, [game, centralizedScores, currentTeamId]);
 
-  // Use scoreResult directly instead of duplicate conversion
-  const scores = scoreResult;
+  // Convert to legacy format for backward compatibility with existing UI
+  const scores = useMemo(() => {
+    if (!scoreResult.hasValidScore) {
+      return null;
+    }
+    
+    return {
+      finalScore: {
+        for: scoreResult.ourScore,
+        against: scoreResult.theirScore
+      },
+      result: scoreResult.result,
+      quarterBreakdown: scoreResult.quarterBreakdown,
+      hasValidScore: scoreResult.hasValidScore,
+      scoreSource: scoreResult.scoreSource
+    };
+  }, [scoreResult]);
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
@@ -295,8 +293,8 @@ export default function GameResultCard({
             </div>
           ) : scores ? (
             <ScoreBadge 
-              teamScore={scores.ourScore} 
-              opponentScore={scores.theirScore}
+              teamScore={scores.finalScore.for} 
+              opponentScore={scores.finalScore.against}
               result={scores.result}
             />
           ) : (
