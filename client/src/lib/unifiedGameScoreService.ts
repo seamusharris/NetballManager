@@ -244,6 +244,15 @@ export class UnifiedGameScoreService {
 
     // Determine team IDs based on perspective
     const { ourTeamId, theirTeamId } = this.getTeamIds(game, perspective, clubTeamIds);
+    
+    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} official scores calculation:`, {
+      ourTeamId,
+      theirTeamId,
+      homeTeamId: game.homeTeamId,
+      awayTeamId: game.awayTeamId,
+      scoresCount: officialScores.length,
+      perspective
+    });
 
     // Debug logging for Team 128 games regardless of perspective
     if (game.homeTeamId === 128 || game.awayTeamId === 128) {
@@ -310,20 +319,14 @@ export class UnifiedGameScoreService {
 
     const result = this.determineResult(ourTotalScore, theirTotalScore, isInterClubGame);
     
-    // Debug logging for Team 128 result from official scores
-    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
-      console.log(`🔍 UNIFIED SERVICE - Team 128 official scores final calculation:`, {
-        perspective,
-        ourTotalScore,
-        theirTotalScore,
-        result,
-        shouldBeRed: result === 'loss',
-        team128IsHome: game.homeTeamId === 128,
-        team128IsAway: game.awayTeamId === 128
-      });
-    }
+    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} OFFICIAL final calculation:`, {
+      ourTotalScore,
+      theirTotalScore,
+      result,
+      hasValidScore: true,
+      quarterBreakdown: quarterBreakdown.length
+    });
 
-    
     return {
       ourScore: ourTotalScore,
       theirScore: theirTotalScore,
