@@ -240,6 +240,8 @@ export class UnifiedGameScoreService {
     // Determine team IDs based on perspective
     const { ourTeamId, theirTeamId } = this.getTeamIds(game, perspective);
 
+
+
     // Calculate totals and quarter breakdown
     Object.keys(scoresByQuarter).forEach(quarterStr => {
       const quarter = parseInt(quarterStr);
@@ -250,6 +252,8 @@ export class UnifiedGameScoreService {
 
       ourTotalScore += ourQuarterScore;
       theirTotalScore += theirQuarterScore;
+
+
 
       quarterBreakdown.push({
         quarter,
@@ -348,11 +352,17 @@ export class UnifiedGameScoreService {
 
   private static getTeamIds(game: Game, perspective: number | 'club-wide'): { ourTeamId: number; theirTeamId: number } {
     if (typeof perspective === 'number') {
-      // Team perspective
+      // Team perspective - ensure perspective team is always returned as ourTeamId
       if (game.homeTeamId === perspective) {
         return { ourTeamId: perspective, theirTeamId: game.awayTeamId || 0 };
       } else if (game.awayTeamId === perspective) {
         return { ourTeamId: perspective, theirTeamId: game.homeTeamId || 0 };
+      } else {
+        // Perspective team not in this game - fallback to home vs away
+        return { 
+          ourTeamId: game.homeTeamId || 0, 
+          theirTeamId: game.awayTeamId || 0 
+        };
       }
     }
 
