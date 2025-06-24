@@ -148,7 +148,7 @@ export default function PlayerAvailability() {
       breadcrumbs={<DynamicBreadcrumbs />}
     >
       <Helmet>
-        <title>Player Availability - Game {gameId} | Netball Manager</title>
+        <title>{`Player Availability - Game ${gameId} | Netball Manager`}</title>
         <meta name="description" content={`Manage player availability for game ${gameId}`} />
       </Helmet>
       
