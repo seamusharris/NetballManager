@@ -284,19 +284,17 @@ export default function DragDropRosterManager({
 
   const queryClient = useQueryClient();
 
-  // Fetch existing roster data using team-specific endpoint when team context is available
+  // Fetch existing roster data using team-specific endpoint
   const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
-    queryKey: teamId ? ['teams', teamId, 'games', gameId, 'roster'] : ['rosters', gameId],
+    queryKey: ['teams', teamId, 'games', gameId, 'roster'],
     queryFn: () => {
-      if (teamId) {
-        console.log(`DragDropRosterManager: Loading roster via team endpoint /api/teams/${teamId}/games/${gameId}/rosters`);
-        return apiClient.get(`/api/teams/${teamId}/games/${gameId}/rosters`);
-      } else {
-        console.log(`DragDropRosterManager: Loading roster via standard endpoint /api/games/${gameId}/rosters`);
-        return apiClient.get(`/api/games/${gameId}/rosters`);
+      if (!teamId) {
+        throw new Error('TeamId is required for roster operations in team-based routing');
       }
+      console.log(`DragDropRosterManager: Loading roster via team endpoint /api/teams/${teamId}/games/${gameId}/rosters`);
+      return apiClient.get(`/api/teams/${teamId}/games/${gameId}/rosters`);
     },
-    enabled: !!gameId,
+    enabled: !!gameId && !!teamId,
     staleTime: 5 * 60 * 1000, // 5 minutes - roster data is relatively stable
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch on window focus to reduce unnecessary requests
@@ -419,7 +417,6 @@ export default function DragDropRosterManager({
 
       console.log(`DragDropRosterManager: Saving ${rosterData.length} roster entries for game ${gameId}`);
 
-      // TeamId should always be available in team-based routing context
       if (!teamId) {
         throw new Error('TeamId is required for roster operations in team-based routing');
       }
@@ -446,9 +443,10 @@ export default function DragDropRosterManager({
       }
     } catch (error) {
       console.error('DragDropRosterManager: Error saving roster:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast({
         title: "Error",
-        description: "Failed to save roster. Please try again.",
+        description: `Failed to save roster: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {

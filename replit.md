@@ -113,10 +113,10 @@ This is a comprehensive netball team management application built with modern we
 
 ## Changelog
 - June 24, 2025: FIXED - Game preparation roster loading with consistent team-based endpoints
-  - Made roster loading and saving endpoints consistent - both use team-based approach when teamId available
-  - Added fallback to standard endpoints when teamId not provided for backward compatibility
-  - DragDropRosterManager now uses `/api/teams/{teamId}/games/{gameId}/rosters` for loading to match saving pattern
-  - Maintained dual-endpoint support for both team-based and legacy routing patterns
+  - Made roster loading and saving endpoints fully consistent - both always use team-based approach
+  - DragDropRosterManager requires teamId parameter and uses `/api/teams/{teamId}/games/{gameId}/rosters` for loading
+  - Removed fallback logic since teamId should always be available in team-based routing context
+  - Complete REST API consistency with team-based endpoints for all roster operations
 - June 24, 2025: STAGE 5 COMPLETE - Team-based game API migration to complete REST architecture
   - Created team-based endpoints: `/api/teams/{teamId}/games/{gameId}/availability`, `/api/teams/{teamId}/games/{gameId}/rosters`
   - Added `requireTeamGameAccess()` middleware for proper team-game authorization
