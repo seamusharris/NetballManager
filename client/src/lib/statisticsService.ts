@@ -202,18 +202,18 @@ class UnifiedStatisticsService {
 
           console.log(`Generating stats for missing team ${missingTeamId} from opponent ${opponentTeamId} defensive data`);
 
-          // Generate offensive stats for missing team from opponent's defensive positions
+          // Generate both offensive AND defensive stats for missing team
           for (const opponentStat of opponentStats) {
+            // Generate offensive stats from opponent's defensive positions
             if (opponentStat.position === 'GD' || opponentStat.position === 'GK') {
-              // Opponent's defensive stats show goals they conceded = our offensive output
-              const generatedStat: GameStat = {
-                id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), // Unique negative ID for generated stats
+              const offensiveStat: GameStat = {
+                id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), 
                 gameId: gameId,
                 teamId: missingTeamId,
                 position: opponentStat.position === 'GD' ? 'GA' : 'GS', // Map defensive to offensive positions
                 quarter: opponentStat.quarter,
                 goalsFor: opponentStat.goalsAgainst || 0, // Their goals against = our goals for
-                goalsAgainst: 0, // We don't have defensive data for the missing team
+                goalsAgainst: 0,
                 missedGoals: 0,
                 rebounds: 0,
                 intercepts: 0,
@@ -223,8 +223,31 @@ class UnifiedStatisticsService {
                 infringement: 0,
                 rating: null
               };
-              processedStats[gameId].push(generatedStat);
-              console.log(`Generated stat: Team ${missingTeamId} ${generatedStat.position} Q${generatedStat.quarter} scored ${generatedStat.goalsFor} goals`);
+              processedStats[gameId].push(offensiveStat);
+              console.log(`Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals`);
+            }
+            
+            // Generate defensive stats from opponent's offensive positions
+            if (opponentStat.position === 'GA' || opponentStat.position === 'GS') {
+              const defensiveStat: GameStat = {
+                id: -Math.abs(gameId * 1000 + missingTeamId * 100 + opponentStat.quarter), // Different ID pattern for defensive stats
+                gameId: gameId,
+                teamId: missingTeamId,
+                position: opponentStat.position === 'GA' ? 'GD' : 'GK', // Map offensive to defensive positions
+                quarter: opponentStat.quarter,
+                goalsFor: 0,
+                goalsAgainst: opponentStat.goalsFor || 0, // Their goals for = our goals against
+                missedGoals: 0,
+                rebounds: 0,
+                intercepts: 0,
+                badPass: 0,
+                handlingError: 0,
+                pickUp: 0,
+                infringement: 0,
+                rating: null
+              };
+              processedStats[gameId].push(defensiveStat);
+              console.log(`Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals`);
             }
           }
         }
