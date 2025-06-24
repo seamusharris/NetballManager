@@ -171,12 +171,22 @@ export default function Games() {
           queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId]
         });
 
-        // Invalidate batch data for the games list
+        // Invalidate Dashboard games queries (critical for UpcomingGames widget)
         queryClient.invalidateQueries({
           predicate: (query) => {
             const key = query.queryKey;
             return Array.isArray(key) && 
-                   key[0] === 'games-batch-data' && 
+                   key[0] === 'games' && 
+                   key[1] === currentClubId;
+          }
+        });
+
+        // Invalidate batch data for the games list and dashboard
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   (key[0] === 'games-batch-data' || key[0] === 'batch-game-data') && 
                    key[1] === currentClubId;
           }
         });
