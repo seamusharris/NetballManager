@@ -170,8 +170,6 @@ export default function Players() {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
 
-      // Force refetch to ensure immediate UI update
-      queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       toast({ title: 'Success', description: 'Player added to team' });
     },
@@ -286,8 +284,6 @@ export default function Players() {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
 
-      // Force refetch of available players to ensure UI updates immediately
-      queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       toast({ title: 'Success', description: 'Player removed from team' });
     },
