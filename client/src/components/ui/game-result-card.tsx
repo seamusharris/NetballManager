@@ -82,7 +82,7 @@ export default function GameResultCard({
 
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
-    const perspective = effectiveTeamId || 'club-wide';
+    const perspective = 'club-wide'; // Always use club-wide for dashboard
     
     // Use URL-based club teams for reliable perspective calculation
     const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
