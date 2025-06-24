@@ -30,13 +30,14 @@ export default function Players() {
     currentTeam,
     clubTeams, 
     setCurrentTeamId,
+    switchClub,
     isLoading: clubLoading 
   } = useClub();
 
   // Redirect to club-scoped URL if accessing /players without club ID
   useEffect(() => {
     if (location === '/players' && currentClubId) {
-      setLocation(`/clubs/${currentClubId}/players`);
+      setLocation(`/club/${currentClubId}/players`);
       return;
     }
   }, [location, currentClubId, setLocation]);
