@@ -240,6 +240,19 @@ export class UnifiedGameScoreService {
     // Determine team IDs based on perspective
     const { ourTeamId, theirTeamId } = this.getTeamIds(game, perspective);
 
+    // Debug logging for Team 128 (Wallabies) 
+    if (perspective === 128) {
+      console.log(`🔍 UNIFIED SERVICE - Team 128 official scores for game ${game.id}:`, {
+        perspective,
+        homeTeamId: game.homeTeamId,
+        awayTeamId: game.awayTeamId,
+        ourTeamId,
+        theirTeamId,
+        officialScoresCount: officialScores.length,
+        officialScores: officialScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`)
+      });
+    }
+
 
 
 
@@ -287,6 +300,15 @@ export class UnifiedGameScoreService {
 
     const result = this.determineResult(ourTotalScore, theirTotalScore);
     
+    // Debug logging for Team 128 result from official scores
+    if (perspective === 128) {
+      console.log(`🔍 UNIFIED SERVICE - Team 128 official scores final calculation:`, {
+        ourTotalScore,
+        theirTotalScore,
+        result,
+        shouldBeRed: result === 'loss'
+      });
+    }
 
     
     return {
