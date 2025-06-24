@@ -155,6 +155,13 @@ export default function Players() {
         return newSet;
       });
 
+      // Remove from optimistic state since the operation succeeded
+      setOptimisticallyAddedPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(data.playerId);
+        return newSet;
+      });
+
       // Invalidate relevant queries with consistent keys
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
@@ -171,6 +178,13 @@ export default function Players() {
     onError: (error, playerId) => {
       // Remove player from adding set on error
       setAddingPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+
+      // Revert optimistic update on error
+      setOptimisticallyAddedPlayerIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(playerId);
         return newSet;
@@ -234,6 +248,10 @@ export default function Players() {
   // Track which players are being removed/added
   const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
   const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
+  
+  // Optimistic updates for immediate UI feedback
+  const [optimisticallyRemovedPlayerIds, setOptimisticallyRemovedPlayerIds] = useState<Set<number>>(new Set());
+  const [optimisticallyAddedPlayerIds, setOptimisticallyAddedPlayerIds] = useState<Set<number>>(new Set());
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   // Remove player from team using simple mutation (matches add pattern)
@@ -248,6 +266,13 @@ export default function Players() {
     onSuccess: (data) => {
       // Remove player from removing set
       setRemovingPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(data.playerId);
+        return newSet;
+      });
+
+      // Remove from optimistic state since the operation succeeded
+      setOptimisticallyRemovedPlayerIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(data.playerId);
         return newSet;
@@ -269,6 +294,13 @@ export default function Players() {
     onError: (error, playerId) => {
       // Remove player from removing set on error
       setRemovingPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+
+      // Revert optimistic update on error
+      setOptimisticallyRemovedPlayerIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(playerId);
         return newSet;
@@ -448,14 +480,16 @@ export default function Players() {
             ) : (
               <SelectablePlayerBox
                 players={teamPlayers}
-                selectedPlayerIds={new Set(teamPlayers.map(p => p.id))}
+                selectedPlayerIds={new Set(teamPlayers.filter(p => !optimisticallyRemovedPlayerIds.has(p.id)).map(p => p.id))}
                 onSelectionChange={(selectedIds) => {
                   // In team management mode, when a player is deselected from current team,
-                  // remove them from the team
-                  const currentTeamPlayerIds = new Set(teamPlayers.map(p => p.id));
+                  // remove them from the team with optimistic update
+                  const currentTeamPlayerIds = new Set(teamPlayers.filter(p => !optimisticallyRemovedPlayerIds.has(p.id)).map(p => p.id));
                   const removedPlayerIds = [...currentTeamPlayerIds].filter(id => !selectedIds.has(id));
                   
                   removedPlayerIds.forEach(playerId => {
+                    // Immediate optimistic update
+                    setOptimisticallyRemovedPlayerIds(prev => new Set([...prev, playerId]));
                     handleRemovePlayer(playerId);
                   });
                 }}
@@ -502,7 +536,7 @@ export default function Players() {
             }
             variant="elevated"
           >
-            {availablePlayers.length === 0 ? (
+            {availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id)).length === 0 ? (
               <p className="text-gray-500 text-center py-4">
                 No unassigned players available. All active players are already assigned to teams this season.
                 <br />
@@ -510,13 +544,27 @@ export default function Players() {
               </p>
             ) : (
               <SelectablePlayerBox
-                players={availablePlayers}
+                players={availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id))}
                 selectedPlayerIds={new Set()}
-                onSelectionChange={() => {}}
+                onSelectionChange={(selectedIds) => {
+                  // Handle optimistic add when players are selected from available list
+                  const availablePlayerIds = new Set(availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id)).map(p => p.id));
+                  const addedPlayerIds = [...selectedIds].filter(id => availablePlayerIds.has(id));
+                  
+                  addedPlayerIds.forEach(playerId => {
+                    // Immediate optimistic update
+                    setOptimisticallyAddedPlayerIds(prev => new Set([...prev, playerId]));
+                    handleAddPlayer(playerId);
+                  });
+                }}
                 title="Available Players"
                 showQuickActions={false}
                 mode="team-management"
-                onAddPlayer={handleAddPlayer}
+                onAddPlayer={(playerId) => {
+                  // Immediate optimistic update for manual add
+                  setOptimisticallyAddedPlayerIds(prev => new Set([...prev, playerId]));
+                  handleAddPlayer(playerId);
+                }}
                 addingPlayerIds={addingPlayerIds}
                 variant="detailed"
               />
