@@ -112,13 +112,15 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
-- June 24, 2025: MIGRATION STARTED - Stats API migration to game-centric REST endpoints
+- June 24, 2025: MIGRATION COMPLETE - Stats API migration to game-centric REST endpoints
   - Created new game-centric backend endpoints: `/api/game/{gameId}/team/{teamId}/stats`, `/api/game/{gameId}/team/{teamId}/rosters`
   - Built new StatsRecorder component (replacing LiveStatsByPosition) with URL pattern `/game/{gameId}/team/{teamId}/stats/record`
   - Updated Statistics page to use club-scoped games and players instead of global endpoints
   - Added support for multi-team stats recording - both teams can record stats for same game independently
+  - Updated LiveStatsButton to navigate to new game-centric stats recording URL
   - Kept opponent system intact during migration for safety
   - Updated cache keys to support new game-centric patterns
+  - APIs tested and working: Game 77, Team 117 accessible via new endpoints
 - June 24, 2025: COMPLETED - Fixed roster synchronization between RosterGame and GamePreparation components
   - Added proper roster data loading to GamePreparation using team-based endpoints `/api/teams/{teamId}/games/{gameId}/rosters`
   - Fixed cache invalidation to update all related roster cache keys for proper UI synchronization
