@@ -1459,10 +1459,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           time: schema.games.time,
           homeTeamId: schema.games.homeTeamId,
           awayTeamId: schema.games.awayTeamId,
-          homeTeamName: schema.homeTeam.name,
-          awayTeamName: schema.awayTeam.name,
-          homeTeamDivision: schema.homeTeam.division,
-          awayTeamDivision: schema.awayTeam.division,
+          homeTeamName: schema.teams.as('homeTeam').name,
+          awayTeamName: schema.teams.as('awayTeam').name,
+          homeTeamDivision: schema.teams.as('homeTeam').division,
+          awayTeamDivision: schema.teams.as('awayTeam').division,
           round: schema.games.round,
           status: schema.games.status,
           statusIsCompleted: schema.gameStatuses.isCompleted,
@@ -1473,13 +1473,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: schema.games.updatedAt
         })
         .from(schema.games)
-        .leftJoin(schema.homeTeam, eq(schema.games.homeTeamId, schema.homeTeam.id))
-        .leftJoin(schema.awayTeam, eq(schema.games.awayTeamId, schema.awayTeam.id))
+        .leftJoin(schema.teams.as('homeTeam'), eq(schema.games.homeTeamId, schema.teams.as('homeTeam').id))
+        .leftJoin(schema.teams.as('awayTeam'), eq(schema.games.awayTeamId, schema.teams.as('awayTeam').id))
         .leftJoin(schema.gameStatuses, eq(schema.games.status, schema.gameStatuses.status))
         .where(
           or(
-            eq(schema.homeTeam.clubId, clubId),
-            eq(schema.awayTeam.clubId, clubId)
+            eq(schema.teams.as('homeTeam').clubId, clubId),
+            eq(schema.teams.as('awayTeam').clubId, clubId)
           )
         );
 
@@ -1488,12 +1488,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gamesQuery = gamesQuery.where(
           and(
             or(
-              eq(schema.homeTeam.clubId, clubId),
-              eq(schema.awayTeam.clubId, clubId)
+              eq(schema.teams.as('homeTeam').clubId, clubId),
+              eq(schema.teams.as('awayTeam').clubId, clubId)
             ),
             or(
-              eq(schema.homeTeam.seasonId, parseInt(seasonId as string)),
-              eq(schema.awayTeam.seasonId, parseInt(seasonId as string))
+              eq(schema.teams.as('homeTeam').seasonId, parseInt(seasonId as string)),
+              eq(schema.teams.as('awayTeam').seasonId, parseInt(seasonId as string))
             )
           )
         );

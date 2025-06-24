@@ -17,35 +17,25 @@ import { cn } from '@/lib/utils';
 import { winRateCalculator } from '@/lib/winRateCalculator';
 
 export default function ClubDashboard() {
-  const params = useParams();
-  const clubIdFromUrl = params.clubId ? parseInt(params.clubId) : null;
-  const { currentClub, currentClubId, setCurrentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
+  const { currentClub, currentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
-
-  // Use URL club ID if available, otherwise fall back to context
-  const effectiveClubId = clubIdFromUrl || currentClubId;
-
-  // Set club context from URL if different
-  useEffect(() => {
-    if (clubIdFromUrl && clubIdFromUrl !== currentClubId) {
-      setCurrentClubId(clubIdFromUrl);
-    }
-  }, [clubIdFromUrl, currentClubId, setCurrentClubId]);
 
   // Always call all hooks - handle enabled state through query options
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['club-players', effectiveClubId],
+    queryKey: ['club-players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
-    enabled: !!effectiveClubId && !clubLoading,
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
-  // Get games data using dedicated club endpoint
+  // Get games data with club-wide header (working approach)
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['/api/clubs', effectiveClubId, 'games'],
-    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/games`),
-    enabled: !!effectiveClubId && !clubLoading,
+    queryKey: ['games', currentClubId, 'club-wide'],
+    queryFn: () => apiClient.get('/api/games', {
+      headers: { 'x-club-wide': 'true' }
+    }),
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
     gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
   });
