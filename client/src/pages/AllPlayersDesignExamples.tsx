@@ -109,6 +109,7 @@ export default function AllPlayersDesignExamples() {
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState('grid');
   const [selectedForTeam, setSelectedForTeam] = useState(new Set());
+  const [batchSelectedPlayers, setBatchSelectedPlayers] = useState(new Set());
 
   const togglePlayerSelection = (playerId) => {
     setSelectedPlayers(prev => {
@@ -121,6 +122,19 @@ export default function AllPlayersDesignExamples() {
       return newSet;
     });
   };
+
+    const toggleBatchSelection = (playerId) => {
+    setBatchSelectedPlayers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(playerId)) {
+        newSet.delete(playerId);
+      } else {
+        newSet.add(playerId);
+      }
+      return newSet;
+    });
+  };
+
 
   const toggleTeamSelection = (playerId) => {
     setSelectedForTeam(prev => {
@@ -143,7 +157,7 @@ export default function AllPlayersDesignExamples() {
                          player.status.toLowerCase() === filterStatus.toLowerCase();
     const matchesTeam = filterTeam === 'all' || player.team === filterTeam;
 
-    return matchesSearch && matchesStatus && matchesTeam;
+    return matchesSearch && matchesStatus && matchesTeam && player.active;
   });
 
   // Helper functions to generate color variations
@@ -340,32 +354,35 @@ export default function AllPlayersDesignExamples() {
 
               {/* Player Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredPlayers.slice(0, 16).map((player) => {
+                {filteredPlayers.filter(player => player.active).slice(0, 16).map((player) => {
                   const playerColorHex = getPlayerColorHex(player.avatarColor);
-                  const darkerBorderColor = getDarkerColorHex(player.avatarColor);
-                  const lightBackgroundColor = getLighterColorHex(player.avatarColor);
-                  const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
+                  const darkerTextColor = getDarkerColorHex(player.avatarColor);
+                  const lighterBgColor = getLighterColorHex(player.avatarColor);
+                  const mediumBgColor = getMediumColorHex(player.avatarColor);
+                  const isSelected = selectedPlayers.has(player.id);
 
                   return (
                     <div key={player.id} className="relative">
                       <div 
-                        className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer z-10 text-white transition-all"
+                        className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                         style={{ 
-                          backgroundColor: selectedPlayers.has(player.id) ? darkerBorderColor : 'transparent', 
-                          border: selectedPlayers.has(player.id) ? 'none' : `2px solid ${playerColorHex}80` 
+                          backgroundColor: isSelected ? darkerTextColor : 'transparent', 
+                          border: isSelected ? 'none' : `2px solid ${darkerTextColor}`
                         }}
                         onClick={() => togglePlayerSelection(player.id)}
                       >
-                        {selectedPlayers.has(player.id) && '✓'}
+                        {isSelected && '✓'}
                       </div>
                       <PlayerBox
                         player={player}
                         size="md"
                         showPositions={true}
-                        className="hover:shadow-lg transition-all duration-200 cursor-pointer"
+                        hasSelect={true}
+                        className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                         style={{
+                          backgroundColor: isSelected ? mediumBgColor : lighterBgColor,
                           borderColor: playerColorHex,
-                          backgroundColor: selectedPlayers.has(player.id) ? mediumBackgroundColor : lightBackgroundColor
+                          color: darkerTextColor
                         }}
                         onClick={() => togglePlayerSelection(player.id)}
                       />
@@ -773,24 +790,24 @@ export default function AllPlayersDesignExamples() {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div>
                   <h3 className="font-medium text-blue-900">Batch Operations</h3>
-                  <p className="text-sm text-blue-700">
-                    {selectedPlayers.size} players selected
+                  <p className="text-sm text-gray-600">
+                    {batchSelectedPlayers.size} players selected
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" disabled={selectedPlayers.size === 0}>
+                  <Button size="sm" disabled={batchSelectedPlayers.size === 0}>
                     <Mail className="h-4 w-4 mr-2" />
                     Send Email
                   </Button>
-                  <Button size="sm" variant="outline" disabled={selectedPlayers.size === 0}>
+                  <Button size="sm" variant="outline" disabled={batchSelectedPlayers.size === 0}>
                     <Users className="h-4 w-4 mr-2" />
                     Assign Team
                   </Button>
-                  <Button size="sm" variant="outline" disabled={selectedPlayers.size === 0}>
+                  <Button size="sm" variant="outline" disabled={batchSelectedPlayers.size === 0}>
                     <Download className="h-4 w-4 mr-2" />
                     Export Selected
                   </Button>
-                  <Button size="sm" variant="outline" disabled={selectedPlayers.size === 0}>
+                  <Button size="sm" variant="outline" disabled={batchSelectedPlayers.size === 0}>
                     <Settings className="h-4 w-4 mr-2" />
                     Bulk Edit
                   </Button>
@@ -799,16 +816,16 @@ export default function AllPlayersDesignExamples() {
 
               {/* Quick Selection Tools */}
               <div className="flex flex-wrap gap-2 mb-4">
-                <Button variant="outline" size="sm" onClick={() => setSelectedPlayers(new Set(filteredPlayers.map(p => p.id)))}>
+                <Button variant="outline" size="sm" onClick={() => setBatchSelectedPlayers(new Set(filteredPlayers.map(p => p.id)))}>
                   Select All Visible
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectedPlayers(new Set(filteredPlayers.filter(p => p.active).map(p => p.id)))}>
+                <Button variant="outline" size="sm" onClick={() => setBatchSelectedPlayers(new Set(filteredPlayers.filter(p => p.active).map(p => p.id)))}>
                   Select Active Only
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectedPlayers(new Set(filteredPlayers.filter(p => !p.team).map(p => p.id)))}>
+                <Button variant="outline" size="sm" onClick={() => setBatchSelectedPlayers(new Set(filteredPlayers.filter(p => !p.team).map(p => p.id)))}>
                   Select Unassigned
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectedPlayers(new Set())}>
+                <Button variant="outline" size="sm" onClick={() => setBatchSelectedPlayers(new Set())}>
                   Clear Selection
                 </Button>
               </div>
@@ -820,12 +837,12 @@ export default function AllPlayersDesignExamples() {
                     <div 
                       className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer z-10 text-white transition-all"
                       style={{ 
-                        backgroundColor: selectedPlayers.has(player.id) ? '#3b82f6' : 'transparent', 
-                        border: selectedPlayers.has(player.id) ? 'none' : '2px solid #3b82f680' 
+                        backgroundColor: batchSelectedPlayers.has(player.id) ? '#3b82f6' : 'transparent', 
+                        border: batchSelectedPlayers.has(player.id) ? 'none' : '2px solid #3b82f680' 
                       }}
-                      onClick={() => togglePlayerSelection(player.id)}
+                      onClick={() => toggleBatchSelection(player.id)}
                     >
-                      {selectedPlayers.has(player.id) && '✓'}
+                      {batchSelectedPlayers.has(player.id) && '✓'}
                     </div>
                     <PlayerBox
                       player={player}
@@ -833,17 +850,17 @@ export default function AllPlayersDesignExamples() {
                       showPositions={true}
                       className="hover:shadow-lg transition-all duration-200 cursor-pointer"
                       style={{
-                        backgroundColor: selectedPlayers.has(player.id) ? '#3b82f615' : '#ffffff',
-                        borderColor: selectedPlayers.has(player.id) ? '#3b82f6' : '#e5e7eb'
+                        backgroundColor: batchSelectedPlayers.has(player.id) ? '#3b82f615' : '#ffffff',
+                        borderColor: batchSelectedPlayers.has(player.id) ? '#3b82f6' : '#e5e7eb'
                       }}
-                      onClick={() => togglePlayerSelection(player.id)}
+                      onClick={() => toggleBatchSelection(player.id)}
                     />
                   </div>
                 ))}
               </div>
 
               {/* Batch Operation Panels */}
-              {selectedPlayers.size > 0 && (
+              {batchSelectedPlayers.size > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <Card>
                     <CardHeader>
@@ -861,7 +878,7 @@ export default function AllPlayersDesignExamples() {
                         </SelectContent>
                       </Select>
                       <Button className="w-full">
-                        Assign {selectedPlayers.size} players to team
+                        Assign {batchSelectedPlayers.size} players to team
                       </Button>
                     </CardContent>
                   </Card>
@@ -883,7 +900,7 @@ export default function AllPlayersDesignExamples() {
                         </SelectContent>
                       </Select>
                       <Button className="w-full">
-                        Update {selectedPlayers.size} players
+                        Update {batchSelectedPlayers.size} players
                       </Button>
                     </CardContent>
                   </Card>
