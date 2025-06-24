@@ -736,6 +736,118 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
+  // Get game from team perspective - provides context for win/loss calculation
+  app.get('/api/teams/:teamId/games/:gameId', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Get game details with team perspective
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.team_goals, gs.opponent_goals,
+          s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
+          ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
+          at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
+          hc.name as home_club_name, hc.code as home_club_code,
+          ac.name as away_club_name, ac.code as away_club_code,
+          CASE 
+            WHEN g.home_team_id = ${teamId} THEN 'home'
+            WHEN g.away_team_id = ${teamId} THEN 'away'
+            ELSE null
+          END as team_perspective
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
+        LEFT JOIN clubs ac ON at.club_id = ac.id
+        WHERE g.id = ${gameId} AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+      `);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found for this team' });
+      }
+
+      const row = result.rows[0];
+      const game = {
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+
+        // Game Status fields
+        statusName: row.status,
+        statusDisplayName: row.status_display_name,
+        statusIsCompleted: row.is_completed,
+        statusAllowsStatistics: row.allows_statistics,
+        statusTeamGoals: row.team_goals,
+        statusOpponentGoals: row.opponent_goals,
+
+        // Season fields
+        seasonName: row.season_name,
+        seasonStartDate: row.season_start,
+        seasonEndDate: row.season_end,
+        seasonIsActive: row.season_active,
+
+        // Team fields
+        homeTeamName: row.home_team_name,
+        homeTeamDivision: row.home_team_division,
+        homeClubId: row.home_club_id,
+        homeClubName: row.home_club_name,
+        homeClubCode: row.home_club_code,
+
+        awayTeamName: row.away_team_name,
+        awayTeamDivision: row.away_team_division,
+        awayClubId: row.away_club_id,
+        awayClubName: row.away_club_name,
+        awayClubCode: row.away_club_code,
+
+        // Team perspective context
+        teamPerspective: row.team_perspective, // 'home' or 'away'
+        ourTeamId: teamId,
+        opponentTeamId: row.home_team_id === teamId ? row.away_team_id : row.home_team_id,
+
+        // Legacy fields
+        isBye: row.away_team_name === 'Bye'
+      };
+
+      res.json(game);
+    } catch (error) {
+      console.error('Error fetching team-perspective game:', error);
+      res.status(500).json({ error: 'Failed to fetch game' });
+    }
+  });
+
   // Get team player availability for a specific game
   app.get('/api/teams/:teamId/availability/:gameId', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
