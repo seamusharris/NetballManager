@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PlayerForm from '@/components/players/PlayerForm';
 import { User, UserMinus, UserPlus, Loader2, Calendar, Users } from 'lucide-react';
-import { PlayerBox } from '@/components/ui/player-box';
+import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
+import ActionButton from '@/components/ui/ActionButton';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
@@ -374,6 +375,15 @@ export default function Players() {
   // Rename the teamPlayersData to teamPlayers
   const teamPlayers = teamPlayersData;
 
+  // Handle remove player function now
+  const handleRemovePlayer = (playerId: number) => {
+    removePlayerFromTeam.mutate(playerId);
+  };
+    // Handle add player function now
+  const handleAddPlayer = (playerId: number) => {
+    addPlayerToTeam.mutate(playerId);
+  };
+
   if (teamId) {
     // Team-specific view with management capabilities
     const availablePlayers = teamId ? availablePlayersForTeam : [];
@@ -438,21 +448,17 @@ export default function Players() {
             ) : (
               <div className="flex flex-col gap-3 max-w-2xl">
                 {teamPlayers.map((player) => (
-                  <PlayerBox
+                  <SelectablePlayerBox
                     key={player.id}
                     player={player}
-                    size="ms"
+                    isSelected={true}
+                    onSelectionChange={(playerId, selected) => {
+                      if (!selected) {
+                        handleRemovePlayer(playerId);
+                      }
+                    }}
+                    size="md"
                     showPositions={true}
-                    actions={
-                      <ActionButton
-                        action="delete"
-                        size="sm"
-                        onClick={() => removePlayerFromTeam.mutate(player.id)}
-                        disabled={removingPlayerIds.has(player.id)}
-                      >
-                        {removingPlayerIds.has(player.id) ? 'Removing...' : 'Remove'}
-                      </ActionButton>
-                    }
                   />
                 ))}
               </div>
@@ -501,20 +507,17 @@ export default function Players() {
             ) : (
               <div className="flex flex-col gap-3 max-w-2xl">
                 {availablePlayers.map((player) => (
-                  <PlayerBox
+                  <SelectablePlayerBox
                     key={player.id}
                     player={player}
-                    actions={
-                      <ActionButton
-                        action="create"
-                        size="sm"
-                        onClick={() => addPlayerToTeam.mutate(player.id)}
-                        disabled={addingPlayerIds.has(player.id)}
-                        icon={UserPlus}
-                      >
-                        {addingPlayerIds.has(player.id) ? 'Adding...' : 'Add to Team'}
-                      </ActionButton>
-                    }
+                    isSelected={false}
+                    onSelectionChange={(playerId, selected) => {
+                      if (selected) {
+                        handleAddPlayer(playerId);
+                      }
+                    }}
+                    size="md"
+                    showPositions={true}
                   />
                 ))}
               </div>

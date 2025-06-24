@@ -1,0 +1,44 @@
+12:26:11 AM [vite] Internal server error: Duplicate declaration "ActionButton"
+  19 | import PageTemplate from '@/components/layout/PageTemplate';
+  20 | import { ContentSection } from '@/components/layout/ContentSection';
+> 21 | import { ActionButton } from '@/components/ui/ActionButton';
+     |          ^^^^^^^^^^^^
+  22 | import { PageActions } from '@/components/layout/PageActions';
+  23 |
+  24 | export default function Players() {
+  Plugin: vite:react-babel
+  File: /home/runner/workspace/client/src/pages/Players.tsx
+      at buildCodeFrameError (/home/runner/workspace/node_modules/@babel/core/src/transformation/file/file.ts:247:12)
+      at checkBlockScopedCollisions (/home/runner/workspace/node_modules/@babel/traverse/src/scope/index.ts:593:27)
+      at registerBinding (/home/runner/workspace/node_modules/@babel/traverse/src/scope/index.ts:736:16)
+      at registerDeclaration (/home/runner/workspace/node_modules/@babel/traverse/src/scope/index.ts:679:14)
+      at ImportDeclaration (/home/runner/workspace/node_modules/@babel/traverse/src/scope/index.ts:268:12)
+      at call (/home/runner/workspace/node_modules/@babel/traverse/src/path/context.ts:36:20)
+      at call (/home/runner/workspace/node_modules/@babel/traverse/src/path/context.ts:21:18)
+      at NodePath.visit (/home/runner/workspace/node_modules/@babel/traverse/src/path/context.ts:97:31)
+      at visitQueue (/home/runner/workspace/node_modules/@babel/traverse/src/context.ts:148:16)
+      at visitMultiple (/home/runner/workspace/node_modules/@babel/traverse/src/context.ts:99:17)
+      at visit (/home/runner/workspace/node_modules/@babel/traverse/src/context.ts:178:19)
+      at traverseNode (/home/runner/workspace/node_modules/@babel/traverse/src/traverse-node.ts:40:17)
+      at traverse (/home/runner/workspace/node_modules/@babel/traverse/src/index.ts:83:15)
+      at traverse (/home/runner/workspace/node_modules/@babel/traverse/src/path/index.ts:147:13)
+      at crawl (/home/runner/workspace/node_modules/@babel/traverse/src/scope/index.ts:954:10)
+      at init (/home/runner/workspace/node_modules/@babel/traverse/src/scope/index.ts:911:12)
+      at call (/home/runner/workspace/node_modules/@babel/traverse/src/path/context.ts:160:15)
+      at NodePath.setContext (/home/runner/workspace/node_modules/@babel/traverse/src/path/context.ts:180:12)
+      at new constructor (/home/runner/workspace/node_modules/@babel/core/src/transformation/file/file.ts:57:8)
+      at normalizeFile (/home/runner/workspace/node_modules/@babel/core/src/transformation/normalize-file.ts:102:10)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/runner/workspace/node_modules/@babel/core/src/transformation/index.ts:40:36)
+      at run.next (<anonymous>)
+      at transform (/home/runner/workspace/node_modules/@babel/core/src/transform.ts:29:20)
+      at transform.next (<anonymous>)
+      at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+      at /home/runner/workspace/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+      at /home/runner/workspace/node_modules/gensync/index.js:189:28
+      at <anonymous> (/home/runner/workspace/node_modules/@babel/core/src/gensync-utils/async.ts:90:7)
+      at /home/runner/workspace/node_modules/gensync/index.js:113:33
+      at step (/home/runner/workspace/node_modules/gensync/index.js:287:14)
+      at /home/runner/workspace/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
