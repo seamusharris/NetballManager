@@ -16,6 +16,7 @@ export const gameStatuses = pgTable("game_statuses", {
   opponentGoals: integer("opponent_goals"), // Fixed score for opponent (null if score comes from statistics)
   isCompleted: boolean("is_completed").notNull().default(false), // Whether this status marks a game as finished
   allowsStatistics: boolean("allows_statistics").notNull().default(true), // Whether stats can be recorded
+  requiresOpponent: boolean("requires_opponent").notNull().default(true), // Whether this status requires an opponent
   colorClass: text("color_class"), // CSS class for status badge colors
   sortOrder: integer("sort_order").notNull().default(0), // Order for dropdown displays
   isActive: boolean("is_active").notNull().default(true), // Whether this status is currently available

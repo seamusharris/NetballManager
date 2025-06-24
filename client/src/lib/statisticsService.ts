@@ -40,7 +40,7 @@ class UnifiedStatisticsService {
     // Convert to legacy format for backward compatibility
     const quarterScores: Record<string, { for: number; against: number }> = {};
     gameScores.quarterScores.forEach(q => {
-      quarterScores[q.quarter.toString()] = { for: q.teamScore, against: q.awayScore };
+      quarterScores[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
     });
 
     return {
@@ -795,22 +795,22 @@ export function invalidateScoreCaches(gameId: number): void {
 // Calculate game scores from statistics
 export function calculateGameScores(stats: GameStat[]) {
   if (!stats || stats.length === 0) {
-    return { teamScore: 0, awayScore: 0 };
+    return { teamScore: 0, opponentScore: 0 };
   }
 
   // For forfeit games, return standard 0-10 score
   if (stats.length > 0 && isForfeitGame({ id: stats[0].gameId } as Game)) {
-    return { teamScore: 0, awayScore: 10 };
+    return { teamScore: 0, opponentScore: 10 };
   }
 
   // Calculate regular game scores
   const teamScore = stats.reduce((total, stat) => 
     total + (stat.goalsFor || 0), 0);
 
-  const awayScore = stats.reduce((total, stat) => 
+  const opponentScore = stats.reduce((total, stat) => 
     total + (stat.goalsAgainst || 0), 0);
 
-  return { teamScore, awayScore };
+  return { teamScore, opponentScore };
 }
 
 // Get appropriate color for game status

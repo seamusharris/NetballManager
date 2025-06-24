@@ -948,7 +948,7 @@ export default function GamePreparation() {
                               if (!transformedScores.length) return null;
 
                               const teamScores = [0, 0, 0, 0];
-                              const awayScores = [0, 0, 0, 0];
+                              const opponentScores = [0, 0, 0, 0];
 
                               transformedScores.forEach(score => {
                                 const quarterIndex = score.quarter - 1;
@@ -956,7 +956,7 @@ export default function GamePreparation() {
                                   if (score.teamId === currentTeamId) {
                                     teamScores[quarterIndex] = score.score;
                                   } else {
-                                    awayScores[quarterIndex] = score.score;
+                                    opponentScores[quarterIndex] = score.score;
                                   }
                                 }
                               });
@@ -969,7 +969,7 @@ export default function GamePreparation() {
 
                               for (let i = 0; i < 4; i++) {
                                 teamTotal += teamScores[i];
-                                opponentTotal += awayScores[i];
+                                opponentTotal += opponentScores[i];
                                 teamCumulative.push(teamTotal);
                                 opponentCumulative.push(opponentTotal);
                               }
@@ -977,7 +977,7 @@ export default function GamePreparation() {
                               return {
                                 quarter: teamScores,
                                 cumulative: teamCumulative,
-                                opponentQuarter: awayScores,
+                                opponentQuarter: opponentScores,
                                 opponentCumulative: opponentCumulative,
                                 finalScore: { team: teamTotal, opponent: opponentTotal }
                               };
@@ -1003,7 +1003,7 @@ export default function GamePreparation() {
                                     (() => {
                                       // Calculate quarter scores for display
                                       const teamScores = [0, 0, 0, 0];
-                                      const awayScores = [0, 0, 0, 0];
+                                      const opponentScores = [0, 0, 0, 0];
 
                                       transformedScores.forEach(score => {
                                         const quarterIndex = score.quarter - 1;
@@ -1011,7 +1011,7 @@ export default function GamePreparation() {
                                           if (score.teamId === currentTeamId) {
                                             teamScores[quarterIndex] = score.score;
                                           } else {
-                                            awayScores[quarterIndex] = score.score;
+                                            opponentScores[quarterIndex] = score.score;
                                           }
                                         }
                                       });
@@ -1024,7 +1024,7 @@ export default function GamePreparation() {
 
                                       for (let i = 0; i < 4; i++) {
                                         teamTotal += teamScores[i];
-                                        opponentTotal += awayScores[i];
+                                        opponentTotal += opponentScores[i];
                                         teamCumulative.push(teamTotal);
                                         opponentCumulative.push(opponentTotal);
                                       }
@@ -1035,19 +1035,19 @@ export default function GamePreparation() {
                                             {/* Quarter-by-quarter scores on top (lighter) */}
                                             <div className="grid grid-cols-4 gap-1">
                                               {teamScores.map((teamScore, qIndex) => {
-                                                const awayScore = awayScores[qIndex];
-                                                const quarterWin = teamScore > awayScore;
-                                                const quarterLoss = teamScore < awayScore;
+                                                const opponentScore = opponentScores[qIndex];
+                                                const quarterWin = teamScore > opponentScore;
+                                                const quarterLoss = teamScore < opponentScore;
 
                                                 // Display in Home-Away format but color by team perspective
                                                 let homeScore, awayScore;
                                                 if (seasonGame.homeTeamId === currentTeamId) {
                                                   // Current team is home
                                                   homeScore = teamScore;
-                                                  awayScore = awayScore;
+                                                  awayScore = opponentScore;
                                                 } else {
                                                   // Current team is away
-                                                  homeScore = awayScore;
+                                                  homeScore = opponentScore;
                                                   awayScore = teamScore;
                                                 }
 

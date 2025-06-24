@@ -16,7 +16,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Game, Player, Roster, GameStat } from '@shared/schema';
+import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { exportStatsToPDF, exportStatsToExcel } from '@/lib/exportUtils';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
@@ -56,7 +56,9 @@ export default function Statistics() {
     queryKey: ['/api/games'],
   });
 
-  // Opponent system removed - using away team data from games
+  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<Opponent[]>({
+    queryKey: ['/api/opponents'],
+  });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['/api/players'],

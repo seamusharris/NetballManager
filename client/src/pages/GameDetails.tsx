@@ -942,7 +942,7 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
       acc.push({
         quarter: index + 1,
         teamScore: current.teamScore,
-        awayScore: current.awayScore
+        opponentScore: current.opponentScore
       });
       return acc;
     }, []);
@@ -963,12 +963,12 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
 
     return scoringByQuarter.map(score => {
       teamRunningTotal += score.teamScore;
-      opponentRunningTotal += score.awayScore;
+      opponentRunningTotal += score.opponentScore;
 
       return {
         quarter: score.quarter,
         teamScore: score.teamScore,
-        awayScore: score.awayScore,
+        opponentScore: score.opponentScore,
         cumulativeTeamScore: teamRunningTotal,
         cumulativeOpponentScore: opponentRunningTotal
       };
@@ -1015,9 +1015,9 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
                 <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter Scores</div>
                 <div className="grid grid-cols-4 gap-1 w-full max-w-xs">
                   {scoringByQuarter.map(score => {
-                    const quarterWin = score.teamScore > score.awayScore;
-                    const quarterLoss = score.teamScore < score.awayScore;
-                    const quarterDraw = score.teamScore === score.awayScore;
+                    const quarterWin = score.teamScore > score.opponentScore;
+                    const quarterLoss = score.teamScore < score.opponentScore;
+                    const quarterDraw = score.teamScore === score.opponentScore;
 
                     const quarterBgColor = quarterWin 
                       ? 'bg-green-100 border-green-300' 
@@ -1029,7 +1029,7 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
                       <div key={`q-${score.quarter}`} className="text-center">
                         <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
                         <div className={`font-medium text-sm p-2 rounded border ${quarterBgColor} min-h-[2.5rem] flex items-center justify-center`}>
-                          {score.teamScore}-{score.awayScore}
+                          {score.teamScore}-{score.opponentScore}
                         </div>
                       </div>
                     );
@@ -1366,12 +1366,12 @@ export default function GameDetails() {
   const scoringByQuarter = quarterScores?.map(q => ({
     quarter: q.quarter,
     teamScore: q.teamScore,
-    awayScore: q.awayScore
+    opponentScore: q.opponentScore
   })) || [];
 
   const cumulativeScores = quarterScores?.map((_, index) => {
     const cumulativeTeamScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.teamScore, 0);
-    const cumulativeOpponentScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.awayScore, 0);
+    const cumulativeOpponentScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.opponentScore, 0);
     return {
       quarter: index + 1,
       cumulativeTeamScore,
@@ -1423,12 +1423,12 @@ export default function GameDetails() {
 
   // Helper function to get score display with correct team context
   const finalTeamScore = quarterScores?.reduce((sum, q) => sum + q.teamScore, 0) || 0;
-  const finalOpponentScore = quarterScores?.reduce((sum, q) => sum + q.awayScore, 0) || 0;
+  const finalOpponentScore = quarterScores?.reduce((sum, q) => sum + q.opponentScore, 0) || 0;
 
   // Determine if we need to flip the perspective for inter-club games
   const getCorrectScoreContext = () => {
     if (!game || !currentTeam) {
-      return { teamScore: finalTeamScore, awayScore: finalOpponentScore };
+      return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
     }
 
     // Check if this is an inter-club game (both teams from same club)
@@ -1458,16 +1458,16 @@ export default function GameDetails() {
 
       // Return scores from current team's perspective
       if (currentTeam.id === game.homeTeamId) {
-        return { teamScore: reconciledScore.homeScore, awayScore: reconciledScore.awayScore };
+        return { teamScore: reconciledScore.homeScore, opponentScore: reconciledScore.awayScore };
       } else {
-        return { teamScore: reconciledScore.awayScore, awayScore: reconciledScore.homeScore };
+        return { teamScore: reconciledScore.awayScore, opponentScore: reconciledScore.homeScore };
       }
     }
 
-    return { teamScore: finalTeamScore, awayScore: finalOpponentScore };
+    return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
   };
 
-  const { teamScore: contextualTeamScore, awayScore: contextualOpponentScore } = getCorrectScoreContext();
+  const { teamScore: contextualTeamScore, opponentScore: contextualOpponentScore } = getCorrectScoreContext();
   const result = contextualTeamScore > contextualOpponentScore ? 'Win' : 
                  contextualTeamScore < contextualOpponentScore ? 'Loss' : 'Draw';
 

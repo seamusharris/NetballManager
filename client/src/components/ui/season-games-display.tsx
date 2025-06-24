@@ -102,7 +102,7 @@ export default function SeasonGamesDisplay({
                 if (!transformedScores.length) return null;
 
                 const teamScores = [0, 0, 0, 0];
-                const awayScores = [0, 0, 0, 0];
+                const opponentScores = [0, 0, 0, 0];
 
                 transformedScores.forEach(score => {
                   const quarterIndex = score.quarter - 1;
@@ -110,7 +110,7 @@ export default function SeasonGamesDisplay({
                     if (score.teamId === currentTeamId) {
                       teamScores[quarterIndex] = score.score;
                     } else {
-                      awayScores[quarterIndex] = score.score;
+                      opponentScores[quarterIndex] = score.score;
                     }
                   }
                 });
@@ -123,7 +123,7 @@ export default function SeasonGamesDisplay({
 
                 for (let i = 0; i < 4; i++) {
                   teamTotal += teamScores[i];
-                  opponentTotal += awayScores[i];
+                  opponentTotal += opponentScores[i];
                   teamCumulative.push(teamTotal);
                   opponentCumulative.push(opponentTotal);
                 }
@@ -131,7 +131,7 @@ export default function SeasonGamesDisplay({
                 return {
                   quarter: teamScores,
                   cumulative: teamCumulative,
-                  opponentQuarter: awayScores,
+                  opponentQuarter: opponentScores,
                   opponentCumulative: opponentCumulative,
                   finalScore: { team: teamTotal, opponent: opponentTotal }
                 };
@@ -159,7 +159,7 @@ export default function SeasonGamesDisplay({
                         <div className="grid grid-cols-4 gap-1">
                           {(() => {
                             const teamScores = [0, 0, 0, 0];
-                            const awayScores = [0, 0, 0, 0];
+                            const opponentScores = [0, 0, 0, 0];
 
                             transformedScores.forEach(score => {
                               const quarterIndex = score.quarter - 1;
@@ -167,25 +167,25 @@ export default function SeasonGamesDisplay({
                                 if (score.teamId === currentTeamId) {
                                   teamScores[quarterIndex] = score.score;
                                 } else {
-                                  awayScores[quarterIndex] = score.score;
+                                  opponentScores[quarterIndex] = score.score;
                                 }
                               }
                             });
 
                             return teamScores.map((teamScore, qIndex) => {
-                              const awayScore = awayScores[qIndex];
-                              const quarterWin = teamScore > awayScore;
-                              const quarterLoss = teamScore < awayScore;
+                              const opponentScore = opponentScores[qIndex];
+                              const quarterWin = teamScore > opponentScore;
+                              const quarterLoss = teamScore < opponentScore;
 
                               // Display in Home-Away format but color by team perspective
                               let homeScore, awayScore;
                               if (game.homeTeamId === currentTeamId) {
                                 // Current team is home
                                 homeScore = teamScore;
-                                awayScore = awayScore;
+                                awayScore = opponentScore;
                               } else {
                                 // Current team is away
-                                homeScore = awayScore;
+                                homeScore = opponentScore;
                                 awayScore = teamScore;
                               }
 
@@ -207,7 +207,7 @@ export default function SeasonGamesDisplay({
                         <div className="grid grid-cols-4 gap-1">
                           {(() => {
                             const teamScores = [0, 0, 0, 0];
-                            const awayScores = [0, 0, 0, 0];
+                            const opponentScores = [0, 0, 0, 0];
 
                             transformedScores.forEach(score => {
                               const quarterIndex = score.quarter - 1;
@@ -215,7 +215,7 @@ export default function SeasonGamesDisplay({
                                 if (score.teamId === currentTeamId) {
                                   teamScores[quarterIndex] = score.score;
                                 } else {
-                                  awayScores[quarterIndex] = score.score;
+                                  opponentScores[quarterIndex] = score.score;
                                 }
                               }
                             });
@@ -228,7 +228,7 @@ export default function SeasonGamesDisplay({
 
                             for (let i = 0; i < 4; i++) {
                               teamTotal += teamScores[i];
-                              opponentTotal += awayScores[i];
+                              opponentTotal += opponentScores[i];
                               teamCumulative.push(teamTotal);
                               opponentCumulative.push(opponentTotal);
                             }

@@ -9,6 +9,7 @@ export async function createBackup(filename: string): Promise<string> {
   try {
     // Get all data from storage
     const players = await storage.getPlayers();
+    const opponents = await storage.getOpponents();
     const games = await storage.getGames();
     
     // Get all rosters and game stats for each game
@@ -26,6 +27,7 @@ export async function createBackup(filename: string): Promise<string> {
     // Create the backup object
     const backupData = {
       players,
+      opponents,
       games,
       rosters,
       gameStats

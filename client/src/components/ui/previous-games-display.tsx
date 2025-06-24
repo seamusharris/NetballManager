@@ -86,7 +86,7 @@ export default function PreviousGamesDisplay({
               if (!transformedScores.length) return null;
 
               const teamScores = [0, 0, 0, 0];
-              const awayScores = [0, 0, 0, 0];
+              const opponentScores = [0, 0, 0, 0];
 
               transformedScores.forEach(score => {
                 const quarterIndex = score.quarter - 1;
@@ -94,12 +94,12 @@ export default function PreviousGamesDisplay({
                   if (score.teamId === currentTeamId) {
                     teamScores[quarterIndex] = score.score;
                   } else {
-                    awayScores[quarterIndex] = score.score;
+                    opponentScores[quarterIndex] = score.score;
                   }
                 }
               });
 
-              return { teamScores, awayScores };
+              return { teamScores, opponentScores };
             };
 
             const quarterData = calculateQuarterScores();
@@ -120,7 +120,7 @@ export default function PreviousGamesDisplay({
                 <div className="ml-4 flex-shrink-0">
                   {!isSpecialStatus && hasQuarterData ? (
                     (() => {
-                      const { teamScores, awayScores } = quarterData;
+                      const { teamScores, opponentScores } = quarterData;
 
                       // Calculate cumulative scores
                       const teamCumulative = [];
@@ -130,7 +130,7 @@ export default function PreviousGamesDisplay({
 
                       for (let i = 0; i < 4; i++) {
                         teamTotal += teamScores[i];
-                        opponentTotal += awayScores[i];
+                        opponentTotal += opponentScores[i];
                         teamCumulative.push(teamTotal);
                         opponentCumulative.push(opponentTotal);
                       }
@@ -141,20 +141,20 @@ export default function PreviousGamesDisplay({
                             {/* Quarter-by-quarter scores on top (lighter) */}
                             <div className="grid grid-cols-4 gap-1">
                               {teamScores.map((teamScore, qIndex) => {
-                                const awayScore = awayScores[qIndex];
-                                const quarterWin = teamScore > awayScore;
-                                const quarterLoss = teamScore < awayScore;
+                                const opponentScore = opponentScores[qIndex];
+                                const quarterWin = teamScore > opponentScore;
+                                const quarterLoss = teamScore < opponentScore;
 
                                 // Display in Home-Away format but color by team perspective
-                                let homeScore, opposingScore;
+                                let homeScore, awayScore;
                                 if (game.homeTeamId === currentTeamId) {
                                   // Current team is home
                                   homeScore = teamScore;
-                                  opposingScore = awayScore;
+                                  awayScore = opponentScore;
                                 } else {
                                   // Current team is away
-                                  homeScore = awayScore;
-                                  opposingScore = teamScore;
+                                  homeScore = opponentScore;
+                                  awayScore = teamScore;
                                 }
 
                                 const quarterClass = quarterWin 
@@ -165,7 +165,7 @@ export default function PreviousGamesDisplay({
 
                                 return (
                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                    {homeScore}–{opposingScore}
+                                    {homeScore}–{awayScore}
                                   </span>
                                 );
                               })}

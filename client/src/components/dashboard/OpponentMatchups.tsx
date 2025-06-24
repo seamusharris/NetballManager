@@ -270,7 +270,7 @@ export default function TeamMatchups({
       // Calculate scores for this game using official scores first
       const officialScores = centralizedScores[game.id] || [];
       let teamScore = 0;
-      let awayScore = 0;
+      let opponentScore = 0;
 
       if (officialScores.length > 0) {
         // Use official scores
@@ -284,17 +284,17 @@ export default function TeamMatchups({
           
           if (isHomeTeamOurs) {
             teamScore += homeScore;
-            awayScore += awayScore;
+            opponentScore += awayScore;
           } else {
             teamScore += awayScore;
-            awayScore += homeScore;
+            opponentScore += homeScore;
           }
         }
       } else {
         // Fallback to calculated scores
         const gameStats = centralizedStats[game.id] || [];
         teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        awayScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
       }
 
       return (
@@ -305,7 +305,7 @@ export default function TeamMatchups({
           />
           {/* Tooltip on hover */}
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-            {teamScore}-{awayScore}
+            {teamScore}-{opponentScore}
           </div>
         </div>
       );

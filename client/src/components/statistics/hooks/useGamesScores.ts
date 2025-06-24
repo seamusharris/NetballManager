@@ -185,7 +185,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
             // Convert to legacy format
             const quarterScores: Record<string, { for: number; against: number }> = {};
             gameScores.quarterScores.forEach(q => {
-              quarterScores[q.quarter.toString()] = { for: q.teamScore, against: q.awayScore };
+              quarterScores[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
             });
 
             scores = {

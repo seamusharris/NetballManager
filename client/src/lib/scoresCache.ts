@@ -100,17 +100,17 @@ export function convertOfficialScoresToGameScores(
   Object.entries(scoresByQuarter).forEach(([quarter, teams]) => {
     const quarterNum = parseInt(quarter);
     const teamScore = teams[currentTeamId] || 0;
-    const awayScore = Object.entries(teams)
+    const opponentScore = Object.entries(teams)
       .filter(([teamId]) => parseInt(teamId) !== currentTeamId)
       .reduce((sum, [, score]) => sum + score, 0);
 
     quarterScores[quarter] = {
       for: teamScore,
-      against: awayScore
+      against: opponentScore
     };
 
     totalTeamScore += teamScore;
-    totalOpponentScore += awayScore;
+    totalOpponentScore += opponentScore;
   });
 
   return {

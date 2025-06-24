@@ -231,11 +231,11 @@ export default function GameStatistics({
   
   // Calculate quarter scores
   const quarterScores = {
-    '1': { teamScore: 0, awayScore: 0 },
-    '2': { teamScore: 0, awayScore: 0 },
-    '3': { teamScore: 0, awayScore: 0 },
-    '4': { teamScore: 0, awayScore: 0 },
-    'total': { teamScore: 0, awayScore: 0 }
+    '1': { teamScore: 0, opponentScore: 0 },
+    '2': { teamScore: 0, opponentScore: 0 },
+    '3': { teamScore: 0, opponentScore: 0 },
+    '4': { teamScore: 0, opponentScore: 0 },
+    'total': { teamScore: 0, opponentScore: 0 }
   };
   
   // Sum goals for each quarter
@@ -246,11 +246,11 @@ export default function GameStatistics({
     if (quarterScores[quarter as '1'|'2'|'3'|'4']) {
       Object.values(playerStats).forEach(stat => {
         quarterScores[quarter as '1'|'2'|'3'|'4'].teamScore += stat.goalsFor;
-        quarterScores[quarter as '1'|'2'|'3'|'4'].awayScore += stat.goalsAgainst;
+        quarterScores[quarter as '1'|'2'|'3'|'4'].opponentScore += stat.goalsAgainst;
         
         // Also add to totals
         quarterScores['total'].teamScore += stat.goalsFor;
-        quarterScores['total'].awayScore += stat.goalsAgainst;
+        quarterScores['total'].opponentScore += stat.goalsAgainst;
       });
     }
   });
@@ -567,7 +567,7 @@ export default function GameStatistics({
                 <div className="bg-gray-200 rounded p-2">
                   <div className="font-heading font-bold text-gray-700">{opponent?.teamName}</div>
                   <div className="text-2xl font-bold text-neutral-dark">
-                    {quarterScores.total.awayScore}
+                    {quarterScores.total.opponentScore}
                   </div>
                 </div>
               </div>
@@ -584,7 +584,7 @@ export default function GameStatistics({
                   </div>
                   <div className="bg-gray-200 rounded p-2">
                     <div className="text-xl font-bold text-neutral-dark">
-                      {quarterScores[quarter as '1'|'2'|'3'|'4'].awayScore}
+                      {quarterScores[quarter as '1'|'2'|'3'|'4'].opponentScore}
                     </div>
                   </div>
                 </div>

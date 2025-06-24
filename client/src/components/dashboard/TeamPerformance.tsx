@@ -129,7 +129,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
 
                 // Use the gameScoreService for consistent score calculation
                 let teamScore = 0;
-                let awayScore = 0;
+                let opponentScore = 0;
 
                 try {
                   // Get official scores from centralized data
@@ -150,13 +150,13 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                   );
 
                   teamScore = gameScores.totalTeamScore;
-                  awayScore = gameScores.totalOpponentScore;
+                  opponentScore = gameScores.totalOpponentScore;
 
                   // Add quarter-by-quarter data from gameScores
                   gameScores.quarterScores.forEach(qScore => {
                     if (qScore.quarter >= 1 && qScore.quarter <= 4) {
                       quarterScores[qScore.quarter].team += qScore.teamScore;
-                      quarterScores[qScore.quarter].opponent += qScore.awayScore;
+                      quarterScores[qScore.quarter].opponent += qScore.opponentScore;
                       quarterScores[qScore.quarter].count += 1;
                     }
                   });
@@ -165,7 +165,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                                     gameStats.length > 0 ? 'stats' :
                                     (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? 'fixed' : 'none';
 
-                  console.log(`TeamPerformance: Game ${gameId} scores (${scoreSource}) - Team: ${teamScore}, Opponent: ${awayScore}, Result: ${gameScores.result}`);
+                  console.log(`TeamPerformance: Game ${gameId} scores (${scoreSource}) - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${gameScores.result}`);
                 } catch (error) {
                   console.error(`TeamPerformance: Error calculating scores for game ${gameId}:`, error);
                   continue;
@@ -174,15 +174,15 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                 // Count all completed games, even if scores are 0
                 actualGamesWithStats++;
                 totalTeamScore += teamScore;
-                totalOpponentScore += awayScore;
+                totalOpponentScore += opponentScore;
 
                 // Determine outcome
-                const result = getWinLoseLabel(teamScore, awayScore);
+                const result = getWinLoseLabel(teamScore, opponentScore);
                 if (result === 'Win') wins++;
                 else if (result === 'Loss') losses++;
                 else draws++;
 
-                console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${awayScore}, Result: ${result}`);
+                console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
               } catch (error) {
                 console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
               }

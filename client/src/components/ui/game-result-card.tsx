@@ -347,7 +347,7 @@ export default function GameResultCard({
             quarterScores={scores.quarterBreakdown.map(q => ({
               quarter: q.quarter,
               teamScore: q.ourScore,
-              awayScore: q.theirScore
+              opponentScore: q.theirScore
             }))}
             size="sm"
             className="mr-4"
@@ -390,7 +390,7 @@ export default function GameResultCard({
               return (
                 <ScoreBadge 
                   teamScore={homeScore} // Home team score (displayed first)
-                  awayScore={awayScore} // Away team score (displayed second)
+                  opponentScore={awayScore} // Away team score (displayed second)
                   result={scores.result}
                 />
               );
