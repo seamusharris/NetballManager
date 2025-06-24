@@ -1,5 +1,6 @@
 import React from 'react';
 import { useClub } from '@/contexts/ClubContext';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import { Building2, ChevronDown } from 'lucide-react';
 export function ClubSwitcher() {
   try {
     const { currentClub, currentClubId, userClubs, switchClub, isLoading, isInitialized } = useClub();
+    const [, setLocation] = useLocation();
 
     if (isLoading || !isInitialized) {
       return (
@@ -80,6 +82,7 @@ export function ClubSwitcher() {
               onClick={() => {
                 console.log('Switching to club:', club.clubId, club.clubName);
                 switchClub(club.clubId);
+                setLocation(`/club/${club.clubId}`);
               }}
               className="flex items-center justify-between p-3"
             >
