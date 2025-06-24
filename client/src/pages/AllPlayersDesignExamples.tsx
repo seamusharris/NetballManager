@@ -53,7 +53,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AllPlayersDesignExamples() {
-  // Sample player data for 150+ players simulation
+  // Sample player data for 150+ players simulation with deterministic generation
   const generatePlayers = (count: number) => {
     const names = [
       "Sarah Johnson", "Emma Wilson", "Lily Chen", "Mia Thompson", "Zoe Parker",
@@ -89,16 +89,16 @@ export default function AllPlayersDesignExamples() {
       lastName: names[i % names.length].split(' ')[1] + (i > names.length - 1 ? ` ${Math.floor(i / names.length) + 1}` : ''),
       positionPreferences: positions[i % positions.length],
       avatarColor: colors[i % colors.length],
-      active: Math.random() > 0.2, // 80% active
+      active: i % 5 !== 0, // Deterministic: 80% active (every 5th player is inactive)
       team: teams[i % teams.length],
       status: statuses[i % statuses.length],
-      joinedDate: new Date(2023 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
-      gamesPlayed: Math.floor(Math.random() * 25),
-      goals: Math.floor(Math.random() * 50),
-      assists: Math.floor(Math.random() * 30),
+      joinedDate: new Date(2023 + (i % 2), (i % 12), Math.min((i % 28) + 1, 28)),
+      gamesPlayed: (i % 25),
+      goals: (i % 50),
+      assists: (i % 30),
       email: `${names[i % names.length].toLowerCase().replace(' ', '.')}@email.com`,
-      phone: `04${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
-      address: `${Math.floor(Math.random() * 999) + 1} ${['Main', 'Oak', 'Pine', 'Elm', 'Cedar'][Math.floor(Math.random() * 5)]} St`
+      phone: `04${(i + 10000000).toString().padStart(8, '0')}`,
+      address: `${(i % 999) + 1} ${['Main', 'Oak', 'Pine', 'Elm', 'Cedar'][i % 5]} St`
     }));
   };
 
@@ -263,8 +263,11 @@ export default function AllPlayersDesignExamples() {
               {/* Player Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(() => {
-                  // Filter active players first, then slice to create a stable array
-                  const activePlayersToShow = filteredPlayers.filter(player => player.active).slice(0, 16);
+                  // Filter active players, sort alphabetically, then slice to create a stable array
+                  const activePlayersToShow = filteredPlayers
+                    .filter(player => player.active)
+                    .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+                    .slice(0, 16);
                   
                   return activePlayersToShow.map((player) => {
                     const playerColorHex = getPlayerColorHex(player.avatarColor);
@@ -651,7 +654,9 @@ export default function AllPlayersDesignExamples() {
 
                   {viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredPlayers.slice(0, 12).map((player) => (
+                      {filteredPlayers
+                        .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+                        .slice(0, 12).map((player) => (
                         <PlayerBox
                           key={player.id}
                           player={player}
@@ -663,7 +668,9 @@ export default function AllPlayersDesignExamples() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {filteredPlayers.slice(0, 12).map((player) => (
+                      {filteredPlayers
+                        .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+                        .slice(0, 12).map((player) => (
                         <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-medium">
@@ -748,7 +755,9 @@ export default function AllPlayersDesignExamples() {
 
               {/* Player Grid with Batch Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredPlayers.slice(0, 16).map((player) => (
+                {filteredPlayers
+                  .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+                  .slice(0, 16).map((player) => (
                   <div key={`batch-player-${player.id}`} className="relative">
                     <div 
                       className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer z-10 text-white transition-all"
@@ -840,7 +849,9 @@ export default function AllPlayersDesignExamples() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPlayers.slice(0, 9).map((player) => (
+                {filteredPlayers
+                  .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+                  .slice(0, 9).map((player) => (
                   <Card key={player.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
@@ -1078,7 +1089,9 @@ export default function AllPlayersDesignExamples() {
 
               {/* Mobile Player List */}
               <div className="space-y-3">
-                {filteredPlayers.slice(0, 10).map((player) => (
+                {filteredPlayers
+                  .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+                  .slice(0, 10).map((player) => (
                   <div key={player.id} className="flex items-center gap-3 p-3 border rounded-lg active:bg-gray-50">
                     <div 
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0"
