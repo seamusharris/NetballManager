@@ -26,7 +26,15 @@ interface QueryParams {
 export default function Games() {
   const { currentClub, currentClubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const params = useParams();
+  const [location] = useLocation();
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
+  
+  // Detect if we're in club-wide games view
+  const isClubWideGamesView = location.includes(`/club/${currentClubId}/games`);
+  
+  // For club-wide view, we should not use team context
+  const effectiveTeamId = isClubWideGamesView ? null : (teamIdFromUrl || currentTeamId);
+  const effectiveTeam = isClubWideGamesView ? null : currentTeam;
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -62,21 +70,21 @@ export default function Games() {
     enabled: !!currentClubId,
   });
 
-  // Auto-select team from URL if provided - optimize to prevent unnecessary updates
+  // Auto-select team from URL if provided - but not for club-wide view
   useEffect(() => {
-    if (teamIdFromUrl && teams.length > 0) {
+    if (!isClubWideGamesView && teamIdFromUrl && teams.length > 0) {
       const targetTeam = teams.find(t => t.id === teamIdFromUrl);
       if (targetTeam && currentTeamId !== teamIdFromUrl) {
         console.log(`Games: Setting team ${teamIdFromUrl} from URL`);
         setCurrentTeamId(teamIdFromUrl);
       }
     }
-  }, [teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
+  }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
 
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId],
-    queryFn: () => apiClient.get('/api/games'),
+    queryKey: ['games', currentClubId, effectiveTeamId],
+    queryFn: () => apiClient.get('/api/games', isClubWideGamesView ? { 'x-club-wide': 'true' } : {}),
     enabled: !!currentClubId,
   });
 
@@ -85,31 +93,31 @@ export default function Games() {
   const gameIds = gameIdsArray.join(',');
 
   const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
-    queryKey: ['games-batch-data', currentClubId, teamIdFromUrl || currentTeamId, gameIds],
+    queryKey: ['games-batch-data', currentClubId, effectiveTeamId, gameIds],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${teamIdFromUrl || currentTeamId}:`, gameIdsArray);
+      console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${effectiveTeamId}:`, gameIdsArray);
 
       try {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
           gameIds: gameIdsArray,
           clubId: currentClubId!,
-          teamId: teamIdFromUrl || currentTeamId,
+          teamId: effectiveTeamId ?? undefined,
           includeStats: true,
           includeRosters: true,
           includeScores: true
         });
 
-        console.log('Games page batch data result for team', teamIdFromUrl || currentTeamId, ':', result);
+        console.log('Games page batch data result for team', effectiveTeamId, ':', result);
         return result;
       } catch (error) {
         console.error('Games page batch data fetch error:', error);
         throw error;
       }
     },
-    enabled: !!currentClubId && !!(teamIdFromUrl || currentTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
+    enabled: !!currentClubId && (isClubWideGamesView || !!effectiveTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
     staleTime: 2 * 60 * 1000, // 2 minutes - shorter for dynamic game data
     gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
     refetchOnWindowFocus: false,
@@ -168,7 +176,7 @@ export default function Games() {
       if (currentClubId) {
         // Invalidate the specific games query for current team (matches the actual query key pattern)
         queryClient.invalidateQueries({
-          queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId]
+          queryKey: ['games', currentClubId, effectiveTeamId]
         });
 
         // Invalidate Dashboard games queries (critical for UpcomingGames widget)
@@ -263,10 +271,16 @@ export default function Games() {
   });
 
   // Generate page title with context
-  const pageTitle = currentTeam ? `Games - ${currentTeam.name}` : 'Games';
-  const pageSubtitle = currentTeamId 
-    ? `Manage and view game schedules and results for ${currentTeam?.name || 'Selected Team'}`
-    : 'Manage and view game schedules and results';
+  const pageTitle = isClubWideGamesView 
+    ? `All Games - ${currentClub?.name || 'Club'}` 
+    : effectiveTeam 
+      ? `Games - ${effectiveTeam.name}` 
+      : 'Games';
+  const pageSubtitle = isClubWideGamesView
+    ? `View all game schedules and results for ${currentClub?.name || 'the club'}`
+    : effectiveTeamId 
+      ? `Manage and view game schedules and results for ${effectiveTeam?.name || 'Selected Team'}`
+      : 'Manage and view game schedules and results';
 
   // Generate breadcrumbs
   const breadcrumbs = [
@@ -285,10 +299,19 @@ export default function Games() {
         ]}
         actions={
           <>
-            <div className="text-sm text-muted-foreground">
-              Team Filter (Optional):
-            </div>
-            <TeamSwitcher />
+            {!isClubWideGamesView && (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  Team Filter (Optional):
+                </div>
+                <TeamSwitcher />
+              </>
+            )}
+            {isClubWideGamesView && (
+              <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
+                Showing all club games
+              </div>
+            )}
             <ActionButton 
               action="create" 
               onClick={() => setIsDialogOpen(true)}
