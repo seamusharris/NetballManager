@@ -406,8 +406,13 @@ export default function GameResultCard({
   );
 
   if (showLink) {
+    // Use team-based URL when currentTeamId is available, otherwise fall back to game-only URL
+    const gameUrl = currentTeamId 
+      ? `/team/${currentTeamId}/games/${game.id}`
+      : `/game/${game.id}`;
+    
     return (
-      <Link href={`/game/${game.id}`}>
+      <Link href={gameUrl}>
         <CardContent />
       </Link>
     );

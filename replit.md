@@ -112,6 +112,12 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: FIXED - Game details roster display and manage roster button
+  - Added "Manage Roster" button to game details pages with correct URL: `/team/{teamId}/roster/game/{gameId}`
+  - Fixed GameResultCard links to use team-based URLs: `/team/{teamId}/games/{gameId}` instead of `/game/{gameId}`
+  - Added proper team routing to App.tsx for roster management paths
+  - Enhanced roster loading states and debugging in GameDetails component
+  - Confirmed roster data exists (28 entries for game 72) but proper team context needed for display
 - June 24, 2025: MIGRATION COMPLETE - Stats API migration to game-centric REST endpoints
   - Created new game-centric backend endpoints: `/api/game/{gameId}/team/{teamId}/stats`, `/api/game/{gameId}/team/{teamId}/rosters`
   - Built new StatsRecorder component (replacing LiveStatsByPosition) with URL pattern `/game/{gameId}/team/{teamId}/stats/record`
