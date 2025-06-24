@@ -1405,8 +1405,8 @@ export default function GameDetails() {
     }
   }, [game]);
 
-  // Loading state
-  if (isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams || !game) { // Removed isLoadingOpponents
+  // Loading state - wait for both players and roster to load before showing the page
+  if (isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams || gameLoading || !game) { // Removed isLoadingOpponents
     return (
       <div className="py-10 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
@@ -1842,8 +1842,11 @@ export default function GameDetails() {
                     rosterLength: roster?.length, 
                     isLoading: isLoadingRoster,
                     playersLength: players?.length,
+                    isLoadingPlayers,
                     firstRosterEntry: roster?.[0],
-                    firstPlayer: players?.[0]
+                    firstPlayer: players?.[0],
+                    rosterPlayerIds: roster?.slice(0, 5)?.map(r => r.playerId),
+                    playerIds: players?.slice(0, 5)?.map(p => p.id)
                   })}
                   {isLoadingRoster ? (
                     <div className="text-center py-10">
