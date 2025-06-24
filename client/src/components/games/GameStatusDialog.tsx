@@ -61,25 +61,38 @@ export function GameStatusDialog({
       return apiRequest('PATCH', `/api/games/${game.id}`, updateData);
     },
     onSuccess: () => {
-      // Invalidate relevant queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', game?.id?.toString()] });
-
-      // Invalidate batch stats queries for any status change to ensure
-      // scores and caching behavior are properly updated
-      queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
-      // Also clear any individual game stats cache
-      queryClient.invalidateQueries({ queryKey: ['/api/games', game?.id, 'stats'] });
-
-      // Show success toast
       toast({
-        title: 'Game status updated',
-        description: `Game status has been updated to ${selectedStatus}.`,
+        title: "Success",
+        description: "Game status has been updated."
+      });
+      onOpenChange(false);
+
+      // Comprehensive cache invalidation for game status changes
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games`] });
+      queryClient.invalidateQueries({ queryKey: ['game', game.id] });
+
+      // Invalidate all games lists since status affects filtering
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && queryKey[0] === 'games';
+        }
       });
 
-      // Close dialog and call success callback
-      onOpenChange(false);
-      if (onSuccess) onSuccess();
+      // Invalidate batch data that includes status-dependent calculations
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && (
+            queryKey[0] === 'batch-scores' ||
+            queryKey[0] === 'official-scores' ||
+            queryKey[0] === 'dashboard' ||
+            queryKey[0] === 'team-performance' ||
+            queryKey[0] === 'batch-game-data'
+          );
+        }
+      });
     },
     onError: (error) => {
       console.error('Error updating game status:', error);

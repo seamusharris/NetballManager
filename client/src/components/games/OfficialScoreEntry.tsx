@@ -110,64 +110,49 @@ export function OfficialScoreEntry({
       return apiClient.post(`/api/games/${gameId}/scores`, saveData);
     },
     onSuccess: () => {
-      toast({
-        title: "Official scores saved",
-        description: "Scores have been saved successfully."
-      });
+        toast({
+          title: "Score saved successfully",
+          description: "Official scores have been updated."
+        });
 
-      // Invalidate the scores query for this specific game
-      queryClient.invalidateQueries({
-        queryKey: ['/api/games', gameId, 'scores']
-      });
+        // Comprehensive cache invalidation for official scores
+        queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/scores`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
+        queryClient.invalidateQueries({ queryKey: ['scores', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['game', gameId] });
 
-      // Invalidate the specific game query (used by GameDetails page)
-      queryClient.invalidateQueries({
-        queryKey: ['/api/games', gameId]
-      });
-
-      // Invalidate games queries using the correct pattern (matches Games page queries)
-      if (currentClub?.id) {
-        // Invalidate all games queries for this club
+        // Invalidate batch score queries that include this game
         queryClient.invalidateQueries({
           predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   key[0] === 'games' && 
-                   key[1] === currentClub.id;
+            const queryKey = query.queryKey;
+            return Array.isArray(queryKey) && (
+              queryKey[0] === 'batch-scores' ||
+              queryKey[0] === 'official-scores' ||
+              (typeof queryKey[0] === 'string' && queryKey[0].includes('/api/games/scores/batch'))
+            );
           }
         });
 
-        // Invalidate batch data queries that include this game
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   key[0] === 'games-batch-data' && 
-                   key[1] === currentClub.id;
-          }
-        });
+        // Invalidate games lists for dashboard updates
+        if (currentClub?.id) {
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const queryKey = query.queryKey;
+              return Array.isArray(queryKey) && 
+                     queryKey[0] === 'games' && 
+                     queryKey[1] === currentClub.id;
+            }
+          });
 
-        // Invalidate batch scores queries that include this game
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   typeof key[0] === 'string' && 
-                   key[0].includes('gameScores');
-          }
-        });
-
-        // Force refetch of batch scores data that powers the games list
-        queryClient.refetchQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   key[0] === 'games-batch-data' && 
-                   key[1] === currentClub.id;
-          }
-        });
-      }
-    },
+          // Invalidate dashboard data
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const queryKey = query.queryKey;
+              return Array.isArray(queryKey) && queryKey[0] === 'dashboard';
+            }
+          });
+        }
+      },
     onError: (error) => {
       console.error('Error saving score:', error);
       toast({
