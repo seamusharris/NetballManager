@@ -422,9 +422,11 @@ export default function DragDropRosterManager({
       }
 
       console.log(`DragDropRosterManager: Saving via team endpoint /api/teams/${teamId}/games/${gameId}/rosters/batch`);
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/rosters/batch`, {
+      console.log('DragDropRosterManager: Roster data being sent:', rosterData);
+      const response = await apiClient.post(`/api/teams/${teamId}/games/${gameId}/rosters/batch`, {
         rosters: rosterData
       });
+      console.log('DragDropRosterManager: Save response:', response);
 
       console.log('DragDropRosterManager: All roster entries saved successfully via batch');
 
