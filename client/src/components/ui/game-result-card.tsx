@@ -45,10 +45,11 @@ export default function GameResultCard({
   showScore = true,
   showQuarterScores = false,
   compact = false,
-  currentTeamId,
+  currentTeamId: propCurrentTeamId,
   clubTeams = []
 }: GameResultCardProps) {
-  const { currentClubId, teams } = useClub();
+  const { currentTeamId, currentClubId, currentClubTeams } = useClub();
+  const effectiveTeamId = propCurrentTeamId || currentTeamId;
   const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data
@@ -62,7 +63,7 @@ export default function GameResultCard({
 
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
-    const perspective = currentTeamId || 'club-wide';
+    const perspective = effectiveTeamId || 'club-wide';
     const clubTeamIds = currentClubTeams?.map(t => t.id) || [];
     
     // Debug logging for Matrix team games (Team 1)
@@ -92,24 +93,27 @@ export default function GameResultCard({
       });
     }
     
-    const result = UnifiedGameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
+    const result = UnifiedGameScoreService.calculateGameScore(
+      game, 
+      centralizedScores || [], 
+      perspective,
+      clubTeamIds
+    );
     
-    // Debug for any team 128 game
-    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
-      console.log(`🔍 GAME RESULT CARD - Team 128 game ${game.id} result:`, {
-        perspective,
+    // Debug result for Matrix team games
+    if (game.homeTeamId === 1 || game.awayTeamId === 1) {
+      console.log(`🔍 MATRIX GAME ${game.id} - Final result:`, {
         result: result.result,
         ourScore: result.ourScore,
         theirScore: result.theirScore,
         hasValidScore: result.hasValidScore,
         scoreSource: result.scoreSource,
-        team128IsHome: game.homeTeamId === 128,
-        team128IsAway: game.awayTeamId === 128
+        isInterClubGame: result.isInterClubGame
       });
     }
     
     return result;
-  }, [game, centralizedScores, currentTeamId, teams]);
+  }, [game, centralizedScores, effectiveTeamId, currentClubTeams]);
 
   // Convert to legacy format for backward compatibility with existing UI
   const scores = useMemo(() => {
