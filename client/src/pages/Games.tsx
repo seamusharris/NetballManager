@@ -100,12 +100,12 @@ export default function Games() {
     queryKey: ['games', currentClubId, effectiveTeamId],
     queryFn: () => {
       if (isClubWideGamesView) {
-        return apiClient.get('/api/games', { 'x-club-wide': 'true' });
+        return apiClient.get(`/api/clubs/${currentClubId}/games`);
       } else if (effectiveTeamId) {
         // Use team-specific endpoint for better filtering
         return apiClient.get(`/api/teams/${effectiveTeamId}/games`);
       } else {
-        return apiClient.get('/api/games');
+        return apiClient.get(`/api/clubs/${currentClubId}/games`);
       }
     },
     enabled: !!currentClubId,

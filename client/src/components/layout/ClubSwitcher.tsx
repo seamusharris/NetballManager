@@ -82,8 +82,8 @@ export function ClubSwitcher() {
               onClick={() => {
                 console.log('Switching to club:', club.clubId, club.clubName);
                 switchClub(club.clubId);
-                // Navigate to club-specific URL
-                window.location.href = `/club/${club.clubId}`;
+                // Navigate to club-specific URL using wouter
+                setLocation(`/club/${club.clubId}`);
               }}
               className="flex items-center justify-between p-3"
             >

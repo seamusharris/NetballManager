@@ -8,6 +8,7 @@ import { calculateTeamWinRate, calculateClubWinRate } from '@/lib/winRateCalcula
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Badge } from '@/components/ui/badge';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 import RecentGames from '@/components/dashboard/RecentGames';
@@ -41,12 +42,10 @@ export default function ClubDashboard() {
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
-  // Get games data with club-wide header (working approach)
+  // Get games data using REST endpoint - Stage 3
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', effectiveClubId, 'club-wide'],
-    queryFn: () => apiClient.get('/api/games', {
-      headers: { 'x-club-wide': 'true' }
-    }),
+    queryKey: [CACHE_KEYS.games, effectiveClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/games`),
     enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
     gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
