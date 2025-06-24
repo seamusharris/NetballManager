@@ -92,6 +92,9 @@ export class UnifiedGameScoreService {
       };
     }
 
+    // Determine team perspective and get team IDs
+    const teamIds = this.getTeamIds(game, perspective, clubTeamIds);
+
     // Try official scores first (highest priority)
     const officialResult = this.calculateFromOfficialScores(game, officialScores, teamIds);
     if (officialResult.hasValidScore) {
@@ -351,76 +354,51 @@ export class UnifiedGameScoreService {
       };
     }
 
-    let ourScore = 0;
-    let theirScore = 0;
+    const { ourTeamId, theirTeamId } = teamIds;
+    
+    let ourScore: number;
+    let theirScore: number;
 
-    // Debug logging for Team 128 (Wallabies)
-    if (perspective === 128) {
-      console.log(`🔍 UNIFIED SERVICE - Team 128 status scores for game ${game.id}:`, {
-        perspective,
-        homeTeamId: game.homeTeamId,
-        awayTeamId: game.awayTeamId,
-        statusTeamGoals: game.statusTeamGoals,
-        statusOpponentGoals: game.statusOpponentGoals,
-        isHomeTeam: game.homeTeamId === perspective,
-        isAwayTeam: game.awayTeamId === perspective
-      });
-    }
-
-    if (typeof perspective === 'number') {
-      // Team perspective - determine if we're home or away
-      if (game.homeTeamId === perspective) {
-        // We are home team
-        ourScore = game.statusTeamGoals;
-        theirScore = game.statusOpponentGoals;
-      } else if (game.awayTeamId === perspective) {
-        // We are away team - statusTeamGoals is still home score, statusOpponentGoals is still away score
-        // So our score (away) = statusOpponentGoals, their score (home) = statusTeamGoals
-        ourScore = game.statusOpponentGoals;
-        theirScore = game.statusTeamGoals;
-      } else {
-        // Team not involved in this game
-        return {
-          ourScore: 0,
-          theirScore: 0,
-          result: 'unknown',
-          quarterBreakdown: [],
-          hasValidScore: false,
-          scoreSource: 'none'
-        };
-      }
-    } else {
-      // Club-wide perspective - use home/away format
+    // Determine our score based on which team is ours
+    if (game.homeTeamId === ourTeamId) {
+      // We are home team
       ourScore = game.statusTeamGoals;
       theirScore = game.statusOpponentGoals;
+    } else if (game.awayTeamId === ourTeamId) {
+      // We are away team - statusTeamGoals is home score, statusOpponentGoals is away score
+      ourScore = game.statusOpponentGoals;
+      theirScore = game.statusTeamGoals;
+    } else {
+      // Team not involved in this game
+      return {
+        ourScore: 0,
+        theirScore: 0,
+        result: 'unknown',
+        quarterBreakdown: [],
+        hasValidScore: false,
+        scoreSource: 'none'
+      };
     }
 
-    // Debug logging for Team 128 result
-    if (perspective === 128) {
-      const result = this.determineResult(ourScore, theirScore);
-      console.log(`🔍 UNIFIED SERVICE - Team 128 final calculation:`, {
-        ourScore,
-        theirScore,
-        result,
-        shouldBeRed: result === 'loss'
-      });
-    }
+    const result = this.determineResult(ourScore, theirScore);
+    const hasValidScore = ourScore >= 0 && theirScore >= 0;
 
-    // Check if this is an inter-club game
-    const isInterClubGame = clubTeamIds.length > 0 && 
-      clubTeamIds.includes(game.homeTeamId || 0) && 
-      clubTeamIds.includes(game.awayTeamId || 0);
+    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} STATUS final calculation:`, {
+      ourTeamId,
+      theirTeamId,
+      ourScore,
+      theirScore,
+      result,
+      hasValidScore
+    });
 
-    const result = this.determineResult(ourScore, theirScore, isInterClubGame);
-    
     return {
       ourScore,
       theirScore,
-      result: isInterClubGame ? 'inter-club' : result,
+      result,
       quarterBreakdown: [],
-      hasValidScore: true,
-      scoreSource: 'status',
-      isInterClubGame
+      hasValidScore,
+      scoreSource: 'status'
     };
   }
 
