@@ -115,6 +115,19 @@ export default function GameResultCard({
   const isLoss = actualResult === 'loss';
   const isDraw = actualResult === 'draw';
 
+  // Debug logging for Team 128 specifically
+  if (currentTeamId === 128 && game.statusIsCompleted) {
+    console.log(`Game ${game.id} Team 128 Debug:`, {
+      ourScore: scoreResult.ourScore,
+      theirScore: scoreResult.theirScore,
+      result: actualResult,
+      isWin,
+      isLoss,
+      homeTeamId: game.homeTeamId,
+      awayTeamId: game.awayTeamId
+    });
+  }
+
   const getResultClass = () => {
     if (isByeGame) return 'border-gray-500 bg-gray-50'; // check byes first
     if (isUpcoming) return 'border-blue-500 bg-blue-50'; // upcoming games
