@@ -1491,6 +1491,7 @@ export default function GamePreparation() {
                 console.log('Roster updated:', rosters);
                 // Handle roster update here if needed
               }}
+              teamId={currentTeamId}
             />
           </TabsContent>
 

@@ -3539,6 +3539,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Team-based get roster entries (NEW - Stage 5)
+  app.get('/api/teams/:teamId/games/:gameId/rosters', requireTeamGameAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const rosters = await storage.getRostersByGame(parseInt(gameId));
+      console.log(`Team-based roster fetch: Found ${rosters.length} roster entries for game ${gameId}`);
+      res.json(rosters);
+    } catch (error) {
+      console.error('Error fetching team roster entries:', error);
+      res.status(500).json({ error: 'Failed to fetch roster entries' });
+    }
+  });
+
   // Team-based delete roster entries (NEW - Stage 5)
   app.delete('/api/teams/:teamId/games/:gameId/rosters', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
     try {
