@@ -262,44 +262,49 @@ export default function AllPlayersDesignExamples() {
 
               {/* Player Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredPlayers.filter(player => player.active).slice(0, 16).map((player) => {
-                  const playerColorHex = getPlayerColorHex(player.avatarColor);
-                  const darkerTextColor = getDarkerColorHex(player.avatarColor);
-                  const lighterBgColor = getLighterColorHex(player.avatarColor);
-                  const mediumBgColor = getMediumColorHex(player.avatarColor);
-                  const isSelected = selectedPlayers.has(player.id);
+                {(() => {
+                  // Filter active players first, then slice to create a stable array
+                  const activePlayersToShow = filteredPlayers.filter(player => player.active).slice(0, 16);
+                  
+                  return activePlayersToShow.map((player) => {
+                    const playerColorHex = getPlayerColorHex(player.avatarColor);
+                    const darkerTextColor = getDarkerColorHex(player.avatarColor);
+                    const lighterBgColor = getLighterColorHex(player.avatarColor);
+                    const mediumBgColor = getMediumColorHex(player.avatarColor);
+                    const isSelected = selectedPlayers.has(player.id);
 
-                  return (
-                    <div key={`grid-player-${player.id}`} className="relative">
-                      <div 
-                        className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                        style={{ 
-                          backgroundColor: isSelected ? darkerTextColor : 'transparent', 
-                          border: isSelected ? 'none' : `2px solid ${darkerTextColor}`
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePlayerSelection(player.id);
-                        }}
-                      >
-                        {isSelected && '✓'}
+                    return (
+                      <div key={`grid-player-${player.id}`} className="relative">
+                        <div 
+                          className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                          style={{ 
+                            backgroundColor: isSelected ? darkerTextColor : 'transparent', 
+                            border: isSelected ? 'none' : `2px solid ${darkerTextColor}`
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePlayerSelection(player.id);
+                          }}
+                        >
+                          {isSelected && '✓'}
+                        </div>
+                        <PlayerBox
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          hasSelect={true}
+                          className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                          style={{
+                            backgroundColor: isSelected ? mediumBgColor : lighterBgColor,
+                            borderColor: playerColorHex,
+                            color: darkerTextColor
+                          }}
+                          onClick={() => togglePlayerSelection(player.id)}
+                        />
                       </div>
-                      <PlayerBox
-                        player={player}
-                        size="md"
-                        showPositions={true}
-                        hasSelect={true}
-                        className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
-                        style={{
-                          backgroundColor: isSelected ? mediumBgColor : lighterBgColor,
-                          borderColor: playerColorHex,
-                          color: darkerTextColor
-                        }}
-                        onClick={() => togglePlayerSelection(player.id)}
-                      />
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
 
               {filteredPlayers.length > 16 && (
