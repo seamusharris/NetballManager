@@ -19,7 +19,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
-import { SharedPlayerAvailability } from '@/components/shared/SharedPlayerAvailability';
+import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchClub } = useClub();
