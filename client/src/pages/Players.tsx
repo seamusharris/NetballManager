@@ -449,7 +449,16 @@ export default function Players() {
               <SelectablePlayerBox
                 players={teamPlayers}
                 selectedPlayerIds={new Set(teamPlayers.map(p => p.id))}
-                onSelectionChange={() => {}}
+                onSelectionChange={(selectedIds) => {
+                  // In team management mode, when a player is deselected from current team,
+                  // remove them from the team
+                  const currentTeamPlayerIds = new Set(teamPlayers.map(p => p.id));
+                  const removedPlayerIds = [...currentTeamPlayerIds].filter(id => !selectedIds.has(id));
+                  
+                  removedPlayerIds.forEach(playerId => {
+                    handleRemovePlayer(playerId);
+                  });
+                }}
                 title="Current Team Players"
                 showQuickActions={false}
                 mode="team-management"
