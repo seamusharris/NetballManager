@@ -146,15 +146,15 @@ export default function PreviousGamesDisplay({
                                 const quarterLoss = teamScore < awayScore;
 
                                 // Display in Home-Away format but color by team perspective
-                                let homeScore, awayScore;
+                                let homeScore, opposingScore;
                                 if (game.homeTeamId === currentTeamId) {
                                   // Current team is home
                                   homeScore = teamScore;
-                                  awayScore = awayScore;
+                                  opposingScore = awayScore;
                                 } else {
                                   // Current team is away
                                   homeScore = awayScore;
-                                  awayScore = teamScore;
+                                  opposingScore = teamScore;
                                 }
 
                                 const quarterClass = quarterWin 
@@ -165,7 +165,7 @@ export default function PreviousGamesDisplay({
 
                                 return (
                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                    {homeScore}–{awayScore}
+                                    {homeScore}–{opposingScore}
                                   </span>
                                 );
                               })}
