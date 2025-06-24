@@ -13,7 +13,8 @@ import {
 import { Link } from 'wouter';
 import { cn } from '@/lib/utils';
 import { ClubSwitcher } from './ClubSwitcher';
-import { TeamSwitcher } from './TeamSwitcher'; // Import TeamSwitcher
+import { TeamSwitcher } from './TeamSwitcher';
+import { useClub } from '@/contexts/ClubContext';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
@@ -28,27 +29,42 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     return path.charAt(0).toUpperCase() + path.slice(1).replace('-', ' ');
   };
 
-  const navLinks = [
-    { path: '/', label: 'Club Dashboard', icon: <Building2 className="h-5 w-5" /> },
-    { path: '/team-dashboard', label: 'Team Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/players', label: 'Players', icon: <Users className="h-5 w-5" /> },
-    { path: '/teams', label: 'Teams', icon: <Users className="h-5 w-5" /> },
-    { path: '/roster', label: 'Roster', icon: <ClipboardList className="h-5 w-5" /> },
-    { path: '/games', label: 'Games', icon: <Calendar className="h-5 w-5" /> },
-    { path: '/opponent-preparation', label: 'Opponent Preparation', icon: <Target className="h-5 w-5" /> },
-    { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="h-5 w-5" /> },
-    { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="h-5 w-5" /> },
-    { path: '/preparation', label: 'Game Preparation', icon: <Target className="h-5 w-5" /> },
-    { path: '/statistics', label: 'Statistics', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/clubs', label: 'Club Management', icon: <Building2 className="h-5 w-5" /> },
-    { path: '/game-result-examples', label: 'Game Result Examples', icon: <Calendar className="h-5 w-5" /> },
-    { path: '/round-badge-examples', label: 'Round Badge Examples', icon: <Trophy className="h-5 w-5" /> },
-    { path: '/player-box-examples', label: 'PlayerBox Examples', icon: <Users className="h-5 w-5" /> },
-    { path: '/action-button-examples', label: 'Action Button Examples', icon: <SettingsIcon className="h-5 w-5" /> },
-    { path: '/dashboard-examples', label: 'Dashboard Examples', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/component-examples', label: 'All Examples', icon: <Zap className="h-5 w-5" /> },
-    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="h-5 w-5" /> },
-  ];
+  // Import club context to match sidebar navigation
+  const { currentTeamId, currentTeam, currentClubId } = useClub();
+
+  // Create navigation links that match the sidebar structure
+  const getNavLinks = () => {
+    const clubWideLinks = [
+      { path: '/', label: 'Club Dashboard', icon: <Building2 className="h-5 w-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/players`, label: 'All Players', icon: <Users className="h-5 w-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="h-5 w-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/games`, label: 'All Games', icon: <Calendar className="h-5 w-5" />, section: 'club' },
+    ];
+
+    const teamLinks = currentTeamId ? [
+      { path: `/team/${currentTeamId}`, label: 'Team Dashboard', icon: <Home className="h-5 w-5" />, section: 'team' },
+      { path: `/team/${currentTeamId}/games`, label: 'Team Games', icon: <Calendar className="h-5 w-5" />, section: 'team' },
+      { path: `/team/${currentTeamId}/roster`, label: 'Team Roster', icon: <ClipboardList className="h-5 w-5" />, section: 'team' },
+      { path: `/team/${currentTeamId}/statistics`, label: 'Team Statistics', icon: <BarChart className="h-5 w-5" />, section: 'team' },
+      { path: `/team/${currentTeamId}/preparation`, label: 'Game Preparation', icon: <Target className="h-5 w-5" />, section: 'team' },
+      { path: `/team/${currentTeamId}/analysis`, label: 'Opponent Analysis', icon: <Target className="h-5 w-5" />, section: 'team' },
+      { path: `/team/${currentTeamId}/players`, label: 'Player Management', icon: <Users className="h-5 w-5" />, section: 'team' },
+    ] : [];
+
+    const adminLinks = [
+      { path: '/seasons', label: 'Season Management', icon: <CalendarRange className="h-5 w-5" />, section: 'admin' },
+      { path: '/clubs', label: 'Club Management', icon: <Building2 className="h-5 w-5" />, section: 'admin' },
+      { path: '/settings', label: 'System Settings', icon: <SettingsIcon className="h-5 w-5" />, section: 'admin' },
+    ];
+
+    const devLinks = [
+      { path: '/component-examples', label: 'All Examples', icon: <Zap className="h-5 w-5" />, section: 'dev' },
+    ];
+
+    return { club: clubWideLinks, team: teamLinks, admin: adminLinks, dev: devLinks };
+  };
+
+  const navSections = getNavLinks();
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm z-20">
@@ -74,31 +90,140 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 space-y-1 p-2">
-                {navLinks.map((link) => {
-                  const isActive = location === link.path || (link.path !== '/' && location.startsWith(link.path));
-                  return (
-                    <DropdownMenuItem key={link.path} asChild className="p-0">
-                      <Link 
-                        href={link.path} 
-                        className={cn(
-                          "flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 border-l-4",
-                          isActive 
-                            ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
-                            : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
-                        )}
-                      >
-                        <span className={cn(
-                          "w-5 h-5 mr-3 transition-colors",
-                          isActive ? "text-blue-700" : "text-blue-600 group-hover:text-white"
-                        )}>
-                          {link.icon}
-                        </span>
-                        <span className="font-medium">{link.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
+              <DropdownMenuContent align="start" className="w-64 space-y-1 p-3 max-h-96 overflow-y-auto">
+                {/* Club Section */}
+                {navSections.club.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-2 px-2">Club Wide</p>
+                    <div className="space-y-1">
+                      {navSections.club.map((link) => {
+                        const isActive = location === link.path || (link.path !== '/' && location.startsWith(link.path));
+                        return (
+                          <DropdownMenuItem key={link.path} asChild className="p-0">
+                            <Link 
+                              href={link.path} 
+                              className={cn(
+                                "flex items-center w-full px-3 py-2 rounded-lg transition-all duration-200 border-l-4",
+                                isActive 
+                                  ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
+                                  : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
+                              )}
+                            >
+                              <span className={cn(
+                                "w-5 h-5 mr-3 transition-colors",
+                                isActive ? "text-blue-700" : "text-blue-600"
+                              )}>
+                                {link.icon}
+                              </span>
+                              <span className="font-medium text-sm">{link.label}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Team Section */}
+                {navSections.team.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-2 px-2">
+                      Team: {currentTeam?.name || 'Select Team'}
+                    </p>
+                    <div className="space-y-1">
+                      {navSections.team.map((link) => {
+                        const isActive = location === link.path || (link.path !== '/' && location.startsWith(link.path));
+                        return (
+                          <DropdownMenuItem key={link.path} asChild className="p-0">
+                            <Link 
+                              href={link.path} 
+                              className={cn(
+                                "flex items-center w-full px-3 py-2 rounded-lg transition-all duration-200 border-l-4",
+                                isActive 
+                                  ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
+                                  : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
+                              )}
+                            >
+                              <span className={cn(
+                                "w-5 h-5 mr-3 transition-colors",
+                                isActive ? "text-blue-700" : "text-blue-600"
+                              )}>
+                                {link.icon}
+                              </span>
+                              <span className="font-medium text-sm">{link.label}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Section */}
+                {navSections.admin.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-2 px-2">Administration</p>
+                    <div className="space-y-1">
+                      {navSections.admin.map((link) => {
+                        const isActive = location === link.path || (link.path !== '/' && location.startsWith(link.path));
+                        return (
+                          <DropdownMenuItem key={link.path} asChild className="p-0">
+                            <Link 
+                              href={link.path} 
+                              className={cn(
+                                "flex items-center w-full px-3 py-2 rounded-lg transition-all duration-200 border-l-4",
+                                isActive 
+                                  ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
+                                  : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
+                              )}
+                            >
+                              <span className={cn(
+                                "w-5 h-5 mr-3 transition-colors",
+                                isActive ? "text-blue-700" : "text-blue-600"
+                              )}>
+                                {link.icon}
+                              </span>
+                              <span className="font-medium text-sm">{link.label}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dev Section */}
+                {navSections.dev.length > 0 && (
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-2 px-2">Development</p>
+                    <div className="space-y-1">
+                      {navSections.dev.map((link) => {
+                        const isActive = location === link.path || (link.path !== '/' && location.startsWith(link.path));
+                        return (
+                          <DropdownMenuItem key={link.path} asChild className="p-0">
+                            <Link 
+                              href={link.path} 
+                              className={cn(
+                                "flex items-center w-full px-3 py-2 rounded-lg transition-all duration-200 border-l-4",
+                                isActive 
+                                  ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
+                                  : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
+                              )}
+                            >
+                              <span className={cn(
+                                "w-5 h-5 mr-3 transition-colors",
+                                isActive ? "text-blue-700" : "text-blue-600"
+                              )}>
+                                {link.icon}
+                              </span>
+                              <span className="font-medium text-sm">{link.label}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
