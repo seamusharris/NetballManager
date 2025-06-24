@@ -468,7 +468,7 @@ export function GamesList({
                     showRound={true}
                     showScore={true}
                     showLink={true}
-                    currentTeamId={currentTeamId}
+                    currentTeamId={urlTeamId || currentTeamId}
                     clubTeams={teams || []}
                   />
 
