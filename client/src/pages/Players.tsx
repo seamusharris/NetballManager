@@ -70,7 +70,6 @@ export default function Players() {
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
-  const currentClubId = currentClub?.id;
 
   // Get active season for team assignments
   const { data: activeSeason } = useQuery({
