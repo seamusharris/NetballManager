@@ -38,62 +38,44 @@ export default function PlayerAvailability() {
     return null;
   }, [params]);
 
-  // Fetch games using team-specific endpoint for player availability context
-  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', teamId, 'team-specific'],
+  // Fetch ONLY the specific game we need
+  const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
+    queryKey: ['game', gameId],
     queryFn: async () => {
-      if (teamId) {
-        console.log(`Fetching games for team ${teamId}`);
-        const result = await apiRequest('GET', `/api/teams/${teamId}/games`) as Promise<Game[]>;
-        console.log(`Team ${teamId} games response:`, result?.length, 'games');
-        return result;
-      } else {
-        // Fallback to club games if no team context
-        console.log(`Fetching club games for club ${currentClub?.id}`);
-        return apiRequest('GET', `/api/clubs/${currentClub?.id}/games`) as Promise<Game[]>;
-      }
+      console.log(`Fetching specific game ${gameId}`);
+      const result = await apiRequest('GET', `/api/games/${gameId}`) as Promise<Game>;
+      console.log(`Game ${gameId} response:`, result);
+      return result;
     },
     retry: 2,
-    enabled: !!currentClub?.id && isInitialized && !!teamId,
+    enabled: !!gameId,
     staleTime: 30000 // 30 seconds
   });
 
-  // Fetch roster for the selected game using team-specific context
-  const { data: gameRoster = [], isLoading: isLoadingRoster } = useQuery({
-    queryKey: ['teams', teamId, 'games', gameId, 'roster'],
-    queryFn: () => {
-      if (teamId && gameId) {
-        return apiRequest('GET', `/api/teams/${teamId}/roster/${gameId}`) as Promise<any[]>;
-      } else {
-        // Fallback to general game roster endpoint
-        return apiRequest('GET', `/api/games/${gameId}/rosters`) as Promise<any[]>;
-      }
-    },
-    enabled: !!gameId && !!teamId
-  });
-
-  // Fetch team players (not club-wide players)
+  // Fetch team players for availability
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['teams', teamId, 'players'],
-    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`) as Promise<Player[]>,
+    queryFn: async () => {
+      console.log(`Fetching players for team ${teamId}`);
+      const result = await apiRequest('GET', `/api/teams/${teamId}/players`) as Promise<Player[]>;
+      console.log(`Team ${teamId} players response:`, result?.length, 'players');
+      return result;
+    },
     enabled: !!teamId && isInitialized
   });
 
-  const selectedGame = games.find((game: Game) => game.id === gameId);
-  
   // Debug logging
   console.log('PlayerAvailability Debug:', {
     gameId,
     teamId,
-    gamesCount: games.length,
-    gameIds: games.map(g => g.id),
     selectedGame: selectedGame?.id,
-    isLoading: gamesLoading,
-    hasError: gamesError
+    playersCount: players.length,
+    isLoading: gameLoading || playersLoading,
+    hasError: gameError || playersError
   });
 
-  const isLoading = playersLoading || gamesLoading;
-  const hasError = playersError || gamesError;
+  const isLoading = playersLoading || gameLoading;
+  const hasError = playersError || gameError;
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
@@ -133,7 +115,7 @@ export default function PlayerAvailability() {
   // Load availability data using the hook
   const { data: availabilityData, isLoading: availabilityLoading } = usePlayerAvailability(gameId || 0, teamId || undefined);
 
-  if (!selectedGame && !isLoading && gameId && teamId) {
+  if (!selectedGame && !isLoading) {
     // If we can't find the game in team games, load it directly
     console.log('Game not found in team games list, proceeding with availability data anyway');
     
