@@ -11,15 +11,16 @@ interface TeamSwitcherProps {
 }
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
+  // ALL HOOKS MUST BE AT THE TOP - NEVER CALL HOOKS CONDITIONALLY
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId, currentClub } = useClub();
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 
-  // Don't render if hidden mode or only one team
+  // Compute derived values (these are NOT hooks)
   const validTeams = clubTeams.filter(team => team.isActive !== false);
   const shouldRender = mode !== 'hidden' && validTeams.length > 1;
 
-  // Sync internal value with context changes
+  // ALL useEffect hooks must be called on every render
   useEffect(() => {
     if (!shouldRender) return;
     const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
@@ -27,7 +28,6 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     setInternalValue(newValue);
   }, [currentTeamId, mode, shouldRender]);
 
-  // For required mode, auto-select first team if none selected
   useEffect(() => {
     if (!shouldRender) return;
     if (mode === 'required' && !currentTeamId && validTeams.length > 0) {
@@ -38,18 +38,14 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     }
   }, [mode, currentTeamId, validTeams, setCurrentTeamId, onTeamChange, shouldRender]);
 
+  // useCallback MUST be called on every render
   const handleTeamSelect = useCallback((teamId: string) => {
     console.log('TeamSwitcher: Team selected:', teamId);
     
     // Handle "all" selection
     if (teamId === 'all') {
-      // Update internal value immediately
       setInternalValue(teamId);
-      
-      // Clear team context
       setCurrentTeamId(null);
-      
-      // Call external handler if provided
       onTeamChange?.(null);
       
       // Navigate to club-wide view if currently on a team page
@@ -86,7 +82,6 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
       // Navigate immediately without debouncing
       if (location.includes('/games')) {
-        // If on any games page, navigate to team-specific games
         setLocation(`/team/${numericTeamId}/games`);
       } else if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
         setLocation(`/team/${numericTeamId}`);
@@ -98,8 +93,9 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         setLocation(`/team/${numericTeamId}`);
       }
     }
-  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, setInternalValue, currentClub]);
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, currentClub]);
 
+  // ONLY AFTER ALL HOOKS - we can conditionally return null
   if (!shouldRender) {
     return null;
   }
