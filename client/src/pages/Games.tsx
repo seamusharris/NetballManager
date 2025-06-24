@@ -89,10 +89,19 @@ export default function Games() {
     }
   }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
 
-  // Fetch games
+  // Fetch games - use team-specific endpoint when we have a team ID
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, effectiveTeamId],
-    queryFn: () => apiClient.get('/api/games', isClubWideGamesView ? { 'x-club-wide': 'true' } : {}),
+    queryFn: () => {
+      if (isClubWideGamesView) {
+        return apiClient.get('/api/games', { 'x-club-wide': 'true' });
+      } else if (effectiveTeamId) {
+        // Use team-specific endpoint for better filtering
+        return apiClient.get(`/api/teams/${effectiveTeamId}/games`);
+      } else {
+        return apiClient.get('/api/games');
+      }
+    },
     enabled: !!currentClubId,
   });
 
@@ -186,6 +195,17 @@ export default function Games() {
         queryClient.invalidateQueries({
           queryKey: ['games', currentClubId, effectiveTeamId]
         });
+
+        // Invalidate team-specific games queries if we have a team
+        if (effectiveTeamId) {
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey;
+              return Array.isArray(key) && 
+                     key[0] === `team-games-${effectiveTeamId}`;
+            }
+          });
+        }
 
         // Invalidate Dashboard games queries (critical for UpcomingGames widget)
         queryClient.invalidateQueries({
