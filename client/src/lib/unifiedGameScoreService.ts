@@ -240,8 +240,8 @@ export class UnifiedGameScoreService {
     // Determine team IDs based on perspective
     const { ourTeamId, theirTeamId } = this.getTeamIds(game, perspective);
 
-    // Debug logging for Team 128 (Wallabies) 
-    if (perspective === 128) {
+    // Debug logging for Team 128 games regardless of perspective
+    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 UNIFIED SERVICE - Team 128 official scores for game ${game.id}:`, {
         perspective,
         homeTeamId: game.homeTeamId,
@@ -301,12 +301,15 @@ export class UnifiedGameScoreService {
     const result = this.determineResult(ourTotalScore, theirTotalScore);
     
     // Debug logging for Team 128 result from official scores
-    if (perspective === 128) {
+    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 UNIFIED SERVICE - Team 128 official scores final calculation:`, {
+        perspective,
         ourTotalScore,
         theirTotalScore,
         result,
-        shouldBeRed: result === 'loss'
+        shouldBeRed: result === 'loss',
+        team128IsHome: game.homeTeamId === 128,
+        team128IsAway: game.awayTeamId === 128
       });
     }
 

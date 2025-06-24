@@ -64,10 +64,11 @@ export default function GameResultCard({
   const scoreResult = useMemo(() => {
     const perspective = currentTeamId || 'club-wide';
     
-    // Debug for Team 128
-    if (currentTeamId === 128) {
+    // Debug for any team 128 game regardless of perspective
+    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 GAME RESULT CARD - Team 128 game ${game.id} inputs:`, {
         perspective,
+        currentTeamId,
         centralizedScoresCount: centralizedScores?.length || 0,
         gameData: {
           homeTeamId: game.homeTeamId,
@@ -79,14 +80,17 @@ export default function GameResultCard({
     
     const result = UnifiedGameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
     
-    // Debug for Team 128
-    if (currentTeamId === 128) {
+    // Debug for any team 128 game
+    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 GAME RESULT CARD - Team 128 game ${game.id} result:`, {
+        perspective,
         result: result.result,
         ourScore: result.ourScore,
         theirScore: result.theirScore,
         hasValidScore: result.hasValidScore,
-        scoreSource: result.scoreSource
+        scoreSource: result.scoreSource,
+        team128IsHome: game.homeTeamId === 128,
+        team128IsAway: game.awayTeamId === 128
       });
     }
     
