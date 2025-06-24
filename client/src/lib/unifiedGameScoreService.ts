@@ -317,12 +317,7 @@ export class UnifiedGameScoreService {
     // Sort quarter breakdown by quarter number
     quarterBreakdown.sort((a, b) => a.quarter - b.quarter);
 
-    // Check if this is an inter-club game
-    const isInterClubGame = clubTeamIds.length > 0 && 
-      clubTeamIds.includes(game.homeTeamId || 0) && 
-      clubTeamIds.includes(game.awayTeamId || 0);
-
-    const result = this.determineResult(ourTotalScore, theirTotalScore, isInterClubGame);
+    const result = this.determineResult(ourTotalScore, theirTotalScore);
     
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} OFFICIAL final calculation:`, {
       ourTotalScore,
@@ -335,11 +330,10 @@ export class UnifiedGameScoreService {
     return {
       ourScore: ourTotalScore,
       theirScore: theirTotalScore,
-      result: isInterClubGame ? 'inter-club' : result,
+      result,
       quarterBreakdown,
       hasValidScore: true,
-      scoreSource: 'official',
-      isInterClubGame
+      scoreSource: 'official'
     };
   }
 

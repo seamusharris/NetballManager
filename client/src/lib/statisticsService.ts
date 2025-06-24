@@ -244,29 +244,51 @@ class UnifiedStatisticsService {
           if (team1Stats.length === 0 && team123Stats.length > 0) {
             console.log(`🚨 MATRIX ISSUE DETECTED! Generating Team 1 stats from Team 123 opponent data`);
             
-            // Generate Matrix team stats from WNC Emus defensive stats
+            // Generate Matrix team stats from WNC Emus data with correct position mapping
             const generatedStats = [];
             team123Stats.forEach(stat => {
+              // Generate Matrix offensive stats from opponent defensive stats
               if (stat.position === 'GD' || stat.position === 'GK') {
-                // Generate Matrix offensive stat from WNC defensive stat
                 const matrixStat: GameStat = {
-                  id: -(gameId * 1000 + stat.id), // Negative ID to mark as generated
+                  id: -(gameId * 1000 + stat.id),
                   gameId: gameId,
                   teamId: 1, // Matrix team
-                  position: stat.position === 'GD' ? 'GA' : 'GS',
+                  position: stat.position === 'GK' ? 'GS' : 'GA', // GK defends GS, GD defends GA
                   quarter: stat.quarter,
-                  goalsFor: stat.goalsAgainst || 0, // Their defense = our offense
+                  goalsFor: stat.goalsAgainst || 0, // Goals they conceded = goals Matrix scored
                   goalsAgainst: 0,
                   missedGoals: 0,
                   rebounds: 0,
                   intercepts: 0,
-                  errors: 0,
-                  playerId: null,
-                  enteredAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  notes: 'Generated from opponent perspective'
+                  badPass: 0,
+                  handlingError: 0,
+                  pickUp: 0,
+                  infringement: 0,
+                  rating: null
                 };
                 generatedStats.push(matrixStat);
+              }
+              
+              // Generate Matrix defensive stats from opponent offensive stats
+              if (stat.position === 'GA' || stat.position === 'GS') {
+                const matrixDefensiveStat: GameStat = {
+                  id: -(gameId * 1000 + stat.id + 1000),
+                  gameId: gameId,
+                  teamId: 1, // Matrix team
+                  position: stat.position === 'GS' ? 'GK' : 'GD', // GS attacks GK, GA attacks GD
+                  quarter: stat.quarter,
+                  goalsFor: 0,
+                  goalsAgainst: stat.goalsFor || 0, // Goals they scored = goals Matrix conceded
+                  missedGoals: 0,
+                  rebounds: 0,
+                  intercepts: 0,
+                  badPass: 0,
+                  handlingError: 0,
+                  pickUp: 0,
+                  infringement: 0,
+                  rating: null
+                };
+                generatedStats.push(matrixDefensiveStat);
               }
             });
             
@@ -293,50 +315,50 @@ class UnifiedStatisticsService {
             
             // Generate both offensive AND defensive stats for missing team
             for (const opponentStat of opponentStats) {
-              // Generate offensive stats from opponent's defensive positions
+              // Generate our offensive stats from opponent's defensive data
               if (opponentStat.position === 'GD' || opponentStat.position === 'GK') {
-              const offensiveStat: GameStat = {
-                id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), 
-                gameId: gameId,
-                teamId: missingTeamId,
-                position: opponentStat.position === 'GD' ? 'GA' : 'GS', // Map defensive to offensive positions
-                quarter: opponentStat.quarter,
-                goalsFor: opponentStat.goalsAgainst || 0, // Their goals against = our goals for
-                goalsAgainst: 0,
-                missedGoals: 0,
-                rebounds: 0,
-                intercepts: 0,
-                badPass: 0,
-                handlingError: 0,
-                pickUp: 0,
-                infringement: 0,
-                rating: null
-              };
+                const offensiveStat: GameStat = {
+                  id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), 
+                  gameId: gameId,
+                  teamId: missingTeamId,
+                  position: opponentStat.position === 'GK' ? 'GS' : 'GA', // GK defends against GS, GD defends against GA
+                  quarter: opponentStat.quarter,
+                  goalsFor: opponentStat.goalsAgainst || 0, // Goals they conceded = goals we scored
+                  goalsAgainst: 0,
+                  missedGoals: 0,
+                  rebounds: 0,
+                  intercepts: 0,
+                  badPass: 0,
+                  handlingError: 0,
+                  pickUp: 0,
+                  infringement: 0,
+                  rating: null
+                };
                 processedStats[gameId].push(offensiveStat);
-                console.log(`Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals`);
+                console.log(`✨ Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals (from opponent ${opponentStat.position} conceding)`);
               }
               
-              // Generate defensive stats from opponent's offensive positions
+              // Generate our defensive stats from opponent's offensive data  
               if (opponentStat.position === 'GA' || opponentStat.position === 'GS') {
-              const defensiveStat: GameStat = {
-                id: -Math.abs(gameId * 1000 + missingTeamId * 100 + opponentStat.quarter), // Different ID pattern for defensive stats
-                gameId: gameId,
-                teamId: missingTeamId,
-                position: opponentStat.position === 'GA' ? 'GD' : 'GK', // Map offensive to defensive positions
-                quarter: opponentStat.quarter,
-                goalsFor: 0,
-                goalsAgainst: opponentStat.goalsFor || 0, // Their goals for = our goals against
-                missedGoals: 0,
-                rebounds: 0,
-                intercepts: 0,
-                badPass: 0,
-                handlingError: 0,
-                pickUp: 0,
-                infringement: 0,
-                rating: null
-              };
+                const defensiveStat: GameStat = {
+                  id: -Math.abs(gameId * 1000 + missingTeamId * 100 + opponentStat.quarter),
+                  gameId: gameId,
+                  teamId: missingTeamId,
+                  position: opponentStat.position === 'GS' ? 'GK' : 'GD', // GS attacks against GK, GA attacks against GD
+                  quarter: opponentStat.quarter,
+                  goalsFor: 0,
+                  goalsAgainst: opponentStat.goalsFor || 0, // Goals they scored = goals we conceded
+                  missedGoals: 0,
+                  rebounds: 0,
+                  intercepts: 0,
+                  badPass: 0,
+                  handlingError: 0,
+                  pickUp: 0,
+                  infringement: 0,
+                  rating: null
+                };
                 processedStats[gameId].push(defensiveStat);
-                console.log(`Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals`);
+                console.log(`🛡️ Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals (from opponent ${opponentStat.position} scoring)`);
               }
             }
           }
