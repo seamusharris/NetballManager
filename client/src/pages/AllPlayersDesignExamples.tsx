@@ -48,6 +48,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -160,99 +161,6 @@ export default function AllPlayersDesignExamples() {
     return matchesSearch && matchesStatus && matchesTeam && player.active;
   });
 
-  // Helper functions to generate color variations
-  const getPlayerColorHex = (colorClass: string) => {
-    // Basic implementation - replace with a more robust color utility if needed
-    const colorName = colorClass.replace('bg-', '').replace('-500', '');
-    switch (colorName) {
-      case 'blue': return '#3b82f6';
-      case 'green': return '#10b981';
-      case 'purple': return '#8b5cf6';
-      case 'orange': return '#f97316';
-      case 'red': return '#ef4444';
-      case 'pink': return '#ec4899';
-      case 'indigo': return '#6366f1';
-      case 'teal': return '#14b8a6';
-      case 'amber': return '#f59e0b';
-      case 'emerald': return '#10b981';
-      case 'cyan': return '#06b6d4';
-      case 'rose': return '#f43f5e';
-      case 'violet': return '#8b5cf6';
-      case 'lime': return '#84cc16';
-      case 'yellow': return '#eab308';
-      default: return '#6b7280'; // Default gray
-    }
-  };
-
-  const getDarkerColorHex = (colorClass: string) => {
-    // Basic implementation - adjust as needed
-    const colorName = colorClass.replace('bg-', '').replace('-500', '');
-    switch (colorName) {
-      case 'blue': return '#2563eb';
-      case 'green': return '#059669';
-      case 'purple': return '#7c3aed';
-      case 'orange': return '#c2410c';
-      case 'red': return '#dc2626';
-      case 'pink': return '#db2777';
-      case 'indigo': return '#4f46e5';
-      case 'teal': return '#0e7490';
-      case 'amber': return '#d97706';
-      case 'emerald': return '#065f46';
-      case 'cyan': return '#0891b2';
-      case 'rose': return '#be123c';
-      case 'violet': return '#6d28d9';
-      case 'lime': return '#65a30d';
-      case 'yellow': return '#ca8a04';
-      default: return '#4b5563'; // Default darker gray
-    }
-  };
-
-  const getLighterColorHex = (colorClass: string) => {
-    // Basic implementation - adjust as needed
-    const colorName = colorClass.replace('bg-', '').replace('-500', '');
-    switch (colorName) {
-      case 'blue': return '#eff6ff';
-      case 'green': return '#f0fdf4';
-      case 'purple': return '#f5f3ff';
-      case 'orange': return '#fff7ed';
-      case 'red': return '#fee2e2';
-      case 'pink': return '#fdf2f8';
-      case 'indigo': return '#eef2ff';
-      case 'teal': return '#ccfbf1';
-      case 'amber': return '#fef3c7';
-      case 'emerald': return '#dcfce7';
-      case 'cyan': return '#e0f2fe';
-      case 'rose': return '#ffe4e6';
-      case 'violet': return '#ede9fe';
-      case 'lime': return '#f7fee7';
-      case 'yellow': return '#fefce8';
-      default: return '#f3f4f6'; // Default lighter gray
-    }
-  };
-
-  const getMediumColorHex = (colorClass: string) => {
-    // Basic implementation - adjust as needed
-    const colorName = colorClass.replace('bg-', '').replace('-500', '');
-    switch (colorName) {
-      case 'blue': return '#dbeafe';
-      case 'green': return '#bbf7d0';
-      case 'purple': return '#ddd6fe';
-      case 'orange': return '#fed7aa';
-      case 'red': return '#fecaca';
-      case 'pink': return '#f9a8d4';
-      case 'indigo': return '#c4b5fd';
-      case 'teal': return '#a7f3d0';
-      case 'amber': return '#fde68a';
-      case 'emerald': return '#a3e635';
-      case 'cyan': return '#7dd3fc';
-      case 'rose': return '#fda4af';
-      case 'violet': return '#c084fc';
-      case 'lime': return '#bef264';
-      case 'yellow': return '#fef08a';
-      default: return '#e5e7eb'; // Default medium gray
-    }
-  };
-
   return (
     <PageTemplate 
       title="All Players Design Examples" 
@@ -353,7 +261,7 @@ export default function AllPlayersDesignExamples() {
               </div>
 
               {/* Player Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredPlayers.filter(player => player.active).slice(0, 16).map((player) => {
                   const playerColorHex = getPlayerColorHex(player.avatarColor);
                   const darkerTextColor = getDarkerColorHex(player.avatarColor);
