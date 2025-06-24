@@ -19,7 +19,6 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
-import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchClub } = useClub();
