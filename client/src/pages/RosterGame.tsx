@@ -40,24 +40,18 @@ export default function RosterGame() {
 
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
 
-  // Fetch games using team-specific endpoint for roster context - Stage 5
-  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', teamId, 'team-specific'],
+  // Fetch ONLY the specific game we need (same approach as PlayerAvailability)
+  const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
+    queryKey: ['game', gameId],
     queryFn: async () => {
-      if (teamId) {
-        console.log(`RosterGame: Fetching games for team ${teamId}`);
-        const result = await apiRequest('GET', `/api/teams/${teamId}/games`) as Promise<Game[]>;
-        console.log(`RosterGame: Team ${teamId} games response:`, result?.length, 'games');
-        return result;
-      } else {
-        // Fallback to club games if no team context
-        console.log(`RosterGame: Fetching club games for club ${currentClub?.id}`);
-        return apiClient.get(`/api/clubs/${currentClub?.id}/games`);
-      }
+      console.log(`RosterGame: Fetching specific game ${gameId}`);
+      const result = await apiRequest('GET', `/api/games/${gameId}`) as Promise<Game>;
+      console.log(`RosterGame: Game ${gameId} response:`, result);
+      return result;
     },
     retry: 2,
-    enabled: !!currentClub?.id && !!teamId,
-    staleTime: 30000 // 30 seconds
+    enabled: !!gameId,
+    staleTime: 30000
   });
 
   // Extract teamId from URL params
@@ -86,21 +80,18 @@ export default function RosterGame() {
     retry: 1
   });
 
-  const selectedGame = games.find(game => game.id === gameId);
-  
   // Debug logging
   console.log('RosterGame Debug:', {
     gameId,
     teamId,
-    gamesCount: games.length,
-    gameIds: games.map(g => g.id),
     selectedGame: selectedGame?.id,
-    isLoading: gamesLoading,
-    hasError: gamesError
+    playersCount: players.length,
+    isLoading: gameLoading || playersLoading || availabilityLoading,
+    hasError: gameError || playersError
   });
 
-  const isLoading = playersLoading || gamesLoading || availabilityLoading;
-  const hasError = playersError || gamesError;
+  const isLoading = playersLoading || gameLoading || availabilityLoading;
+  const hasError = playersError || gameError;
 
   // Set available players from availability data
   useEffect(() => {
