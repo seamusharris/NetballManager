@@ -2,14 +2,15 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ScoreBadgeProps {
-  teamScore: number;
-  opponentScore: number;
+  teamScore: number; // Home team score (first number displayed)
+  opponentScore: number; // Away team score (second number displayed) 
   className?: string;
   size?: 'sm' | 'md' | 'default' | 'lg';
   result?: string;
 }
 
 export function ScoreBadge({ teamScore, opponentScore, className, size = 'default', result }: ScoreBadgeProps) {
+  // teamScore = Home team score, opponentScore = Away team score for display consistency
   const sizeClasses = {
     'sm': 'px-2 py-1 text-xs',
     'md': 'px-2.5 py-1 text-sm', 

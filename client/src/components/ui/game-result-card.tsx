@@ -341,11 +341,36 @@ export default function GameResultCard({
               —
             </div>
           ) : scores ? (
-            <ScoreBadge 
-              teamScore={scores.finalScore.for} 
-              opponentScore={scores.finalScore.against}
-              result={scores.result}
-            />
+            // Convert perspective-based scores (for/against) to home-away display format
+            (() => {
+              let homeScore = 0;
+              let awayScore = 0;
+              
+              if (currentTeamId) {
+                // Team perspective: convert "for/against" to "home/away" display
+                if (game.homeTeamId === currentTeamId) {
+                  // Current team is home - for=home, against=away
+                  homeScore = scores.finalScore.for;
+                  awayScore = scores.finalScore.against;
+                } else if (game.awayTeamId === currentTeamId) {
+                  // Current team is away - for=away, against=home
+                  homeScore = scores.finalScore.against;
+                  awayScore = scores.finalScore.for;
+                }
+              } else {
+                // Club-wide view - assume scores are already in home/away format
+                homeScore = scores.finalScore.for;
+                awayScore = scores.finalScore.against;
+              }
+              
+              return (
+                <ScoreBadge 
+                  teamScore={homeScore} // Home team score (displayed first)
+                  opponentScore={awayScore} // Away team score (displayed second)
+                  result={scores.result}
+                />
+              );
+            })()
           ) : (
             <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
               —
