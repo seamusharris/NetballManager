@@ -31,12 +31,10 @@ export default function RosterGame() {
 
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
 
-  // Fetch games with club-wide header
+  // Fetch games using REST endpoint - Stage 3
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: [CACHE_KEYS.games, currentClub?.id, 'club-wide'],
-    queryFn: () => apiClient.get('/api/games', {
-      headers: { 'x-club-wide': 'true' }
-    }),
+    queryKey: [CACHE_KEYS.games, currentClub?.id, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/games`),
     retry: 1,
     enabled: !!currentClub?.id
   });

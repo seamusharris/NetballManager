@@ -1443,70 +1443,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
   }
 
-  // Dedicated club games endpoint following REST best practices
+  // REST endpoint for club games - Stage 3 implementation
   app.get("/api/clubs/:clubId/games", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const { seasonId } = req.query;
 
-      console.log(`Club games endpoint: clubId=${clubId}, seasonId=${seasonId}`);
+      console.log(`REST Club games endpoint: clubId=${clubId}, seasonId=${seasonId}`);
 
-      // Build the games query for this specific club
-      let gamesQuery = db
-        .select({
-          id: schema.games.id,
-          date: schema.games.date,
-          time: schema.games.time,
-          homeTeamId: schema.games.homeTeamId,
-          awayTeamId: schema.games.awayTeamId,
-          homeTeamName: schema.teams.as('homeTeam').name,
-          awayTeamName: schema.teams.as('awayTeam').name,
-          homeTeamDivision: schema.teams.as('homeTeam').division,
-          awayTeamDivision: schema.teams.as('awayTeam').division,
-          round: schema.games.round,
-          status: schema.games.status,
-          statusIsCompleted: schema.gameStatuses.isCompleted,
-          statusAllowsStatistics: schema.gameStatuses.allowsStatistics,
-          venue: schema.games.venue,
-          notes: schema.games.notes,
-          createdAt: schema.games.createdAt,
-          updatedAt: schema.games.updatedAt
-        })
-        .from(schema.games)
-        .leftJoin(schema.teams.as('homeTeam'), eq(schema.games.homeTeamId, schema.teams.as('homeTeam').id))
-        .leftJoin(schema.teams.as('awayTeam'), eq(schema.games.awayTeamId, schema.teams.as('awayTeam').id))
-        .leftJoin(schema.gameStatuses, eq(schema.games.status, schema.gameStatuses.status))
-        .where(
-          or(
-            eq(schema.teams.as('homeTeam').clubId, clubId),
-            eq(schema.teams.as('awayTeam').clubId, clubId)
-          )
-        );
+      // Use the same SQL query as the working header-based endpoint
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.name as status, 
+          gs.display_name as status_display_name, 
+          gs.is_completed, 
+          gs.allows_statistics, 
+          gs.team_goals, 
+          gs.opponent_goals,
+          s.name as season_name, 
+          s.start_date as season_start, 
+          s.end_date as season_end, 
+          s.is_active as season_active,
+          ht.name as home_team_name, 
+          ht.division as home_team_division, 
+          ht.club_id as home_club_id,
+          at.name as away_team_name, 
+          at.division as away_team_division, 
+          at.club_id as away_club_id,
+          hc.name as home_club_name, 
+          hc.code as home_club_code,
+          ac.name as away_club_name, 
+          ac.code as away_club_code
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
+        LEFT JOIN clubs ac ON at.club_id = ac.id
+        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+          SELECT 1 FROM game_permissions gp
+          WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+        ))
+        ORDER BY g.date DESC, g.time DESC
+      `);
 
-      // Add season filter if provided
-      if (seasonId) {
-        gamesQuery = gamesQuery.where(
-          and(
-            or(
-              eq(schema.teams.as('homeTeam').clubId, clubId),
-              eq(schema.teams.as('awayTeam').clubId, clubId)
-            ),
-            or(
-              eq(schema.teams.as('homeTeam').seasonId, parseInt(seasonId as string)),
-              eq(schema.teams.as('awayTeam').seasonId, parseInt(seasonId as string))
-            )
-          )
-        );
-      }
+      console.log(`REST endpoint found ${result.rows.length} games for club ${clubId}`);
 
-      const games = await gamesQuery.orderBy(desc(schema.games.date), desc(schema.games.time));
-
-      console.log(`Found ${games.length} games for club ${clubId}`);
-
-      const transformedGames = games.map(transformGameRow);
+      const transformedGames = result.rows.map(transformGameRow);
       res.json(transformedGames);
     } catch (error) {
-      console.error('Error fetching club games:', error);
+      console.error('Error fetching club games via REST:', error);
       res.status(500).json({ error: 'Failed to fetch club games' });
     }
   });

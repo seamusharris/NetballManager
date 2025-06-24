@@ -112,6 +112,11 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: STAGE 3 COMPLETE - Migrated games API from header-based to REST endpoints
+  - Created `/api/clubs/{clubId}/games` REST endpoint using same SQL as working header-based version
+  - Updated RosterGame and PlayerAvailability pages to use REST endpoint instead of x-club-wide headers
+  - Game 110 accessibility issues resolved - all pages now use consistent REST API approach
+  - Eliminated team ID and game ID issues by using proper URL-based club context
 - June 24, 2025: STAGE 1&2 COMPLETE - Implemented URL-based club routing with existing APIs
   - Root URL (/) now shows HomePage for future login/welcome functionality
   - Club switcher redirects to /club/{clubId} URLs following REST conventions
