@@ -28,14 +28,14 @@ export function QuarterScoresDisplay({
   // Ensure we have 4 quarters
   const fullQuarterScores = [1, 2, 3, 4].map(quarter => {
     const existing = quarterScores.find(q => q.quarter === quarter);
-    return existing || { quarter, teamScore: 0, opponentScore: 0 };
+    return existing || { quarter, teamScore: 0, awayScore: 0 };
   });
 
   // Calculate cumulative scores if needed
   const cumulativeScores = showCumulative ? fullQuarterScores.map((_, index) => {
     const teamTotal = fullQuarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.teamScore, 0);
-    const opponentTotal = fullQuarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.opponentScore, 0);
-    return { teamTotal, opponentTotal };
+    const awayTotal = fullQuarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.awayScore, 0);
+    return { teamTotal, awayTotal };
   }) : [];
 
   const getSizeClasses = () => {
@@ -72,9 +72,9 @@ export function QuarterScoresDisplay({
       <div className="space-y-1">
         <div className={cn('grid grid-cols-4', sizeClasses.container)}>
           {fullQuarterScores.map((quarter) => {
-            const quarterWin = quarter.teamScore > quarter.opponentScore;
-            const quarterLoss = quarter.teamScore < quarter.opponentScore;
-            const quarterDraw = quarter.teamScore === quarter.opponentScore;
+            const quarterWin = quarter.teamScore > quarter.awayScore;
+            const quarterLoss = quarter.teamScore < quarter.awayScore;
+            const quarterDraw = quarter.teamScore === quarter.awayScore;
 
             return (
               <div key={quarter.quarter} className="text-center">
@@ -90,7 +90,7 @@ export function QuarterScoresDisplay({
                   'bg-gray-50 border-gray-200 text-gray-600'
                 )}>
                   <div className="leading-none">
-                    {quarter.teamScore}-{quarter.opponentScore}
+                    {quarter.teamScore}-{quarter.awayScore}
                   </div>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export function QuarterScoresDisplay({
                     'bg-gray-100 border-gray-300 text-gray-700'
                   )}>
                     <div className="leading-none">
-                      {cumulative.teamTotal}-{cumulative.opponentTotal}
+                      {cumulative.teamTotal}-{cumulative.awayTotal}
                     </div>
                   </div>
                 </div>
