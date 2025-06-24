@@ -12,7 +12,7 @@ import { eq, and } from 'drizzle-orm';
 export function registerGameStatsRoutes(app: Express) {
   
   // Get game data with team context
-  app.get('/api/game/:gameId/team/:teamId', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/game/:gameId/team/:teamId', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -50,7 +50,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Get stats for a specific game and team
-  app.get('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -85,7 +85,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Create/update stats for a specific game and team
-  app.post('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.post('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -143,7 +143,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Get rosters for a specific game and team
-  app.get('/api/game/:gameId/team/:teamId/rosters', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/game/:gameId/team/:teamId/rosters', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -179,7 +179,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Update roster for a specific game and team
-  app.post('/api/game/:gameId/team/:teamId/rosters', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.post('/api/game/:gameId/team/:teamId/rosters', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);

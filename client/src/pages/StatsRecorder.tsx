@@ -73,7 +73,7 @@ export default function StatsRecorder() {
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
 
   // NEW: Game data with team context
-  const { data: game, isLoading: isLoadingGame } = useQuery<Game>({
+  const { data: game, isLoading: isLoadingGame } = useQuery<any>({
     queryKey: ['/api/game', gameId, 'team', teamId],
     queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
