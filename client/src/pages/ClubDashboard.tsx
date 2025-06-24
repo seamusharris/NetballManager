@@ -17,21 +17,33 @@ import { cn } from '@/lib/utils';
 import { winRateCalculator } from '@/lib/winRateCalculator';
 
 export default function ClubDashboard() {
-  const { currentClub, currentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
+  const params = useParams();
+  const clubIdFromUrl = params.clubId ? parseInt(params.clubId) : null;
+  const { currentClub, currentClubId, setCurrentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
+
+  // Use URL club ID if available, otherwise fall back to context
+  const effectiveClubId = clubIdFromUrl || currentClubId;
+
+  // Set club context from URL if different
+  useEffect(() => {
+    if (clubIdFromUrl && clubIdFromUrl !== currentClubId) {
+      setCurrentClubId(clubIdFromUrl);
+    }
+  }, [clubIdFromUrl, currentClubId, setCurrentClubId]);
 
   // Always call all hooks - handle enabled state through query options
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['club-players', currentClubId],
+    queryKey: ['club-players', effectiveClubId],
     queryFn: () => apiClient.get('/api/players'),
-    enabled: !!currentClubId && !clubLoading,
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   // Get games data with club-wide header (working approach)
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, 'club-wide'],
+    queryKey: ['games', effectiveClubId, 'club-wide'],
     queryFn: () => apiClient.get('/api/games', {
       headers: { 'x-club-wide': 'true' }
     }),
@@ -41,25 +53,25 @@ export default function ClubDashboard() {
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['clubs', currentClubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
-    enabled: !!currentClubId && !clubLoading,
+    queryKey: ['clubs', effectiveClubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/teams`),
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
-    queryKey: ['/api/seasons', currentClubId],
+    queryKey: ['/api/seasons', effectiveClubId],
     queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!currentClubId && !clubLoading,
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (seasons change infrequently)
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active', currentClubId],
+    queryKey: ['/api/seasons/active', effectiveClubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!currentClubId && !clubLoading,
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 60 * 60 * 1000 // 1 hour
   });
@@ -72,9 +84,9 @@ export default function ClubDashboard() {
 
   // Fetch current club details - only if we have a valid club ID that the user has access to
   const { data: clubDetails = null, isLoading: isLoadingClubDetails } = useQuery<any>({
-    queryKey: ['club-details', currentClubId],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}`),
-    enabled: !!currentClubId && userClubs.some(club => club.clubId === currentClubId),
+    queryKey: ['club-details', effectiveClubId],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}`),
+    enabled: !!effectiveClubId && userClubs.some(club => club.clubId === effectiveClubId),
   });
 
   // Fetch official scores for completed games only

@@ -112,6 +112,13 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: STAGE 1&2 COMPLETE - Implemented URL-based club routing with existing APIs
+  - Root URL (/) now shows HomePage for future login/welcome functionality
+  - Club switcher redirects to /club/{clubId} URLs following REST conventions
+  - ClubDashboard extracts club ID from URL parameters while maintaining compatibility
+  - Teams API already working perfectly with /api/clubs/{clubId}/teams endpoint
+  - Games still use working header-based approach (/api/games with x-club-wide header)
+  - All existing functionality preserved while building toward cleaner architecture
 - June 24, 2025: RESOLVED - Fixed unified game score service parameter errors and team perspective calculation
   - Added missing clubTeamIds parameter to all UnifiedGameScoreService methods
   - Fixed calculateFromOfficialScores method signature to include clubTeamIds parameter
