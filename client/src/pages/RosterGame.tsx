@@ -85,6 +85,17 @@ export default function RosterGame() {
   });
 
   const selectedGame = games.find(game => game.id === gameId);
+  
+  // Debug logging
+  console.log('RosterGame Debug:', {
+    gameId,
+    teamId,
+    gamesCount: games.length,
+    gameIds: games.map(g => g.id),
+    selectedGame: selectedGame?.id,
+    isLoading: gamesLoading,
+    hasError: gamesError
+  });
 
   const isLoading = playersLoading || gamesLoading || availabilityLoading;
   const hasError = playersError || gamesError;

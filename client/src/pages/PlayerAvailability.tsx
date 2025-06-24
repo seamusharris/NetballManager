@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
-import { Helmet } from 'react-helmet'; // Added import
+import { usePlayerAvailability } from '@/hooks/use-player-availability';
+import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
   const params = useParams();
@@ -129,7 +130,7 @@ export default function PlayerAvailability() {
     );
   }
 
-  // Load availability data using the new hook
+  // Load availability data using the hook
   const { data: availabilityData, isLoading: availabilityLoading } = usePlayerAvailability(gameId || 0, teamId || undefined);
 
   if (!selectedGame && !isLoading && gameId && teamId) {
