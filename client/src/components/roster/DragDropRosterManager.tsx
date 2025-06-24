@@ -442,8 +442,8 @@ export default function DragDropRosterManager({
         queryKey: CACHE_KEYS.gameRoster(gameId)
       });
       
-      // Also refetch to ensure immediate UI update
-      queryClient.refetchQueries({
+      // Also refetch to ensure immediate UI update across all components
+      await queryClient.refetchQueries({
         queryKey: ['teams', teamId, 'games', gameId, 'roster']
       });
 

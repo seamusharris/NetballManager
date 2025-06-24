@@ -314,6 +314,21 @@ export default function GamePreparation() {
   // Fetch batch statistics for season games
   const { statsMap: seasonBatchStats, isLoading: isLoadingSeasonStats } = useBatchGameStatistics(seasonGameIds);
 
+  // Load roster data for this specific game using team-based endpoint
+  const { data: gameRosters = [], isLoading: loadingRosters, refetch: refetchRosters } = useQuery({
+    queryKey: ['teams', currentTeamId, 'games', gameId, 'roster'],
+    queryFn: () => {
+      if (!currentTeamId || !gameId) {
+        throw new Error('Team ID and Game ID are required for roster operations');
+      }
+      console.log(`GamePreparation: Loading roster via team endpoint /api/teams/${currentTeamId}/games/${gameId}/rosters`);
+      return apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}/rosters`);
+    },
+    enabled: !!gameId && !!currentTeamId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
   // Initialize default tactical notes and objectives
   useEffect(() => {
     if (game && tacticalNotes.length === 0) {
@@ -1486,10 +1501,11 @@ export default function GamePreparation() {
             <LineupTab
               game={game}
               players={players || []}
-              rosters={[]}
+              rosters={gameRosters}
               onRosterUpdate={(rosters) => {
                 console.log('Roster updated:', rosters);
-                // Handle roster update here if needed
+                // Refetch roster data to ensure UI stays synchronized
+                refetchRosters();
               }}
               teamId={currentTeamId}
             />
