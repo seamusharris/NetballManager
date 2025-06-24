@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { ActivitySquare } from 'lucide-react';
 import { Game } from '@shared/schema';
+import { useClub } from '@/contexts/ClubContext';
 
 interface LiveStatsButtonProps {
   game: Game;
@@ -10,20 +11,39 @@ interface LiveStatsButtonProps {
 
 export default function LiveStatsButton({ game, className = "" }: LiveStatsButtonProps) {
   const [, navigate] = useLocation();
+  const { currentTeam } = useClub();
 
   // Show the button if the game allows statistics
   if (!game.statusAllowsStatistics) {
     return null;
   }
 
-  // For now, use home team ID as default - in practice this would be determined by user's team
-  const teamId = game.homeTeamId;
+  // Use team from club context - determine which team the user represents
+  const handleRecordStats = () => {
+    // Prefer current team context if available and matches one of the game teams
+    const userTeamId = currentTeam?.id;
+    let targetTeamId;
+    
+    if (userTeamId && (userTeamId === game.homeTeamId || userTeamId === game.awayTeamId)) {
+      targetTeamId = userTeamId;
+    } else {
+      // Fallback to home team (could be away team based on user preference)
+      targetTeamId = game.homeTeamId;
+    }
+    
+    if (targetTeamId) {
+      navigate(`/game/${game.id}/team/${targetTeamId}/stats/record`);
+    } else {
+      // Last resort: legacy stats
+      navigate(`/game/${game.id}/livestats`);
+    }
+  };
 
   return (
     <Button
       variant="outline"
       size="sm"
-      onClick={() => navigate(`/game/${game.id}/team/${teamId}/stats/record`)}
+      onClick={handleRecordStats}
       className={`flex items-center gap-1 ${className}`}
     >
       <ActivitySquare className="h-4 w-4" />

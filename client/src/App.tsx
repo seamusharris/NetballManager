@@ -146,6 +146,7 @@ function Router() {
         <Route path="/game/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
         <Route path="/game/:gameId/team/:teamId/stats/record" component={lazy(() => import('./pages/StatsRecorder'))} />
         <Route path="/game/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />
+        <Route path="/game/:id/livestats-legacy" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/stats-debug">
           {(params) => (
             <ErrorBoundary>

@@ -478,8 +478,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
   // Helper to get player display name
   const getPlayerName = (playerId) => {
-    if (!Array.isArray(players) || !playerId) return null;
+    console.log('getPlayerName called with:', { playerId, playersArray: Array.isArray(players), playersLength: players?.length });
+    if (!Array.isArray(players) || !playerId) {
+      console.log('getPlayerName: returning null - no players array or no playerId');
+      return null;
+    }
     const player = players.find(p => p.id === playerId);
+    console.log('getPlayerName: found player:', player);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
 
@@ -1833,7 +1838,13 @@ export default function GameDetails() {
                   <CardTitle>Court Positions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {console.log("Rendering roster section - roster length:", roster?.length, "isLoading:", isLoadingRoster)}
+                  {console.log("Debug: Rendering roster section", { 
+                    rosterLength: roster?.length, 
+                    isLoading: isLoadingRoster,
+                    playersLength: players?.length,
+                    firstRosterEntry: roster?.[0],
+                    firstPlayer: players?.[0]
+                  })}
                   {isLoadingRoster ? (
                     <div className="text-center py-10">
                       <p className="text-gray-500">Loading roster...</p>
