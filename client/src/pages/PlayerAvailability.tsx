@@ -36,12 +36,33 @@ export default function PlayerAvailability() {
     return null;
   }, [params]);
 
-  // Fetch games using REST endpoint - Stage 3
+  // Fetch games using team-specific endpoint for player availability context
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', currentClub?.id, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/games`) as Promise<Game[]>,
+    queryKey: ['games', teamId, 'team-specific'],
+    queryFn: () => {
+      if (teamId) {
+        return apiRequest('GET', `/api/teams/${teamId}/games`) as Promise<Game[]>;
+      } else {
+        // Fallback to club games if no team context
+        return apiRequest('GET', `/api/clubs/${currentClub?.id}/games`) as Promise<Game[]>;
+      }
+    },
     retry: 1,
     enabled: !!currentClub?.id && isInitialized
+  });
+
+  // Fetch roster for the selected game using team-specific context
+  const { data: gameRoster = [], isLoading: isLoadingRoster } = useQuery({
+    queryKey: ['teams', teamId, 'games', gameId, 'roster'],
+    queryFn: () => {
+      if (teamId && gameId) {
+        return apiRequest('GET', `/api/teams/${teamId}/roster/${gameId}`) as Promise<any[]>;
+      } else {
+        // Fallback to general game roster endpoint
+        return apiRequest('GET', `/api/games/${gameId}/rosters`) as Promise<any[]>;
+      }
+    },
+    enabled: !!gameId && !!teamId
   });
 
   // Fetch team players (not club-wide players)

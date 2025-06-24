@@ -1244,14 +1244,20 @@ export default function GameDetails() {
     enabled: true
   });
 
-  // Fetch roster for this game
+  // Fetch roster for this game using team-specific endpoint when possible
   const { 
     data: roster,
     isLoading: isLoadingRoster,
     refetch: refetchRosters
   } = useQuery({
-    queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
+    queryKey: currentTeam?.id ? ['teams', currentTeam.id, 'games', gameId, 'roster'] : ['/api/games', gameId, 'rosters'],
+    queryFn: () => {
+      if (currentTeam?.id) {
+        return apiClient.get(`/api/teams/${currentTeam.id}/roster/${gameId}`);
+      } else {
+        return apiClient.get(`/api/games/${gameId}/rosters`);
+      }
+    },
     enabled: !isNaN(gameId)
   });
 

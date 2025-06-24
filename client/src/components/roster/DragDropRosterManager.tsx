@@ -148,6 +148,7 @@ export default function DragDropRosterManager({
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const teamId = gameInfo?.homeTeamId;
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
@@ -282,10 +283,19 @@ export default function DragDropRosterManager({
 
   const queryClient = useQueryClient();
 
-  // Use cached React Query for roster data
+  // Fetch existing roster data using team-specific endpoint when team context is available
   const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
-    queryKey: CACHE_KEYS.gameRoster(gameId),
-    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
+    queryKey: teamId ? ['teams', teamId, 'games', gameId, 'roster'] : ['rosters', gameId],
+    queryFn: () => {
+      // Try to get team ID from gameInfo if available
+      const teamIdToUse = teamId || gameInfo?.homeTeamId;
+
+      if (teamIdToUse) {
+        return apiClient.get(`/api/teams/${teamIdToUse}/roster/${gameId}`);
+      } else {
+        return apiClient.get(`/api/games/${gameId}/rosters`);
+      }
+    },
     enabled: !!gameId,
     staleTime: 5 * 60 * 1000, // 5 minutes - roster data is relatively stable
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer

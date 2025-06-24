@@ -667,6 +667,8 @@ export function registerTeamRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
 
+      console.log(`Team-specific roster endpoint: teamId=${teamId}, gameId=${gameId}`);
+
       if (isNaN(teamId) || isNaN(gameId)) {
         return res.status(400).json({ error: 'Invalid team ID or game ID' });
       }
@@ -712,6 +714,8 @@ export function registerTeamRoutes(app: Express) {
         WHERE r.game_id = ${gameId}
         ORDER BY r.quarter, r.position
       `);
+
+      console.log(`Found ${roster.rows.length} roster entries for team ${teamId} game ${gameId}`);
 
       const mappedRoster = roster.rows.map(row => ({
         id: row.id,
