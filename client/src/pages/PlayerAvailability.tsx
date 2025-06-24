@@ -38,7 +38,7 @@ export default function PlayerAvailability() {
 
   // Fetch games using REST endpoint - Stage 3
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: [CACHE_KEYS.games, currentClub?.id, 'rest'],
+    queryKey: ['games', currentClub?.id, 'rest'],
     queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/games`) as Promise<Game[]>,
     retry: 1,
     enabled: !!currentClub?.id && isInitialized

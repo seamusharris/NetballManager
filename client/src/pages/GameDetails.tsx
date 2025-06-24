@@ -1199,13 +1199,14 @@ export default function GameDetails() {
     enabled: !!gameId,
   });
 
-  // Fetch players
+  // Fetch players using REST endpoint - Stage 4
   const { 
     data: players = [],
     isLoading: isLoadingPlayers
   } = useQuery({
-    queryKey: ['/api/players'],
-    queryFn: () => apiClient.get('/api/players'),
+    queryKey: ['players', currentClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
+    enabled: !!currentClubId,
     select: (data) => Array.isArray(data) ? data : []
   });
 
