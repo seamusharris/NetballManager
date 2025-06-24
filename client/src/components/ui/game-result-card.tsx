@@ -69,26 +69,34 @@ export default function GameResultCard({
     );
   }
 
+  // Fetch club teams based on URL club ID for reliable team perspective
+  const { data: urlClubTeams = [] } = useQuery<any[]>({
+    queryKey: ['clubs', urlClubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${urlClubId}/teams`),
+    enabled: !!urlClubId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000 // 30 minutes
+  });
+
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
     const perspective = effectiveTeamId || 'club-wide';
     
-    // For Eltham Panthers (club ID 1), hardcode the team IDs since we know them
-    const clubTeamIds = urlClubId === 1 ? [2, 129, 1] : (currentClubTeams?.map(t => t.id) || []);
+    // Use URL-based club teams for reliable perspective calculation
+    const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
     
-    // Debug logging for Matrix team games (Team 1)
-    if (game.homeTeamId === 1 || game.awayTeamId === 1) {
-      console.log(`🔍 MATRIX GAME ${game.id} - Game result card calculation:`, {
+    // Debug logging for team perspective calculation
+    if (game.homeTeamId === 117 || game.awayTeamId === 117 || game.homeTeamId === 124 || game.awayTeamId === 124) {
+      console.log(`🔍 CLUB ${urlClubId} GAME ${game.id} - Team perspective calculation:`, {
         perspective,
         clubTeamIds,
         urlClubId,
-        currentClubId,
+        urlClubTeamsCount: urlClubTeams?.length || 0,
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
         centralizedScoresCount: centralizedScores?.length || 0,
-        matrixIsAway: game.awayTeamId === 1,
-        shouldShowRed: game.awayTeamId === 1 && clubTeamIds.includes(1),
-        matrixInClubTeams: clubTeamIds.includes(1)
+        homeIsOurs: clubTeamIds.includes(game.homeTeamId || 0),
+        awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0)
       });
     }
     
@@ -127,7 +135,7 @@ export default function GameResultCard({
     }
     
     return result;
-  }, [game, centralizedScores, effectiveTeamId, urlClubId, currentClubTeams]);
+  }, [game, centralizedScores, effectiveTeamId, urlClubId, urlClubTeams]);
 
   // Convert to legacy format for backward compatibility with existing UI
   const scores = useMemo(() => {
