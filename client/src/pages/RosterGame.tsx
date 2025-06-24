@@ -230,6 +230,7 @@ export default function RosterGame() {
           time: selectedGame?.time || ''
         }}
         gameId={gameId}
+        teamId={teamId}
         onRosterChange={() => {}}
         onRosterSaved={() => {
           // Optional: Add success toast or other feedback

@@ -47,6 +47,7 @@ interface DragDropRosterManagerProps {
   availablePlayers: Player[];
   gameInfo: GameInfo;
   gameId?: number;
+  teamId?: number;
   onRosterChange?: (roster: Record<number, Record<string, number | null>>) => void;
   onRosterSaved?: () => void;
   initialRoster?: Record<number, Record<string, number | null>>;
@@ -131,6 +132,7 @@ export default function DragDropRosterManager({
   availablePlayers, 
   gameInfo, 
   gameId,
+  teamId,
   onRosterChange,
   onRosterSaved,
   initialRoster 
@@ -148,7 +150,6 @@ export default function DragDropRosterManager({
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const teamId = gameInfo?.homeTeamId;
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
