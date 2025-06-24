@@ -19,7 +19,26 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
 
 
 
+  // Debug for Team 128 Wallabies
+  if (teamScore === 5 && opponentScore === 36) {
+    console.log('🔍 ScoreBadge DEBUG for Game 106:', {
+      teamScore,
+      opponentScore,
+      result,
+      expectedColor: 'red (loss)',
+      willUseResult: !!result
+    });
+  }
+
   const getResultColor = () => {
+    // Use the result from unified service if provided, otherwise calculate
+    if (result) {
+      if (result === 'win') return 'bg-green-500 text-white';
+      if (result === 'loss') return 'bg-red-500 text-white';
+      if (result === 'draw') return 'bg-yellow-500 text-white';
+    }
+    
+    // Fallback to score comparison
     if (teamScore > opponentScore) return 'bg-green-500 text-white';
     if (teamScore < opponentScore) return 'bg-red-500 text-white';
     return 'bg-yellow-500 text-white';
