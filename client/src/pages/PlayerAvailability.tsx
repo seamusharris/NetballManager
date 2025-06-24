@@ -112,62 +112,25 @@ export default function PlayerAvailability() {
     );
   }
 
-  // Load availability data using the hook
+  // Load availability data using the hook - MUST be called unconditionally
   const { data: availabilityData, isLoading: availabilityLoading } = usePlayerAvailability(gameId || 0, teamId || undefined);
 
   if (!selectedGame && !isLoading) {
-    // If we can't find the game in team games, load it directly
-    console.log('Game not found in team games list, proceeding with availability data anyway');
-    
-    if (!availabilityData && availabilityLoading) {
-      return (
-        <PageTemplate
-          title="Player Availability"
-          subtitle="Loading game details..."
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Player Availability' }
-          ]}
-        >
-          <div className="flex items-center justify-center h-64">
-            Loading availability data...
-          </div>
-        </PageTemplate>
-      );
-    }
-
-    // Proceed with a minimal game object if we have availability data
-    const fallbackGame = {
-      id: gameId,
-      homeTeamName: `Team ${teamId}`,
-      awayTeamName: 'Unknown Opponent',
-      date: new Date().toISOString().split('T')[0],
-      time: '10:00'
-    } as Game;
-
     return (
       <PageTemplate
         title="Player Availability"
-        subtitle={`Game ${gameId} - Player Availability`}
+        subtitle="Game not found"
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Player Availability' }
         ]}
       >
-        <div className="space-y-6">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Game details not found in team roster. Proceeding with availability management.
-            </AlertDescription>
-          </Alert>
-          <PlayerAvailabilityManager
-            gameId={gameId}
-            teamId={teamId}
-            players={players}
-            selectedGame={fallbackGame}
-          />
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Game {gameId} not found. Please check the game ID and try again.
+          </AlertDescription>
+        </Alert>
       </PageTemplate>
     );
   }
