@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
-import { useLocation } from 'wouter';
-import { useMemo } from 'react';
+import { useLocation, useParams } from 'wouter';
+import { useMemo, useEffect } from 'react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
 import { calculateTeamWinRate, calculateClubWinRate } from '@/lib/winRateCalculator';
@@ -17,23 +17,35 @@ import { cn } from '@/lib/utils';
 import { winRateCalculator } from '@/lib/winRateCalculator';
 
 export default function ClubDashboard() {
-  const { currentClub, currentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
+  const params = useParams();
+  const clubIdFromUrl = params.clubId ? parseInt(params.clubId) : null;
+  const { currentClub, currentClubId, setCurrentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
+
+  // Use URL club ID if available, otherwise fall back to context
+  const effectiveClubId = clubIdFromUrl || currentClubId;
+
+  // Set club context from URL if different
+  useEffect(() => {
+    if (clubIdFromUrl && clubIdFromUrl !== currentClubId) {
+      setCurrentClubId(clubIdFromUrl);
+    }
+  }, [clubIdFromUrl, currentClubId, setCurrentClubId]);
 
   // Always call all hooks - handle enabled state through query options
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['club-players', currentClubId],
+    queryKey: ['club-players', effectiveClubId],
     queryFn: () => apiClient.get('/api/players'),
-    enabled: !!currentClubId && !clubLoading,
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
-  // Get games data with proper club context
+  // Get games data using dedicated club endpoint
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, 'all-teams'],
-    queryFn: () => apiClient.get('/api/games', { 'x-club-wide': 'true' }),
-    enabled: !!currentClubId && !clubLoading,
+    queryKey: ['/api/clubs', effectiveClubId, 'games'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/games`),
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
     gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
   });

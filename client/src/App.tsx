@@ -15,6 +15,7 @@ import Roster from "@/pages/Roster";
 import Games from "@/pages/Games";
 import Statistics from "@/pages/Statistics";
 import ClubDashboard from '@/pages/ClubDashboard';
+import HomePage from '@/pages/HomePage';
 import PlayerDetails from "@/pages/PlayerDetails";
 import Teams from "@/pages/Teams";
 import ClubManagement from "./pages/ClubManagement";
@@ -109,7 +110,8 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
+        <Route path="/" component={withErrorBoundary(HomePage, 'HomePage')} />
+        <Route path="/club/:clubId" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
         <Route path="/team/:teamId/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/team/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
