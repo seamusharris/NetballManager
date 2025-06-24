@@ -62,11 +62,15 @@ export default function GameResultCard({
 
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
-    // For club-wide view, detect which team from our club is playing and use their perspective
+    // Use team perspective directly from props (URL-based) or fall back to club-wide
     let perspective: number | 'club-wide' = currentTeamId || 'club-wide';
     
+    // If we have team perspective, use it directly (this comes from URL)
+    if (currentTeamId) {
+      perspective = currentTeamId;
+    }
     // If we're in club-wide view but this game involves one of our teams, use that team's perspective
-    if (!currentTeamId && teams && teams.length > 0) {
+    else if (teams && teams.length > 0) {
       // Check if home team is from our club
       if (game.homeTeamId && teams.some(team => team.id === game.homeTeamId)) {
         perspective = game.homeTeamId;

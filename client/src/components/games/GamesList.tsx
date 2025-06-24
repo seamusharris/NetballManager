@@ -58,6 +58,7 @@ interface GamesListProps {
   teams?: any[];
   centralizedStats?: Record<number, any[]>;
   centralizedScores?: Record<number, any>;
+  urlTeamId?: number | null; // Team perspective from URL
 }
 
 // Shared function for filtering games by status and search query
@@ -100,7 +101,8 @@ export function GamesList({
   className,
   teams = [],
   centralizedStats,
-  centralizedScores
+  centralizedScores,
+  urlTeamId = null
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');

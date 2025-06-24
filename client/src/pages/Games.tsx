@@ -371,6 +371,7 @@ export default function Games() {
             teams={teams}
             centralizedStats={gameStatsMap}
             centralizedScores={gameScoresMap}
+            urlTeamId={effectiveTeamId} // Pass URL team ID for proper perspective
           />
         </ContentBox>
       </PageTemplate>
