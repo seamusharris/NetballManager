@@ -62,11 +62,17 @@ export default function PlayerAvailabilityWidget({
     fetchTeamPlayers();
   }, [currentTeamId, players]);
 
-  // Use cached queries for availability data
+  // Use cached queries for availability data with team-specific endpoint when possible
   const availabilityQueries = useQueries({
     queries: upcomingGames.map(game => ({
       queryKey: CACHE_KEYS.playerAvailability(game.id),
-      queryFn: () => apiClient.get(`/api/games/${game.id}/availability`),
+      queryFn: () => {
+        if (currentTeamId) {
+          return apiClient.get(`/api/teams/${currentTeamId}/availability/${game.id}`);
+        } else {
+          return apiClient.get(`/api/games/${game.id}/availability`);
+        }
+      },
       enabled: teamPlayers.length > 0,
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 30 * 60 * 1000, // 30 minutes

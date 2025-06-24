@@ -1186,10 +1186,16 @@ export default function GameDetails() {
       queryFn: () => apiClient.get('/api/clubs/current'),
     });
 
-  // Fetch game data
+  // Fetch game data using team-perspective endpoint when possible
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
-    queryKey: ['/api/games', gameId],
-    queryFn: () => apiClient.get<Game>(`/api/games/${gameId}`),
+    queryKey: currentTeam?.id ? ['teams', currentTeam.id, 'games', gameId] : ['/api/games', gameId],
+    queryFn: () => {
+      if (currentTeam?.id) {
+        return apiClient.get<Game>(`/api/teams/${currentTeam.id}/games/${gameId}`);
+      } else {
+        return apiClient.get<Game>(`/api/games/${gameId}`);
+      }
+    },
     enabled: !!gameId,
   });
 

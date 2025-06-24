@@ -95,14 +95,14 @@ export default function Games() {
     }
   }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
 
-  // Fetch games - use team-specific endpoint when we have a team ID
+  // Fetch games - use team-specific endpoint when we have a team ID for better perspective handling
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, effectiveTeamId],
     queryFn: () => {
       if (isClubWideGamesView) {
         return apiClient.get(`/api/clubs/${currentClubId}/games`);
       } else if (effectiveTeamId) {
-        // Use team-specific endpoint for better filtering
+        // Use team-specific endpoint for better filtering and automatic perspective calculation
         return apiClient.get(`/api/teams/${effectiveTeamId}/games`);
       } else {
         return apiClient.get(`/api/clubs/${currentClubId}/games`);
