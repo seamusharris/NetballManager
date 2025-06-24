@@ -88,11 +88,11 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
       console.log('TeamSwitcher: Selected team:', selectedTeam.name);
 
       // Navigate immediately without debouncing
-      if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
+      if (location.includes('/games')) {
+        // If on any games page, navigate to team-specific games
+        setLocation(`/team/${numericTeamId}/games`);
+      } else if (location.startsWith('/team-dashboard') || location.startsWith('/team/') || location === '/dashboard') {
         setLocation(`/team/${numericTeamId}`);
-      } else if (location === '/games' || location.startsWith('/games')) {
-        // Stay on games page but with team context
-        return;
       } else if (location.startsWith('/preparation')) {
         setLocation(`/team/${numericTeamId}/preparation`);
       } else if (location.startsWith('/opponent-preparation')) {
