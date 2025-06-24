@@ -2049,7 +2049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- PLAYER AVAILABILITY API -----
 
   // Get player availability for a specific game
-  app.get("/api/games/:gameId/availability", async (req, res) => {
+  app.get("/api/games/:gameId/availability", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const teamId = req.headers['x-current-team-id'] ? Number(req.headers['x-current-team-id']) : undefined;
@@ -2064,7 +2064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Set player availability for a specific game
-  app.post("/api/games/:gameId/availability", async (req, res) => {
+  app.post("/api/games/:gameId/availability", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const { availablePlayerIds } = req.body;
@@ -2088,7 +2088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update individual player availability
-  app.patch("/api/games/:gameId/availability/:playerId", async (req, res) => {
+  app.patch("/api/games/:gameId/availability/:playerId", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const playerId = Number(req.params.playerId);
