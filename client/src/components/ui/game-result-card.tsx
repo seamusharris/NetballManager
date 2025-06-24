@@ -329,8 +329,8 @@ export default function GameResultCard({
 
               return (
                 <ScoreBadge 
-                  teamScore={homeScore} 
-                  opponentScore={awayScore}
+                  teamScore={currentTeamId ? scores.finalScore.for : homeScore} 
+                  opponentScore={currentTeamId ? scores.finalScore.against : awayScore}
                   result={displayResult}
                 />
               );
