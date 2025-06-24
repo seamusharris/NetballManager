@@ -238,7 +238,7 @@ class UnifiedStatisticsService {
             const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
             const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
 
-            console.log(`Generating missing stats for team ${missingTeamId} from opponent ${opponentTeamId} with ${opponentStats.length} stats`);
+            console.log(`🔄 GENERATING missing stats for team ${missingTeamId} from opponent ${opponentTeamId} with ${opponentStats.length} stats`);
 
             // Clear existing stats for this team to avoid duplicates
             processedStats[gameId] = processedStats[gameId].filter(s => s.teamId !== missingTeamId);
