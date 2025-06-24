@@ -175,13 +175,17 @@ class UnifiedStatisticsService {
    */
   private async processStatsWithOpponentPerspective(statsMap: Record<number, GameStat[]>): Promise<Record<number, GameStat[]>> {
     console.log(`🎯 PROCESSING OPPONENT PERSPECTIVE for ${Object.keys(statsMap).length} games`);
+    console.log(`📊 Raw stats map:`, JSON.stringify(statsMap, null, 2));
     const processedStats: Record<number, GameStat[]> = {};
 
     for (const [gameIdStr, stats] of Object.entries(statsMap)) {
       const gameId = parseInt(gameIdStr);
       processedStats[gameId] = [...stats]; // Start with existing stats
 
+      console.log(`🏀 Processing game ${gameId} with ${stats.length} stats`);
+      
       if (stats.length === 0) {
+        console.log(`⚠️ Skipping game ${gameId} - no stats found`);
         continue;
       }
 
@@ -206,15 +210,26 @@ class UnifiedStatisticsService {
           const hasDefensive = teamStats.some(s => s.position === 'GD' || s.position === 'GK');
           teamStatsCompletion[teamId] = { hasOffensive, hasDefensive, total: teamStats.length };
         }
+        
+        // Force opponent perspective for teams with 0 stats (Matrix team issue)
+        if (teamStatsCompletion[homeTeamId]?.total === 0) {
+          console.log(`🔧 FORCING stats generation for home team ${homeTeamId} (0 stats recorded)`);
+          teamStatsCompletion[homeTeamId] = { hasOffensive: false, hasDefensive: false, total: 0 };
+        }
+        if (teamStatsCompletion[awayTeamId]?.total === 0) {
+          console.log(`🔧 FORCING stats generation for away team ${awayTeamId} (0 stats recorded)`);
+          teamStatsCompletion[awayTeamId] = { hasOffensive: false, hasDefensive: false, total: 0 };
+        }
 
         console.log(`🔍 Game ${gameId}: Team stats completion:`, teamStatsCompletion);
 
         // Generate missing stats for teams that have incomplete data
         for (const teamId of [homeTeamId, awayTeamId]) {
-          const completion = teamStatsCompletion[teamId];
+          const completion = teamStatsCompletion[teamId] || { hasOffensive: false, hasDefensive: false, total: 0 };
           console.log(`📊 Team ${teamId}: hasOffensive=${completion.hasOffensive}, hasDefensive=${completion.hasDefensive}, total=${completion.total}`);
           if (!completion.hasOffensive || !completion.hasDefensive || completion.total < 8) {
             // This team needs opponent perspective stats
+            console.log(`🚨 TEAM ${teamId} NEEDS OPPONENT PERSPECTIVE STATS!`);
             const missingTeamId = teamId;
             const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
             const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
