@@ -141,8 +141,8 @@ export default function AdvancedTeamAnalytics({
     const recentResults = recentGames.map(game => {
       const gameStats = gameStatsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      return getWinLoseLabel(teamScore, opponentScore);
+      const awayScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      return getWinLoseLabel(teamScore, awayScore);
     });
     const momentum = calculateMomentum(recentResults);
 
@@ -157,8 +157,8 @@ export default function AdvancedTeamAnalytics({
     const allResults = sortedGames.map(game => {
       const gameStats = gameStatsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      return getWinLoseLabel(teamScore, opponentScore);
+      const awayScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      return getWinLoseLabel(teamScore, awayScore);
     });
     const streakAnalysis = calculateStreakAnalysis(allResults);
 
@@ -547,12 +547,12 @@ export default function AdvancedTeamAnalytics({
 
       const gameStats = statsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const awayScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
       opponentPerformance[opponentName].total++;
       opponentPerformance[opponentName].totalScore += teamScore;
 
-      if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
+      if (getWinLoseLabel(teamScore, awayScore) === 'Win') {
         opponentPerformance[opponentName].wins++;
       }
     });
@@ -589,12 +589,12 @@ export default function AdvancedTeamAnalytics({
 
       const gameStats = statsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const awayScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
       opponentStrengthMatrix[category].total++;
       opponentStrengthMatrix[category].totalScore += teamScore;
 
-      if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
+      if (getWinLoseLabel(teamScore, awayScore) === 'Win') {
         opponentStrengthMatrix[category].wins++;
       }
     });

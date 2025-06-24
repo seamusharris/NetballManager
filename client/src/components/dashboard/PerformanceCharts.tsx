@@ -26,7 +26,7 @@ interface PerformanceChartsProps {
 interface ChartDataPoint {
   name: string;
   teamScore: number;
-  opponentScore: number;
+  awayScore: number;
   reboundRate: number;
   interceptions: number;
   change: number;
@@ -34,7 +34,7 @@ interface ChartDataPoint {
 
 interface QuarterStats {
   teamScore: number;
-  opponentScore: number;
+  awayScore: number;
   rebounds: number;
   intercepts: number;
   totalReboundOpportunities: number;
@@ -95,10 +95,10 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
 
     // Initialize quarter stats
     const quarterStats: Record<number, QuarterStats> = {
-      1: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
-      2: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
-      3: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
-      4: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 }
+      1: { teamScore: 0, awayScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
+      2: { teamScore: 0, awayScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
+      3: { teamScore: 0, awayScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
+      4: { teamScore: 0, awayScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 }
     };
 
     const quarterGamesCount: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
@@ -119,7 +119,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
 
         // Add to quarter totals
         quarterStats[quarter].teamScore += stat.goalsFor || 0;
-        quarterStats[quarter].opponentScore += stat.goalsAgainst || 0;
+        quarterStats[quarter].awayScore += stat.goalsAgainst || 0;
         quarterStats[quarter].rebounds += stat.rebounds || 0;
         quarterStats[quarter].intercepts += stat.intercepts || 0;
         quarterStats[quarter].totalReboundOpportunities += (stat.rebounds || 0) + (stat.missedGoals || 0);
@@ -139,7 +139,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
     for (let quarter = 1; quarter <= 4; quarter++) {
       const gameCount = quarterGamesCount[quarter] || 1; // Avoid division by zero
       const teamScore = quarterStats[quarter].teamScore / gameCount;
-      const opponentScore = quarterStats[quarter].opponentScore / gameCount;
+      const awayScore = quarterStats[quarter].awayScore / gameCount;
       const intercepts = quarterStats[quarter].intercepts / gameCount;
 
       // Calculate rebound rate (rebounds as percentage of rebound opportunities)
@@ -156,7 +156,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
       newChartData.push({
         name: `Quarter ${quarter}`,
         teamScore: parseFloat(teamScore.toFixed(1)),
-        opponentScore: parseFloat(opponentScore.toFixed(1)),
+        awayScore: parseFloat(awayScore.toFixed(1)),
         reboundRate: parseFloat(reboundRate.toFixed(1)),
         interceptions: parseFloat(intercepts.toFixed(1)),
         change: parseFloat(change.toFixed(1))
@@ -240,7 +240,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
               <Tooltip />
               <Legend />
               <Bar dataKey="teamScore" name="Team Score" fill="hsl(var(--primary))" />
-              <Bar dataKey="opponentScore" name="Opponent Score" fill="hsl(var(--secondary))" />
+              <Bar dataKey="awayScore" name="Opponent Score" fill="hsl(var(--secondary))" />
               {metricType !== 'goals' && (
                 <>
                   <Bar dataKey="reboundRate" name="Rebound %" fill="hsl(var(--accent))" />

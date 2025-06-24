@@ -183,12 +183,12 @@ export default function QuarterPerformanceWidget({
   const quarterDiffs = Object.keys(quarterPerformance.avgTeamScoreByQuarter).map(quarter => {
     const q = parseInt(quarter);
     const teamScore = quarterPerformance.avgTeamScoreByQuarter[q];
-    const opponentScore = quarterPerformance.avgOpponentScoreByQuarter[q];
+    const awayScore = quarterPerformance.avgOpponentScoreByQuarter[q];
     return {
       quarter: q,
-      diff: teamScore - opponentScore,
+      diff: teamScore - awayScore,
       teamScore,
-      opponentScore
+      awayScore
     };
   });
 
@@ -218,8 +218,8 @@ export default function QuarterPerformanceWidget({
             <div className="space-y-2">
               {[1, 2, 3, 4].map(quarter => {
                 const teamScore = quarterPerformance.avgTeamScoreByQuarter[quarter];
-                const opponentScore = quarterPerformance.avgOpponentScoreByQuarter[quarter];
-                const maxScore = Math.max(teamScore, opponentScore, 5);
+                const awayScore = quarterPerformance.avgOpponentScoreByQuarter[quarter];
+                const maxScore = Math.max(teamScore, awayScore, 5);
 
                 return (
                   <div key={quarter} className="flex items-center space-x-2">
@@ -233,12 +233,12 @@ export default function QuarterPerformanceWidget({
                       {/* Opponent bar */}
                       <div 
                         className="absolute right-0 top-0 h-full bg-red-400 rounded-r-full"
-                        style={{ width: `${(opponentScore / maxScore) * 50}%` }}
+                        style={{ width: `${(awayScore / maxScore) * 50}%` }}
                       />
                       {/* Center line */}
                       <div className="absolute left-1/2 top-0 w-px h-full bg-gray-400 transform -translate-x-1/2" />
                     </div>
-                    <span className="text-xs w-12 text-gray-600">{teamScore.toFixed(1)}-{opponentScore.toFixed(1)}</span>
+                    <span className="text-xs w-12 text-gray-600">{teamScore.toFixed(1)}-{awayScore.toFixed(1)}</span>
                   </div>
                 );
               })}

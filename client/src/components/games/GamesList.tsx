@@ -301,14 +301,14 @@ export function GamesList({
       // We are the home team, so our score is 'for' and opponent is 'against'
       return {
         teamScore: scores.finalScore.for,
-        opponentScore: scores.finalScore.against,
+        awayScore: scores.finalScore.against,
         isWin: scores.finalScore.for > scores.finalScore.against
       };
     } else {
       // We are the away team, so our score is 'against' and opponent is 'for'
       return {
         teamScore: scores.finalScore.against,
-        opponentScore: scores.finalScore.for,
+        awayScore: scores.finalScore.for,
         isWin: scores.finalScore.against > scores.finalScore.for
       };
     }

@@ -65,9 +65,9 @@ const samplePlayerPositions = {
 };
 
 export default function RecommendationExamples() {
-  const getScoreResult = (teamScore: number, opponentScore: number) => {
-    if (teamScore > opponentScore) return { result: 'win', color: 'bg-green-100 text-green-800' };
-    if (teamScore < opponentScore) return { result: 'loss', color: 'bg-red-100 text-red-800' };
+  const getScoreResult = (teamScore: number, awayScore: number) => {
+    if (teamScore > awayScore) return { result: 'win', color: 'bg-green-100 text-green-800' };
+    if (teamScore < awayScore) return { result: 'loss', color: 'bg-red-100 text-red-800' };
     return { result: 'draw', color: 'bg-gray-100 text-gray-800' };
   };
 

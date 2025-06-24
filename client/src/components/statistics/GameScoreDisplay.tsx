@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface GameScoreDisplayProps {
   teamScore?: number;
-  opponentScore?: number;
+  awayScore?: number;
   teamName?: string;
   opponentName?: string;
   showQuarters?: boolean;
@@ -19,7 +19,7 @@ interface GameScoreDisplayProps {
 
 export function GameScoreDisplay({
   teamScore,
-  opponentScore,
+  awayScore,
   teamName = "Team",
   opponentName = "Opponent",
   showQuarters = false,
@@ -30,7 +30,7 @@ export function GameScoreDisplay({
   showWarning = false
 }: GameScoreDisplayProps) {
   // Only show scores if we have official scores
-  if (!hasOfficialScores || teamScore === undefined || opponentScore === undefined) {
+  if (!hasOfficialScores || teamScore === undefined || awayScore === undefined) {
     if (compact) {
       return (
         <div className={cn("flex items-center gap-2", className)}>
@@ -65,8 +65,8 @@ export function GameScoreDisplay({
   }
 
   const getResult = () => {
-    if (teamScore > opponentScore) return 'win';
-    if (teamScore < opponentScore) return 'loss';
+    if (teamScore > awayScore) return 'win';
+    if (teamScore < awayScore) return 'loss';
     return 'draw';
   };
 
@@ -93,7 +93,7 @@ export function GameScoreDisplay({
   if (compact) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
-        <span className="font-bold">{teamScore}-{opponentScore}</span>
+        <span className="font-bold">{teamScore}-{awayScore}</span>
         <Badge variant={getBadgeVariant()} className="text-xs">
           {getResultText()}
         </Badge>
@@ -112,7 +112,7 @@ export function GameScoreDisplay({
           </div>
           <div className="text-xl text-muted-foreground">-</div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{opponentScore}</div>
+            <div className="text-2xl font-bold">{awayScore}</div>
             <div className="text-sm text-muted-foreground">{opponentName}</div>
           </div>
         </div>

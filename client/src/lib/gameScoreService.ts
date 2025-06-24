@@ -6,7 +6,7 @@ import { apiClient } from './apiClient';
 export interface QuarterScore {
   quarter: number;
   teamScore: number;
-  opponentScore: number;
+  awayScore: number;
 }
 
 export interface GameScores {
@@ -81,7 +81,7 @@ class GameScoreService {
     const quarterScores = Array.from({ length: 4 }, (_, i) => ({
       quarter: i + 1,
       teamScore: i === 0 ? (isWin ? 10 : 0) : 0,
-      opponentScore: i === 0 ? (isWin ? 0 : 10) : 0
+      awayScore: i === 0 ? (isWin ? 0 : 10) : 0
     }));
 
     return {
@@ -96,7 +96,7 @@ class GameScoreService {
     const quarterScores = Array.from({ length: 4 }, (_, i) => ({
       quarter: i + 1,
       teamScore: i === 0 ? teamGoals : 0,
-      opponentScore: i === 0 ? opponentGoals : 0
+      awayScore: i === 0 ? opponentGoals : 0
     }));
 
     const result = teamGoals > opponentGoals ? 'win' : 
@@ -131,7 +131,7 @@ class GameScoreService {
     const quarterScores = Object.entries(legacy.quarterScores).map(([quarter, scores]: [string, any]) => ({
       quarter: parseInt(quarter),
       teamScore: scores.for,
-      opponentScore: scores.against
+      awayScore: scores.against
     }));
 
     return {
@@ -145,7 +145,7 @@ class GameScoreService {
 
   private convertToLegacyFormat(scores: GameScores): any {
     const quarterScores = scores.quarterScores.reduce((acc, q) => {
-      acc[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
+      acc[q.quarter.toString()] = { for: q.teamScore, against: q.awayScore };
       return acc;
     }, {} as any);
 
@@ -163,7 +163,7 @@ class GameScoreService {
     const quarterScores: QuarterScore[] = Array.from({ length: 4 }, (_, i) => ({
       quarter: i + 1,
       teamScore: 0,
-      opponentScore: 0
+      awayScore: 0
     }));
 
     return {
@@ -210,7 +210,7 @@ class GameScoreService {
       quarterScores.push({
         quarter,
         teamScore: homeTeamScore,
-        opponentScore: awayTeamScore
+        awayScore: awayTeamScore
       });
     }
 
@@ -233,8 +233,8 @@ class GameScoreService {
         // Also flip quarter scores for away team perspective
         quarterScores.forEach(q => {
           const temp = q.teamScore;
-          q.teamScore = q.opponentScore;
-          q.opponentScore = temp;
+          q.teamScore = q.awayScore;
+          q.awayScore = temp;
         });
       }
       // If current team is home team, scores are already correct

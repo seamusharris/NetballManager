@@ -3,14 +3,14 @@ import { cn } from '@/lib/utils';
 
 interface ScoreBadgeProps {
   teamScore: number; // Home team score (first number displayed)
-  opponentScore: number; // Away team score (second number displayed) 
+  awayScore: number; // Away team score (second number displayed) 
   className?: string;
   size?: 'sm' | 'md' | 'default' | 'lg';
   result?: string;
 }
 
-export function ScoreBadge({ teamScore, opponentScore, className, size = 'default', result }: ScoreBadgeProps) {
-  // teamScore = Home team score, opponentScore = Away team score for display consistency
+export function ScoreBadge({ teamScore, awayScore, className, size = 'default', result }: ScoreBadgeProps) {
+  // teamScore = Home team score, awayScore = Away team score for display consistency
   const sizeClasses = {
     'sm': 'px-2 py-1 text-xs',
     'md': 'px-2.5 py-1 text-sm', 
@@ -23,10 +23,10 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
 
 
   // Debug for Team 128 
-  if (teamScore === 5 && opponentScore === 36) {
+  if (teamScore === 5 && awayScore === 36) {
     console.log(`🔍 SCORE BADGE - Team 128 game (5-36):`, {
       teamScore,
-      opponentScore,
+      awayScore,
       result,
       expectedColor: 'red (loss)',
       willUseResult: !!result
@@ -42,8 +42,8 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
     }
     
     // Fallback to score comparison
-    if (teamScore > opponentScore) return 'bg-green-500 text-white';
-    if (teamScore < opponentScore) return 'bg-red-500 text-white';
+    if (teamScore > awayScore) return 'bg-green-500 text-white';
+    if (teamScore < awayScore) return 'bg-red-500 text-white';
     return 'bg-yellow-500 text-white';
   };
 
@@ -56,7 +56,7 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
         className
       )}
     >
-      {teamScore}—{opponentScore}
+      {teamScore}—{awayScore}
     </div>
   );
 }

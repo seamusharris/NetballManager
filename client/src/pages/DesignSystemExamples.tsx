@@ -512,9 +512,9 @@ export default function DesignSystemExamples() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap gap-2">
-                  <ScoreBadge teamScore={25} opponentScore={18} result="won" />
-                  <ScoreBadge teamScore={22} opponentScore={28} result="lost" />
-                  <ScoreBadge teamScore={24} opponentScore={24} result="draw" />
+                  <ScoreBadge teamScore={25} awayScore={18} result="won" />
+                  <ScoreBadge teamScore={22} awayScore={28} result="lost" />
+                  <ScoreBadge teamScore={24} awayScore={24} result="draw" />
                 </div>
               </CardContent>
             </Card>

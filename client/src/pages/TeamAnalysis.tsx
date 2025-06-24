@@ -79,11 +79,11 @@ interface DetailedStats {
 }
 
 const calculateQuarterAnalysis = (gameResults: any[]) => {
-  const quarterData: Record<number, { teamScores: number[]; opponentScores: number[] }> = {
-    1: { teamScores: [], opponentScores: [] },
-    2: { teamScores: [], opponentScores: [] },
-    3: { teamScores: [], opponentScores: [] },
-    4: { teamScores: [], opponentScores: [] }
+  const quarterData: Record<number, { teamScores: number[]; awayScores: number[] }> = {
+    1: { teamScores: [], awayScores: [] },
+    2: { teamScores: [], awayScores: [] },
+    3: { teamScores: [], awayScores: [] },
+    4: { teamScores: [], awayScores: [] }
   };
 
   gameResults.forEach(result => {
@@ -91,10 +91,10 @@ const calculateQuarterAnalysis = (gameResults: any[]) => {
       [1, 2, 3, 4].forEach(quarter => {
         const quarterStats = result.gameStats.filter((stat: any) => stat.quarter === quarter);
         const teamScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsFor || 0), 0);
-        const opponentScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
+        const awayScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
 
         quarterData[quarter].teamScores.push(teamScore);
-        quarterData[quarter].opponentScores.push(opponentScore);
+        quarterData[quarter].awayScores.push(awayScore);
       });
     }
   });
@@ -110,8 +110,8 @@ const calculateQuarterAnalysis = (gameResults: any[]) => {
     const avgTeamScore = data.teamScores.length > 0 
       ? data.teamScores.reduce((a, b) => a + b, 0) / data.teamScores.length 
       : 0;
-    const avgOpponentScore = data.opponentScores.length > 0 
-      ? data.opponentScores.reduce((a, b) => a + b, 0) / data.opponentScores.length 
+    const avgOpponentScore = data.awayScores.length > 0 
+      ? data.awayScores.reduce((a, b) => a + b, 0) / data.awayScores.length 
       : 0;
 
     const differential = avgTeamScore - avgOpponentScore;
@@ -252,8 +252,8 @@ export default function TeamAnalysis() {
       // Filter stats to only include current team's stats
       const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
       const teamScore = teamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = teamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      return getWinLoseLabel(teamScore, opponentScore);
+      const awayScore = teamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      return getWinLoseLabel(teamScore, awayScore);
     });
 
     const momentum = calculateMomentum(recentResults);
@@ -356,7 +356,7 @@ export default function TeamAnalysis() {
     completedGames.forEach(game => {
       const gameStats = centralizedStats[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const awayScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
       // Determine opponent name using the same logic as other components
       let opponentName = null;
@@ -381,7 +381,7 @@ export default function TeamAnalysis() {
         teamPerformanceMatrix[opponentName].total++;
         teamPerformanceMatrix[opponentName].totalScore += teamScore;
 
-        if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
+        if (getWinLoseLabel(teamScore, awayScore) === 'Win') {
           teamPerformanceMatrix[opponentName].wins++;
         }
       }
@@ -505,7 +505,7 @@ export default function TeamAnalysis() {
           return {
             game: g,
             teamScore: ourScore,
-            opponentScore: theirScore,
+            awayScore: theirScore,
             result,
             margin: ourScore - theirScore,
             gameStats
@@ -575,7 +575,7 @@ export default function TeamAnalysis() {
       return {
         game: g,
         teamScore: ourScore,
-        opponentScore: theirScore,
+        awayScore: theirScore,
         result: getWinLoseLabel(ourScore, theirScore),
         margin: ourScore - theirScore,
         gameStats

@@ -248,12 +248,12 @@ export function sortByDate<T extends { date: string }>(items: T[], ascending: bo
   });
 }
 
-export function getWinLoseLabel(teamScore: number, opponentScore: number, gameStatus?: { name: string }): 'Win' | 'Loss' | 'Draw' | 'Abandoned' {
+export function getWinLoseLabel(teamScore: number, awayScore: number, gameStatus?: { name: string }): 'Win' | 'Loss' | 'Draw' | 'Abandoned' {
   // Handle abandoned games specially
   if (gameStatus?.name === 'abandoned') return 'Abandoned';
 
-  if (teamScore > opponentScore) return 'Win';
-  if (teamScore < opponentScore) return 'Loss';
+  if (teamScore > awayScore) return 'Win';
+  if (teamScore < awayScore) return 'Loss';
   return 'Draw';
 }
 
@@ -318,18 +318,18 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
 export function getForfeitGameScoreFromStatus(gameStatus: { name: string, teamGoals?: number | null, opponentGoals?: number | null }) {
   // Use the database-defined scores, with fallback to legacy values
   const teamScore = gameStatus.teamGoals ?? (gameStatus.name === 'forfeit-win' ? 10 : 0);
-  const opponentScore = gameStatus.opponentGoals ?? (gameStatus.name === 'forfeit-win' ? 0 : 10);
+  const awayScore = gameStatus.opponentGoals ?? (gameStatus.name === 'forfeit-win' ? 0 : 10);
 
   return {
     quarterScores: {
-      '1': { for: teamScore, against: opponentScore },
+      '1': { for: teamScore, against: awayScore },
       '2': { for: 0, against: 0 },
       '3': { for: 0, against: 0 },
       '4': { for: 0, against: 0 }
     },
     teamScore,
-    opponentScore,
-    finalScore: { for: teamScore, against: opponentScore }
+    awayScore,
+    finalScore: { for: teamScore, against: awayScore }
   };
 }
 
@@ -375,7 +375,7 @@ export function getForfeitGameScore(game: { status?: string | null } | string | 
       '4': { for: 0, against: 0 }
     },
     teamScore: isWin ? 10 : 0,
-    opponentScore: isWin ? 0 : 10,
+    awayScore: isWin ? 0 : 10,
     finalScore: { for: isWin ? 10 : 0, against: isWin ? 0 : 10 }
   };
 }
