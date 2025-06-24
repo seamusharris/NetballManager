@@ -17,17 +17,7 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
     'lg': 'px-4 py-2 text-base'
   };
 
-  // Debug logging for Game 106 Team 128
-  if (teamScore === 5 && opponentScore === 36) {
-    console.log(`🔍 SCORE BADGE DEBUG Team 128 Game 106:`, {
-      teamScore,
-      opponentScore,
-      result,
-      expectedColor: 'red (loss)',
-      calculatedWin: teamScore > opponentScore,
-      calculatedLoss: teamScore < opponentScore
-    });
-  }
+
 
   const getResultColor = () => {
     if (teamScore > opponentScore) return 'bg-green-500 text-white';

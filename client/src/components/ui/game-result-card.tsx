@@ -81,31 +81,13 @@ export default function GameResultCard({
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
   const isUpcoming = !game.statusIsCompleted && !isByeGame;
 
-  const getOpponentName = (): string => {
+  const getGameDisplay = (): string => {
     // Handle BYE games
     if (isByeGame) {
       return 'Bye';
     }
 
-    // For team-specific context, show opponent
-    if (currentTeamId) {
-      if (game.homeTeamId === currentTeamId) {
-        return `vs ${game.awayTeamName || 'Unknown'}`;
-      } else if (game.awayTeamId === currentTeamId) {
-        return `vs ${game.homeTeamName || 'Unknown'}`;
-      }
-    }
-
-    // For club-wide view or no team context, show both teams
-    return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
-  };
-
-    const getOpponentDisplay = (): string => {
-    if (isByeGame) {
-      return "Bye";
-    }
-
-    // Always show Home vs Away format
+    // Always show Home vs Away format for consistency
     return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
@@ -197,7 +179,7 @@ export default function GameResultCard({
     return "bg-blue-200 text-blue-800"; // upcoming games
   };
 
-  // Display score or placeholder
+  // Display score in home-away format always
   const getScoreDisplay = () => {
     if (!game) return "—";
 
@@ -207,32 +189,29 @@ export default function GameResultCard({
     // For upcoming games, show dash
     if (isUpcoming) return "—";
 
-    // Show calculated scores if available - always in Home-Away format
+    // Use unified service scores - convert perspective scores to home-away display
     if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
-      // For club-wide view or when showing home vs away, we need to determine actual home/away scores
       let homeScore = 0;
       let awayScore = 0;
 
-      if (currentTeamId && game.homeTeamId === currentTeamId) {
-        // Current team is home team
-        homeScore = scores.finalScore.for;
-        awayScore = scores.finalScore.against;
-      } else if (currentTeamId && game.awayTeamId === currentTeamId) {
-        // Current team is away team - flip the scores
-        homeScore = scores.finalScore.against;
-        awayScore = scores.finalScore.for;
+      if (currentTeamId) {
+        // Team perspective: convert "for/against" to "home/away" display
+        if (game.homeTeamId === currentTeamId) {
+          // Current team is home - for=home, against=away
+          homeScore = scores.finalScore.for;
+          awayScore = scores.finalScore.against;
+        } else if (game.awayTeamId === currentTeamId) {
+          // Current team is away - for=away, against=home
+          homeScore = scores.finalScore.against;
+          awayScore = scores.finalScore.for;
+        }
       } else {
-        // No team context or different team - assume scores are already in home-away format
+        // Club-wide view - scores should already be in correct format
         homeScore = scores.finalScore.for;
         awayScore = scores.finalScore.against;
       }
 
       return `${homeScore}-${awayScore}`;
-    }
-
-    // Show status scores if no calculated scores but status scores exist
-    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
     }
 
     // For completed games without scores, show placeholder
@@ -257,7 +236,7 @@ export default function GameResultCard({
       {/* Left side - Opponent and details */}
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-gray-800 truncate text-base">
-          {isByeGame ? "Bye" : getOpponentName()}
+          {isByeGame ? "Bye" : getGameDisplay()}
         </div>
 
         {/* Details row */}
@@ -329,8 +308,8 @@ export default function GameResultCard({
 
               return (
                 <ScoreBadge 
-                  teamScore={currentTeamId ? scores.finalScore.for : homeScore} 
-                  opponentScore={currentTeamId ? scores.finalScore.against : awayScore}
+                  teamScore={scores.finalScore.for} 
+                  opponentScore={scores.finalScore.against}
                   result={displayResult}
                 />
               );
