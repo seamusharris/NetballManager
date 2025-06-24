@@ -448,10 +448,10 @@ export default function Players() {
             ) : (
               <SelectablePlayerBox
                 players={teamPlayers}
-                selectedPlayerIds={selectedPlayerIds}
-                onSelectionChange={setSelectedPlayerIds}
+                selectedPlayerIds={new Set(teamPlayers.map(p => p.id))}
+                onSelectionChange={() => {}}
                 title="Current Team Players"
-                showQuickActions={true}
+                showQuickActions={false}
                 mode="team-management"
                 onRemovePlayer={handleRemovePlayer}
                 removingPlayerIds={removingPlayerIds}
