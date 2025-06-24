@@ -162,8 +162,17 @@ class UnifiedStatisticsService {
       console.log(`🔍 RAW BATCH STATS RESULT for games ${validIds}:`, result);
       
       // ALWAYS process through opponent perspective to ensure Matrix team gets stats
+      console.log(`🎯 ABOUT TO PROCESS OPPONENT PERSPECTIVE - Raw result:`, result);
       const processedResult = await this.processStatsWithOpponentPerspective(result || {});
       console.log(`✅ PROCESSED BATCH STATS RESULT: Found stats for ${Object.keys(processedResult).length} games`);
+      
+      // Special check for game 80 Matrix team
+      if (processedResult[80]) {
+        const team1Stats = processedResult[80].filter(s => s.teamId === 1);
+        const team123Stats = processedResult[80].filter(s => s.teamId === 123);
+        console.log(`🏀 GAME 80 FINAL CHECK: Team 1 has ${team1Stats.length} stats, Team 123 has ${team123Stats.length} stats`);
+      }
+      
       return processedResult;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
@@ -177,7 +186,6 @@ class UnifiedStatisticsService {
    */
   private async processStatsWithOpponentPerspective(statsMap: Record<number, GameStat[]>): Promise<Record<number, GameStat[]>> {
     console.log(`🎯 PROCESSING OPPONENT PERSPECTIVE for ${Object.keys(statsMap).length} games`);
-    console.log(`📊 Raw stats map:`, JSON.stringify(statsMap, null, 2));
     const processedStats: Record<number, GameStat[]> = {};
 
     for (const [gameIdStr, stats] of Object.entries(statsMap)) {
