@@ -32,12 +32,20 @@ export default function RosterGame() {
 
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
 
-  // Fetch games using REST endpoint - Stage 3
+  // Fetch games using team-specific endpoint for roster context - Stage 5
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', currentClub?.id, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/games`),
-    retry: 1,
-    enabled: !!currentClub?.id
+    queryKey: ['games', teamId, 'team-specific'],
+    queryFn: () => {
+      if (teamId) {
+        return apiRequest('GET', `/api/teams/${teamId}/games`) as Promise<Game[]>;
+      } else {
+        // Fallback to club games if no team context
+        return apiClient.get(`/api/clubs/${currentClub?.id}/games`);
+      }
+    },
+    retry: 2,
+    enabled: !!currentClub?.id,
+    staleTime: 30000 // 30 seconds
   });
 
   // Extract teamId from URL params

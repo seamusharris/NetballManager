@@ -48,8 +48,9 @@ export default function PlayerAvailability() {
         return apiRequest('GET', `/api/clubs/${currentClub?.id}/games`) as Promise<Game[]>;
       }
     },
-    retry: 1,
-    enabled: !!currentClub?.id && isInitialized
+    retry: 2,
+    enabled: !!currentClub?.id && isInitialized,
+    staleTime: 30000 // 30 seconds
   });
 
   // Fetch roster for the selected game using team-specific context
@@ -113,20 +114,20 @@ export default function PlayerAvailability() {
     );
   }
 
-  if (!selectedGame) {
+  if (!selectedGame && !isLoading) {
     return (
       <PageTemplate
         title="Player Availability"
-        subtitle="Game not found"
+        subtitle="Loading game details..."
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Player Availability' }
         ]}
       >
-        <Alert variant="destructive">
+        <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Game with ID {gameId} not found.
+            Loading game details. Please wait...
           </AlertDescription>
         </Alert>
       </PageTemplate>
