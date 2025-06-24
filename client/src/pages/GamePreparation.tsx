@@ -1029,6 +1029,18 @@ export default function GamePreparation() {
                                                 const quarterWin = teamScore > opponentScore;
                                                 const quarterLoss = teamScore < opponentScore;
 
+                                                // Display in Home-Away format but color by team perspective
+                                                let homeScore, awayScore;
+                                                if (seasonGame.homeTeamId === currentTeamId) {
+                                                  // Current team is home
+                                                  homeScore = teamScore;
+                                                  awayScore = opponentScore;
+                                                } else {
+                                                  // Current team is away
+                                                  homeScore = opponentScore;
+                                                  awayScore = teamScore;
+                                                }
+
                                                 const quarterClass = quarterWin 
                                                   ? 'bg-green-100 text-green-800 border border-green-400' 
                                                   : quarterLoss 
@@ -1037,7 +1049,7 @@ export default function GamePreparation() {
 
                                                 return (
                                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                                    {teamScore}–{opponentScore}
+                                                    {homeScore}–{awayScore}
                                                   </span>
                                                 );
                                               })}
@@ -1049,6 +1061,18 @@ export default function GamePreparation() {
                                                 const cumulativeWin = teamCum > opponentCum;
                                                 const cumulativeLoss = teamCum < opponentCum;
 
+                                                // Display in Home-Away format but color by team perspective
+                                                let homeCum, awayCum;
+                                                if (seasonGame.homeTeamId === currentTeamId) {
+                                                  // Current team is home
+                                                  homeCum = teamCum;
+                                                  awayCum = opponentCum;
+                                                } else {
+                                                  // Current team is away
+                                                  homeCum = opponentCum;
+                                                  awayCum = teamCum;
+                                                }
+
                                                 const cumulativeClass = cumulativeWin 
                                                   ? 'bg-green-200 text-green-800 border border-green-500' 
                                                   : cumulativeLoss 
@@ -1057,7 +1081,7 @@ export default function GamePreparation() {
 
                                                 return (
                                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
-                                                    {teamCum}–{opponentCum}
+                                                    {homeCum}–{awayCum}
                                                   </span>
                                                 );
                                               })}
