@@ -112,7 +112,8 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
-- June 23, 2025. Initial setup
+- June 24, 2025: Created unified game score service to consolidate all score calculation logic
+- June 23, 2025: Initial setup
 
 ## User Preferences
 

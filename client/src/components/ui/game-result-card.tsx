@@ -5,7 +5,7 @@ import { formatShortDate, formatDate } from '@/lib/utils';
 import { ScoreBadge } from '@/components/ui/score-badge';
 import { GameBadge } from '@/components/ui/game-badge';
 import { cn } from '@/lib/utils';
-import { gameScoreService } from '@/lib/gameScoreService';
+import { gameScoreService } from '@/lib/unifiedGameScoreService';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from './badge';
 import { Card } from './card';
@@ -60,129 +60,22 @@ export default function GameResultCard({
     );
   }
 
-  // Memoize score calculation to avoid unnecessary recalculations
-  const scores = useMemo(() => {
-    try {
-      // Use only centralized scores - no API calls
-      const officialScores = centralizedScores || [];
+  // Use unified game score service for all calculations
+  const scoreResult = useMemo(() => {
+    const perspective = currentTeamId || 'club-wide';
+    return gameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
+  }, [game, centralizedScores, currentTeamId]);
 
-      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${officialScores.length}`, officialScores.slice(0, 2));
-
-      // Process scores for completed games
-      if (game.statusIsCompleted) {
-        // Check if game has fixed scores from status (forfeit, etc.)
-        const hasFixedScores = game.statusTeamGoals !== null && game.statusTeamGoals !== undefined && 
-                              game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined;
-
-        if (hasFixedScores) {
-          // For fixed scores, we need to determine perspective based on team context
-          let ourScore = 0;
-          let theirScore = 0;
-          let result = 'unknown';
-
-          if (currentTeamId) {
-            // Determine if we're home or away team
-            if (game.homeTeamId === currentTeamId) {
-              ourScore = game.statusTeamGoals || 0;
-              theirScore = game.statusOpponentGoals || 0;
-            } else if (game.awayTeamId === currentTeamId) {
-              ourScore = game.statusOpponentGoals || 0;
-              theirScore = game.statusTeamGoals || 0;
-            } else {
-              // Fallback for club-wide view - show home vs away
-              ourScore = game.statusTeamGoals || 0;
-              theirScore = game.statusOpponentGoals || 0;
-            }
-
-            // Calculate result from our perspective
-            if (ourScore > theirScore) result = 'win';
-            else if (ourScore < theirScore) result = 'loss';
-            else result = 'draw';
-          }
-
-          console.log(`GameResultCard ${game.id}: fixed scores calculated - ${ourScore}-${theirScore} (${result}) from status scores`);
-
-          return {
-            quarterScores: [],
-            finalScore: { for: ourScore, against: theirScore },
-            result: result
-          };
-        } else if (officialScores.length > 0) {
-          // For official scores, calculate from team perspective
-          let ourTotalScore = 0;
-          let theirTotalScore = 0;
-          const quarterBreakdown = [];
-
-          // Group scores by quarter
-          const scoresByQuarter = {};
-          officialScores.forEach(score => {
-            if (!scoresByQuarter[score.quarter]) {
-              scoresByQuarter[score.quarter] = {};
-            }
-            scoresByQuarter[score.quarter][score.teamId] = score.score;
-          });
-
-          // Calculate totals and quarter breakdown
-          Object.keys(scoresByQuarter).forEach(quarter => {
-            const quarterScores = scoresByQuarter[quarter];
-            let ourQuarterScore = 0;
-            let theirQuarterScore = 0;
-
-            if (currentTeamId) {
-              // Get our score and opponent score for this quarter
-              ourQuarterScore = quarterScores[currentTeamId] || 0;
-
-              // Find opponent's score (any team that's not us)
-              Object.keys(quarterScores).forEach(teamId => {
-                if (parseInt(teamId) !== currentTeamId) {
-                  theirQuarterScore += quarterScores[teamId] || 0;
-                }
-              });
-            } else {
-              // Club-wide view: use home vs away perspective
-              ourQuarterScore = quarterScores[game.homeTeamId] || 0;
-              theirQuarterScore = quarterScores[game.awayTeamId] || 0;
-            }
-
-            ourTotalScore += ourQuarterScore;
-            theirTotalScore += theirQuarterScore;
-
-            quarterBreakdown.push({
-              quarter: parseInt(quarter),
-              teamScore: ourQuarterScore,
-              opponentScore: theirQuarterScore
-            });
-          });
-
-          // Calculate result
-          let result = 'unknown';
-          if (ourTotalScore > theirTotalScore) result = 'win';
-          else if (ourTotalScore < theirTotalScore) result = 'loss';
-          else result = 'draw';
-
-          console.log(`GameResultCard ${game.id}: official scores calculated - ${ourTotalScore}-${theirTotalScore} (${result}) from ${officialScores.length} score entries`);
-
-          return {
-            quarterScores: quarterBreakdown,
-            finalScore: { for: ourTotalScore, against: theirTotalScore },
-            result: result
-          };
-        }
-      }
-
-      // Return empty scores for games without official scores
-      return {
-        quarterScores: [],
-        finalScore: { for: 0, against: 0 }
-      };
-    } catch (error) {
-      console.error(`GameResultCard ${game.id}: Error processing scores:`, error);
-      return {
-        quarterScores: [],
-        finalScore: { for: 0, against: 0 }
-      };
-    }
-  }, [centralizedScores, game.id, game.statusIsCompleted, currentTeamId, game.homeTeamId, game.awayTeamId, game.isInterClub, game.statusName, game.statusTeamGoals, game.statusOpponentGoals]);
+  // Legacy format for backward compatibility
+  const scores = useMemo(() => ({
+    quarterScores: scoreResult.quarterBreakdown.map(q => ({
+      quarter: q.quarter,
+      teamScore: q.ourScore,
+      opponentScore: q.theirScore
+    })),
+    finalScore: { for: scoreResult.ourScore, against: scoreResult.theirScore },
+    result: scoreResult.result
+  }), [scoreResult]);
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
