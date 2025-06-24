@@ -420,8 +420,8 @@ export default function ClubDashboard() {
                 games={games} 
                 opponents={[]} 
                 className="md:col-span-2" 
-                centralizedStats={centralizedStats}
-                centralizedScores={officialScores}
+                centralizedStats={batchData?.stats || {}}
+                centralizedScores={batchData?.scores || {}}
                 teams={teams}
                 clubWide={true}
               />

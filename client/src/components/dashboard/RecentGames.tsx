@@ -31,6 +31,25 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
     .filter(game => {
       const isCompleted = game.statusIsCompleted === true;
 
+      // For club-wide view, only show games where at least one team belongs to current club
+      if (clubWide && teams && teams.length > 0) {
+        const clubTeamIds = teams.map(t => t.id);
+        const hasClubTeam = clubTeamIds.includes(game.homeTeamId) || clubTeamIds.includes(game.awayTeamId);
+        
+        console.log(`Game ${game.id} club filter:`, {
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId,
+          clubTeamIds,
+          hasClubTeam,
+          isCompleted,
+          finalIncluded: isCompleted && hasClubTeam,
+          homeTeamName: game.homeTeamName,
+          awayTeamName: game.awayTeamName
+        });
+        
+        return isCompleted && hasClubTeam;
+      }
+
       console.log(`Game ${game.id} completion check:`, {
         statusIsCompleted: game.statusIsCompleted,
         finalResult: isCompleted

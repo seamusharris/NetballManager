@@ -408,11 +408,9 @@ export class UnifiedGameScoreService {
       } else if (game.awayTeamId === perspective) {
         return { ourTeamId: perspective, theirTeamId: game.homeTeamId || 0 };
       } else {
-        // Perspective team not in this game - fallback to home vs away
-        return { 
-          ourTeamId: game.homeTeamId || 0, 
-          theirTeamId: game.awayTeamId || 0 
-        };
+        // Perspective team not in this game - this should not happen for valid team perspectives
+        console.warn(`Team ${perspective} not found in game ${game.id} (${game.homeTeamId} vs ${game.awayTeamId})`);
+        return { ourTeamId: 0, theirTeamId: 0 }; // Invalid game for this team
       }
     }
 
