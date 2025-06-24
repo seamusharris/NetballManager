@@ -158,12 +158,82 @@ class UnifiedStatisticsService {
     try {
       // Use POST method with proper authentication via apiRequest
       const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
-      return result || {};
+      const processedResult = await this.processStatsWithOpponentPerspective(result || {});
+      return processedResult;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
       // Fallback to individual requests using apiRequest
       return this.fallbackIndividualFetch(validIds);
     }
+  }
+
+  /**
+   * Process stats to generate missing team perspectives from opponent data
+   */
+  private async processStatsWithOpponentPerspective(statsMap: Record<number, GameStat[]>): Promise<Record<number, GameStat[]>> {
+    const processedStats: Record<number, GameStat[]> = {};
+
+    for (const [gameIdStr, stats] of Object.entries(statsMap)) {
+      const gameId = parseInt(gameIdStr);
+      processedStats[gameId] = [...stats]; // Start with existing stats
+
+      if (stats.length === 0) {
+        continue;
+      }
+
+      // Get game information to determine teams
+      try {
+        const gameInfo = await apiRequest('GET', `/api/games/${gameId}`);
+        const homeTeamId = gameInfo.homeTeamId;
+        const awayTeamId = gameInfo.awayTeamId;
+
+        if (!homeTeamId || !awayTeamId) {
+          continue; // Skip BYE games or incomplete data
+        }
+
+        // Check which teams have recorded stats
+        const teamsWithStats = new Set(stats.map(stat => stat.teamId));
+        const missingTeams = [homeTeamId, awayTeamId].filter(teamId => !teamsWithStats.has(teamId));
+
+        // Generate stats for missing teams from opponent's defensive data
+        for (const missingTeamId of missingTeams) {
+          const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
+          const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
+
+          console.log(`Generating stats for missing team ${missingTeamId} from opponent ${opponentTeamId} defensive data`);
+
+          // Generate offensive stats for missing team from opponent's defensive positions
+          for (const opponentStat of opponentStats) {
+            if (opponentStat.position === 'GD' || opponentStat.position === 'GK') {
+              // Opponent's defensive stats show goals they conceded = our offensive output
+              const generatedStat: GameStat = {
+                id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), // Unique negative ID for generated stats
+                gameId: gameId,
+                teamId: missingTeamId,
+                position: opponentStat.position === 'GD' ? 'GA' : 'GS', // Map defensive to offensive positions
+                quarter: opponentStat.quarter,
+                goalsFor: opponentStat.goalsAgainst || 0, // Their goals against = our goals for
+                goalsAgainst: 0, // We don't have defensive data for the missing team
+                missedGoals: 0,
+                rebounds: 0,
+                intercepts: 0,
+                badPass: 0,
+                handlingError: 0,
+                pickUp: 0,
+                infringement: 0,
+                rating: null
+              };
+              processedStats[gameId].push(generatedStat);
+              console.log(`Generated stat: Team ${missingTeamId} ${generatedStat.position} Q${generatedStat.quarter} scored ${generatedStat.goalsFor} goals`);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`Could not process opponent perspective for game ${gameId}:`, error);
+      }
+    }
+
+    return processedStats;
   }
 
   private async executeBatchRequest(gameIds: number[]): Promise<Record<number, GameStat[]>> {

@@ -112,6 +112,11 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: Fixed defensive statistics calculation from opponent perspective
+  - Statistics system now properly generates missing team stats from opponent's defensive data
+  - When Team A has no recorded stats but Team B has defensive stats, Team A's offensive performance is correctly calculated from Team B's goals conceded
+  - Fixed issue where Pumas were showing inflated stats due to incorrect perspective calculation
+  - Added processStatsWithOpponentPerspective method to handle missing team data properly
 - June 24, 2025: Implemented unified game score service across all components
   - Created UnifiedGameScoreService as single source of truth for score calculations
   - Refactored GameResultCard to use unified service (eliminated 100+ lines of duplicate logic)
