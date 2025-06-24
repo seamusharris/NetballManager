@@ -237,11 +237,17 @@ export default function LiveStats() {
     refetchOnWindowFocus: true // Refetch when window regains focus
   });
 
+  // Fetch current club first
+  const { data: currentClub } = useQuery({
+    queryKey: ['/api/clubs/current'],
+    queryFn: () => apiClient.get('/api/clubs/current'),
+  });
+
   // Fetch players for the team - Stage 4 REST endpoint
   const { data: allPlayers, isLoading: allPlayersLoading } = useQuery({
-    queryKey: ['players', currentClubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId
+    queryKey: ['players', currentClub?.id, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/players`),
+    enabled: !!currentClub?.id
   });
 
   // Filter to only show players assigned to the current team

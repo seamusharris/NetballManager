@@ -1295,13 +1295,15 @@ export default function GameDetails() {
     if (gameId && !isNaN(gameId)) {
       console.log("Loaded roster data:", roster?.length, "entries");
       console.log("Roster first entry:", roster?.[0]);
+      console.log("Players data:", { players, isLoadingPlayers, playersLength: players?.length });
       console.log("Teams data:", { teams, isLoadingTeams, teamsLength: teams?.length });
       console.log("Current club:", currentClub);
       console.log("Current team:", currentTeam);
+      console.log("Effective team ID:", effectiveTeamId);
       // Always refetch roster data when navigating to this page
       refetchRosters();
     }
-  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub, roster, currentTeam]);
+  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub, roster, currentTeam, players, isLoadingPlayers, effectiveTeamId]);
 
   // Fetch game stats
   const { 
