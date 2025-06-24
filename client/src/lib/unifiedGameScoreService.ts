@@ -421,7 +421,8 @@ export class UnifiedGameScoreService {
       }
     }
 
-    // Club-wide perspective or fallback - use home vs away
+    // Club-wide perspective - maintain home vs away format for display consistency
+    // But for game result calculations, we need to consider the actual team context
     return { 
       ourTeamId: game.homeTeamId || 0, 
       theirTeamId: game.awayTeamId || 0 

@@ -62,12 +62,26 @@ export default function GameResultCard({
 
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
-    const perspective = currentTeamId || 'club-wide';
+    // For club-wide view, detect which team from our club is playing and use their perspective
+    let perspective: number | 'club-wide' = currentTeamId || 'club-wide';
     
-    // Debug for any team 128 game regardless of perspective
+    // If we're in club-wide view but this game involves one of our teams, use that team's perspective
+    if (!currentTeamId && currentClub) {
+      // Check if home team is from our club
+      if (game.homeTeamId && teams.some(team => team.id === game.homeTeamId)) {
+        perspective = game.homeTeamId;
+      }
+      // Check if away team is from our club  
+      else if (game.awayTeamId && teams.some(team => team.id === game.awayTeamId)) {
+        perspective = game.awayTeamId;
+      }
+    }
+    
+    // Debug for any team 128 game
     if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 GAME RESULT CARD - Team 128 game ${game.id} inputs:`, {
-        perspective,
+        originalPerspective: currentTeamId || 'club-wide',
+        finalPerspective: perspective,
         currentTeamId,
         centralizedScoresCount: centralizedScores?.length || 0,
         gameData: {
@@ -95,7 +109,7 @@ export default function GameResultCard({
     }
     
     return result;
-  }, [game, centralizedScores, currentTeamId]);
+  }, [game, centralizedScores, currentTeamId, currentClub, teams]);
 
   // Convert to legacy format for backward compatibility with existing UI
   const scores = useMemo(() => {
