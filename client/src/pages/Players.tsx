@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import PlayerForm from '@/components/players/PlayerForm';
 import { User, UserMinus, UserPlus, Loader2, Calendar, Users } from 'lucide-react';
 import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
-import ActionButton from '@/components/ui/ActionButton';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
