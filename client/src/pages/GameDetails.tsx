@@ -288,7 +288,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
     });
 
     return Object.values(result);
-  }, [roster, players, gameStats]);
+  }, [rosterData, players, gameStats]);
 
   // Helper function to get player name (moved from elsewhere in the file)
   function getPlayerName(players: any[], playerId: number) {
@@ -348,7 +348,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       // If no stats for this quarter, create empty stats object with zeros
       if (!player.quarterStats[activeQuarter]) {
         // Find position from roster
-        const rosterEntry = roster.find(r => 
+        const rosterEntry = rosterData.find(r => 
           r.playerId === player.playerId && r.quarter === activeQuarter
         );
 
@@ -1849,23 +1849,23 @@ export default function GameDetails() {
                 </CardHeader>
                 <CardContent>
                   {console.log("Debug: Rendering roster section", { 
-                    rosterLength: roster?.length, 
-                    isLoading: isLoadingRoster,
+                    rosterLength: rosterData?.length, 
+                    isLoading: rosterLoading,
                     playersLength: players?.length,
-                    isLoadingPlayers,
-                    firstRosterEntry: roster?.[0],
+                    isLoadingPlayers: playersLoading,
+                    firstRosterEntry: rosterData?.[0],
                     firstPlayer: players?.[0],
-                    rosterPlayerIds: roster?.slice(0, 5)?.map(r => r.playerId),
+                    rosterPlayerIds: rosterData?.slice(0, 5)?.map(r => r.playerId),
                     playerIds: players?.slice(0, 5)?.map(p => p.id),
                     playersWithNames: players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName}))
                   })}
-                  {isLoadingRoster ? (
+                  {rosterLoading ? (
                     <div className="text-center py-10">
                       <p className="text-gray-500">Loading roster...</p>
                     </div>
-                  ) : roster && roster.length > 0 ? (
+                  ) : rosterData && rosterData.length > 0 ? (
                     <CourtPositionRoster 
-                      roster={roster} 
+                      roster={rosterData || []} 
                       players={players || []}
                       gameStats={gameStats || []}
                     />
@@ -1873,16 +1873,16 @@ export default function GameDetails() {
                     <div className="text-center py-10 border rounded-lg bg-gray-50">
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
-                      {currentTeam?.id && (
+                      {teamId && (
                         <Button asChild className="mr-2">
-                          <Link to={`/team/${currentTeam.id}/roster/game/${gameId}`}>
+                          <Link to={`/team/${teamId}/roster/game/${gameId}`}>
                             <ClipboardList className="mr-2 h-4 w-4" />
                             Manage Roster
                           </Link>
                         </Button>
                       )}
                       <Button asChild>
-                        <Link to={`/availability/game/${gameId}`}>
+                        <Link to={`/team/${teamId}/availability/${gameId}`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Set Player Availability
                         </Link>
@@ -2214,9 +2214,9 @@ export default function GameDetails() {
                   No statistics are recorded for forfeit games.
                 </p>
               </div>
-            ) : (roster && roster.length > 0 && gameStats && gameStats.length > 0) ? (
+            ) : (rosterData && rosterData.length > 0 && gameStats && gameStats.length > 0) ? (
               <PlayerStatsByQuarter 
-                roster={roster} 
+                roster={rosterData} 
                 players={players || []}
                 gameStats={gameStats || []}
               />
@@ -2224,16 +2224,16 @@ export default function GameDetails() {
               <div className="text-center py-10 border rounded-lg bg-gray-50">
                 <h3 className="text-lg font-medium mb-2">No data available</h3>
                 <p className="text-gray-500 mb-4">
-                  {!roster || roster.length === 0 
+                  {!rosterData || rosterData.length === 0 
                     ? "There are no positions assigned for this game yet." 
                     : "There are no statistics recorded for this game yet."}
                 </p>
                 <Button asChild>
-                  <Link to={!roster || roster.length === 0 
+                  <Link to={!rosterData || rosterData.length === 0 
                     ? `/availability/game/${gameId}`
                     : `/games/${gameId}/stats`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    {!roster || roster.length === 0 
+                    {!rosterData || rosterData.length === 0 
                       ? "Set Player Availability" 
                       : "Record Statistics"}
                   </Link>
