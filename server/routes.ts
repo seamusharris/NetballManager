@@ -1443,6 +1443,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
   }
 
+  // Dedicated club games endpoint following REST best practices
+  app.get("/api/clubs/:clubId/games", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const { seasonId } = req.query;
+
+      console.log(`Club games endpoint: clubId=${clubId}, seasonId=${seasonId}`);
+
+      // Build the games query for this specific club
+      let gamesQuery = db
+        .select({
+          id: schema.games.id,
+          date: schema.games.date,
+          time: schema.games.time,
+          homeTeamId: schema.games.homeTeamId,
+          awayTeamId: schema.games.awayTeamId,
+          homeTeamName: schema.homeTeam.name,
+          awayTeamName: schema.awayTeam.name,
+          homeTeamDivision: schema.homeTeam.division,
+          awayTeamDivision: schema.awayTeam.division,
+          round: schema.games.round,
+          status: schema.games.status,
+          statusIsCompleted: schema.gameStatuses.isCompleted,
+          statusAllowsStatistics: schema.gameStatuses.allowsStatistics,
+          venue: schema.games.venue,
+          notes: schema.games.notes,
+          createdAt: schema.games.createdAt,
+          updatedAt: schema.games.updatedAt
+        })
+        .from(schema.games)
+        .leftJoin(schema.homeTeam, eq(schema.games.homeTeamId, schema.homeTeam.id))
+        .leftJoin(schema.awayTeam, eq(schema.games.awayTeamId, schema.awayTeam.id))
+        .leftJoin(schema.gameStatuses, eq(schema.games.status, schema.gameStatuses.status))
+        .where(
+          or(
+            eq(schema.homeTeam.clubId, clubId),
+            eq(schema.awayTeam.clubId, clubId)
+          )
+        );
+
+      // Add season filter if provided
+      if (seasonId) {
+        gamesQuery = gamesQuery.where(
+          and(
+            or(
+              eq(schema.homeTeam.clubId, clubId),
+              eq(schema.awayTeam.clubId, clubId)
+            ),
+            or(
+              eq(schema.homeTeam.seasonId, parseInt(seasonId as string)),
+              eq(schema.awayTeam.seasonId, parseInt(seasonId as string))
+            )
+          )
+        );
+      }
+
+      const games = await gamesQuery.orderBy(desc(schema.games.date), desc(schema.games.time));
+
+      console.log(`Found ${games.length} games for club ${clubId}`);
+
+      const transformedGames = games.map(transformGameRow);
+      res.json(transformedGames);
+    } catch (error) {
+      console.error('Error fetching club games:', error);
+      res.status(500).json({ error: 'Failed to fetch club games' });
+    }
+  });
+
   app.get("/api/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       // Set appropriate cache headers for games data
