@@ -131,7 +131,7 @@ export default function GameResultCard({
             if (currentTeamId) {
               // Get our score and opponent score for this quarter
               ourQuarterScore = quarterScores[currentTeamId] || 0;
-              
+
               // Find opponent's score (any team that's not us)
               Object.keys(quarterScores).forEach(teamId => {
                 if (parseInt(teamId) !== currentTeamId) {
@@ -207,6 +207,42 @@ export default function GameResultCard({
     return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
+    const getOpponentDisplay = (): string => {
+    if (isByeGame) {
+      return "Bye";
+    }
+
+    // Always show Home vs Away format
+    return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
+  };
+
+  const getGameResultFromPerspective = () => {
+    if (!scores || !scores.finalScore || !currentTeamId) {
+      return scores?.result || 'unknown';
+    }
+
+    // Calculate result from current team's perspective
+    let ourScore = 0;
+    let theirScore = 0;
+
+    if (game.homeTeamId === currentTeamId) {
+      // We are the home team
+      ourScore = scores.finalScore.for;
+      theirScore = scores.finalScore.against;
+    } else if (game.awayTeamId === currentTeamId) {
+      // We are the away team - need to flip the scores
+      ourScore = scores.finalScore.against;
+      theirScore = scores.finalScore.for;
+    } else {
+      // Not our team, use the calculated result as-is
+      return scores.result;
+    }
+
+    if (ourScore > theirScore) return 'win';
+    if (ourScore < theirScore) return 'loss';
+    return 'draw';
+  };
+
   // Get result styling using perspective-aware calculation
   const actualResult = getGameResultFromPerspective();
   const isWin = actualResult === 'win';
@@ -266,15 +302,15 @@ export default function GameResultCard({
   // Create custom round display with forfeit status if applicable
   const customRoundDisplay = useMemo(() => {
     if (!game.round) return null;
-    
+
     const baseRound = layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`;
-    
+
     // Add forfeit status if game is completed with forfeit status
     if (game.statusIsCompleted && game.statusName && game.statusName.startsWith('forfeit-')) {
       const forfeitType = game.statusName === 'forfeit-win' ? 'Forfeit Win' : 'Forfeit Loss';
       return `${baseRound} • ${forfeitType}`;
     }
-    
+
     return baseRound;
   }, [game.round, game.statusIsCompleted, game.statusName, layout]);
 
@@ -308,7 +344,7 @@ export default function GameResultCard({
       // For club-wide view or when showing home vs away, we need to determine actual home/away scores
       let homeScore = 0;
       let awayScore = 0;
-      
+
       if (currentTeamId && game.homeTeamId === currentTeamId) {
         // Current team is home team
         homeScore = scores.finalScore.for;
@@ -322,7 +358,7 @@ export default function GameResultCard({
         homeScore = scores.finalScore.for;
         awayScore = scores.finalScore.against;
       }
-      
+
       return `${homeScore}-${awayScore}`;
     }
 
@@ -338,42 +374,6 @@ export default function GameResultCard({
 
     // Default fallback
     return "—";
-  };
-
-    const getOpponentDisplay = (): string => {
-    if (isByeGame) {
-      return "Bye";
-    }
-
-    // Always show Home vs Away format
-    return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
-  };
-
-  const getGameResultFromPerspective = () => {
-    if (!scores || !scores.finalScore || !currentTeamId) {
-      return scores?.result || 'unknown';
-    }
-
-    // Calculate result from current team's perspective
-    let ourScore = 0;
-    let theirScore = 0;
-
-    if (game.homeTeamId === currentTeamId) {
-      // We are the home team
-      ourScore = scores.finalScore.for;
-      theirScore = scores.finalScore.against;
-    } else if (game.awayTeamId === currentTeamId) {
-      // We are the away team - need to flip the scores
-      ourScore = scores.finalScore.against;
-      theirScore = scores.finalScore.for;
-    } else {
-      // Not our team, use the calculated result as-is
-      return scores.result;
-    }
-
-    if (ourScore > theirScore) return 'win';
-    if (ourScore < theirScore) return 'loss';
-    return 'draw';
   };
 
   const CardContent = () => (
@@ -443,7 +443,7 @@ export default function GameResultCard({
               let homeScore = 0;
               let awayScore = 0;
               let displayResult = actualResult;
-              
+
               if (currentTeamId && game.homeTeamId === currentTeamId) {
                 // Current team is home team
                 homeScore = scores.finalScore.for;
@@ -458,7 +458,7 @@ export default function GameResultCard({
                 awayScore = scores.finalScore.against;
                 displayResult = scores.result || 'unknown';
               }
-              
+
               return (
                 <ScoreBadge 
                   teamScore={homeScore} 
