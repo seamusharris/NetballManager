@@ -135,61 +135,54 @@ export default function Players() {
     });
   }, [players, selectedTeamFilter]);
 
-  // Add player to team mutation
   const addPlayerToTeam = useMutation({
-    mutationFn: async (playerId: number) => {
-      // Add player to adding set
-      setAddingPlayerIds(prev => new Set([...prev, playerId]));
+    mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
+    onMutate: async (playerId: number) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/players`] });
+      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
 
-      const response = await apiClient.post(`/api/teams/${teamId}/players`, {
-        playerId,
-        isRegular: true
-      });
-      return { playerId, response };
+      // Snapshot previous values
+      const previousTeamPlayers = queryClient.getQueryData([`/api/teams/${teamId}/players`]);
+      const previousAvailablePlayers = queryClient.getQueryData([`/api/teams/${teamId}/available-players`]);
+
+      // Find the player being added
+      const playerToAdd = availablePlayersForTeam?.find(p => p.id === playerId);
+
+      if (playerToAdd && previousTeamPlayers && previousAvailablePlayers) {
+        // Optimistically update team players
+        queryClient.setQueryData([`/api/teams/${teamId}/players`], (old: any[]) => [...old, playerToAdd]);
+
+        // Optimistically update available players
+        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], (old: any[]) => 
+          old.filter(p => p.id !== playerId)
+        );
+      }
+
+      return { previousTeamPlayers, previousAvailablePlayers };
     },
-    onSuccess: (data) => {
-      // Remove player from adding set
-      setAddingPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(data.playerId);
-        return newSet;
-      });
-
-      // Remove from optimistic state since the operation succeeded
-      setOptimisticallyAddedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(data.playerId);
-        return newSet;
-      });
-
-      // Invalidate relevant queries with consistent keys
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-
-
+    onSuccess: () => {
       toast({ title: 'Success', description: 'Player added to team' });
     },
-    onError: (error, playerId) => {
-      // Remove player from adding set on error
-      setAddingPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
+    onError: (error: any, variables, context) => {
+      // Revert optimistic updates
+      if (context?.previousTeamPlayers) {
+        queryClient.setQueryData([`/api/teams/${teamId}/players`], context.previousTeamPlayers);
+      }
+      if (context?.previousAvailablePlayers) {
+        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], context.previousAvailablePlayers);
+      }
 
-      // Revert optimistic update on error
-      setOptimisticallyAddedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add player to team',
+        variant: 'destructive',
       });
-
-      console.error('Error adding player to team:', error);
-      toast({ title: 'Error', description: 'Failed to add player to team', variant: 'destructive' });
+    },
+    onSettled: () => {
+      // Invalidate to ensure eventual consistency
+      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/players`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
     },
   });
 
@@ -252,80 +245,56 @@ export default function Players() {
   const [optimisticallyAddedPlayerIds, setOptimisticallyAddedPlayerIds] = useState<Set<number>>(new Set());
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
-  // Remove player from team using simple mutation (matches add pattern)
   const removePlayerFromTeam = useMutation({
-    mutationFn: async (playerId: number) => {
-      // Add player to removing set
-      setRemovingPlayerIds(prev => new Set([...prev, playerId]));
+    mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
+    onMutate: async (playerId: number) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/players`] });
+      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
 
-      const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
-      return { playerId, response };
+      // Snapshot previous values
+      const previousTeamPlayers = queryClient.getQueryData([`/api/teams/${teamId}/players`]);
+      const previousAvailablePlayers = queryClient.getQueryData([`/api/teams/${teamId}/available-players`]);
+
+      // Find the player being removed
+      const playerToRemove = teamPlayersData?.find(p => p.id === playerId);
+
+      if (playerToRemove && previousTeamPlayers && previousAvailablePlayers) {
+        // Optimistically update team players
+        queryClient.setQueryData([`/api/teams/${teamId}/players`], (old: any[]) => 
+          old.filter(p => p.id !== playerId)
+        );
+
+        // Optimistically update available players
+        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], (old: any[]) => 
+          [...old, playerToRemove].sort((a, b) => a.displayName.localeCompare(b.displayName))
+        );
+      }
+
+      return { previousTeamPlayers, previousAvailablePlayers };
     },
-    onSuccess: (data) => {
-      // Remove player from removing set
-      setRemovingPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(data.playerId);
-        return newSet;
-      });
-
-      // Remove from optimistic state since the operation succeeded
-      setOptimisticallyRemovedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(data.playerId);
-        return newSet;
-      });
-
-      // Comprehensive cache invalidation to refresh both team players and available players
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-
-
+    onSuccess: () => {
       toast({ title: 'Success', description: 'Player removed from team' });
     },
-    onError: (error, playerId) => {
-      // Remove player from removing set on error
-      setRemovingPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-
-      // Revert optimistic update on error
-      setOptimisticallyRemovedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-
-      // Handle 404 errors gracefully (React Strict Mode double execution)
-      const errorMessage = error.message?.toLowerCase() || '';
-      const is404Error = errorMessage.includes("not found") || 
-                         errorMessage.includes("404") || 
-                         (error as any).status === 404 ||
-                         (error as any).response?.status === 404;
-
-      if (is404Error) {
-        // Player was already removed, treat as success and refresh all relevant data
-        toast({ title: 'Success', description: 'Player removed from team' });
-
-        // Comprehensive cache invalidation to ensure available players list updates
-        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-        queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-        queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-        queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-        queryClient.invalidateQueries({ queryKey: ['players'] });
-        queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-
-        // Force refetch of available players
-        queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-      } else {
-        toast({ title: 'Error', description: 'Failed to remove player from team', variant: 'destructive' });
+    onError: (error: any, variables, context) => {
+      // Revert optimistic updates
+      if (context?.previousTeamPlayers) {
+        queryClient.setQueryData([`/api/teams/${teamId}/players`], context.previousTeamPlayers);
       }
+      if (context?.previousAvailablePlayers) {
+        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], context.previousAvailablePlayers);
+      }
+
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove player from team',
+        variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      // Invalidate to ensure eventual consistency
+      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/players`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
     },
   });
 
