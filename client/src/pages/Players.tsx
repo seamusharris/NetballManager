@@ -139,22 +139,22 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/players`] });
-      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData([`/api/teams/${teamId}/players`]);
-      const previousAvailablePlayers = queryClient.getQueryData([`/api/teams/${teamId}/available-players`]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
+      const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being added
       const playerToAdd = availablePlayersForTeam?.find(p => p.id === playerId);
 
       if (playerToAdd && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData([`/api/teams/${teamId}/players`], (old: any[]) => [...old, playerToAdd]);
+        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => [...old, playerToAdd]);
 
         // Optimistically update available players
-        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], (old: any[]) => 
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
           old.filter(p => p.id !== playerId)
         );
       }
@@ -167,10 +167,10 @@ export default function Players() {
     onError: (error: any, variables, context) => {
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData([`/api/teams/${teamId}/players`], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
-        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], context.previousAvailablePlayers);
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
       }
 
       toast({
@@ -181,8 +181,8 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/players`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
 
@@ -249,24 +249,24 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/players`] });
-      await queryClient.cancelQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData([`/api/teams/${teamId}/players`]);
-      const previousAvailablePlayers = queryClient.getQueryData([`/api/teams/${teamId}/available-players`]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
+      const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being removed
       const playerToRemove = teamPlayersData?.find(p => p.id === playerId);
 
       if (playerToRemove && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData([`/api/teams/${teamId}/players`], (old: any[]) => 
+        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => 
           old.filter(p => p.id !== playerId)
         );
 
         // Optimistically update available players
-        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], (old: any[]) => 
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
           [...old, playerToRemove].sort((a, b) => a.displayName.localeCompare(b.displayName))
         );
       }
@@ -279,10 +279,10 @@ export default function Players() {
     onError: (error: any, variables, context) => {
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData([`/api/teams/${teamId}/players`], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
-        queryClient.setQueryData([`/api/teams/${teamId}/available-players`], context.previousAvailablePlayers);
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
       }
 
       toast({
@@ -293,8 +293,8 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/players`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}/available-players`] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
 
