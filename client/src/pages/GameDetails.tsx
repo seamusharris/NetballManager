@@ -1204,9 +1204,9 @@ export default function GameDetails() {
     data: players = [],
     isLoading: isLoadingPlayers
   } = useQuery({
-    queryKey: ['players', currentClubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId,
+    queryKey: ['players', currentClub?.id, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/players`),
+    enabled: !!currentClub?.id,
     select: (data) => Array.isArray(data) ? data : []
   });
 
