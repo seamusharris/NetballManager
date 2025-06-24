@@ -436,7 +436,7 @@ export default function Players() {
             {!teamPlayers || teamPlayers.length === 0 ? (
               <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
             ) : (
-              <div className="grid gap-3">
+              <div className="flex flex-col gap-3 max-w-2xl">
                 {teamPlayers.map((player) => (
                   <PlayerBox
                     key={player.id}
@@ -499,7 +499,7 @@ export default function Players() {
                 <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
               </p>
             ) : (
-              <div className="grid gap-3">
+              <div className="flex flex-col gap-3 max-w-2xl">
                 {availablePlayers.map((player) => (
                   <PlayerBox
                     key={player.id}
