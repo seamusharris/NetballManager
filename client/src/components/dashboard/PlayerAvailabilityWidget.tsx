@@ -39,32 +39,22 @@ export default function PlayerAvailabilityWidget({
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 3);
 
-  console.log('PlayerAvailabilityWidget rendering:', {
-    totalGames: games.length,
-    upcomingGames: upcomingGames.length,
-    todayDate: new Date().toISOString().split('T')[0],
-    games: games.map(g => ({ id: g.id, date: g.date, completed: g.completed }))
-  });
+  // Removed excessive logging that was causing console spam
 
   // Fetch current team players using Club context
   useEffect(() => {
     const fetchTeamPlayers = async () => {
       if (!currentTeamId) {
-        console.log('PlayerAvailabilityWidget: No currentTeamId, using all players');
         setTeamPlayers(players);
         return;
       }
 
       try {
-        console.log('PlayerAvailabilityWidget: Fetching team players for team:', currentTeamId);
         const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
         setTeamPlayers(response);
-        console.log('PlayerAvailabilityWidget: Fetched team players:', response.length, 'for team:', currentTeamId);
-        console.log('PlayerAvailabilityWidget: Team player names:', response.map(p => p.displayName));
       } catch (error) {
         console.error('PlayerAvailabilityWidget: Error fetching team players:', error);
         // Fallback to all players on error
-        console.log('PlayerAvailabilityWidget: Failed to fetch team players, using all players as fallback');
         setTeamPlayers(players);
       }
     };
@@ -84,7 +74,7 @@ export default function PlayerAvailabilityWidget({
     }))
   });
 
-  // Process availability query results
+  // Process availability query results with stable dependencies
   useEffect(() => {
     if (teamPlayers.length === 0) return;
 
@@ -118,7 +108,7 @@ export default function PlayerAvailabilityWidget({
 
     setAvailabilityData(newAvailabilityData);
     setLoading(availabilityQueries.some(q => q.isLoading));
-  }, [availabilityQueries, teamPlayers, upcomingGames]);
+  }, [teamPlayers.length, upcomingGames.length, JSON.stringify(availabilityQueries.map(q => q.data)), availabilityQueries.some(q => q.isLoading)]);
 
   const getAvailabilityStatus = (available: number, total: number) => {
     const percentage = total > 0 ? (available / total) * 100 : 0;
