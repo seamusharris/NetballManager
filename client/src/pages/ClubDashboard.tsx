@@ -33,10 +33,10 @@ export default function ClubDashboard() {
     }
   }, [clubIdFromUrl, currentClubId, setCurrentClubId]);
 
-  // Always call all hooks - handle enabled state through query options
+  // Players data using REST endpoint - Stage 4
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['club-players', effectiveClubId],
-    queryFn: () => apiClient.get('/api/players'),
+    queryKey: ['players', effectiveClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/players`),
     enabled: !!effectiveClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes

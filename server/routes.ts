@@ -707,6 +707,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- PLAYERS API -----
+  // REST endpoint for club players - Stage 4
+  app.get("/api/clubs/:clubId/players", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+
+      if (!clubId) {
+        return res.status(400).json({ message: "Invalid club ID" });
+      }
+
+      console.log(`REST endpoint: Fetching players for club ${clubId}`);
+      const players = await storage.getPlayersByClub(clubId);
+      res.json(players);
+    } catch (error) {
+      console.error('Error fetching players:', error);
+      res.status(500).json({ message: "Failed to fetch players" });
+    }
+  });
+
+  // Legacy endpoint for backward compatibility
   app.get("/api/players", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = req.user?.currentClubId;
@@ -715,7 +734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Club context not available" });
       }
 
-      console.log(`Fetching players for club ${clubId}`);
+      console.log(`Legacy endpoint: Fetching players for club ${clubId}`);
       const players = await storage.getPlayersByClub(clubId);
       res.json(players);
     } catch (error) {
