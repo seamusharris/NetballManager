@@ -21,6 +21,8 @@ export function registerGameStatsRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
 
+      console.log(`Game-centric API: Fetching game ${gameId} for team ${teamId}`);
+      
       const result = await db.execute(sql`
         SELECT g.*, 
                ht.name as home_team_name, ht.club_id as home_club_id,
@@ -36,6 +38,8 @@ export function registerGameStatsRoutes(app: Express) {
         WHERE g.id = ${gameId} 
         AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
       `);
+      
+      console.log(`Game-centric API: Found ${result.rows.length} results for game ${gameId}, team ${teamId}`);
 
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Game not found or team not participating' });
