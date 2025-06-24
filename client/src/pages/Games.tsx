@@ -35,6 +35,13 @@ export default function Games() {
   // For club-wide view, we should not use team context
   const effectiveTeamId = isClubWideGamesView ? null : (teamIdFromUrl || currentTeamId);
   const effectiveTeam = isClubWideGamesView ? null : currentTeam;
+  
+  // Clear team context when in club-wide view
+  useEffect(() => {
+    if (isClubWideGamesView && currentTeamId) {
+      setCurrentTeamId(null);
+    }
+  }, [isClubWideGamesView, currentTeamId, setCurrentTeamId]);
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -299,18 +306,30 @@ export default function Games() {
         ]}
         actions={
           <>
-            {!isClubWideGamesView && (
+            {isClubWideGamesView ? (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  Switch to Team View:
+                </div>
+                <TeamSwitcher 
+                  mode="optional" 
+                  onTeamChange={(teamId) => {
+                    if (teamId) {
+                      setLocation(`/team/${teamId}/games`);
+                    }
+                  }}
+                />
+                <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
+                  Showing all club games
+                </div>
+              </>
+            ) : (
               <>
                 <div className="text-sm text-muted-foreground">
                   Team Filter (Optional):
                 </div>
                 <TeamSwitcher />
               </>
-            )}
-            {isClubWideGamesView && (
-              <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
-                Showing all club games
-              </div>
             )}
             <ActionButton 
               action="create" 

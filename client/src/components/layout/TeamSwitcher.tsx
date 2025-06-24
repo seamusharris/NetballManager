@@ -90,7 +90,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         onValueChange={handleTeamSelect}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={mode === 'required' ? "Select team" : "All teams"} />
+          <SelectValue placeholder={mode === 'required' ? "Select team" : onTeamChange ? "Select team" : "All teams"} />
         </SelectTrigger>
         <SelectContent>
           {mode === 'optional' && (
