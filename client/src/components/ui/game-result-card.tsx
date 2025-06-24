@@ -285,35 +285,11 @@ export default function GameResultCard({
               —
             </div>
           ) : scores ? (
-            (() => {
-              // Calculate proper home/away scores for display
-              let homeScore = 0;
-              let awayScore = 0;
-              let displayResult = actualResult;
-
-              if (currentTeamId && game.homeTeamId === currentTeamId) {
-                // Current team is home team
-                homeScore = scores.finalScore.for;
-                awayScore = scores.finalScore.against;
-              } else if (currentTeamId && game.awayTeamId === currentTeamId) {
-                // Current team is away team - flip the scores for display
-                homeScore = scores.finalScore.against;
-                awayScore = scores.finalScore.for;
-              } else {
-                // No team context - use scores as-is
-                homeScore = scores.finalScore.for;
-                awayScore = scores.finalScore.against;
-                displayResult = scores.result || 'unknown';
-              }
-
-              return (
-                <ScoreBadge 
-                  teamScore={scores.finalScore.for} 
-                  opponentScore={scores.finalScore.against}
-                  result={displayResult}
-                />
-              );
-            })()
+            <ScoreBadge 
+              teamScore={scores.finalScore.for} 
+              opponentScore={scores.finalScore.against}
+              result={actualResult}
+            />
           ) : (
             <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
               —
