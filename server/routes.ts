@@ -2729,6 +2729,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
+  
+  // Register game-centric stats routes
+  const { registerGameStatsRoutes } = await import('./game-stats-routes');
+  registerGameStatsRoutes(app);
   // Team Game Awards endpoints
   app.get('/api/games/:gameId/team-awards', async (req, res) => {
     try {

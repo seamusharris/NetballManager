@@ -20,11 +20,14 @@ import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { exportStatsToPDF, exportStatsToExcel } from '@/lib/exportUtils';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { useClub } from '@/contexts/ClubContext';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Statistics() {
   const [location, navigate] = useLocation();
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const { toast } = useToast();
+  const { currentClubId } = useClub();
 
   // Parse game ID from URL query parameter or route
   useEffect(() => {
@@ -51,17 +54,22 @@ export default function Statistics() {
     }
   }, [navigate, location]);
 
-  // Type our data with explicit types from the schema
+  // NEW: Use club-scoped data instead of global
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
-    queryKey: ['/api/games'],
+    queryKey: ['/api/clubs', currentClubId, 'games'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/games`),
+    enabled: !!currentClubId
   });
 
+  // Keep opponents for now (will remove later)
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<Opponent[]>({
     queryKey: ['/api/opponents'],
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
-    queryKey: ['/api/players'],
+    queryKey: ['/api/clubs', currentClubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
+    enabled: !!currentClubId
   });
 
   // Use state to store roster data
@@ -73,11 +81,33 @@ export default function Statistics() {
     if (!selectedGameId) return;
 
     async function fetchRosters() {
+      if (!currentClubId) return;
+      
       setLoadingRosters(true);
       try {
-        const response = await fetch(`/api/games/${selectedGameId}/rosters`);
-        if (!response.ok) throw new Error('Failed to fetch rosters');
-        const data = await response.json();
+        // Find the game to determine team context
+        const game = games.find(g => g.id === selectedGameId);
+        if (!game) throw new Error('Game not found');
+        
+        const rosterPromises = [];
+        
+        if (game.homeClubId === currentClubId) {
+          rosterPromises.push(
+            fetch(`/api/game/${selectedGameId}/team/${game.homeTeamId}/rosters`)
+              .then(res => res.json())
+          );
+        }
+        
+        if (game.awayClubId === currentClubId && game.awayTeamId) {
+          rosterPromises.push(
+            fetch(`/api/game/${selectedGameId}/team/${game.awayTeamId}/rosters`)
+              .then(res => res.json())
+          );
+        }
+        
+        const rosterArrays = await Promise.all(rosterPromises);
+        const data = rosterArrays.flat();
+        
         console.log(`Manually fetched ${data.length} roster entries`);
         setRosterData(data);
       } catch (error) {
@@ -89,15 +119,38 @@ export default function Statistics() {
     }
 
     fetchRosters();
-  }, [selectedGameId]);
+  }, [selectedGameId, currentClubId, games]);
 
-  // Attempt to fetch roster data again when selectedGameId changes
+  // NEW: Updated roster fetching to use game-centric approach
   useEffect(() => {
-    if (selectedGameId) {
+    if (selectedGameId && currentClubId) {
       console.log(`Loading roster data for game ${selectedGameId}`);
-      fetch(`/api/games/${selectedGameId}/rosters`)
-        .then(res => res.json())
-        .then(data => {
+      
+      // Find the game to determine which teams are playing
+      const game = games.find(g => g.id === selectedGameId);
+      if (!game) return;
+      
+      // Fetch rosters for our club's team(s) in this game
+      const fetchRosterPromises = [];
+      
+      if (game.homeClubId === currentClubId) {
+        fetchRosterPromises.push(
+          fetch(`/api/game/${selectedGameId}/team/${game.homeTeamId}/rosters`)
+            .then(res => res.json())
+        );
+      }
+      
+      if (game.awayClubId === currentClubId && game.awayTeamId) {
+        fetchRosterPromises.push(
+          fetch(`/api/game/${selectedGameId}/team/${game.awayTeamId}/rosters`)
+            .then(res => res.json())
+        );
+      }
+      
+      Promise.all(fetchRosterPromises)
+        .then(rosterArrays => {
+          // Combine all roster data
+          const combinedRosters = rosterArrays.flat();
           console.log(`Directly fetched ${data.length} roster entries for game ${selectedGameId}`);
           if (Array.isArray(data) && data.length > 0) {
             data.forEach(entry => {
