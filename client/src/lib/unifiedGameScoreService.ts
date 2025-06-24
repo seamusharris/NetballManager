@@ -97,7 +97,7 @@ export class UnifiedGameScoreService {
     const teamIds = this.getTeamIds(game, perspective, clubTeamIds);
 
     // Try official scores first (highest priority)
-    const officialResult = this.calculateFromOfficialScores(game, officialScores, teamIds);
+    const officialResult = this.calculateFromOfficialScores(game, officialScores, teamIds, clubTeamIds);
     if (officialResult.hasValidScore) {
       console.log(`🔍 UNIFIED SERVICE - Game ${game.id} using OFFICIAL scores result:`, officialResult);
       return officialResult;
@@ -222,7 +222,8 @@ export class UnifiedGameScoreService {
   private static calculateFromOfficialScores(
     game: Game, 
     officialScores: OfficialScore[], 
-    teamIds: { ourTeamId: number; theirTeamId: number }
+    teamIds: { ourTeamId: number; theirTeamId: number },
+    clubTeamIds: number[] = []
   ): GameScoreResult {
     if (!officialScores.length) {
       return {
