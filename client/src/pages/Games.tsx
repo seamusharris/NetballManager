@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
+import { Helmet } from 'react-helmet';
 
 // Import new UI standards
 import { ContentBox, ActionButton, ResponsiveGrid } from '@/components/ui/ui-standards';
@@ -28,14 +29,14 @@ export default function Games() {
   const params = useParams();
   const [location] = useLocation();
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
-  
+
   // Detect if we're in club-wide games view
   const isClubWideGamesView = location.includes(`/club/${currentClubId}/games`);
-  
+
   // For club-wide view, we should not use team context
   const effectiveTeamId = isClubWideGamesView ? null : (teamIdFromUrl || currentTeamId);
   const effectiveTeam = isClubWideGamesView ? null : currentTeam;
-  
+
   // Clear team context when in club-wide view
   useEffect(() => {
     if (isClubWideGamesView && currentTeamId) {
@@ -297,6 +298,9 @@ export default function Games() {
 
   return (
     <>
+       <Helmet>
+        <title>{`Games - ${currentClub?.name || 'Club'}`}</title>
+      </Helmet>
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
