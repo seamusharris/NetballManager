@@ -1077,8 +1077,10 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
 };
 
 export default function GameDetails() {
-  const { id } = useParams();
-  const gameId = parseInt(id);
+  const params = useParams();
+  // Handle both /game/:id and /team/:teamId/games/:gameId URL patterns
+  const gameId = params.gameId ? parseInt(params.gameId) : parseInt(params.id);
+  const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { currentTeam } = useClub();
@@ -1194,11 +1196,12 @@ export default function GameDetails() {
     });
 
   // Fetch game data using team-perspective endpoint when possible
+  const effectiveTeamId = teamIdFromUrl || currentTeam?.id;
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
-    queryKey: currentTeam?.id ? ['teams', currentTeam.id, 'games', gameId] : ['/api/games', gameId],
+    queryKey: effectiveTeamId ? ['teams', effectiveTeamId, 'games', gameId] : ['/api/games', gameId],
     queryFn: () => {
-      if (currentTeam?.id) {
-        return apiClient.get<Game>(`/api/teams/${currentTeam.id}/games/${gameId}`);
+      if (effectiveTeamId) {
+        return apiClient.get<Game>(`/api/teams/${effectiveTeamId}/games/${gameId}`);
       } else {
         return apiClient.get<Game>(`/api/games/${gameId}`);
       }
@@ -1263,10 +1266,10 @@ export default function GameDetails() {
     isLoading: isLoadingRoster,
     refetch: refetchRosters
   } = useQuery({
-    queryKey: currentTeam?.id ? ['teams', currentTeam.id, 'games', gameId, 'roster'] : ['/api/games', gameId, 'rosters'],
+    queryKey: effectiveTeamId ? ['teams', effectiveTeamId, 'games', gameId, 'roster'] : ['/api/games', gameId, 'rosters'],
     queryFn: () => {
-      if (currentTeam?.id) {
-        return apiClient.get(`/api/teams/${currentTeam.id}/roster/${gameId}`);
+      if (effectiveTeamId) {
+        return apiClient.get(`/api/teams/${effectiveTeamId}/games/${gameId}/rosters`);
       } else {
         return apiClient.get(`/api/games/${gameId}/rosters`);
       }
