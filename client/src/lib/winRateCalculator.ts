@@ -1,4 +1,6 @@
 
+import { gameScoreService } from './unifiedGameScoreService';
+
 export interface WinRateResult {
   wins: number;
   losses: number;
@@ -37,88 +39,8 @@ export function calculateTeamWinRate(
   clubId: number,
   officialScores: Record<number, OfficialScore[]> = {}
 ): WinRateResult {
-  // Filter to only games where this team played and are completed
-  const eligibleGames = games.filter(game => 
-    game.statusIsCompleted && 
-    game.statusAllowsStatistics &&
-    (game.homeTeamId === teamId || game.awayTeamId === teamId)
-  );
-
-  let wins = 0;
-  let losses = 0;
-  let draws = 0;
-  let totalGames = 0;
-
-  for (const game of eligibleGames) {
-    const gameScores = officialScores[game.id] || [];
-    
-    let ourScore = 0;
-    let theirScore = 0;
-    let hasValidScore = false;
-
-    // Priority 1: Try official scores first
-    if (gameScores.length > 0) {
-      const isHome = game.homeTeamId === teamId;
-      const ourTeamId = teamId;
-      const theirTeamId = isHome ? game.awayTeamId : game.homeTeamId;
-
-      // Sum up scores for each team from official scores
-      gameScores.forEach(score => {
-        if (score.teamId === ourTeamId) {
-          ourScore += score.score;
-        } else if (score.teamId === theirTeamId) {
-          theirScore += score.score;
-        }
-      });
-
-      // Check if we have scores for both teams
-      const ourTeamHasScores = gameScores.some(s => s.teamId === ourTeamId);
-      const theirTeamHasScores = gameScores.some(s => s.teamId === theirTeamId);
-      
-      hasValidScore = ourTeamHasScores && theirTeamHasScores;
-    }
-
-    // Priority 2: Fall back to game status fixed scores if no official scores
-    if (!hasValidScore && 
-        typeof game.statusTeamGoals === 'number' && 
-        typeof game.statusOpponentGoals === 'number') {
-      
-      const isHome = game.homeTeamId === teamId;
-      
-      if (isHome) {
-        ourScore = game.statusTeamGoals;
-        theirScore = game.statusOpponentGoals;
-      } else {
-        ourScore = game.statusOpponentGoals;
-        theirScore = game.statusTeamGoals;
-      }
-      
-      hasValidScore = true;
-    }
-
-    // Only count games where we have valid scores
-    if (hasValidScore) {
-      totalGames++;
-      
-      if (ourScore > theirScore) {
-        wins++;
-      } else if (ourScore < theirScore) {
-        losses++;
-      } else {
-        draws++;
-      }
-    }
-  }
-
-  const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
-
-  return {
-    wins,
-    losses,
-    draws,
-    totalGames,
-    winRate
-  };
+  // Use unified game score service for consistent calculations
+  return gameScoreService.calculateWinRate(games, teamId, officialScores);
 }
 
 /**

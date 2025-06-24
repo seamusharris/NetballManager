@@ -112,6 +112,11 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: Implemented unified game score service across all components
+  - Created UnifiedGameScoreService as single source of truth for score calculations
+  - Refactored GameResultCard to use unified service (eliminated 100+ lines of duplicate logic)
+  - Updated winRateCalculator to use unified service for consistency
+  - All score calculations now handle team perspective, official vs status scores uniformly
 - June 24, 2025: Created unified game score service to consolidate all score calculation logic
 - June 23, 2025: Initial setup
 
