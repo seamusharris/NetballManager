@@ -65,7 +65,8 @@ export class UnifiedGameScoreService {
   static calculateGameScore(
     game: Game, 
     officialScores: OfficialScore[] = [], 
-    perspective: number | 'club-wide' = 'club-wide'
+    perspective: number | 'club-wide' = 'club-wide',
+    clubTeamIds: number[] = []
   ): GameScoreResult {
     
     // Handle BYE games first
@@ -127,9 +128,10 @@ export class UnifiedGameScoreService {
   static getGameResult(
     game: Game, 
     officialScores: OfficialScore[] = [], 
-    perspective: number | 'club-wide' = 'club-wide'
+    perspective: number | 'club-wide' = 'club-wide',
+    clubTeamIds: number[] = []
   ): 'win' | 'loss' | 'draw' | 'upcoming' | 'bye' | 'unknown' {
-    const result = this.calculateGameScore(game, officialScores, perspective);
+    const result = this.calculateGameScore(game, officialScores, perspective, clubTeamIds);
     return result.result;
   }
 
@@ -139,9 +141,10 @@ export class UnifiedGameScoreService {
   static getDisplayScore(
     game: Game, 
     officialScores: OfficialScore[] = [], 
-    perspective: number | 'club-wide' = 'club-wide'
+    perspective: number | 'club-wide' = 'club-wide',
+    clubTeamIds: number[] = []
   ): string {
-    const result = this.calculateGameScore(game, officialScores, perspective);
+    const result = this.calculateGameScore(game, officialScores, perspective, clubTeamIds);
 
     if (result.result === 'bye') return 'BYE';
     if (result.result === 'upcoming') return '—';
@@ -162,7 +165,8 @@ export class UnifiedGameScoreService {
   static calculateWinRate(
     games: Game[], 
     teamId: number, 
-    officialScoresMap: Record<number, OfficialScore[]> = {}
+    officialScoresMap: Record<number, OfficialScore[]> = {},
+    clubTeamIds: number[] = []
   ): WinRateResult {
     const eligibleGames = games.filter(game => 
       game.statusIsCompleted && 
@@ -177,7 +181,7 @@ export class UnifiedGameScoreService {
 
     for (const game of eligibleGames) {
       const officialScores = officialScoresMap[game.id] || [];
-      const result = this.calculateGameScore(game, officialScores, teamId);
+      const result = this.calculateGameScore(game, officialScores, teamId, clubTeamIds);
 
       if (result.hasValidScore) {
         totalGames++;
