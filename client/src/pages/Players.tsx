@@ -453,7 +453,7 @@ export default function Players() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Switch Team" />
+                  <SelectValue placeholder="Switch to Team" />
                 </SelectTrigger>
                 <SelectContent>
                   {allTeams
