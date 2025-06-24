@@ -473,7 +473,6 @@ export default function Players() {
           {/* Current Team Players */}
           <ContentSection 
             title="Current Team Players"
-            actions={<Badge variant="secondary">{teamPlayers?.length || 0} players</Badge>}
             variant="elevated"
           >
             {!teamPlayers || teamPlayers.length === 0 ? (
@@ -532,7 +531,7 @@ export default function Players() {
                     />
                   </DialogContent>
                 </Dialog>
-                <Badge variant="outline">{availablePlayers.length} available</Badge>
+                
               </PageActions>
             }
             variant="elevated"
