@@ -56,11 +56,16 @@ export default function RosterGame() {
     enabled: !!teamId
   });
 
-  // Load availability for this game
+  // Load availability for this game using team-based endpoint - Stage 5
   const { data: availabilityData, isLoading: availabilityLoading } = useQuery({
-    queryKey: ['availability', gameId],
+    queryKey: ['availability', teamId, gameId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/games/${gameId}/availability`);
+      if (!teamId) {
+        // Fallback to legacy endpoint if no team ID
+        const response = await apiRequest('GET', `/api/games/${gameId}/availability`);
+        return response;
+      }
+      const response = await apiRequest('GET', `/api/teams/${teamId}/games/${gameId}/availability`);
       return response;
     },
     enabled: !!gameId,

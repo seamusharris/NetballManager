@@ -2094,7 +2094,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update individual player availability
+  // Team-based individual player availability update (NEW - Stage 5)
+  app.patch("/api/teams/:teamId/games/:gameId/availability/:playerId", requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const playerId = Number(req.params.playerId);
+      const { isAvailable } = req.body;
+
+      if (typeof isAvailable !== 'boolean') {
+        return res.status(400).json({ message: "isAvailable must be a boolean" });
+      }
+
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const success = await playerAvailabilityStorage.updatePlayerAvailability(gameId, playerId, isAvailable);
+
+      if (success) {
+        res.json({ message: "Player availability updated successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to update player availability" });
+      }
+    } catch (error) {
+      console.error('Error updating team player availability:', error);
+      res.status(500).json({ message: "Failed to update player availability" });
+    }
+  });
+
+  // Update individual player availability (LEGACY - will be deprecated)
   app.patch("/api/games/:gameId/availability/:playerId", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
@@ -3474,7 +3499,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete all roster entries for a game
+  // Team-based delete roster entries (NEW - Stage 5)
+  app.delete('/api/teams/:teamId/games/:gameId/rosters', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      await storage.deleteRostersByGame(parseInt(gameId));
+      res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
+    } catch (error) {
+      console.error('Error deleting team roster entries:', error);
+      res.status(500).json({ error: 'Failed to delete roster entries' });
+    }
+  });
+
+  // Delete all roster entries for a game (LEGACY - will be deprecated)
   app.delete('/api/games/:gameId/rosters', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameId } = req.params;
@@ -3486,7 +3523,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Batch save roster entries for a game
+  // Team-based batch save roster entries (NEW - Stage 5)
+  app.post('/api/teams/:teamId/games/:gameId/rosters/batch', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const { rosters: rosterData } = req.body;
+
+      if (!Array.isArray(rosterData)) {
+        return res.status(400).json({ error: 'Rosters data must be an array' });
+      }
+
+      const gameIdNum = parseInt(gameId);
+      console.log(`Team-based batch saving ${rosterData.length} roster entries for game ${gameIdNum}`);
+
+      // Use a single transaction for the entire operation
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+
+        // Delete all existing roster entries for this game in one operation
+        const deleteResult = await client.query(
+          'DELETE FROM rosters WHERE game_id = $1',
+          [gameIdNum]
+        );
+        console.log(`Deleted ${deleteResult.rowCount} existing roster entries`);
+
+        // Insert new roster entries
+        if (rosterData.length > 0) {
+          const insertQuery = `
+            INSERT INTO rosters (game_id, player_id, position, quarter)
+            VALUES ${rosterData.map((_, index) => 
+              `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${index * 4 + 4})`
+            ).join(', ')};
+          `;
+
+          const insertValues = rosterData.flatMap(roster => [
+            gameIdNum,
+            roster.playerId,
+            roster.position,
+            roster.quarter
+          ]);
+
+          const insertResult = await client.query(insertQuery, insertValues);
+          console.log(`Inserted ${insertResult.rowCount} new roster entries`);
+        }
+
+        await client.query('COMMIT');
+        res.json({ 
+          success: true, 
+          message: `Successfully saved ${rosterData.length} roster entries for game ${gameIdNum}` 
+        });
+
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error in team-based batch roster save:', error);
+      res.status(500).json({ error: 'Failed to save roster entries' });
+    }
+  });
+
+  // Batch save roster entries for a game (LEGACY - will be deprecated)
   app.post('/api/games/:gameId/rosters/batch', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameId } = req.params;

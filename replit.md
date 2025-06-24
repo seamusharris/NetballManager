@@ -112,6 +112,13 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 24, 2025: STAGE 5 COMPLETE - Team-based game API migration to complete REST architecture
+  - Created team-based endpoints: `/api/teams/{teamId}/games/{gameId}/availability`, `/api/teams/{teamId}/games/{gameId}/rosters`
+  - Added `requireTeamGameAccess()` middleware for proper team-game authorization
+  - Updated RosterGame, PlayerAvailability, and usePlayerAvailability hook to use team-based endpoints
+  - Maintained legacy endpoints with deprecation notices for backward compatibility
+  - Resolved "Game with ID 110 not found" error - proper team-based access control now in place
+  - Complete REST API migration achieved with consistent URL-based team routing
 - June 24, 2025: STAGE 4 COMPLETE - Players API fully migrated to REST endpoints
   - Implemented `/api/clubs/{clubId}/players` REST endpoint with backward compatibility
   - Updated ALL components: ClubDashboard, LiveStats, TeamAnalysis, Dashboard, GameDetails, OpponentPreparation, PlayerAvailability, RosterGame
