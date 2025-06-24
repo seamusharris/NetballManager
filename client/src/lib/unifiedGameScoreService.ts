@@ -6,10 +6,11 @@
 export interface GameScoreResult {
   ourScore: number;
   theirScore: number;
-  result: 'win' | 'loss' | 'draw' | 'upcoming' | 'bye' | 'unknown';
+  result: 'win' | 'loss' | 'draw' | 'upcoming' | 'bye' | 'unknown' | 'inter-club';
   quarterBreakdown: QuarterScore[];
   hasValidScore: boolean;
   scoreSource: 'official' | 'status' | 'none';
+  isInterClubGame?: boolean;
 }
 
 export interface QuarterScore {
@@ -299,7 +300,12 @@ export class UnifiedGameScoreService {
     // Sort quarter breakdown by quarter number
     quarterBreakdown.sort((a, b) => a.quarter - b.quarter);
 
-    const result = this.determineResult(ourTotalScore, theirTotalScore);
+    // Check if this is an inter-club game
+    const isInterClubGame = clubTeamIds.length > 0 && 
+      clubTeamIds.includes(game.homeTeamId || 0) && 
+      clubTeamIds.includes(game.awayTeamId || 0);
+
+    const result = this.determineResult(ourTotalScore, theirTotalScore, isInterClubGame);
     
     // Debug logging for Team 128 result from official scores
     if (game.homeTeamId === 128 || game.awayTeamId === 128) {
@@ -318,10 +324,11 @@ export class UnifiedGameScoreService {
     return {
       ourScore: ourTotalScore,
       theirScore: theirTotalScore,
-      result,
+      result: isInterClubGame ? 'inter-club' : result,
       quarterBreakdown,
       hasValidScore: true,
-      scoreSource: 'official'
+      scoreSource: 'official',
+      isInterClubGame
     };
   }
 
@@ -425,13 +432,34 @@ export class UnifiedGameScoreService {
 
     // Club-wide perspective - determine which team belongs to our club
     if (clubTeamIds.length > 0) {
-      if (clubTeamIds.includes(game.homeTeamId || 0)) {
+      const homeIsOurs = clubTeamIds.includes(game.homeTeamId || 0);
+      const awayIsOurs = clubTeamIds.includes(game.awayTeamId || 0);
+      
+      // Debug logging for games involving Team 1 (Matrix)
+      if (game.homeTeamId === 1 || game.awayTeamId === 1) {
+        console.log(`🔍 UNIFIED SERVICE - Matrix game ${game.id} team perspective:`, {
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId,
+          clubTeamIds,
+          homeIsOurs,
+          awayIsOurs
+        });
+      }
+      
+      if (homeIsOurs && awayIsOurs) {
+        // Inter-club game: both teams are ours
+        // For display consistency, use home team perspective but mark as inter-club
+        return { 
+          ourTeamId: game.homeTeamId || 0, 
+          theirTeamId: game.awayTeamId || 0 
+        };
+      } else if (homeIsOurs) {
         // Home team is ours
         return { 
           ourTeamId: game.homeTeamId || 0, 
           theirTeamId: game.awayTeamId || 0 
         };
-      } else if (clubTeamIds.includes(game.awayTeamId || 0)) {
+      } else if (awayIsOurs) {
         // Away team is ours
         return { 
           ourTeamId: game.awayTeamId || 0, 
@@ -447,7 +475,12 @@ export class UnifiedGameScoreService {
     };
   }
 
-  private static determineResult(ourScore: number, theirScore: number): 'win' | 'loss' | 'draw' {
+  private static determineResult(ourScore: number, theirScore: number, isInterClubGame: boolean = false): 'win' | 'loss' | 'draw' {
+    if (isInterClubGame) {
+      // For inter-club games, we could show neutral colors or use a different indicator
+      // For now, still calculate win/loss but could be enhanced later
+    }
+    
     if (ourScore > theirScore) return 'win';
     if (ourScore < theirScore) return 'loss';
     return 'draw';

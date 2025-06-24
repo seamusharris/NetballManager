@@ -62,23 +62,19 @@ export default function GameResultCard({
 
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
-    // Use team perspective directly from props (URL-based) or fall back to club-wide
-    let perspective: number | 'club-wide' = currentTeamId || 'club-wide';
+    const perspective = currentTeamId || 'club-wide';
+    const clubTeamIds = currentClubTeams?.map(t => t.id) || [];
     
-    // If we have team perspective, use it directly (this comes from URL)
-    if (currentTeamId) {
-      perspective = currentTeamId;
-    }
-    // If we're in club-wide view but this game involves one of our teams, use that team's perspective
-    else if (teams && teams.length > 0) {
-      // Check if home team is from our club
-      if (game.homeTeamId && teams.some(team => team.id === game.homeTeamId)) {
-        perspective = game.homeTeamId;
-      }
-      // Check if away team is from our club  
-      else if (game.awayTeamId && teams.some(team => team.id === game.awayTeamId)) {
-        perspective = game.awayTeamId;
-      }
+    // Debug logging for Matrix team games (Team 1)
+    if (game.homeTeamId === 1 || game.awayTeamId === 1) {
+      console.log(`🔍 MATRIX GAME ${game.id} - Game result card calculation:`, {
+        perspective,
+        clubTeamIds,
+        homeTeamId: game.homeTeamId,
+        awayTeamId: game.awayTeamId,
+        currentClubId,
+        centralizedScoresCount: centralizedScores?.length || 0
+      });
     }
     
     // Debug for any team 128 game
