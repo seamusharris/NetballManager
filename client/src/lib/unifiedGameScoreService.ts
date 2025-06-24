@@ -311,9 +311,12 @@ export class UnifiedGameScoreService {
     if (typeof perspective === 'number') {
       // Team perspective - determine if we're home or away
       if (game.homeTeamId === perspective) {
+        // We are home team
         ourScore = game.statusTeamGoals;
         theirScore = game.statusOpponentGoals;
       } else if (game.awayTeamId === perspective) {
+        // We are away team - statusTeamGoals is still home score, statusOpponentGoals is still away score
+        // So our score (away) = statusOpponentGoals, their score (home) = statusTeamGoals
         ourScore = game.statusOpponentGoals;
         theirScore = game.statusTeamGoals;
       } else {
