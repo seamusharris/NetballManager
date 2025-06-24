@@ -15,14 +15,14 @@ import { usePlayerAvailability } from '@/hooks/use-player-availability';
 import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
-  const params = useLocation()[1];
+  const params = useParams();
   const { currentClub, isInitialized } = useClub();
 
   // Extract parameters from URL - always call these hooks
   const gameId = React.useMemo(() => {
     console.log('PlayerAvailability URL params:', params);
-    if (params && 'gameId' in params && params.gameId) {
-      const id = parseInt(params.gameId as string);
+    if (params && params.gameId) {
+      const id = parseInt(params.gameId);
       console.log('Extracted gameId from URL:', id);
       return isNaN(id) ? null : id;
     }
@@ -30,8 +30,8 @@ export default function PlayerAvailability() {
   }, [params]);
 
   const teamId = React.useMemo(() => {
-    if (params && 'teamId' in params && params.teamId) {
-      const id = parseInt(params.teamId as string);
+    if (params && params.teamId) {
+      const id = parseInt(params.teamId);
       return isNaN(id) ? null : id;
     }
     return null;
