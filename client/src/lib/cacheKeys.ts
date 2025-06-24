@@ -37,6 +37,11 @@ export const CACHE_KEYS = {
 
   // Statistics
   gameStats: (gameId: number) => ['stats', gameId],
+  
+  // NEW: Game-centric stats endpoints
+  gameTeamStats: (gameId: number, teamId: number) => ['game', gameId, 'team', teamId, 'stats'],
+  gameTeamRosters: (gameId: number, teamId: number) => ['game', gameId, 'team', teamId, 'rosters'],
+  gameTeam: (gameId: number, teamId: number) => ['game', gameId, 'team', teamId],
 
   batchStats: (clubId: number, gameIds: number[]) => 
     ['batch-stats', clubId, normalizeGameIds(gameIds)],

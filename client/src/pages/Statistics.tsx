@@ -121,53 +121,6 @@ export default function Statistics() {
     fetchRosters();
   }, [selectedGameId, currentClubId, games]);
 
-  // NEW: Updated roster fetching to use game-centric approach
-  useEffect(() => {
-    if (selectedGameId && currentClubId) {
-      console.log(`Loading roster data for game ${selectedGameId}`);
-      
-      // Find the game to determine which teams are playing
-      const game = games.find(g => g.id === selectedGameId);
-      if (!game) return;
-      
-      // Fetch rosters for our club's team(s) in this game
-      const fetchRosterPromises = [];
-      
-      if (game.homeClubId === currentClubId) {
-        fetchRosterPromises.push(
-          fetch(`/api/game/${selectedGameId}/team/${game.homeTeamId}/rosters`)
-            .then(res => res.json())
-        );
-      }
-      
-      if (game.awayClubId === currentClubId && game.awayTeamId) {
-        fetchRosterPromises.push(
-          fetch(`/api/game/${selectedGameId}/team/${game.awayTeamId}/rosters`)
-            .then(res => res.json())
-        );
-      }
-      
-      Promise.all(fetchRosterPromises)
-        .then(rosterArrays => {
-          // Combine all roster data
-          const combinedRosters = rosterArrays.flat();
-          console.log(`Directly fetched ${data.length} roster entries for game ${selectedGameId}`);
-          if (Array.isArray(data) && data.length > 0) {
-            data.forEach(entry => {
-              if ('position' in entry && 'playerId' in entry && 'quarter' in entry) {
-                console.log("Found valid roster entry:", entry);
-              }
-            });
-          }
-          setRosterData(data);
-        })
-        .catch(err => {
-          console.error("Error fetching roster data:", err);
-          setRosterData([]);
-        });
-    }
-  }, [selectedGameId]);
-
   // Use our manually fetched roster data instead of the query result
   const rosters = rosterData;
   const isLoadingRosters = loadingRosters;
