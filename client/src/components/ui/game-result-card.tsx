@@ -63,19 +63,28 @@ export default function GameResultCard({
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
     const perspective = currentTeamId || 'club-wide';
-    return gameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
+    // Use unified service that correctly handles team perspective
+    const result = UnifiedGameScoreService.calculateGameScore(game, centralizedScores || [], perspective);
+    
+    // Convert to format expected by existing components
+    return {
+      finalScore: {
+        for: result.ourScore,
+        against: result.theirScore
+      },
+      result: result.result,
+      quarterScores: result.quarterBreakdown.map(q => ({
+        quarter: q.quarter,
+        teamScore: q.ourScore,
+        opponentScore: q.theirScore
+      })),
+      hasValidScore: result.hasValidScore,
+      scoreSource: result.scoreSource
+    };
   }, [game, centralizedScores, currentTeamId]);
 
-  // Legacy format for backward compatibility
-  const scores = useMemo(() => ({
-    quarterScores: scoreResult.quarterBreakdown.map(q => ({
-      quarter: q.quarter,
-      teamScore: q.ourScore,
-      opponentScore: q.theirScore
-    })),
-    finalScore: { for: scoreResult.ourScore, against: scoreResult.theirScore },
-    result: scoreResult.result
-  }), [scoreResult]);
+  // Use scoreResult directly instead of duplicate conversion
+  const scores = scoreResult;
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
@@ -286,9 +295,9 @@ export default function GameResultCard({
             </div>
           ) : scores ? (
             <ScoreBadge 
-              teamScore={scores.finalScore.for} 
-              opponentScore={scores.finalScore.against}
-              result={actualResult}
+              teamScore={scores.ourScore} 
+              opponentScore={scores.theirScore}
+              result={scores.result}
             />
           ) : (
             <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
