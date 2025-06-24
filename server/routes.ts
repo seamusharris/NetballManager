@@ -339,14 +339,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate the data structure
       const hasPlayers = Array.isArray(data.players);
-      const hasOpponents = Array.isArray(data.opponents);
+      // Opponent system has been removed
       const hasGames = Array.isArray(data.games);
       const hasRosters = Array.isArray(data.rosters);
       const hasGameStats = Array.isArray(data.gameStats);
 
       console.log("Import validation:", { 
         players: hasPlayers ? data.players.length : 0,
-        opponents: hasOpponents ? data.opponents.length : 0, 
+        // opponents: removed from system 
         games: hasGames ? data.games.length : 0,
         rosters: hasRosters ? data.rosters.length : 0,
         stats: hasGameStats ? data.gameStats.length : 0
@@ -359,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Import counts
       let playersImported = 0;
-      let opponentsImported = 0;
+      // opponentsImported: removed
       let gamesImported = 0;
       let rostersImported = 0;
       let statsImported = 0;

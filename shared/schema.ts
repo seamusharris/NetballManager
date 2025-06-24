@@ -11,12 +11,11 @@ export const gameStatuses = pgTable("game_statuses", {
   name: text("name").notNull().unique(), // Internal status name (e.g., 'forfeit-win', 'bye', 'completed')
   displayName: text("display_name").notNull(), // User-friendly display name (e.g., 'Forfeit Win', 'BYE', 'Completed')
   points: integer("points").notNull().default(0), // Points awarded for this status
-  opponentPoints: integer("opponent_points").notNull().default(0), // Points awarded to opponent
-  teamGoals: integer("team_goals"), // Fixed score for team (null if score comes from statistics)
-  opponentGoals: integer("opponent_goals"), // Fixed score for opponent (null if score comes from statistics)
+  awayPoints: integer("away_points").notNull().default(0), // Points awarded to away team
+  homeGoals: integer("home_goals"), // Fixed score for home team (null if score comes from statistics)
+  awayGoals: integer("away_goals"), // Fixed score for away team (null if score comes from statistics)
   isCompleted: boolean("is_completed").notNull().default(false), // Whether this status marks a game as finished
   allowsStatistics: boolean("allows_statistics").notNull().default(true), // Whether stats can be recorded
-  requiresOpponent: boolean("requires_opponent").notNull().default(true), // Whether this status requires an opponent
   colorClass: text("color_class"), // CSS class for status badge colors
   sortOrder: integer("sort_order").notNull().default(0), // Order for dropdown displays
   isActive: boolean("is_active").notNull().default(true), // Whether this status is currently available

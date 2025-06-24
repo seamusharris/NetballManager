@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
-import { GameStat, Position, allPositions, Opponent, Game, Player, Roster } from '@shared/schema';
+import { GameStat, Position, allPositions, Game, Player, Roster } from '@shared/schema';
 import { POSITION_NAMES, STAT_LABELS, STAT_COLORS, EMPTY_POSITION_STATS, COMMON_STATS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { 
@@ -76,11 +76,7 @@ export default function LiveStatsByPosition() {
     enabled: !!gameId && !isNaN(gameId)
   });
 
-  const { data: opponent, isLoading: isLoadingOpponent } = useQuery<Opponent>({
-    queryKey: ['/api/opponents', game?.opponentId],
-    queryFn: () => apiRequest('GET', `/api/opponents/${game?.opponentId}`),
-    enabled: !!game?.opponentId
-  });
+  // Opponent system removed - using away team data from game object
 
   const { data: rosters = [], isLoading: isLoadingRoster } = useQuery<Roster[]>({
     queryKey: ['/api/games', gameId, 'rosters'],
