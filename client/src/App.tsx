@@ -37,6 +37,7 @@ import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
 import PlayerBoxExamples from './pages/PlayerBoxExamples';
 import TeamBoxExamples from './pages/TeamBoxExamples';
 import ActionButtonExamples from './pages/ActionButtonExamples';
+import AllPlayersDesignExamples from './pages/AllPlayersDesignExamples';
 import ComponentExamples from '@/pages/ComponentExamples';
 import DashboardExamples from '@/pages/DashboardExamples';
 import WidgetExamples from './pages/WidgetExamples';
@@ -158,6 +159,7 @@ function Router() {
         <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />
         <Route path="/team-box-examples" component={withErrorBoundary(TeamBoxExamples, 'TeamBoxExamples')} />
         <Route path="/action-button-examples" component={ActionButtonExamples} />
+        <Route path="/all-players-design-examples" component={AllPlayersDesignExamples} />
         <Route path="/component-examples" component={ComponentExamples} />
         <Route path="/dashboard-examples" component={DashboardExamples} />
         <Route path="/widget-examples" component={WidgetExamples} />

@@ -111,6 +111,14 @@ const examples: ExampleSection[] = [
     category: 'Sport-Specific',
     status: 'Complete'
   },
+  {
+    title: 'All Players Design Examples',
+    description: 'Comprehensive player management interfaces with filtering, batch operations, and various layout options for managing 150+ players.',
+    path: '/all-players-design-examples',
+    icon: <Users className="h-5 w-5" />,
+    category: 'Patterns',
+    status: 'Complete'
+  },
 
   // Navigation
   {
