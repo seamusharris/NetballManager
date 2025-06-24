@@ -270,14 +270,17 @@ export default function AllPlayersDesignExamples() {
                   const isSelected = selectedPlayers.has(player.id);
 
                   return (
-                    <div key={player.id} className="relative">
+                    <div key={`grid-player-${player.id}`} className="relative">
                       <div 
                         className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                         style={{ 
                           backgroundColor: isSelected ? darkerTextColor : 'transparent', 
                           border: isSelected ? 'none' : `2px solid ${darkerTextColor}`
                         }}
-                        onClick={() => togglePlayerSelection(player.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePlayerSelection(player.id);
+                        }}
                       >
                         {isSelected && '✓'}
                       </div>
@@ -741,14 +744,17 @@ export default function AllPlayersDesignExamples() {
               {/* Player Grid with Batch Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredPlayers.slice(0, 16).map((player) => (
-                  <div key={player.id} className="relative">
+                  <div key={`batch-player-${player.id}`} className="relative">
                     <div 
                       className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer z-10 text-white transition-all"
                       style={{ 
                         backgroundColor: batchSelectedPlayers.has(player.id) ? '#3b82f6' : 'transparent', 
-                        border:batchSelectedPlayers.has(player.id) ? 'none' : '2px solid #3b82f680' 
+                        border: batchSelectedPlayers.has(player.id) ? 'none' : '2px solid #3b82f680' 
                       }}
-                      onClick={() => toggleBatchSelection(player.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleBatchSelection(player.id);
+                      }}
                     >
                       {batchSelectedPlayers.has(player.id) && '✓'}
                     </div>
