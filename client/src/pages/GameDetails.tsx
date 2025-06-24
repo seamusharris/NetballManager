@@ -1589,6 +1589,21 @@ export default function GameDetails() {
               </Button>
             )}
 
+            {/* Manage Roster Button */}
+            {currentTeam?.id && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                asChild 
+                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-900"
+              >
+                <Link to={`/roster/game/${gameId}`}>
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  Manage Roster
+                </Link>
+              </Button>
+            )}
+
             {/* Edit Game Button */}
             <Button 
               variant="outline" 
