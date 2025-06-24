@@ -48,7 +48,7 @@ export default function GameResultCard({
   currentTeamId,
   clubTeams = []
 }: GameResultCardProps) {
-  const { currentClubId } = useClub();
+  const { currentClubId, teams } = useClub();
   const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data
