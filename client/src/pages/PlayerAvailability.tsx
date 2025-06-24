@@ -38,8 +38,10 @@ export default function PlayerAvailability() {
 
   // Fetch games
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', currentClub?.id],
-    queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
+    queryKey: ['games', currentClub?.id, 'club-wide'],
+    queryFn: () => apiClient.get('/api/games', {
+      headers: { 'x-club-wide': 'true' }
+    }) as Promise<Game[]>,
     retry: 1,
     enabled: !!currentClub?.id && isInitialized
   });
