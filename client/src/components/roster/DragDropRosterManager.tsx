@@ -284,12 +284,17 @@ export default function DragDropRosterManager({
 
   const queryClient = useQueryClient();
 
-  // Fetch existing roster data using the standard working endpoint
+  // Fetch existing roster data using team-specific endpoint when team context is available
   const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
-    queryKey: ['rosters', gameId],
+    queryKey: teamId ? ['teams', teamId, 'games', gameId, 'roster'] : ['rosters', gameId],
     queryFn: () => {
-      console.log(`DragDropRosterManager: Loading roster via standard endpoint /api/games/${gameId}/rosters`);
-      return apiClient.get(`/api/games/${gameId}/rosters`);
+      if (teamId) {
+        console.log(`DragDropRosterManager: Loading roster via team endpoint /api/teams/${teamId}/games/${gameId}/rosters`);
+        return apiClient.get(`/api/teams/${teamId}/games/${gameId}/rosters`);
+      } else {
+        console.log(`DragDropRosterManager: Loading roster via standard endpoint /api/games/${gameId}/rosters`);
+        return apiClient.get(`/api/games/${gameId}/rosters`);
+      }
     },
     enabled: !!gameId,
     staleTime: 5 * 60 * 1000, // 5 minutes - roster data is relatively stable
