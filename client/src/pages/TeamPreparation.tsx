@@ -290,7 +290,7 @@ export default function TeamPreparation() {
                       const opponentId = value ? parseInt(value) : null;
                       setSelectedOpponentId(opponentId);
                       if (opponentId && currentTeamId) {
-                        setLocation(`/teams/${currentTeamId}/analysis/${opponentId}`);
+                        setLocation(`/team/${currentTeamId}/analysis/${opponentId}`);
                       }
                     }}
                     disabled={!currentTeamId || opponentTeamsFromGames.length === 0}
