@@ -248,7 +248,7 @@ export default function Players() {
   // Track which players are being removed/added
   const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
   const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
-  
+
   // Optimistic updates for immediate UI feedback
   const [optimisticallyRemovedPlayerIds, setOptimisticallyRemovedPlayerIds] = useState<Set<number>>(new Set());
   const [optimisticallyAddedPlayerIds, setOptimisticallyAddedPlayerIds] = useState<Set<number>>(new Set());
@@ -453,7 +453,7 @@ export default function Players() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Switch to Team" />
+                  <SelectValue placeholder="Switch Team" />
                 </SelectTrigger>
                 <SelectContent>
                   {allTeams
@@ -486,7 +486,7 @@ export default function Players() {
                   // remove them from the team with optimistic update
                   const currentTeamPlayerIds = new Set(teamPlayers.filter(p => !optimisticallyRemovedPlayerIds.has(p.id)).map(p => p.id));
                   const removedPlayerIds = [...currentTeamPlayerIds].filter(id => !selectedIds.has(id));
-                  
+
                   removedPlayerIds.forEach(playerId => {
                     // Immediate optimistic update
                     setOptimisticallyRemovedPlayerIds(prev => new Set([...prev, playerId]));
@@ -550,7 +550,7 @@ export default function Players() {
                   // Handle optimistic add when players are selected from available list
                   const availablePlayerIds = new Set(availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id)).map(p => p.id));
                   const addedPlayerIds = [...selectedIds].filter(id => availablePlayerIds.has(id));
-                  
+
                   addedPlayerIds.forEach(playerId => {
                     // Immediate optimistic update
                     setOptimisticallyAddedPlayerIds(prev => new Set([...prev, playerId]));
