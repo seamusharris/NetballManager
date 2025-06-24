@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { Plus, Activity, Users, Edit, Trash2, MoreVertical, Trophy, Calendar } from 'lucide-react';
 import { useClub } from '@/contexts/ClubContext';
 import { useState, useEffect } from 'react';
@@ -21,6 +21,7 @@ export default function Teams() {
     currentClub, 
     currentClubId, 
     clubTeams, 
+    setCurrentTeamId,
     isLoading: clubLoading 
   } = useClub();
 
@@ -34,7 +35,6 @@ export default function Teams() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
-  const { setCurrentTeamId, currentClubId, currentClub, isLoading: clubLoading } = useClub();
   const queryClient = useQueryClient();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
