@@ -5,7 +5,7 @@ import { formatShortDate, formatDate } from '@/lib/utils';
 import { ScoreBadge } from '@/components/ui/score-badge';
 import { GameBadge } from '@/components/ui/game-badge';
 import { cn } from '@/lib/utils';
-import { gameScoreService } from '@/lib/unifiedGameScoreService';
+import { UnifiedGameScoreService } from '@/lib/unifiedGameScoreService';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from './badge';
 import { Card } from './card';
@@ -271,12 +271,12 @@ export default function GameResultCard({
       {/* Right side - Score and Quarter Scores */}
       <div className="ml-auto flex items-center gap-4">
         {/* Quarter scores if enabled and available */}
-        {showQuarterScores && scores && scores.quarterScores && scores.quarterScores.length > 0 && (
+        {showQuarterScores && scores && scores.quarterBreakdown && scores.quarterBreakdown.length > 0 && (
           <QuarterScoresDisplay
-            quarterScores={scores.quarterScores.map(q => ({
+            quarterScores={scores.quarterBreakdown.map(q => ({
               quarter: q.quarter,
-              teamScore: q.teamScore,
-              opponentScore: q.opponentScore
+              teamScore: q.ourScore,
+              opponentScore: q.theirScore
             }))}
             size="sm"
             className="mr-4"
