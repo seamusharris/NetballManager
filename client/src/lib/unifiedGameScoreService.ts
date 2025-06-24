@@ -95,16 +95,19 @@ export class UnifiedGameScoreService {
     // Try official scores first (highest priority)
     const officialResult = this.calculateFromOfficialScores(game, officialScores, perspective);
     if (officialResult.hasValidScore) {
+      console.log(`🔍 UNIFIED SERVICE - Game ${game.id} using OFFICIAL scores result:`, officialResult);
       return officialResult;
     }
 
     // Fall back to status scores
     const statusResult = this.calculateFromStatusScores(game, perspective);
     if (statusResult.hasValidScore) {
+      console.log(`🔍 UNIFIED SERVICE - Game ${game.id} using STATUS scores result:`, statusResult);
       return statusResult;
     }
 
     // No valid scores found
+    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} NO VALID scores found`);
     return {
       ourScore: 0,
       theirScore: 0,
