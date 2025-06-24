@@ -2120,7 +2120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- GAME STATS API -----
-  // Batch endpoint to get rosters for multiple games at once (READ-ONLY)
+  // Batch endpoint to get rosters for multiple games at once
   app.post("/api/games/rosters/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       console.log("POST Batch rosters endpoint received body:", req.body);

@@ -363,34 +363,12 @@ export default function SimpleRosterManager({
     });
   };
 
-  // Save roster to database using batch endpoint
+  // Save roster to database
   const saveRosterMutation = useMutation({
     mutationFn: async () => {
       if (!selectedGameId) return;
 
       try {
-        // Prepare roster data for batch save
-        const rosterData = [];
-
-        // Collect ALL roster positions from the entire localRosterState
-        for (const quarterKey of ['1', '2', '3', '4']) {
-          const quarterPositions = localRosterState[quarterKey as '1'|'2'|'3'|'4'];
-          const quarterNum = parseInt(quarterKey);
-
-          // Go through all positions in this quarter
-          for (const [position, playerId] of Object.entries(quarterPositions)) {
-            // Only include positions that have a player assigned
-            if (playerId !== null) {
-              rosterData.push({
-                gameId: selectedGameId,
-                quarter: quarterNum,
-                position: position as Position,
-                playerId: playerId
-              });
-            }
-          }
-        }
-
         // First delete existing roster entries
         console.log(`Deleting all existing roster entries for game ${selectedGameId}`);
         await apiClient.delete(`/api/games/${selectedGameId}/rosters`);
