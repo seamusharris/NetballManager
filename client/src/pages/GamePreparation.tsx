@@ -190,10 +190,16 @@ export default function GamePreparation() {
   const [tacticalNotes, setTacticalNotes] = useState<TacticalNote[]>([]);
   const [gameObjectives, setGameObjectives] = useState<GameObjective[]>([]);
 
-  // Load game data
+  // Load game data using team-specific endpoint for better context
   const { data: game, isLoading: loadingGame } = useQuery({
-    queryKey: ['game', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}`),
+    queryKey: ['teams', currentTeamId, 'games', gameId],
+    queryFn: () => {
+      if (currentTeamId && gameId) {
+        return apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}`);
+      }
+      // Fallback to regular game endpoint if no team context
+      return apiClient.get(`/api/games/${gameId}`);
+    },
     enabled: !!gameId
   });
 
@@ -204,9 +210,9 @@ export default function GamePreparation() {
     enabled: !!currentTeamId
   });
 
-  // Load players
+  // Load players using team-specific endpoint
   const { data: players = [], isLoading: loadingPlayers } = useQuery({
-    queryKey: ['teamPlayers', currentTeamId],
+    queryKey: ['teams', currentTeamId, 'players'],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
     enabled: !!currentTeamId
   });
@@ -218,21 +224,14 @@ export default function GamePreparation() {
     enabled: !!gameId
   });
 
-  // Load historical games against this opponent
+  // Load historical games against this opponent using team-specific endpoint
   const { data: historicalGames = [], isLoading: loadingHistory } = useQuery({
-    queryKey: ['historicalGames', currentTeamId, game?.awayTeamId || game?.homeTeamId],
+    queryKey: ['teams', currentTeamId, 'historicalGames', game?.opponentTeamId],
     queryFn: async () => {
       if (!game || !currentTeamId) return [];
 
-      // Get all games for the current team using existing API
-      const headers: Record<string, string> = {};
-      if (currentTeamId) {
-        headers['x-current-team-id'] = currentTeamId.toString();
-      }
-      const allGames = await apiClient.get('/api/games', headers);
-
-      // Determine the opponent team ID
-      const opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
+      // Get all games for the current team using team-specific API
+      const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
 
       // Filter for completed games against this specific opponent
       const historicalMatches = allGames.filter((g: any) => {
@@ -244,13 +243,13 @@ export default function GamePreparation() {
 
         // Check if this game was against the same opponent team ID
         const gameOpponentId = g.homeTeamId === currentTeamId ? g.awayTeamId : g.homeTeamId;
-        return gameOpponentId === opponentTeamId;
+        return gameOpponentId === game.opponentTeamId;
       });
 
-      console.log(`Historical games against opponent team ${opponentTeamId}:`, historicalMatches);
+      console.log(`Historical games against opponent team ${game.opponentTeamId}:`, historicalMatches);
       return historicalMatches;
     },
-    enabled: !!game && !!currentTeamId
+    enabled: !!game && !!currentTeamId && !!game.opponentTeamId
   });
 
   // Strategy data will be handled by StrategyTab component internally
@@ -273,20 +272,16 @@ export default function GamePreparation() {
   // Fetch batch statistics for position-based analysis
   const { statsMap: batchStats, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIdsArray);
 
-  // Load all season games for the current team
+  // Load all season games for the current team using team-specific endpoint
   const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery({
-    queryKey: ['seasonGames', currentTeamId, game?.seasonId],
+    queryKey: ['teams', currentTeamId, 'seasonGames', game?.seasonId],
     queryFn: async () => {
       if (!currentTeamId || !game?.seasonId) return [];
 
-      // Get all games for the current team using existing API
-      const headers: Record<string, string> = {};
-      if (currentTeamId) {
-        headers['x-current-team-id'] = currentTeamId.toString();
-      }
-      const allGames = await apiClient.get('/api/games', headers);
+      // Get all games for the current team using team-specific API
+      const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
 
-      // Filter for completed games in the same season, excluding BYE games
+      // Filter for completed games in the same season
       const seasonMatches = allGames.filter((g: any) => {
         // Skip the current game
         if (g.id === game.id) return false;
@@ -424,8 +419,8 @@ export default function GamePreparation() {
     );
   }
 
-  const opponent = game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName;
-  const isHomeGame = game.homeTeamId === currentTeamId;
+  const opponent = game.teamPerspective === 'home' ? game.awayTeamName : game.homeTeamName;
+  const isHomeGame = game.teamPerspective === 'home';
 
   return (
     <PageTemplate 
