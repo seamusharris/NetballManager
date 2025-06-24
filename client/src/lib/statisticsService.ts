@@ -309,6 +309,16 @@ class UnifiedStatisticsService {
             const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
 
             console.log(`🔄 GENERATING missing stats for team ${missingTeamId} from opponent ${opponentTeamId} with ${opponentStats.length} stats`);
+            
+            // Special debug logging for Team 124 (Gems)
+            if (missingTeamId === 124) {
+              console.log(`🎯 GEMS TEAM 124 DEBUG - Game ${gameId}:`, {
+                missingTeamId,
+                opponentTeamId,
+                opponentStatsCount: opponentStats.length,
+                opponentStats: opponentStats.map(s => `${s.position} Q${s.quarter}: For=${s.goalsFor} Against=${s.goalsAgainst}`)
+              });
+            }
 
             // Clear existing stats for this team to avoid duplicates
             processedStats[gameId] = processedStats[gameId].filter(s => s.teamId !== missingTeamId);
@@ -336,6 +346,11 @@ class UnifiedStatisticsService {
                 };
                 processedStats[gameId].push(offensiveStat);
                 console.log(`✨ Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals (from opponent ${opponentStat.position} conceding)`);
+                
+                // Special debug for Team 124 (Gems)
+                if (missingTeamId === 124) {
+                  console.log(`🎯 GEMS OFFENSE: Generated ${offensiveStat.position} Q${offensiveStat.quarter} with ${offensiveStat.goalsFor} goals from opponent ${opponentStat.position} conceding ${opponentStat.goalsAgainst}`);
+                }
               }
               
               // Generate our defensive stats from opponent's offensive data  
@@ -359,6 +374,11 @@ class UnifiedStatisticsService {
                 };
                 processedStats[gameId].push(defensiveStat);
                 console.log(`🛡️ Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals (from opponent ${opponentStat.position} scoring)`);
+                
+                // Special debug for Team 124 (Gems)
+                if (missingTeamId === 124) {
+                  console.log(`🎯 GEMS DEFENSE: Generated ${defensiveStat.position} Q${defensiveStat.quarter} with ${defensiveStat.goalsAgainst} goals against from opponent ${opponentStat.position} scoring ${opponentStat.goalsFor}`);
+                }
               }
             }
           }
