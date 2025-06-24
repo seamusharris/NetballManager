@@ -163,7 +163,7 @@ class UnifiedStatisticsService {
       
       // ALWAYS process through opponent perspective to ensure Matrix team gets stats
       const processedResult = await this.processStatsWithOpponentPerspective(result || {});
-      console.log(`✅ PROCESSED BATCH STATS RESULT:`, processedResult);
+      console.log(`✅ PROCESSED BATCH STATS RESULT: Found stats for ${Object.keys(processedResult).length} games`);
       return processedResult;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);

@@ -128,7 +128,7 @@ export default function AdvancedTeamAnalytics({
 
 
 
-  // Calculate all advanced analytics
+  // Calculate all advanced analytics with stable dependencies
   useEffect(() => {
     if (!gameStatsMap || isLoading || Object.keys(gameStatsMap).length === 0) return;
 
@@ -274,7 +274,7 @@ export default function AdvancedTeamAnalytics({
       opponentStrengthMatrix
     });
 
-  }, [gameStatsMap, isLoading, completedGames, opponents]);
+  }, [JSON.stringify(gameStatsMap), isLoading, completedGames.length, opponents.length]);
 
   // Helper functions
   const calculateMomentum = (results: string[]) => {
