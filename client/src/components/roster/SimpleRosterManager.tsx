@@ -391,14 +391,39 @@ export default function SimpleRosterManager({
           }
         }
 
-        console.log(`Batch saving ${rosterData.length} roster entries for game ${selectedGameId}:`, rosterData);
+        // First delete existing roster entries
+        console.log(`Deleting all existing roster entries for game ${selectedGameId}`);
+        await apiClient.delete(`/api/games/${selectedGameId}/rosters`);
 
-        // Use the batch save endpoint
-        const response = await apiRequest('POST', `/api/games/${selectedGameId}/rosters/batch`, {
-          rosters: rosterData
-        });
+        // Create all the new entries
+        const savePromises = [];
 
-        return response;
+        // Save ALL roster positions from the entire localRosterState
+        for (const quarterKey of ['1', '2', '3', '4']) {
+          const quarterPositions = localRosterState[quarterKey as '1'|'2'|'3'|'4'];
+          const quarterNum = parseInt(quarterKey);
+
+          // Go through all positions in this quarter
+          for (const [position, playerId] of Object.entries(quarterPositions)) {
+            // Only save positions that have a player assigned
+            if (playerId !== null) {
+              console.log(`Creating roster entry: Game ${selectedGameId}, Q${quarterNum}, Pos: ${position}, Player: ${playerId}`);
+
+              const rosterEntry = {
+                gameId: selectedGameId,
+                quarter: quarterNum,
+                position: position as Position,
+                playerId: playerId
+              };
+
+              savePromises.push(apiRequest('POST', `/api/rosters`, rosterEntry));
+            }
+          }
+        }
+
+        // Wait for all save operations to complete
+        await Promise.all(savePromises);
+        return true;
       } catch (error) {
         console.error("Error saving roster:", error);
         throw error;
