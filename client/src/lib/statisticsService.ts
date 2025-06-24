@@ -253,7 +253,7 @@ class UnifiedStatisticsService {
                   id: -(gameId * 1000 + stat.id),
                   gameId: gameId,
                   teamId: 1, // Matrix team
-                  position: stat.position === 'GK' ? 'GS' : 'GA', // GK defends GS, GD defends GA
+                  position: stat.position === 'GD' ? 'GA' : 'GS', // GD defends GA, GK defends GS
                   quarter: stat.quarter,
                   goalsFor: stat.goalsAgainst || 0, // Goals they conceded = goals Matrix scored
                   goalsAgainst: 0,
@@ -275,7 +275,7 @@ class UnifiedStatisticsService {
                   id: -(gameId * 1000 + stat.id + 1000),
                   gameId: gameId,
                   teamId: 1, // Matrix team
-                  position: stat.position === 'GS' ? 'GK' : 'GD', // GS attacks GK, GA attacks GD
+                  position: stat.position === 'GA' ? 'GD' : 'GK', // GA attacks GD, GS attacks GK
                   quarter: stat.quarter,
                   goalsFor: 0,
                   goalsAgainst: stat.goalsFor || 0, // Goals they scored = goals Matrix conceded
@@ -321,7 +321,7 @@ class UnifiedStatisticsService {
                   id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), 
                   gameId: gameId,
                   teamId: missingTeamId,
-                  position: opponentStat.position === 'GK' ? 'GS' : 'GA', // GK defends against GS, GD defends against GA
+                  position: opponentStat.position === 'GD' ? 'GA' : 'GS', // GD defends against GA, GK defends against GS
                   quarter: opponentStat.quarter,
                   goalsFor: opponentStat.goalsAgainst || 0, // Goals they conceded = goals we scored
                   goalsAgainst: 0,
@@ -344,7 +344,7 @@ class UnifiedStatisticsService {
                   id: -Math.abs(gameId * 1000 + missingTeamId * 100 + opponentStat.quarter),
                   gameId: gameId,
                   teamId: missingTeamId,
-                  position: opponentStat.position === 'GS' ? 'GK' : 'GD', // GS attacks against GK, GA attacks against GD
+                  position: opponentStat.position === 'GA' ? 'GD' : 'GK', // GA attacks against GD, GS attacks against GK
                   quarter: opponentStat.quarter,
                   goalsFor: 0,
                   goalsAgainst: opponentStat.goalsFor || 0, // Goals they scored = goals we conceded

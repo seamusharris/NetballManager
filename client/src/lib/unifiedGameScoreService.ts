@@ -276,7 +276,7 @@ export class UnifiedGameScoreService {
 
 
 
-    // Calculate totals and quarter breakdown
+    // Calculate quarter breakdown
     Object.keys(scoresByQuarter).forEach(quarterStr => {
       const quarter = parseInt(quarterStr);
       const quarterScores = scoresByQuarter[quarter];
