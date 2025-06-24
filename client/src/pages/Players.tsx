@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
@@ -21,7 +21,25 @@ import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 
 export default function Players() {
-  const { currentClub, hasPermission, isLoading: clubLoading, switchClub } = useClub();
+  const params = useParams();
+  const [location, setLocation] = useLocation();
+  const { 
+    currentClub, 
+    currentClubId, 
+    currentTeamId, 
+    currentTeam,
+    clubTeams, 
+    setCurrentTeamId,
+    isLoading: clubLoading 
+  } = useClub();
+
+  // Redirect to club-scoped URL if accessing /players without club ID
+  useEffect(() => {
+    if (location === '/players' && currentClubId) {
+      setLocation(`/clubs/${currentClubId}/players`);
+      return;
+    }
+  }, [location, currentClubId, setLocation]);
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -34,10 +52,8 @@ export default function Players() {
       </div>
     );
   }
-  const params = useParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
 
   // Handle club ID from URL parameter (but not team ID)
@@ -182,7 +198,7 @@ export default function Players() {
         newSet.delete(variables);
         return newSet;
       });
-      
+
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
         queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
@@ -312,7 +328,7 @@ export default function Players() {
         newSet.delete(variables);
         return newSet;
       });
-      
+
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
         queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
@@ -531,7 +547,7 @@ export default function Players() {
                     />
                   </DialogContent>
                 </Dialog>
-                
+
               </PageActions>
             }
             variant="elevated"

@@ -17,7 +17,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  const { currentTeamId, currentTeam } = useClub();
+  const { currentTeamId, currentTeam, currentClubId } = useClub();
   const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
 
   const isActive = (path: string) => {
@@ -30,8 +30,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   const getNavLinks = () => {
     const clubWideLinks = [
       { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" />, section: 'club' },
-      { path: '/players', label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
-      { path: '/teams', label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/clubs/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/clubs/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
     ];
 
     const adminLinks = [

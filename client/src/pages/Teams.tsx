@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Plus, Activity, Users, Edit, Trash2, MoreVertical, Trophy, Calendar } from 'lucide-react';
 import { useClub } from '@/contexts/ClubContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,23 @@ import { ContentSection, ActionButton } from '@/components/ui/ui-standards';
 import PageTemplate from '@/components/layout/PageTemplate';
 
 export default function Teams() {
-  const [, setLocation] = useLocation();
+  const params = useParams();
+  const [location, setLocation] = useLocation();
+  const { 
+    currentClub, 
+    currentClubId, 
+    clubTeams, 
+    isLoading: clubLoading 
+  } = useClub();
+
+  // Redirect to club-scoped URL if accessing /teams without club ID
+  useEffect(() => {
+    if (location === '/teams' && currentClubId) {
+      setLocation(`/clubs/${currentClubId}/teams`);
+      return;
+    }
+  }, [location, currentClubId, setLocation]);
+
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const { setCurrentTeamId, currentClubId, currentClub, isLoading: clubLoading } = useClub();
