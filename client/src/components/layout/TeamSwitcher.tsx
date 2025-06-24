@@ -15,31 +15,28 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 
+  // Don't render if hidden mode or only one team
+  const validTeams = clubTeams.filter(team => team.isActive !== false);
+  const shouldRender = mode !== 'hidden' && validTeams.length > 1;
+
   // Sync internal value with context changes
   useEffect(() => {
+    if (!shouldRender) return;
     const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
     console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
     setInternalValue(newValue);
-  }, [currentTeamId, mode]);
-
-  // Don't render if hidden mode or only one team
-  const validTeams = clubTeams.filter(team => team.isActive !== false);
-
-  if (mode === 'hidden' || validTeams.length <= 1) {
-    return null;
-  }
+  }, [currentTeamId, mode, shouldRender]);
 
   // For required mode, auto-select first team if none selected
   useEffect(() => {
+    if (!shouldRender) return;
     if (mode === 'required' && !currentTeamId && validTeams.length > 0) {
       const firstTeam = validTeams[0];
       console.log('TeamSwitcher: Auto-selecting first team:', firstTeam.id, firstTeam.name);
       setCurrentTeamId(firstTeam.id);
       onTeamChange?.(firstTeam.id);
     }
-  }, [mode, currentTeamId, validTeams, setCurrentTeamId, onTeamChange]);
-
-
+  }, [mode, currentTeamId, validTeams, setCurrentTeamId, onTeamChange, shouldRender]);
 
   const handleTeamSelect = useCallback((teamId: string) => {
     console.log('TeamSwitcher: Team selected:', teamId);
@@ -103,6 +100,9 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     }
   }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, setInternalValue, currentClub]);
 
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <div className={`flex items-center space-x-2 ${className || ''}`}>
