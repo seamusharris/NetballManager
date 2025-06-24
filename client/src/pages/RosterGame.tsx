@@ -19,12 +19,20 @@ export default function RosterGame() {
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
 
-  // Extract gameId from URL params
+  // Extract parameters from URL - always call these hooks first
   const gameId = React.useMemo(() => {
     console.log('RosterGame URL params:', params);
-    if (params && 'gameId' in params && params.gameId) {
-      const id = parseInt(params.gameId as string);
+    if (params && params.gameId) {
+      const id = parseInt(params.gameId);
       console.log('Extracted gameId from URL:', id);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+
+  const teamId = React.useMemo(() => {
+    if (params && params.teamId) {
+      const id = parseInt(params.teamId);
       return isNaN(id) ? null : id;
     }
     return null;
@@ -53,13 +61,7 @@ export default function RosterGame() {
   });
 
   // Extract teamId from URL params
-  const teamId = React.useMemo(() => {
-    if (params && 'teamId' in params && params.teamId) {
-      const id = parseInt(params.teamId as string);
-      return isNaN(id) ? null : id;
-    }
-    return null;
-  }, [params]);
+
 
   // Fetch team-specific players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
