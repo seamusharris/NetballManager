@@ -159,9 +159,11 @@ class UnifiedStatisticsService {
     try {
       // Use POST method with proper authentication via apiRequest
       const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
-      console.log(`🔍 RAW BATCH STATS RESULT for games ${validIds}:`, JSON.stringify(result, null, 2));
+      console.log(`🔍 RAW BATCH STATS RESULT for games ${validIds}:`, result);
+      
+      // ALWAYS process through opponent perspective to ensure Matrix team gets stats
       const processedResult = await this.processStatsWithOpponentPerspective(result || {});
-      console.log(`✅ PROCESSED BATCH STATS RESULT:`, JSON.stringify(processedResult, null, 2));
+      console.log(`✅ PROCESSED BATCH STATS RESULT:`, processedResult);
       return processedResult;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
@@ -211,13 +213,15 @@ class UnifiedStatisticsService {
           teamStatsCompletion[teamId] = { hasOffensive, hasDefensive, total: teamStats.length };
         }
         
-        // Force opponent perspective for teams with 0 stats (Matrix team issue)
-        if (teamStatsCompletion[homeTeamId]?.total === 0) {
-          console.log(`🔧 FORCING stats generation for home team ${homeTeamId} (0 stats recorded)`);
+        // Check for teams with zero stats to force opponent perspective
+        const homeTeamStats = stats.filter(s => s.teamId === homeTeamId);
+        const awayTeamStats = stats.filter(s => s.teamId === awayTeamId);
+        
+        // Ensure teams with 0 stats get processed
+        if (!teamStatsCompletion[homeTeamId]) {
           teamStatsCompletion[homeTeamId] = { hasOffensive: false, hasDefensive: false, total: 0 };
         }
-        if (teamStatsCompletion[awayTeamId]?.total === 0) {
-          console.log(`🔧 FORCING stats generation for away team ${awayTeamId} (0 stats recorded)`);
+        if (!teamStatsCompletion[awayTeamId]) {
           teamStatsCompletion[awayTeamId] = { hasOffensive: false, hasDefensive: false, total: 0 };
         }
 
@@ -229,7 +233,7 @@ class UnifiedStatisticsService {
           console.log(`📊 Team ${teamId}: hasOffensive=${completion.hasOffensive}, hasDefensive=${completion.hasDefensive}, total=${completion.total}`);
           if (!completion.hasOffensive || !completion.hasDefensive || completion.total < 8) {
             // This team needs opponent perspective stats
-            console.log(`🚨 TEAM ${teamId} NEEDS OPPONENT PERSPECTIVE STATS!`);
+            console.log(`🚨 TEAM ${teamId} NEEDS OPPONENT PERSPECTIVE STATS! Completion:`, completion);
             const missingTeamId = teamId;
             const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
             const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);

@@ -31,7 +31,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
   );
 
   // Include timestamp in key to force refresh when needed - updated version for opponent perspective
-  const freshKey = forceFresh ? `fresh-${Date.now()}` : 'cached-v3-opponent-perspective';
+  const freshKey = forceFresh ? `fresh-${Date.now()}` : `cached-v4-opponent-${Date.now()}`;
 
   // Fetch batch game statistics
   const { 
@@ -41,7 +41,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     refetch,
     isStale
   } = useQuery({
-    queryKey: ['batchGameStats-v3-opponent', gameIdsKey, freshKey],
+    queryKey: ['batchGameStats-v4-opponent-force', gameIdsKey, freshKey],
     queryFn: async () => {
       console.log('🎯 BATCH HOOK CALLING statisticsService.getBatchGameStats with:', sortedGameIds);
       if (!sortedGameIds || sortedGameIds.length === 0) {
@@ -53,7 +53,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
       return result;
     },
     enabled: sortedGameIds.length > 0,
-    staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
+    staleTime: 0, // Force fresh data to test opponent perspective
     gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
     retry: CACHE_SETTINGS.MAX_RETRIES,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
