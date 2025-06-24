@@ -19,7 +19,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
-import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
+import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchClub } = useClub();
@@ -447,21 +447,15 @@ export default function Players() {
             {!teamPlayers || teamPlayers.length === 0 ? (
               <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
             ) : (
-              <SharedPlayerAvailability
+              <SelectablePlayerBox
                 players={teamPlayers}
-                availabilityData={Object.fromEntries(
-                  teamPlayers.map(player => [player.id, selectedPlayerIds.has(player.id) ? 'available' : 'unavailable'])
-                )}
-                onAvailabilityChange={(data) => {
-                  const newSelectedIds = new Set(
-                    Object.entries(data)
-                      .filter(([_, status]) => status === 'available')
-                      .map(([playerId, _]) => parseInt(playerId))
-                  );
-                  setSelectedPlayerIds(newSelectedIds);
-                }}
+                selectedPlayerIds={selectedPlayerIds}
+                onSelectionChange={setSelectedPlayerIds}
                 title="Current Team Players"
                 showQuickActions={true}
+                mode="team-management"
+                onRemovePlayer={handleRemovePlayer}
+                removingPlayerIds={removingPlayerIds}
                 variant="detailed"
               />
             )}
@@ -507,21 +501,15 @@ export default function Players() {
                 <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
               </p>
             ) : (
-              <SharedPlayerAvailability
+              <SelectablePlayerBox
                 players={availablePlayers}
-                availabilityData={Object.fromEntries(
-                  availablePlayers.map(player => [player.id, selectedPlayerIds.has(player.id) ? 'available' : 'unavailable'])
-                )}
-                onAvailabilityChange={(data) => {
-                  const newSelectedIds = new Set(
-                    Object.entries(data)
-                      .filter(([_, status]) => status === 'available')
-                      .map(([playerId, _]) => parseInt(playerId))
-                  );
-                  setSelectedPlayerIds(newSelectedIds);
-                }}
+                selectedPlayerIds={new Set()}
+                onSelectionChange={() => {}}
                 title="Available Players"
-                showQuickActions={true}
+                showQuickActions={false}
+                mode="team-management"
+                onAddPlayer={handleAddPlayer}
+                addingPlayerIds={addingPlayerIds}
                 variant="detailed"
               />
             )}

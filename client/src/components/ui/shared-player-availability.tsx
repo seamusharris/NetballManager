@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { getPlayerBoxContainerClasses, getPlayerBoxCheckboxStyles, getPlayerBoxB
 import { Badge } from '@/components/ui/badge';
 import { Zap, RotateCcw } from 'lucide-react';
 
-interface SharedPlayerAvailabilityProps {
+interface PlayerAvailabilityManagerProps {
   players: Player[];
   availabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>;
   onAvailabilityChange: (data: Record<number, 'available' | 'unavailable' | 'maybe'>) => void;
@@ -23,7 +24,7 @@ interface SharedPlayerAvailabilityProps {
   variant?: 'compact' | 'detailed';
 }
 
-export default function SharedPlayerAvailability({
+export function PlayerAvailabilityManager({
   players,
   availabilityData,
   onAvailabilityChange,
@@ -32,7 +33,7 @@ export default function SharedPlayerAvailability({
   className,
   gameId,
   variant = 'detailed'
-}: SharedPlayerAvailabilityProps) {
+}: PlayerAvailabilityManagerProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -139,20 +140,11 @@ export default function SharedPlayerAvailability({
       <CardContent>
         <div className={cn(
           "grid gap-4 mt-2",
-          variant === 'compact' 
-            ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5" 
-            : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
         )}>
           {sortedPlayers.map(player => {
             const playerColor = getPlayerColor(player);
             const isAvailable = availabilityData[player.id] === 'available';
-
-            const handleToggleAvailability = (playerId: number, newAvailability: boolean) => {
-              handlePlayerAvailabilityChange(
-                playerId,
-                newAvailability ? 'available' : 'unavailable'
-              );
-            };
 
             return (
               <div 
@@ -209,3 +201,5 @@ export default function SharedPlayerAvailability({
     </Card>
   );
 }
+
+export default PlayerAvailabilityManager;
