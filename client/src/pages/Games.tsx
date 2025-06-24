@@ -304,6 +304,14 @@ export default function Games() {
     queryFn: () => apiRequest('GET', '/api/teams/all')
   });
 
+  // Debug club context
+  console.log('Games page club context:', {
+    currentClub: currentClub?.name,
+    currentClubId,
+    isClubWideGamesView,
+    clubLoading
+  });
+
   // Generate page title with context
   const pageTitle = isClubWideGamesView 
     ? `All Games - ${currentClub?.name || 'Club'}` 

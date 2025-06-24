@@ -445,7 +445,7 @@ export class UnifiedGameScoreService {
       
       // Debug logging for games involving our teams
       if (clubTeamIds.length > 0 && (homeIsOurs || awayIsOurs)) {
-        console.log(`🔍 UNIFIED SERVICE - Game ${game.id} calculation:`, {
+        console.log(`🔍 UNIFIED SERVICE - Game ${game.id} result calculation:`, {
           homeTeamId: game.homeTeamId,
           awayTeamId: game.awayTeamId,
           clubTeamIds,
@@ -453,7 +453,8 @@ export class UnifiedGameScoreService {
           awayIsOurs,
           perspective,
           willUseHomePerspective: homeIsOurs,
-          willUseAwayPerspective: awayIsOurs
+          willUseAwayPerspective: awayIsOurs,
+          finalResult: homeIsOurs ? 'from-home-perspective' : 'from-away-perspective'
         });
       }
       
