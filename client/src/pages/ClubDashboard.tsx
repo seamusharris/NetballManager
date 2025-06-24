@@ -47,7 +47,7 @@ export default function ClubDashboard() {
     queryFn: () => apiClient.get('/api/games', {
       headers: { 'x-club-wide': 'true' }
     }),
-    enabled: !!currentClubId && !clubLoading,
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
     gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
   });
