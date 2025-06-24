@@ -31,7 +31,10 @@ export default function FixedPlayerAvailabilityManager({
   // Fetch availability data from API
   const { data: availabilityResponse, isLoading } = useQuery<{availablePlayerIds: number[]}>({
     queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
-    queryFn: () => apiClient.get(`/api/games/${gameId}/availability`),
+    queryFn: () => {
+      console.log('FixedPlayerAvailabilityManager: Fetching availability for game', gameId);
+      return apiClient.get(`/api/games/${gameId}/availability`);
+    },
     enabled: !!gameId,
     staleTime: 5 * 60 * 1000,
   });
@@ -46,6 +49,13 @@ export default function FixedPlayerAvailabilityManager({
   const availabilityData: Record<number, boolean> = {};
   if (players.length > 0) {
     const availableIds = availabilityResponse?.availablePlayerIds || [];
+    console.log('FixedPlayerAvailabilityManager: Processing availability', {
+      gameId,
+      totalPlayers: players.length,
+      availableIds: availableIds,
+      optimisticUpdates
+    });
+    
     players.forEach(player => {
       // Use optimistic update if available, otherwise use API data
       if (player.id in optimisticUpdates) {
