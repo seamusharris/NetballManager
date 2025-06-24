@@ -445,8 +445,15 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
   const [quarter, setQuarter] = useState(initialQuarter);
 
+  console.log('CourtPositionRoster received roster:', roster?.length, 'entries');
+
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
+    if (!roster || !Array.isArray(roster)) {
+      console.log('Roster is not an array:', roster);
+      return {};
+    }
+    
     return roster.reduce((acc, entry) => {
       if (!acc[entry.quarter]) acc[entry.quarter] = {};
       acc[entry.quarter][entry.position] = entry;
@@ -1283,13 +1290,15 @@ export default function GameDetails() {
   // Force refetch when component mounts or route changes
   useEffect(() => {
     if (gameId && !isNaN(gameId)) {
-      console.log("Loaded roster data:", roster);
+      console.log("Loaded roster data:", roster?.length, "entries");
+      console.log("Roster first entry:", roster?.[0]);
       console.log("Teams data:", { teams, isLoadingTeams, teamsLength: teams?.length });
       console.log("Current club:", currentClub);
+      console.log("Current team:", currentTeam);
       // Always refetch roster data when navigating to this page
       refetchRosters();
     }
-  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub]);
+  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub, roster, currentTeam]);
 
   // Fetch game stats
   const { 
@@ -1819,7 +1828,12 @@ export default function GameDetails() {
                   <CardTitle>Court Positions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {roster && roster.length > 0 ? (
+                  {console.log("Rendering roster section - roster length:", roster?.length, "isLoading:", isLoadingRoster)}
+                  {isLoadingRoster ? (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500">Loading roster...</p>
+                    </div>
+                  ) : roster && roster.length > 0 ? (
                     <CourtPositionRoster 
                       roster={roster} 
                       players={players || []}
@@ -1829,6 +1843,14 @@ export default function GameDetails() {
                     <div className="text-center py-10 border rounded-lg bg-gray-50">
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
+                      {currentTeam?.id && (
+                        <Button asChild className="mr-2">
+                          <Link to={`/roster/game/${gameId}`}>
+                            <ClipboardList className="mr-2 h-4 w-4" />
+                            Manage Roster
+                          </Link>
+                        </Button>
+                      )}
                       <Button asChild>
                         <Link to={`/availability/game/${gameId}`}>
                           <Edit className="mr-2 h-4 w-4" />
