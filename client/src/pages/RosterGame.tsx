@@ -33,7 +33,7 @@ export default function RosterGame() {
 
   // Fetch games using REST endpoint - Stage 3
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: [CACHE_KEYS.games, currentClub?.id, 'rest'],
+    queryKey: ['games', currentClub?.id, 'rest'],
     queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/games`),
     retry: 1,
     enabled: !!currentClub?.id
@@ -50,14 +50,14 @@ export default function RosterGame() {
 
   // Fetch team-specific players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
-    queryKey: [CACHE_KEYS.teamPlayers, teamId],
+    queryKey: ['teamPlayers', teamId],
     queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`),
     enabled: !!teamId
   });
 
   // Load availability for this game
   const { data: availabilityData, isLoading: availabilityLoading } = useQuery({
-    queryKey: [CACHE_KEYS.availability, gameId],
+    queryKey: ['availability', gameId],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/games/${gameId}/availability`);
       return response;

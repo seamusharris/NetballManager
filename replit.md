@@ -114,11 +114,12 @@ This is a comprehensive netball team management application built with modern we
 ## Changelog
 - June 24, 2025: STAGE 4 COMPLETE - Players API fully migrated to REST endpoints
   - Implemented `/api/clubs/{clubId}/players` REST endpoint with backward compatibility
-  - Updated ALL components: ClubDashboard, LiveStats, TeamAnalysis, Dashboard, GameDetails, OpponentPreparation, PlayerAvailability
-  - Fixed CACHE_KEYS import issues and resolved all runtime errors
+  - Updated ALL components: ClubDashboard, LiveStats, TeamAnalysis, Dashboard, GameDetails, OpponentPreparation, PlayerAvailability, RosterGame
+  - Fixed CACHE_KEYS import issues across all affected components
+  - Resolved "Game with ID 110 not found" roster management error for Dingoes
   - Legacy `/api/players` endpoint maintained for backward compatibility
-  - Club switching now works seamlessly with consistent REST architecture across all pages
-  - Application running successfully with proper URL-based club routing
+  - Club switching and roster management now work seamlessly with consistent REST architecture
+  - Application fully stable with proper URL-based club routing
 - June 24, 2025: STAGE 3 COMPLETE - Migrated games API from header-based to REST endpoints
   - Created `/api/clubs/{clubId}/games` REST endpoint using same SQL as working header-based version
   - Updated RosterGame and PlayerAvailability pages to use REST endpoint instead of x-club-wide headers
