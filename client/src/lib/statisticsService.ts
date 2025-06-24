@@ -223,8 +223,8 @@ class UnifiedStatisticsService {
             
             // Generate both offensive AND defensive stats for missing team
             for (const opponentStat of opponentStats) {
-            // Generate offensive stats from opponent's defensive positions
-            if (opponentStat.position === 'GD' || opponentStat.position === 'GK') {
+              // Generate offensive stats from opponent's defensive positions
+              if (opponentStat.position === 'GD' || opponentStat.position === 'GK') {
               const offensiveStat: GameStat = {
                 id: -Math.abs(gameId * 1000 + missingTeamId * 10 + opponentStat.quarter), 
                 gameId: gameId,
@@ -242,12 +242,12 @@ class UnifiedStatisticsService {
                 infringement: 0,
                 rating: null
               };
-              processedStats[gameId].push(offensiveStat);
-              console.log(`Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals`);
-            }
-            
-            // Generate defensive stats from opponent's offensive positions
-            if (opponentStat.position === 'GA' || opponentStat.position === 'GS') {
+                processedStats[gameId].push(offensiveStat);
+                console.log(`Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals`);
+              }
+              
+              // Generate defensive stats from opponent's offensive positions
+              if (opponentStat.position === 'GA' || opponentStat.position === 'GS') {
               const defensiveStat: GameStat = {
                 id: -Math.abs(gameId * 1000 + missingTeamId * 100 + opponentStat.quarter), // Different ID pattern for defensive stats
                 gameId: gameId,
@@ -265,8 +265,9 @@ class UnifiedStatisticsService {
                 infringement: 0,
                 rating: null
               };
-              processedStats[gameId].push(defensiveStat);
-              console.log(`Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals`);
+                processedStats[gameId].push(defensiveStat);
+                console.log(`Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals`);
+              }
             }
           }
         }
