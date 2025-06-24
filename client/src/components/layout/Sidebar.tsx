@@ -30,8 +30,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   const getNavLinks = () => {
     const clubWideLinks = [
       { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" />, section: 'club' },
-      { path: `/clubs/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
-      { path: `/clubs/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
     ];
 
     const adminLinks = [
