@@ -158,7 +158,9 @@ class UnifiedStatisticsService {
     try {
       // Use POST method with proper authentication via apiRequest
       const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
+      console.log(`Raw batch stats result:`, result);
       const processedResult = await this.processStatsWithOpponentPerspective(result || {});
+      console.log(`Processed batch stats result:`, processedResult);
       return processedResult;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
@@ -191,19 +193,36 @@ class UnifiedStatisticsService {
           continue; // Skip BYE games or incomplete data
         }
 
-        // Check which teams have recorded stats
+        // Check which teams have recorded stats and their completeness
         const teamsWithStats = new Set(stats.map(stat => stat.teamId));
-        const missingTeams = [homeTeamId, awayTeamId].filter(teamId => !teamsWithStats.has(teamId));
+        
+        // Check if teams have complete offensive AND defensive stats
+        const teamStatsCompletion = {};
+        for (const teamId of [homeTeamId, awayTeamId]) {
+          const teamStats = stats.filter(s => s.teamId === teamId);
+          const hasOffensive = teamStats.some(s => s.position === 'GA' || s.position === 'GS');
+          const hasDefensive = teamStats.some(s => s.position === 'GD' || s.position === 'GK');
+          teamStatsCompletion[teamId] = { hasOffensive, hasDefensive, total: teamStats.length };
+        }
 
-        // Generate stats for missing teams from opponent's defensive data
-        for (const missingTeamId of missingTeams) {
-          const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
-          const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
+        console.log(`Game ${gameId}: Team stats completion:`, teamStatsCompletion);
 
-          console.log(`Generating stats for missing team ${missingTeamId} from opponent ${opponentTeamId} defensive data`);
+        // Generate missing stats for teams that have incomplete data
+        for (const teamId of [homeTeamId, awayTeamId]) {
+          const completion = teamStatsCompletion[teamId];
+          if (!completion.hasOffensive || !completion.hasDefensive || completion.total < 8) {
+            // This team needs opponent perspective stats
+            const missingTeamId = teamId;
+            const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
+            const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
 
-          // Generate both offensive AND defensive stats for missing team
-          for (const opponentStat of opponentStats) {
+            console.log(`Generating missing stats for team ${missingTeamId} from opponent ${opponentTeamId} with ${opponentStats.length} stats`);
+
+            // Clear existing stats for this team to avoid duplicates
+            processedStats[gameId] = processedStats[gameId].filter(s => s.teamId !== missingTeamId);
+            
+            // Generate both offensive AND defensive stats for missing team
+            for (const opponentStat of opponentStats) {
             // Generate offensive stats from opponent's defensive positions
             if (opponentStat.position === 'GD' || opponentStat.position === 'GK') {
               const offensiveStat: GameStat = {
