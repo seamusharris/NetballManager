@@ -15,11 +15,10 @@ import { usePlayerAvailability } from '@/hooks/use-player-availability';
 import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
-  const params = useParams();
-  const [, navigate] = useLocation();
+  const params = useLocation()[1];
   const { currentClub, isInitialized } = useClub();
 
-  // Extract gameId and teamId from URL params
+  // Extract parameters from URL - always call these hooks
   const gameId = React.useMemo(() => {
     console.log('PlayerAvailability URL params:', params);
     if (params && 'gameId' in params && params.gameId) {
@@ -38,7 +37,9 @@ export default function PlayerAvailability() {
     return null;
   }, [params]);
 
-  // Fetch ONLY the specific game we need
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY - no early returns before this point
+  
+  // Fetch specific game
   const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
     queryKey: ['game', gameId],
     queryFn: async () => {
@@ -49,10 +50,10 @@ export default function PlayerAvailability() {
     },
     retry: 2,
     enabled: !!gameId,
-    staleTime: 30000 // 30 seconds
+    staleTime: 30000
   });
 
-  // Fetch team players for availability
+  // Fetch team players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['teams', teamId, 'players'],
     queryFn: async () => {
@@ -64,6 +65,9 @@ export default function PlayerAvailability() {
     enabled: !!teamId && isInitialized
   });
 
+  // Load availability data - always call this hook
+  const { data: availabilityData, isLoading: availabilityLoading } = usePlayerAvailability(gameId || 0, teamId || undefined);
+
   // Debug logging
   console.log('PlayerAvailability Debug:', {
     gameId,
@@ -74,11 +78,16 @@ export default function PlayerAvailability() {
     hasError: gameError || playersError
   });
 
+  // NOW we can do conditional rendering - all hooks have been called
   const isLoading = playersLoading || gameLoading;
   const hasError = playersError || gameError;
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        Loading game and player data...
+      </div>
+    );
   }
 
   if (hasError) {
@@ -112,10 +121,7 @@ export default function PlayerAvailability() {
     );
   }
 
-  // Load availability data using the hook - MUST be called unconditionally
-  const { data: availabilityData, isLoading: availabilityLoading } = usePlayerAvailability(gameId || 0, teamId || undefined);
-
-  if (!selectedGame && !isLoading) {
+  if (!selectedGame) {
     return (
       <PageTemplate
         title="Player Availability"
@@ -135,48 +141,20 @@ export default function PlayerAvailability() {
     );
   }
 
-  const pageActions = (
-    <div className="flex gap-2">
-      <Button
-        variant="outline"
-        onClick={() => navigate(`/team/${teamId}/roster/${gameId}`)}
-        className="flex items-center gap-2"
-      >
-        Roster Management
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-
   return (
     <PageTemplate
       title="Player Availability"
-      subtitle={`Set player availability for ${selectedGame.homeTeamName} vs ${selectedGame.awayTeamName || 'BYE'}`}
-      actions={pageActions}
+      subtitle={`${selectedGame?.homeTeamName} vs ${selectedGame?.awayTeamName || 'BYE'} - ${selectedGame?.date}`}
+      breadcrumbs={<DynamicBreadcrumbs />}
     >
       <Helmet>
-        <title>{`Player Availability - ${selectedGame?.homeTeamName || 'Team'} vs ${selectedGame?.awayTeamName || 'TBD'}`}</title>
+        <title>Player Availability - Game {gameId} | Netball Manager</title>
+        <meta name="description" content={`Manage player availability for game ${gameId}`} />
       </Helmet>
-      {/* Breadcrumbs */}
-      <DynamicBreadcrumbs />
-      {selectedGame && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div>
-                <h3 className="font-semibold text-lg">{selectedGame.homeTeamName} vs {selectedGame.awayTeamName || 'BYE'}</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>{new Date(selectedGame.date).toLocaleDateString()} at {selectedGame.time}</span>
-                  {selectedGame.round && <span>• Round {selectedGame.round}</span>}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      
       <FixedPlayerAvailabilityManager
         gameId={gameId}
+        teamId={teamId}
         players={players}
         games={[selectedGame].filter(Boolean)}
         hideGameSelection={true}
