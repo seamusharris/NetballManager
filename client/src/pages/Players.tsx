@@ -19,6 +19,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
+import { SharedPlayerAvailability } from '@/components/shared/SharedPlayerAvailability';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchClub } = useClub();
@@ -38,6 +39,7 @@ export default function Players() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [location, navigate] = useLocation();
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
 
   // Handle club ID from URL parameter (but not team ID)
   useEffect(() => {
@@ -445,22 +447,23 @@ export default function Players() {
             {!teamPlayers || teamPlayers.length === 0 ? (
               <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
             ) : (
-              <div className="flex flex-col gap-3 max-w-2xl">
-                {teamPlayers.map((player) => (
-                  <SelectablePlayerBox
-                    key={player.id}
-                    player={player}
-                    isSelected={true}
-                    onSelectionChange={(playerId, selected) => {
-                      if (!selected) {
-                        handleRemovePlayer(playerId);
-                      }
-                    }}
-                    size="md"
-                    showPositions={true}
-                  />
-                ))}
-              </div>
+              <SharedPlayerAvailability
+                players={teamPlayers}
+                availabilityData={Object.fromEntries(
+                  teamPlayers.map(player => [player.id, selectedPlayerIds.has(player.id) ? 'available' : 'unavailable'])
+                )}
+                onAvailabilityChange={(data) => {
+                  const newSelectedIds = new Set(
+                    Object.entries(data)
+                      .filter(([_, status]) => status === 'available')
+                      .map(([playerId, _]) => parseInt(playerId))
+                  );
+                  setSelectedPlayerIds(newSelectedIds);
+                }}
+                title="Current Team Players"
+                showQuickActions={true}
+                variant="detailed"
+              />
             )}
           </ContentSection>
 
@@ -504,22 +507,23 @@ export default function Players() {
                 <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
               </p>
             ) : (
-              <div className="flex flex-col gap-3 max-w-2xl">
-                {availablePlayers.map((player) => (
-                  <SelectablePlayerBox
-                    key={player.id}
-                    player={player}
-                    isSelected={false}
-                    onSelectionChange={(playerId, selected) => {
-                      if (selected) {
-                        handleAddPlayer(playerId);
-                      }
-                    }}
-                    size="md"
-                    showPositions={true}
-                  />
-                ))}
-              </div>
+              <SharedPlayerAvailability
+                players={availablePlayers}
+                availabilityData={Object.fromEntries(
+                  availablePlayers.map(player => [player.id, selectedPlayerIds.has(player.id) ? 'available' : 'unavailable'])
+                )}
+                onAvailabilityChange={(data) => {
+                  const newSelectedIds = new Set(
+                    Object.entries(data)
+                      .filter(([_, status]) => status === 'available')
+                      .map(([playerId, _]) => parseInt(playerId))
+                  );
+                  setSelectedPlayerIds(newSelectedIds);
+                }}
+                title="Available Players"
+                showQuickActions={true}
+                variant="detailed"
+              />
             )}
           </ContentSection>
         </PageTemplate>
