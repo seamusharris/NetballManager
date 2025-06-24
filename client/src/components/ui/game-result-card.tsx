@@ -221,22 +221,10 @@ export default function GameResultCard({
       return scores?.result || 'unknown';
     }
 
-    // Calculate result from current team's perspective
-    let ourScore = 0;
-    let theirScore = 0;
-
-    if (game.homeTeamId === currentTeamId) {
-      // We are the home team
-      ourScore = scores.finalScore.for;
-      theirScore = scores.finalScore.against;
-    } else if (game.awayTeamId === currentTeamId) {
-      // We are the away team - need to flip the scores
-      ourScore = scores.finalScore.against;
-      theirScore = scores.finalScore.for;
-    } else {
-      // Not our team, use the calculated result as-is
-      return scores.result;
-    }
+    // The memoized scores calculation already handles perspective correctly
+    // finalScore.for = our score, finalScore.against = their score
+    const ourScore = scores.finalScore.for;
+    const theirScore = scores.finalScore.against;
 
     if (ourScore > theirScore) return 'win';
     if (ourScore < theirScore) return 'loss';
