@@ -287,12 +287,14 @@ export default function DragDropRosterManager({
   const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
     queryKey: teamId ? ['teams', teamId, 'games', gameId, 'roster'] : ['rosters', gameId],
     queryFn: () => {
-      // Try to get team ID from gameInfo if available
+      // Use team-based endpoint if teamId is available (preferred approach)
       const teamIdToUse = teamId || gameInfo?.homeTeamId;
 
       if (teamIdToUse) {
-        return apiClient.get(`/api/teams/${teamIdToUse}/roster/${gameId}`);
+        console.log(`DragDropRosterManager: Loading roster via team endpoint /api/teams/${teamIdToUse}/games/${gameId}/rosters`);
+        return apiClient.get(`/api/teams/${teamIdToUse}/games/${gameId}/rosters`);
       } else {
+        console.log(`DragDropRosterManager: Loading roster via game endpoint /api/games/${gameId}/rosters`);
         return apiClient.get(`/api/games/${gameId}/rosters`);
       }
     },
@@ -419,10 +421,20 @@ export default function DragDropRosterManager({
 
       console.log(`DragDropRosterManager: Saving ${rosterData.length} roster entries for game ${gameId}`);
 
-      // Use batch save endpoint to save all roster data in one request
-      await apiClient.post(`/api/games/${gameId}/rosters/batch`, {
-        rosters: rosterData
-      });
+      // Use team-based batch save endpoint when teamId is available
+      const teamIdToUse = teamId || gameInfo?.homeTeamId;
+      
+      if (teamIdToUse) {
+        console.log(`DragDropRosterManager: Saving via team endpoint /api/teams/${teamIdToUse}/games/${gameId}/rosters/batch`);
+        await apiClient.post(`/api/teams/${teamIdToUse}/games/${gameId}/rosters/batch`, {
+          rosters: rosterData
+        });
+      } else {
+        console.log(`DragDropRosterManager: Saving via game endpoint /api/games/${gameId}/rosters/batch`);
+        await apiClient.post(`/api/games/${gameId}/rosters/batch`, {
+          rosters: rosterData
+        });
+      }
 
       console.log('DragDropRosterManager: All roster entries saved successfully via batch');
 
