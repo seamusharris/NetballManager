@@ -45,6 +45,7 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
   console.log('RecentGames: Received centralizedScores (batch format):', centralizedScores);
   console.log('RecentGames: Recent games count:', recentGames.length);
   console.log('RecentGames: Recent games IDs:', recentGames.map(g => g.id));
+  console.log('RecentGames: Games involved teams:', recentGames.map(g => `${g.id}: ${g.homeTeamId} vs ${g.awayTeamId}`));
 
   // Transform and validate batch scores for each game
   const transformedScores = {};
