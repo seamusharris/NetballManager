@@ -207,10 +207,11 @@ export default function GameResultCard({
     return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
-  // Get result styling
-  const isWin = scores && scores.result === 'win';
-  const isLoss = scores && scores.result === 'loss';
-  const isDraw = scores && scores.result === 'draw';
+  // Get result styling using perspective-aware calculation
+  const actualResult = getGameResultFromPerspective();
+  const isWin = actualResult === 'win';
+  const isLoss = actualResult === 'loss';
+  const isDraw = actualResult === 'draw';
 
   const getResultClass = () => {
     if (isByeGame) return 'border-gray-500 bg-gray-50'; // check byes first
@@ -302,9 +303,27 @@ export default function GameResultCard({
     // For upcoming games, show dash
     if (isUpcoming) return "—";
 
-    // Show calculated scores if available
+    // Show calculated scores if available - always in Home-Away format
     if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
-      return `${scores.finalScore.for}-${scores.finalScore.against}`;
+      // For club-wide view or when showing home vs away, we need to determine actual home/away scores
+      let homeScore = 0;
+      let awayScore = 0;
+      
+      if (currentTeamId && game.homeTeamId === currentTeamId) {
+        // Current team is home team
+        homeScore = scores.finalScore.for;
+        awayScore = scores.finalScore.against;
+      } else if (currentTeamId && game.awayTeamId === currentTeamId) {
+        // Current team is away team - flip the scores
+        homeScore = scores.finalScore.against;
+        awayScore = scores.finalScore.for;
+      } else {
+        // No team context or different team - assume scores are already in home-away format
+        homeScore = scores.finalScore.for;
+        awayScore = scores.finalScore.against;
+      }
+      
+      return `${homeScore}-${awayScore}`;
     }
 
     // Show status scores if no calculated scores but status scores exist
@@ -328,6 +347,33 @@ export default function GameResultCard({
 
     // Always show Home vs Away format
     return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
+  };
+
+  const getGameResultFromPerspective = () => {
+    if (!scores || !scores.finalScore || !currentTeamId) {
+      return scores?.result || 'unknown';
+    }
+
+    // Calculate result from current team's perspective
+    let ourScore = 0;
+    let theirScore = 0;
+
+    if (game.homeTeamId === currentTeamId) {
+      // We are the home team
+      ourScore = scores.finalScore.for;
+      theirScore = scores.finalScore.against;
+    } else if (game.awayTeamId === currentTeamId) {
+      // We are the away team - need to flip the scores
+      ourScore = scores.finalScore.against;
+      theirScore = scores.finalScore.for;
+    } else {
+      // Not our team, use the calculated result as-is
+      return scores.result;
+    }
+
+    if (ourScore > theirScore) return 'win';
+    if (ourScore < theirScore) return 'loss';
+    return 'draw';
   };
 
   const CardContent = () => (
@@ -392,11 +438,35 @@ export default function GameResultCard({
               —
             </div>
           ) : scores ? (
-            <ScoreBadge 
-              teamScore={scores.finalScore.for} 
-              opponentScore={scores.finalScore.against}
-              result={scores.result}
-            />
+            (() => {
+              // Calculate proper home/away scores for display
+              let homeScore = 0;
+              let awayScore = 0;
+              let displayResult = actualResult;
+              
+              if (currentTeamId && game.homeTeamId === currentTeamId) {
+                // Current team is home team
+                homeScore = scores.finalScore.for;
+                awayScore = scores.finalScore.against;
+              } else if (currentTeamId && game.awayTeamId === currentTeamId) {
+                // Current team is away team - flip the scores for display
+                homeScore = scores.finalScore.against;
+                awayScore = scores.finalScore.for;
+              } else {
+                // No team context - use scores as-is
+                homeScore = scores.finalScore.for;
+                awayScore = scores.finalScore.against;
+                displayResult = scores.result || 'unknown';
+              }
+              
+              return (
+                <ScoreBadge 
+                  teamScore={homeScore} 
+                  opponentScore={awayScore}
+                  result={displayResult}
+                />
+              );
+            })()
           ) : (
             <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
               —

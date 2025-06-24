@@ -192,50 +192,58 @@ class GameScoreService {
       awayTeamId = teamIds[1];
     }
 
+    // Calculate actual home and away totals first
+    let homeTotal = 0;
+    let awayTotal = 0;
+    
     // Ensure we have scores for all 4 quarters
     for (let quarter = 1; quarter <= 4; quarter++) {
       // Find scores for this quarter for both teams
       const homeTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
       const awayTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
 
-      // Determine scores from the perspective of the current team
-      let teamScore: number;
-      let opponentScore: number;
+      homeTotal += homeTeamScore;
+      awayTotal += awayTeamScore;
 
-      // Use currentTeamId if provided, otherwise determine from available team IDs
-      const effectiveCurrentTeamId = currentTeamId || (teamIds.includes(homeTeamId!) ? homeTeamId : awayTeamId);
-
-      if (effectiveCurrentTeamId === homeTeamId) {
-        // Current team is home team - show from home perspective
-        teamScore = homeTeamScore;
-        opponentScore = awayTeamScore;
-      } else if (effectiveCurrentTeamId === awayTeamId) {
-        // Current team is away team - show from away perspective
-        teamScore = awayTeamScore;
-        opponentScore = homeTeamScore;
-      } else {
-        // Fallback: if current team doesn't match either, default to home perspective
-        teamScore = homeTeamScore;
-        opponentScore = awayTeamScore;
-      }
-
+      // For the quarter scores, we always store from home/away perspective initially
+      // The display logic will handle the team perspective
       quarterScores.push({
         quarter,
-        teamScore,
-        opponentScore
+        teamScore: homeTeamScore,
+        opponentScore: awayTeamScore
       });
     }
 
-    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+    // Return scores in a standardized format (home team = "for", away team = "against")
+    // The consuming component will handle perspective transformation
+    let finalTeamScore = homeTotal;
+    let finalOpponentScore = awayTotal;
+    let result: 'win' | 'loss' | 'draw' = homeTotal > awayTotal ? 'win' : 
+                                         homeTotal < awayTotal ? 'loss' : 'draw';
 
-    const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                   totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
+    // If we have a current team context, adjust the perspective
+    if (currentTeamId) {
+      if (currentTeamId === awayTeamId) {
+        // Current team is away team - flip the perspective
+        finalTeamScore = awayTotal;
+        finalOpponentScore = homeTotal;
+        result = awayTotal > homeTotal ? 'win' : 
+                awayTotal < homeTotal ? 'loss' : 'draw';
+        
+        // Also flip quarter scores for away team perspective
+        quarterScores.forEach(q => {
+          const temp = q.teamScore;
+          q.teamScore = q.opponentScore;
+          q.opponentScore = temp;
+        });
+      }
+      // If current team is home team, scores are already correct
+    }
 
     return {
       quarterScores,
-      totalTeamScore,
-      totalOpponentScore,
+      totalTeamScore: finalTeamScore,
+      totalOpponentScore: finalOpponentScore,
       result
     };
   }
