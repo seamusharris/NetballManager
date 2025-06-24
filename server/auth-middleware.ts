@@ -177,6 +177,79 @@ export function requireGameAccess(requireEditAccess = false) {
 }
 
 /**
+ * Middleware to check if user can access a specific game via team context
+ * This is the new team-based approach for REST API consistency
+ */
+export function requireTeamGameAccess(requireEditAccess = false) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const teamId = req.params.teamId;
+      const gameId = req.params.gameId;
+
+      if (!teamId || !gameId) {
+        return res.status(400).json({ error: 'Team ID and Game ID required' });
+      }
+
+      if (!req.user?.currentClubId) {
+        return res.status(403).json({ error: 'Club context required' });
+      }
+
+      // Verify team belongs to user's club and is involved in the game
+      const accessResult = await db.execute(sql`
+        SELECT 
+          g.id,
+          g.home_team_id,
+          g.away_team_id,
+          t.club_id as team_club_id,
+          ht.club_id as home_club_id,
+          at.club_id as away_club_id,
+          gp.can_edit_stats,
+          gp.can_view_detailed_stats
+        FROM games g
+        LEFT JOIN teams t ON t.id = ${teamId}
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN game_permissions gp ON g.id = gp.game_id AND gp.club_id = ${req.user.currentClubId}
+        WHERE g.id = ${gameId} AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId});
+      `);
+
+      if (accessResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found or team not involved in this game' });
+      }
+
+      const result = accessResult.rows[0];
+      const userClubId = req.user.currentClubId;
+
+      // Verify team belongs to user's club
+      if (result.team_club_id !== userClubId) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Check if user's club has access to this game
+      const hasDirectAccess = result.home_club_id === userClubId || result.away_club_id === userClubId;
+      const hasPermissionAccess = result.can_view_detailed_stats || result.can_edit_stats;
+
+      if (!hasDirectAccess && !hasPermissionAccess) {
+        return res.status(403).json({ error: 'Access denied to this game' });
+      }
+
+      // Check edit access if required
+      if (requireEditAccess) {
+        const canEdit = hasDirectAccess || result.can_edit_stats;
+        if (!canEdit) {
+          return res.status(403).json({ error: 'Edit access denied for this game' });
+        }
+      }
+
+      next();
+    } catch (error) {
+      console.error('Team game access check error:', error);
+      res.status(500).json({ error: 'Team game authorization check failed' });
+    }
+  };
+}
+
+/**
  * Basic authentication middleware - ensures user is authenticated
  */
 export function requireAuth() {
