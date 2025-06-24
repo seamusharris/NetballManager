@@ -36,6 +36,7 @@ interface ClubContextType {
   currentClubId: number | null;
   currentTeamId: number | null;
   currentTeam: Team | null;
+  currentClubTeams: Team[];
   userClubs: UserClubAccess[];
   clubTeams: Team[];
   switchClub: (clubId: number) => void;

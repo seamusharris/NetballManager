@@ -211,7 +211,8 @@ export class UnifiedGameScoreService {
   private static calculateFromOfficialScores(
     game: Game, 
     officialScores: OfficialScore[], 
-    perspective: number | 'club-wide'
+    perspective: number | 'club-wide',
+    clubTeamIds: number[] = []
   ): GameScoreResult {
     if (!officialScores.length) {
       return {
@@ -238,7 +239,7 @@ export class UnifiedGameScoreService {
     const quarterBreakdown: QuarterScore[] = [];
 
     // Determine team IDs based on perspective
-    const { ourTeamId, theirTeamId } = this.getTeamIds(game, perspective);
+    const { ourTeamId, theirTeamId } = this.getTeamIds(game, perspective, clubTeamIds);
 
     // Debug logging for Team 128 games regardless of perspective
     if (game.homeTeamId === 128 || game.awayTeamId === 128) {
@@ -326,7 +327,8 @@ export class UnifiedGameScoreService {
 
   private static calculateFromStatusScores(
     game: Game, 
-    perspective: number | 'club-wide'
+    perspective: number | 'club-wide',
+    clubTeamIds: number[] = []
   ): GameScoreResult {
     // Check if we have valid status scores
     if (typeof game.statusTeamGoals !== 'number' || typeof game.statusOpponentGoals !== 'number') {
@@ -405,7 +407,7 @@ export class UnifiedGameScoreService {
     };
   }
 
-  private static getTeamIds(game: Game, perspective: number | 'club-wide'): { ourTeamId: number; theirTeamId: number } {
+  private static getTeamIds(game: Game, perspective: number | 'club-wide', clubTeamIds: number[] = []): { ourTeamId: number; theirTeamId: number } {
     if (typeof perspective === 'number') {
       // Team perspective - ensure perspective team is always returned as ourTeamId
       if (game.homeTeamId === perspective) {
@@ -421,8 +423,24 @@ export class UnifiedGameScoreService {
       }
     }
 
-    // Club-wide perspective - maintain home vs away format for display consistency
-    // But for game result calculations, we need to consider the actual team context
+    // Club-wide perspective - determine which team belongs to our club
+    if (clubTeamIds.length > 0) {
+      if (clubTeamIds.includes(game.homeTeamId || 0)) {
+        // Home team is ours
+        return { 
+          ourTeamId: game.homeTeamId || 0, 
+          theirTeamId: game.awayTeamId || 0 
+        };
+      } else if (clubTeamIds.includes(game.awayTeamId || 0)) {
+        // Away team is ours
+        return { 
+          ourTeamId: game.awayTeamId || 0, 
+          theirTeamId: game.homeTeamId || 0 
+        };
+      }
+    }
+
+    // Fallback to home vs away format
     return { 
       ourTeamId: game.homeTeamId || 0, 
       theirTeamId: game.awayTeamId || 0 
