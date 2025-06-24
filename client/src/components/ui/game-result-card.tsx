@@ -74,27 +74,98 @@ export default function GameResultCard({
         const hasFixedScores = game.statusTeamGoals !== null && game.statusTeamGoals !== undefined && 
                               game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined;
 
-        if (hasFixedScores || officialScores.length > 0) {
-          // Use the gameScoreService to properly calculate scores with game context
-          const gameScores = gameScoreService.calculateGameScoresSync(
-            [], // gameStats - not needed for official scores
-            game.statusName, // game status
-            { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
-            game.isInterClub, // is inter club
-            game.homeTeamId, // proper home team ID
-            game.awayTeamId, // proper away team ID
-            currentTeamId, // current team context
-            officialScores // official scores
-          );
+        if (hasFixedScores) {
+          // For fixed scores, we need to determine perspective based on team context
+          let ourScore = 0;
+          let theirScore = 0;
+          let result = 'unknown';
 
-          const scoreType = hasFixedScores ? 'fixed' : 'official';
-          const scoreCount = hasFixedScores ? 'status scores' : `${officialScores.length} score entries`;
-          console.log(`GameResultCard ${game.id}: ${scoreType} scores calculated - ${gameScores.totalTeamScore}-${gameScores.totalOpponentScore} (${gameScores.result}) from ${scoreCount}`);
+          if (currentTeamId) {
+            // Determine if we're home or away team
+            if (game.homeTeamId === currentTeamId) {
+              ourScore = game.statusTeamGoals || 0;
+              theirScore = game.statusOpponentGoals || 0;
+            } else if (game.awayTeamId === currentTeamId) {
+              ourScore = game.statusOpponentGoals || 0;
+              theirScore = game.statusTeamGoals || 0;
+            } else {
+              // Fallback for club-wide view - show home vs away
+              ourScore = game.statusTeamGoals || 0;
+              theirScore = game.statusOpponentGoals || 0;
+            }
+
+            // Calculate result from our perspective
+            if (ourScore > theirScore) result = 'win';
+            else if (ourScore < theirScore) result = 'loss';
+            else result = 'draw';
+          }
+
+          console.log(`GameResultCard ${game.id}: fixed scores calculated - ${ourScore}-${theirScore} (${result}) from status scores`);
 
           return {
-            quarterScores: gameScores.quarterScores,
-            finalScore: { for: gameScores.totalTeamScore, against: gameScores.totalOpponentScore },
-            result: gameScores.result
+            quarterScores: [],
+            finalScore: { for: ourScore, against: theirScore },
+            result: result
+          };
+        } else if (officialScores.length > 0) {
+          // For official scores, calculate from team perspective
+          let ourTotalScore = 0;
+          let theirTotalScore = 0;
+          const quarterBreakdown = [];
+
+          // Group scores by quarter
+          const scoresByQuarter = {};
+          officialScores.forEach(score => {
+            if (!scoresByQuarter[score.quarter]) {
+              scoresByQuarter[score.quarter] = {};
+            }
+            scoresByQuarter[score.quarter][score.teamId] = score.score;
+          });
+
+          // Calculate totals and quarter breakdown
+          Object.keys(scoresByQuarter).forEach(quarter => {
+            const quarterScores = scoresByQuarter[quarter];
+            let ourQuarterScore = 0;
+            let theirQuarterScore = 0;
+
+            if (currentTeamId) {
+              // Get our score and opponent score for this quarter
+              ourQuarterScore = quarterScores[currentTeamId] || 0;
+              
+              // Find opponent's score (any team that's not us)
+              Object.keys(quarterScores).forEach(teamId => {
+                if (parseInt(teamId) !== currentTeamId) {
+                  theirQuarterScore += quarterScores[teamId] || 0;
+                }
+              });
+            } else {
+              // Club-wide view: use home vs away perspective
+              ourQuarterScore = quarterScores[game.homeTeamId] || 0;
+              theirQuarterScore = quarterScores[game.awayTeamId] || 0;
+            }
+
+            ourTotalScore += ourQuarterScore;
+            theirTotalScore += theirQuarterScore;
+
+            quarterBreakdown.push({
+              quarter: parseInt(quarter),
+              teamScore: ourQuarterScore,
+              opponentScore: theirQuarterScore
+            });
+          });
+
+          // Calculate result
+          let result = 'unknown';
+          if (ourTotalScore > theirTotalScore) result = 'win';
+          else if (ourTotalScore < theirTotalScore) result = 'loss';
+          else result = 'draw';
+
+          console.log(`GameResultCard ${game.id}: official scores calculated - ${ourTotalScore}-${theirTotalScore} (${result}) from ${officialScores.length} score entries`);
+
+          return {
+            quarterScores: quarterBreakdown,
+            finalScore: { for: ourTotalScore, against: theirTotalScore },
+            result: result
           };
         }
       }
@@ -123,17 +194,17 @@ export default function GameResultCard({
       return 'Bye';
     }
 
-    // For inter-club games, determine opponent based on current team
-    if (game.isInterClub && currentTeamId) {
+    // For team-specific context, show opponent
+    if (currentTeamId) {
       if (game.homeTeamId === currentTeamId) {
-        return game.awayTeamName || 'Unknown';
+        return `vs ${game.awayTeamName || 'Unknown'}`;
       } else if (game.awayTeamId === currentTeamId) {
-        return game.homeTeamName || 'Unknown';
+        return `vs ${game.homeTeamName || 'Unknown'}`;
       }
     }
 
-    // Default fallback
-    return game.awayTeamName || game.homeTeamName || 'Unknown Opponent';
+    // For club-wide view or no team context, show both teams
+    return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
   // Get result styling
@@ -272,7 +343,7 @@ export default function GameResultCard({
       {/* Left side - Opponent and details */}
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-gray-800 truncate text-base">
-          {isByeGame ? "Bye" : `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`}
+          {isByeGame ? "Bye" : getOpponentName()}
         </div>
 
         {/* Details row */}
