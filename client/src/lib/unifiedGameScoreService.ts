@@ -262,7 +262,6 @@ export class UnifiedGameScoreService {
     // Debug logging for Team 128 games regardless of perspective
     if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 UNIFIED SERVICE - Team 128 official scores for game ${game.id}:`, {
-        perspective,
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
         ourTeamId,
