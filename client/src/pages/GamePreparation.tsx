@@ -1384,86 +1384,101 @@ export default function GamePreparation() {
                         </div>
 
                         {/* Season Position Performance */}
-                        {seasonGames.length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some(gameId => seasonBatchStats[gameId]?.length > 0) && (
-                          <Card className="mt-6">
-                            <CardHeader>
-                              <CardTitle>Season Position Performance ({game?.seasonName || 'Current Season'})</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              {(() => {
-                                // Calculate position-based statistics using shared utility
-                                const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats, currentTeamId);
-                                console.log('Season position averages calculated:', positionAverages);
-                                
-                                if (positionAverages.gamesWithPositionStats === 0) {
-                                  return (
-                                    <div className="text-center py-8">
-                                      <div className="text-gray-500">No position statistics available for season games</div>
-                                      <div className="text-xs text-gray-400 mt-2">
-                                        Season games: {seasonGames.length}, Games with stats: {positionAverages.gamesWithPositionStats}
-                                      </div>
-                                    </div>
-                                  );
-                                }
-
-                                // Calculate quarter-by-quarter breakdown
-                                const quarterBreakdown = seasonGames
-                                  .filter(game => game.statusAllowsStatistics && seasonBatchStats[game.id])
-                                  .reduce((quarters: any[], game) => {
-                                    const gameStats = seasonBatchStats[game.id] || [];
-                                    const teamStats = gameStats.filter(stat => Number(stat.teamId) === Number(currentTeamId));
-
-                                    // Group by quarter
-                                    [1, 2, 3, 4].forEach(quarter => {
-                                      const quarterStats = teamStats.filter(stat => stat.quarter === quarter);
-                                      const existingQuarter = quarters.find(q => q.quarter === quarter);
-
-                                      const gsGoals = quarterStats.filter(s => s.position === 'GS').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
-                                      const gaGoals = quarterStats.filter(s => s.position === 'GA').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
-                                      const gdGoals = quarterStats.filter(s => s.position === 'GD').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
-                                      const gkGoals = quarterStats.filter(s => s.position === 'GK').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
-
-                                      if (existingQuarter) {
-                                        existingQuarter.gsGoalsFor += gsGoals;
-                                        existingQuarter.gaGoalsFor += gaGoals;
-                                        existingQuarter.gdGoalsAgainst += gdGoals;
-                                        existingQuarter.gkGoalsAgainst += gkGoals;
-                                        existingQuarter.games += 1;
-                                      } else {
-                                        quarters.push({
-                                          quarter,
-                                          gsGoalsFor: gsGoals,
-                                          gaGoalsFor: gaGoals,
-                                          gdGoalsAgainst: gdGoals,
-                                          gkGoalsAgainst: gkGoals,
-                                          games: 1
-                                        });
-                                      }
-                                    });
-
-                                    return quarters;
-                                  }, [])
-                                  .map(q => ({
-                                    quarter: q.quarter,
-                                    gsGoalsFor: q.games > 0 ? q.gsGoalsFor / q.games : 0,
-                                    gaGoalsFor: q.games > 0 ? q.gaGoalsFor / q.games : 0,
-                                    gdGoalsAgainst: q.games > 0 ? q.gdGoalsAgainst / q.games : 0,
-                                    gkGoalsAgainst: q.games > 0 ? q.gkGoalsAgainst / q.games : 0
-                                  }))
-                                  .sort((a, b) => a.quarter - b.quarter);
-
+                        <Card className="mt-6">
+                          <CardHeader>
+                            <CardTitle>Season Position Performance ({game?.seasonName || 'Current Season'})</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {(() => {
+                              if (loadingSeasonStats) {
                                 return (
-                                  <AttackDefenseDisplay
-                                    averages={positionAverages}
-                                    label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`}
-                                    showQuarterBreakdown={true}
-                                    quarterData={quarterBreakdown}
-                                  />
+                                  <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                                    <p className="text-sm text-muted-foreground">Loading season position stats...</p>
+                                  </div>
                                 );
-                              })()}
-                            </CardContent>
-                          </Card>
-                        )}
+                              }
+
+                              if (seasonGames.length === 0) {
+                                return (
+                                  <div className="text-center py-8">
+                                    <div className="text-gray-500">No season games available</div>
+                                  </div>
+                                );
+                              }
+
+                              // Calculate position-based statistics using shared utility
+                              const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats || {}, currentTeamId);
+                              console.log('Season position averages calculated:', positionAverages);
+                              
+                              if (positionAverages.gamesWithPositionStats === 0) {
+                                return (
+                                  <div className="text-center py-8">
+                                    <div className="text-gray-500">No position statistics available for season games</div>
+                                    <div className="text-xs text-gray-400 mt-2">
+                                      Season games: {seasonGames.length}, Games with stats: {positionAverages.gamesWithPositionStats}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              // Calculate quarter-by-quarter breakdown
+                              const quarterBreakdown = seasonGames
+                                .filter(game => game.statusIsCompleted && seasonBatchStats && seasonBatchStats[game.id])
+                                .reduce((quarters: any[], game) => {
+                                  const gameStats = seasonBatchStats[game.id] || [];
+                                  const teamStats = gameStats.filter(stat => Number(stat.teamId) === Number(currentTeamId));
+
+                                  // Group by quarter
+                                  [1, 2, 3, 4].forEach(quarter => {
+                                    const quarterStats = teamStats.filter(stat => stat.quarter === quarter);
+                                    const existingQuarter = quarters.find(q => q.quarter === quarter);
+
+                                    const gsGoals = quarterStats.filter(s => s.position === 'GS').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                    const gaGoals = quarterStats.filter(s => s.position === 'GA').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                    const gdGoals = quarterStats.filter(s => s.position === 'GD').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+                                    const gkGoals = quarterStats.filter(s => s.position === 'GK').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+
+                                    if (existingQuarter) {
+                                      existingQuarter.gsGoalsFor += gsGoals;
+                                      existingQuarter.gaGoalsFor += gaGoals;
+                                      existingQuarter.gdGoalsAgainst += gdGoals;
+                                      existingQuarter.gkGoalsAgainst += gkGoals;
+                                      existingQuarter.games += 1;
+                                    } else {
+                                      quarters.push({
+                                        quarter,
+                                        gsGoalsFor: gsGoals,
+                                        gaGoalsFor: gaGoals,
+                                        gdGoalsAgainst: gdGoals,
+                                        gkGoalsAgainst: gkGoals,
+                                        games: 1
+                                      });
+                                    }
+                                  });
+
+                                  return quarters;
+                                }, [])
+                                .map(q => ({
+                                  quarter: q.quarter,
+                                  gsGoalsFor: q.games > 0 ? q.gsGoalsFor / q.games : 0,
+                                  gaGoalsFor: q.games > 0 ? q.gaGoalsFor / q.games : 0,
+                                  gdGoalsAgainst: q.games > 0 ? q.gdGoalsAgainst / q.games : 0,
+                                  gkGoalsAgainst: q.games > 0 ? q.gkGoalsAgainst / q.games : 0
+                                }))
+                                .sort((a, b) => a.quarter - b.quarter);
+
+                              return (
+                                <AttackDefenseDisplay
+                                  averages={positionAverages}
+                                  label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`}
+                                  showQuarterBreakdown={true}
+                                  quarterData={quarterBreakdown}
+                                />
+                              );
+                            })()}
+                          </CardContent>
+                        </Card>
                       </>
                     ) : (
                       <div className="text-center py-8">
