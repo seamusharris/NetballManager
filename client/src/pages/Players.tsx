@@ -131,7 +131,7 @@ export default function Players() {
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
       const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being added
@@ -173,7 +173,7 @@ export default function Players() {
 
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
@@ -187,7 +187,7 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
@@ -195,13 +195,13 @@ export default function Players() {
   // Standardized player creation mutation that handles both club and team contexts
   const createPlayer = useMutation({
     mutationFn: async (playerData: any) => {
-      if (!currentClub?.id) {
+      if (!club?.id) {
         throw new Error('No club selected');
       }
 
       // Prepare headers with club context and optional team context
       const headers: Record<string, string> = {
-        'x-current-club-id': currentClub.id.toString()
+        'x-current-club-id': club.id.toString()
       };
 
       // Add team context if we're in team-specific view
@@ -259,7 +259,7 @@ export default function Players() {
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
       const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being removed
@@ -303,7 +303,7 @@ export default function Players() {
 
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
@@ -317,7 +317,7 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
@@ -326,8 +326,8 @@ export default function Players() {
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post('/api/players', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', clubId, 'players'] });
       toast({
         title: "Success",
         description: "Player created successfully",
@@ -345,8 +345,8 @@ export default function Players() {
   const updateMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', clubId, 'players'] });
       toast({
         title: "Success",
         description: "Player updated successfully",
@@ -364,8 +364,8 @@ export default function Players() {
   const deleteMutation = useMutation({
     mutationFn: (playerId: number) => apiClient.delete(`/api/players/${playerId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', clubId, 'players'] });
       toast({
         title: "Success",
         description: "Player deleted successfully",
@@ -507,7 +507,7 @@ export default function Players() {
                       <DialogTitle>Add New Player</DialogTitle>
                     </DialogHeader>
                     <PlayerForm
-                      clubId={currentClubId}
+                      clubId={clubId}
                       teamId={teamId}
                       onSuccess={() => {
                         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
