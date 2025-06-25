@@ -720,7 +720,6 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                     alignItems: 'center',
                     padding: '0.25rem'
                   }}
-                ```typescript
                 >
                   <div 
                     className="font-bold text-center text-lg" 
@@ -1523,3 +1522,299 @@ export default function GameDetails() {
       const awayTeamStats = gameStats?.filter(stat => stat.teamId === game.awayTeamId) || [];
 
       const homeTeamTotals = {
+        goals: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
+
+      const awayTeamTotals = {
+        goals: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
+
+      return {
+        homeTeamGoals: homeTeamTotals.goals,
+        awayTeamGoals: awayTeamTotals.goals
+      };
+    }
+
+    return { homeTeamGoals: 0, awayTeamGoals: 0 };
+  }, [game, gameStats]);
+
+  // Determine if we can show roster based on team context
+  const canShowRoster = useMemo(() => {
+    if (!game || !currentTeamId) return false;
+    return game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
+  }, [game, currentTeamId]);
+
+  // Determine roster management URL
+  const rosterManagementUrl = useMemo(() => {
+    if (!game || !currentTeamId) return null;
+    return `/team/${currentTeamId}/roster/game/${game.id}`;
+  }, [game, currentTeamId]);
+
+  if (isLoadingGame) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-32 bg-gray-200 rounded mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!game) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">Game not found</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <Helmet>
+        <title>{game.homeTeamName} vs {game.awayTeamName} - {TEAM_NAME}</title>
+        <meta name="description" content={`Game details for ${game.homeTeamName} vs ${game.awayTeamName} on ${formatDate(game.date)}`} />
+      </Helmet>
+
+      <div className="mb-4">
+        <BackButton />
+      </div>
+
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Game Details</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">
+                  {game.homeTeamName} vs {game.awayTeamName}
+                </CardTitle>
+                <CardDescription>
+                  {formatDate(game.date)} at {game.time} • Round {game.round}
+                </CardDescription>
+              </div>
+              <Badge variant={game.statusIsCompleted ? "default" : "secondary"}>
+                {game.statusDisplayName}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">{game.homeTeamName}</h3>
+                <p className="text-muted-foreground">{game.homeClubName}</p>
+              </div>
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">{game.awayTeamName}</h3>
+                <p className="text-muted-foreground">{game.awayClubName}</p>
+              </div>
+            </div>
+            
+            {game.statusIsCompleted && (
+              <div className="mt-4 text-center">
+                <div className="text-3xl font-bold">
+                  {finalScores.homeTeamGoals} - {finalScores.awayTeamGoals}
+                </div>
+              </div>
+            )}
+
+            {canShowRoster && rosterManagementUrl && (
+              <div className="mt-4 flex justify-center">
+                <Button asChild variant="outline">
+                  <Link href={rosterManagementUrl}>
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Manage Roster
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="roster">Roster</TabsTrigger>
+            <TabsTrigger value="stats">Statistics</TabsTrigger>
+            <TabsTrigger value="actions">Actions</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Game Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-medium">{formatDate(game.date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Time</p>
+                    <p className="font-medium">{game.time}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Round</p>
+                    <p className="font-medium">{game.round}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Season</p>
+                    <p className="font-medium">{game.seasonName}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="roster" className="space-y-4">
+            {canShowRoster ? (
+              <RosterDisplay gameId={game.id} />
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-muted-foreground">
+                    Roster information not available for this game
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="stats" className="space-y-4">
+            <StatsDisplay gameId={game.id} />
+          </TabsContent>
+
+          <TabsContent value="actions" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Game Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Game
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print Summary
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+// Simple roster display component
+const RosterDisplay = ({ gameId }: { gameId: number }) => {
+  const { data: roster, isLoading } = useQuery({
+    queryKey: ['game-roster', gameId],
+    queryFn: () => fetch(`/api/games/${gameId}/rosters`).then(res => res.json())
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="animate-pulse space-y-2">
+            {[...Array(7)].map((_, i) => (
+              <div key={i} className="h-4 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Game Roster</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {roster && roster.length > 0 ? (
+          <div className="space-y-2">
+            {roster.map((entry: any) => (
+              <div key={`${entry.quarter}-${entry.position}`} className="flex justify-between">
+                <span>{entry.position} (Q{entry.quarter})</span>
+                <span>{entry.playerName || `Player ${entry.playerId}`}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No roster data available</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Simple stats display component
+const StatsDisplay = ({ gameId }: { gameId: number }) => {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['game-stats', gameId],
+    queryFn: () => fetch(`/api/games/${gameId}/stats`).then(res => res.json())
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="animate-pulse space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-4 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Game Statistics</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {stats && stats.length > 0 ? (
+          <div className="space-y-2">
+            {stats.map((stat: any, index: number) => (
+              <div key={index} className="grid grid-cols-3 gap-2 text-sm">
+                <span>{stat.position} (Q{stat.quarter})</span>
+                <span>Goals: {stat.goalsFor || 0}</span>
+                <span>Rebounds: {stat.rebounds || 0}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No statistics available</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default GameDetails;
