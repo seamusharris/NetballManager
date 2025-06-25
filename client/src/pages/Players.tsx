@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
-import { useClub } from '@/contexts/ClubContext';
+import { useURLClub } from '@/hooks/use-url-club';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -23,27 +23,27 @@ import { PageActions } from '@/components/layout/PageActions';
 export default function Players() {
   const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location, setLocation] = useLocation();
-  const { 
-    currentClub, 
-    currentClubId, 
-    currentTeamId, 
-    currentTeam,
-    clubTeams, 
-    setCurrentTeamId,
-    switchClub,
-    isLoading: clubLoading 
-  } = useClub();
+  const {
+    clubId,
+    club,
+    clubTeams,
+    userClubs,
+    hasPermission,
+    isLoading: clubLoading
+  } = useURLClub();
 
-  // Redirect to club-scoped URL if accessing /players without club ID
+  // Redirect to default club if accessing /players without club ID
   useEffect(() => {
-    if (location === '/players' && currentClubId) {
-      setLocation(`/club/${currentClubId}/players`);
+    if (location === '/players' && userClubs.length > 0) {
+      // Default to Warrandyte (club 54) if available, otherwise first club
+      const defaultClub = userClubs.find(c => c.clubId === 54) || userClubs[0];
+      setLocation(`/club/${defaultClub.clubId}/players`);
       return;
     }
-  }, [location, currentClubId, setLocation]);
+  }, [location, userClubs, setLocation]);
 
-  // Don't render anything until club context is fully loaded
-  if (clubLoading || !currentClub) {
+  // Don't render anything until club data is loaded
+  if (clubLoading || !club) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -56,18 +56,6 @@ export default function Players() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
-
-  // Handle club ID from URL parameter
-  useEffect(() => {
-    const clubIdFromUrl = params.clubId;
-    if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId) {
-      const targetClubId = Number(clubIdFromUrl);
-      if (currentClub?.id !== targetClubId) {
-        switchClub(targetClubId);
-      }
-    }
-  }, [params.clubId, currentClub?.id, switchClub, params.teamId]);
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
@@ -127,18 +115,15 @@ export default function Players() {
   // Team filter state for main players view
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
 
-  // Get club ID from URL directly - more reliable than club context
-  const clubIdFromUrl = params.clubId ? parseInt(params.clubId) : null;
-  
   // Get players for non-team view
   const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
-    queryKey: ['players', clubIdFromUrl],
+    queryKey: ['players', clubId],
     queryFn: async () => {
-      if (!clubIdFromUrl) return [];
-      const response = await apiClient.get(`/api/clubs/${clubIdFromUrl}/players`);
+      if (!clubId) return [];
+      const response = await apiClient.get(`/api/clubs/${clubId}/players`);
       return response;
     },
-    enabled: !!clubIdFromUrl && !teamId,
+    enabled: !!clubId && !teamId,
   });
 
   // Filter players based on team selection
@@ -595,10 +580,10 @@ export default function Players() {
   }
 
   // Regular club players view
-  const pageTitle = 'Players';
-  const pageSubtitle = currentClub?.name ? `Manage your club's players - ${currentClub.name}` : `Manage your club's players (Club ${clubIdFromUrl})`;
+  const pageTitle = `${club.name} Players`;
+  const pageSubtitle = `Manage players for ${club.name}`;
   const breadcrumbs = [
-    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
     { label: 'Players' }
   ];
 
@@ -672,11 +657,10 @@ export default function Players() {
             </div>
           ) : filteredPlayers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No players found for this club</p>
-              <p className="text-xs text-gray-500">Club: {currentClub?.name || 'Loading...'} (URL ID: {clubIdFromUrl})</p>
+              <p className="text-muted-foreground mb-4">No players found for {club.name}</p>
+              <p className="text-xs text-gray-500">Club: {club.name} (ID: {clubId})</p>
               <p className="text-xs text-gray-500">Players array length: {players.length}</p>
-              <p className="text-xs text-gray-500">Query enabled: {!!clubIdFromUrl && !teamId ? 'YES' : 'NO'}</p>
-              <p className="text-xs text-gray-500">Is loading: {isPlayersLoading ? 'YES' : 'NO'}</p>
+              <p className="text-xs text-gray-500">Query enabled: {!!clubId && !teamId ? 'YES' : 'NO'}</p>
             </div>
           ) : (
             <PlayersList
