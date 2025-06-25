@@ -8,7 +8,7 @@ import {
   invalidateGameCache, 
   clearGameCache 
 } from '@/lib/scoresCache';
-import { useClub } from '@/contexts/ClubContext';
+import { useParams } from 'wouter';
 import { gameScoreService } from '@/lib/gameScoreService';
 
 /**
@@ -20,7 +20,7 @@ import { gameScoreService } from '@/lib/gameScoreService';
  * @param forceFresh - Whether to force fresh data (bypass cache)
  */
 export function useGamesScores(gameIds: number[], forceFresh = false) {
-  const { currentClub } = useClub();
+  
   const queryClient = useQueryClient();
 
   // Stabilize gameIds to prevent unnecessary re-renders
@@ -239,7 +239,7 @@ export function useGamesScores(
   useOfficialPriority: boolean = true,
   teamIdOverride?: number | null // null = no team filtering, undefined = use context
 ) {
-  const { currentClub } = useClub();
+  
   const contextTeamId = currentClub?.currentTeam?.id;
   const currentTeamId = teamIdOverride !== undefined ? teamIdOverride : contextTeamId;
 }

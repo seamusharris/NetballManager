@@ -3,7 +3,7 @@ import { statisticsService, GameScores } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
 import { getCachedScores } from '@/lib/scoresCache';
 import { apiRequest } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
+import { useParams } from 'wouter';
 
 /**
  * Custom hook to fetch game statistics with enhanced caching
@@ -12,7 +12,7 @@ import { useClub } from '@/contexts/ClubContext';
  * @param preloadedStats - Optional preloaded stats to avoid API calls
  */
 export function useGameStatistics(gameId: number, forceFresh: boolean = false, preloadedStats?: GameStat[]) {
-  const { currentTeam } = useClub();
+  
 
   // Create a unique key for freshness tracking (only when forcing fresh data)
   const freshQueryKey = forceFresh ? `fresh-${Date.now()}` : 'cached';

@@ -1,7 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useClub } from '@/contexts/ClubContext';
+import { useParams } from 'wouter';
 import { dataFetcher } from '@/lib/unifiedDataFetcher';
 
 interface PrefetchOptions {
@@ -12,7 +12,7 @@ interface PrefetchOptions {
 }
 
 export function useSmartPrefetch(gameIds: number[], options: PrefetchOptions = {}) {
-  const { currentClubId, currentTeamId } = useClub();
+  
   const queryClient = useQueryClient();
   
   const {

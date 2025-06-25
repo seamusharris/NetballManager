@@ -3,11 +3,11 @@ import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 // ClubContext removed - using URL-based club management
 
-export function useBatchRosterData(gameIds: number[]) {
-  const { currentClubId } = useClub();
+export function useBatchRosterData(gameIds: number[], clubId: number | null = null) {
+  // ClubContext removed - clubId now passed as parameter
 
   const { data: rostersMap = {}, isLoading, error } = useQuery({
-    queryKey: CACHE_KEYS.batchRosters(currentClubId || 0, gameIds),
+    queryKey: CACHE_KEYS.batchRosters(clubId || 0, gameIds),
     queryFn: async () => {
       if (!gameIds.length) {
         console.log('useBatchRosterData: No game IDs provided');

@@ -8,6 +8,7 @@ import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
 import { useQueries } from '@tanstack/react-query';
+import { useParams } from 'wouter';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 interface PlayerAvailabilityWidgetProps {
