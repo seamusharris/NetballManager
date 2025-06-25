@@ -175,7 +175,7 @@ export default function Players() {
 
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
@@ -189,7 +189,7 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
@@ -245,11 +245,11 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
       const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being removed
@@ -257,7 +257,7 @@ export default function Players() {
 
       if (playerToRemove && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => 
+        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => 
           old.filter(p => p.id !== playerId)
         );
 
@@ -293,7 +293,7 @@ export default function Players() {
 
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
@@ -307,7 +307,7 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
@@ -497,7 +497,7 @@ export default function Players() {
                       <DialogTitle>Add New Player</DialogTitle>
                     </DialogHeader>
                     <PlayerForm
-                      clubId={currentClubId}
+                      clubId={clubId}
                       teamId={teamId}
                       onSuccess={() => {
                         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
@@ -605,7 +605,7 @@ export default function Players() {
                   <DialogTitle>Add New Player</DialogTitle>
                 </DialogHeader>
                 <PlayerForm
-                  clubId={currentClubId}
+                  clubId={clubId}
                   teamId={undefined}
                   onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ['players'] });
