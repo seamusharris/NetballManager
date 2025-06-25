@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
 import { useURLClub } from '@/hooks/use-url-club';
@@ -8,21 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import PlayerForm from '@/components/players/PlayerForm';
-import { User, UserMinus, UserPlus, Loader2, Calendar, Users } from 'lucide-react';
-import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
+import { Loader2, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useLocation } from 'wouter';
-import { apiClient } from '@/lib/apiClient';
-import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import PageTemplate from '@/components/layout/PageTemplate';
+import PlayerForm from '@/components/players/PlayerForm';
+import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Players() {
   const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location, setLocation] = useLocation();
+  
+  // ALL HOOKS MUST BE DECLARED AT THE TOP LEVEL
   const {
     clubId,
     club,
@@ -34,11 +34,20 @@ export default function Players() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
+  
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
 
-  // Get active season for team assignments
+  // ALL STATE HOOKS
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
+  const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
+  const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
+  const [optimisticallyRemovedPlayerIds, setOptimisticallyRemovedPlayerIds] = useState<Set<number>>(new Set());
+  const [optimisticallyAddedPlayerIds, setOptimisticallyAddedPlayerIds] = useState<Set<number>>(new Set());
+  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
+  const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
+
+  // ALL QUERY HOOKS
   const { data: activeSeason } = useQuery({
     queryKey: ['seasons', 'active'],
     queryFn: async () => {
@@ -47,13 +56,6 @@ export default function Players() {
     },
   });
 
-  // Use teams from URL club hook
-  const allTeams = clubTeams;
-
-  // Team filter state for main players view
-  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
-
-  // Get players for non-team view
   const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
     queryKey: ['players', clubId],
     queryFn: async () => {
@@ -64,7 +66,6 @@ export default function Players() {
     enabled: !!clubId && !teamId,
   });
 
-  // Get team details if viewing a specific team
   const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
     queryKey: ['team', teamId],
     queryFn: async () => {
@@ -73,7 +74,7 @@ export default function Players() {
     },
     enabled: !!teamId,
     retry: 3,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
@@ -90,12 +91,67 @@ export default function Players() {
     enabled: !!teamId && !!activeSeason?.id,
   });
 
-  // Filter players based on team selection
+  // ALL MUTATION HOOKS
+  const addPlayerToTeam = useMutation({
+    mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Player added to team' });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add player to team',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const removePlayerFromTeam = useMutation({
+    mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Player removed from team' });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove player from team',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const createPlayer = useMutation({
+    mutationFn: async (playerData: any) => {
+      if (!clubId) {
+        throw new Error('No club selected');
+      }
+      const response = await apiClient.post('/api/players', playerData);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players'] });
+      toast({ title: 'Success', description: 'Player created successfully' });
+      setIsAddPlayerDialogOpen(false);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create player';
+      toast({ 
+        title: 'Error', 
+        description: errorMessage, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // ALL MEMO/COMPUTED VALUES
+  const allTeams = clubTeams;
+  
   const filteredPlayers = useMemo(() => {
     if (!players || selectedTeamFilter === 'all') return players;
-
     return players.filter(player => {
-      // Check if player has team assignments in current season
       const hasTeamAssignment = player.teamAssignments?.some(
         assignment => assignment.teamId === parseInt(selectedTeamFilter)
       );
@@ -103,17 +159,16 @@ export default function Players() {
     });
   }, [players, selectedTeamFilter]);
 
-  // Now add useEffects and other hooks after all state/queries are defined
+  // ALL EFFECTS
   useEffect(() => {
     if (location === '/players' && userClubs.length > 0) {
-      // Default to Warrandyte (club 54) if available, otherwise first club
       const defaultClub = userClubs.find(c => c.clubId === 54) || userClubs[0];
       setLocation(`/club/${defaultClub.clubId}/players`);
       return;
     }
   }, [location, userClubs, setLocation]);
 
-  // Don't render anything until club data is loaded
+  // NOW EARLY RETURNS ARE SAFE
   if (clubLoading || !club) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -125,282 +180,49 @@ export default function Players() {
     );
   }
 
-  const addPlayerToTeam = useMutation({
-    mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
-    onMutate: async (playerId: number) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
-      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-
-      // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
-      const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
-
-      // Find the player being added
-      const playerToAdd = availablePlayersForTeam?.find(p => p.id === playerId);
-
-      if (playerToAdd && previousTeamPlayers && previousAvailablePlayers) {
-        // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => [...old, playerToAdd]);
-
-        // Optimistically update available players
-        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
-          old.filter(p => p.id !== playerId)
-        );
-      }
-
-      return { previousTeamPlayers, previousAvailablePlayers };
-    },
-    onSuccess: (data, playerId) => {
-      // Clear any optimistic state since the real update happened
-      setOptimisticallyAddedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-      setOptimisticallyRemovedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-      toast({ title: 'Success', description: 'Player added to team' });
-    },
-    onError: (error: any, variables, context) => {
-      // Clear optimistic state and revert cache
-      setOptimisticallyAddedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(variables);
-        return newSet;
-      });
-
-      // Revert optimistic updates
-      if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
-      }
-      if (context?.previousAvailablePlayers) {
-        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
-      }
-
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add player to team',
-        variant: 'destructive',
-      });
-    },
-    onSettled: () => {
-      // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-    },
-  });
-
-  // Standardized player creation mutation that handles both club and team contexts
-  const createPlayer = useMutation({
-    mutationFn: async (playerData: any) => {
-      if (!clubId) {
-        throw new Error('No club selected');
-      }
-
-      // Create the player with club context
-      const response = await apiClient.post('/api/players', playerData);
-      return response;
-    },
-    onSuccess: () => {
-      // Invalidate all relevant queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['team-players'] });
-
-      toast({ title: 'Success', description: 'Player created successfully' });
-      setIsAddPlayerDialogOpen(false);
-    },
-    onError: (error: any) => {
-      console.error('Player creation failed:', error);
-      console.error('Error response:', error.response);
-      console.error('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create player';
-      toast({ 
-        title: 'Error', 
-        description: errorMessage, 
-        variant: 'destructive' 
-      });
-    },
-  });
-
-  // Track which players are being removed/added
-  const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
-  const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
-  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
-
-  const removePlayerFromTeam = useMutation({
-    mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
-    onMutate: async (playerId: number) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
-      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-
-      // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
-      const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
-
-      // Find the player being removed
-      const playerToRemove = teamPlayersData?.find(p => p.id === playerId);
-
-      if (playerToRemove && previousTeamPlayers && previousAvailablePlayers) {
-        // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => 
-          old.filter(p => p.id !== playerId)
-        );
-
-        // Optimistically update available players
-        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
-          [...old, playerToRemove].sort((a, b) => a.displayName.localeCompare(b.displayName))
-        );
-      }
-
-      return { previousTeamPlayers, previousAvailablePlayers };
-    },
-    onSuccess: (data, playerId) => {
-      // Clear any optimistic state since the real update happened
-      setOptimisticallyRemovedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-      setOptimisticallyAddedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-      toast({ title: 'Success', description: 'Player removed from team' });
-    },
-    onError: (error: any, variables, context) => {
-      // Clear optimistic state and revert cache
-      setOptimisticallyRemovedPlayerIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(variables);
-        return newSet;
-      });
-
-      // Revert optimistic updates
-      if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
-      }
-      if (context?.previousAvailablePlayers) {
-        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
-      }
-
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to remove player from team',
-        variant: 'destructive',
-      });
-    },
-    onSettled: () => {
-      // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-    },
-  });
-
-  // Direct mutations following clubs/teams pattern - avoids CRUD hook 404 issues
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/players', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      toast({
-        title: "Success",
-        description: "Player created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create player",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      toast({
-        title: "Success",
-        description: "Player updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update player",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (playerId: number) => apiClient.delete(`/api/players/${playerId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      toast({
-        title: "Success",
-        description: "Player deleted successfully",
-      });
-    },
-    onError: (error: any) => {
-      const errorMessage = error.message?.toLowerCase() || '';
-
-      if (errorMessage.includes('constraint') || errorMessage.includes('foreign key')) {
-        toast({
-          title: "Cannot Delete Player",
-          description: "This player has game statistics or other records. Please remove those first.",
-          variant: "destructive",
-        });
-      } else if (!errorMessage.includes('not found') && !errorMessage.includes('404')) {
-        // Only show error for real errors, not 404s from double execution
-        toast({
-          title: "Error",
-          description: `Failed to delete player: ${error.message}`,
-          variant: "destructive",
-        });
-      }
-    }
-  });
-
-  const isLoading = isPlayersLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
-
-  // Rename the teamPlayersData to teamPlayers
-  const teamPlayers = teamPlayersData;
-
-  // Handle remove player function now
+  // Helper functions
   const handleRemovePlayer = (playerId: number) => {
-    removePlayerFromTeam.mutate(playerId);
+    setRemovingPlayerIds(prev => new Set([...prev, playerId]));
+    removePlayerFromTeam.mutate(playerId, {
+      onSettled: () => {
+        setRemovingPlayerIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(playerId);
+          return newSet;
+        });
+      }
+    });
   };
-    // Handle add player function now
+
   const handleAddPlayer = (playerId: number) => {
-    addPlayerToTeam.mutate(playerId);
+    setAddingPlayerIds(prev => new Set([...prev, playerId]));
+    addPlayerToTeam.mutate(playerId, {
+      onSettled: () => {
+        setAddingPlayerIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(playerId);
+          return newSet;
+        });
+      }
+    });
   };
 
-  if (teamId) {
-    // Team-specific view with management capabilities
-    const availablePlayers = teamId ? availablePlayersForTeam : [];
+  // TEAM VIEW RENDERING
+  if (teamId && teamData) {
+    const teamPlayers = teamPlayersData || [];
+    const availablePlayers = availablePlayersForTeam || [];
 
-    // Generate page context for team view
-    const pageTitle = teamData?.name ? `Players - ${teamData.name}` : 'Team Players';
-    const pageSubtitle = teamData?.division 
+    const pageTitle = teamData?.name 
+      ? `${teamData.name} Players`
+      : 'Team Players';
+    
+    const pageSubtitle = teamData?.name 
       ? `Manage players for ${teamData.name} (${teamData.division})`
       : 'Manage team players';
 
     const breadcrumbs = [
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Teams', href: '/teams' },
+      { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
+      { label: 'Teams', href: `/club/${clubId}/teams` },
       { label: teamData?.name || 'Team' }
     ];
 
@@ -415,7 +237,6 @@ export default function Players() {
           subtitle={pageSubtitle}
           breadcrumbs={breadcrumbs}
           actions={
-          <>
             <div className="w-64">
               <Select
                 value={teamId?.toString() || ""}
@@ -438,10 +259,8 @@ export default function Players() {
                 </SelectContent>
               </Select>
             </div>
-          </>
-        }
+          }
         >
-          {/* Current Team Players */}
           <ContentSection 
             title="Current Team Players"
             variant="elevated"
@@ -451,19 +270,8 @@ export default function Players() {
             ) : (
               <SelectablePlayerBox
                 players={teamPlayers}
-                selectedPlayerIds={new Set(teamPlayers.filter(p => !optimisticallyRemovedPlayerIds.has(p.id)).map(p => p.id))}
-                onSelectionChange={(selectedIds) => {
-                  // In team management mode, when a player is deselected from current team,
-                  // remove them from the team with optimistic update
-                  const currentTeamPlayerIds = new Set(teamPlayers.filter(p => !optimisticallyRemovedPlayerIds.has(p.id)).map(p => p.id));
-                  const removedPlayerIds = [...currentTeamPlayerIds].filter(id => !selectedIds.has(id));
-
-                  removedPlayerIds.forEach(playerId => {
-                    // Immediate optimistic update
-                    setOptimisticallyRemovedPlayerIds(prev => new Set([...prev, playerId]));
-                    handleRemovePlayer(playerId);
-                  });
-                }}
+                selectedPlayerIds={new Set()}
+                onSelectionChange={() => {}}
                 title="Current Team Players"
                 showQuickActions={false}
                 mode="team-management"
@@ -474,7 +282,6 @@ export default function Players() {
             )}
           </ContentSection>
 
-          {/* Available Players to Add */}
           <ContentSection 
             title="Available Players"
             actions={
@@ -502,12 +309,11 @@ export default function Players() {
                     />
                   </DialogContent>
                 </Dialog>
-
               </PageActions>
             }
             variant="elevated"
           >
-            {availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id)).length === 0 ? (
+            {availablePlayers.length === 0 ? (
               <p className="text-gray-500 text-center py-4">
                 No unassigned players available. All active players are already assigned to teams this season.
                 <br />
@@ -515,27 +321,16 @@ export default function Players() {
               </p>
             ) : (
               <SelectablePlayerBox
-                players={availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id))}
+                players={availablePlayers}
                 selectedPlayerIds={new Set()}
                 onSelectionChange={(selectedIds) => {
-                  // Handle optimistic add when players are selected from available list
-                  const availablePlayerIds = new Set(availablePlayers.filter(p => !optimisticallyAddedPlayerIds.has(p.id)).map(p => p.id));
-                  const addedPlayerIds = [...selectedIds].filter(id => availablePlayerIds.has(id));
-
-                  addedPlayerIds.forEach(playerId => {
-                    // Immediate optimistic update
-                    setOptimisticallyAddedPlayerIds(prev => new Set([...prev, playerId]));
+                  selectedIds.forEach(playerId => {
                     handleAddPlayer(playerId);
                   });
                 }}
                 title="Available Players"
                 showQuickActions={false}
-                mode="team-management"
-                onAddPlayer={(playerId) => {
-                  // Immediate optimistic update for manual add
-                  setOptimisticallyAddedPlayerIds(prev => new Set([...prev, playerId]));
-                  handleAddPlayer(playerId);
-                }}
+                mode="selection"
                 addingPlayerIds={addingPlayerIds}
                 variant="detailed"
               />
@@ -546,7 +341,7 @@ export default function Players() {
     );
   }
 
-  // Regular club players view
+  // CLUB VIEW RENDERING
   const pageTitle = `${club.name} Players`;
   const pageSubtitle = `Manage players for ${club.name}`;
   const breadcrumbs = [
@@ -557,7 +352,7 @@ export default function Players() {
   return (
     <>
       <Helmet>
-        <title>Players | Team Manager</title>
+        <title>{pageTitle} | Team Manager</title>
       </Helmet>
 
       <PageTemplate
@@ -565,28 +360,7 @@ export default function Players() {
         subtitle={pageSubtitle}
         breadcrumbs={breadcrumbs}
         actions={
-          <>
-            {/* Team Filter Dropdown */}
-            <div className="w-64">
-              <Select
-                value={selectedTeamFilter}
-                onValueChange={setSelectedTeamFilter}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by team" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Teams</SelectItem>
-                  {allTeams
-                    .filter(team => team.name !== 'BYE')
-                    .map(team => (
-                      <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name} {team.division && `(${team.division})`}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <PageActions>
             <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
               <DialogTrigger asChild>
                 <ActionButton action="create" icon={UserPlus}>
@@ -609,13 +383,39 @@ export default function Players() {
                 />
               </DialogContent>
             </Dialog>
-          </>
+          </PageActions>
         }
       >
         <ContentSection variant="elevated">
+          {/* Team Filter */}
+          {allTeams && allTeams.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium">Filter by team:</label>
+                <Select value={selectedTeamFilter} onValueChange={setSelectedTeamFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Players</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {allTeams
+                      .filter(team => team.name !== 'BYE')
+                      .map(team => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name} {team.division && `(${team.division})`}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Players List */}
           {isPlayersLoading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Loading players...</p>
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : playersError ? (
             <div className="text-center py-12">
@@ -631,11 +431,13 @@ export default function Players() {
           ) : (
             <PlayersList
               players={filteredPlayers}
-              isLoading={isLoading}
-              onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
-              onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
+              selectedPlayerIds={selectedPlayers}
+              onSelectionChange={setSelectedPlayers}
+              showTeamAssignments={true}
+              clubTeams={allTeams}
             />
-          )}</ContentSection>
+          )}
+        </ContentSection>
       </PageTemplate>
     </>
   );
