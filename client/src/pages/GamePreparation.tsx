@@ -233,9 +233,6 @@ export default function GamePreparation() {
       // Get all games for the current team using team-specific API
       const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
 
-      // Calculate opponent team ID correctly based on current team perspective
-      const opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
-
       // Filter for completed games against this specific opponent
       const historicalMatches = allGames.filter((g: any) => {
         // Skip the current game
@@ -438,8 +435,21 @@ export default function GamePreparation() {
   }
 
   // Calculate opponent name correctly based on which team we are
-  const opponent = game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName;
   const isHomeGame = game.homeTeamId === currentTeamId;
+  const opponent = isHomeGame ? game.awayTeamName : game.homeTeamName;
+  const opponentTeamId = isHomeGame ? game.awayTeamId : game.homeTeamId;
+  
+  console.log('Game Preparation opponent calculation:', {
+    gameId: game.id,
+    currentTeamId,
+    homeTeamId: game.homeTeamId,
+    awayTeamId: game.awayTeamId,
+    homeTeamName: game.homeTeamName,
+    awayTeamName: game.awayTeamName,
+    isHomeGame,
+    opponent,
+    opponentTeamId
+  });
 
   return (
     <PageTemplate 

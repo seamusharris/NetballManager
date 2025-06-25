@@ -57,8 +57,10 @@ export function calculatePositionAverages(
       return;
     }
 
-    const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
-    console.log(`Game ${game.id} team stats for team ${currentTeamId}:`, teamStats.length, 'records');
+    // Convert currentTeamId to number for comparison
+    const currentTeamIdNum = Number(currentTeamId);
+    const teamStats = gameStats.filter(stat => Number(stat.teamId) === currentTeamIdNum);
+    console.log(`Game ${game.id} team stats for team ${currentTeamId} (converted to ${currentTeamIdNum}):`, teamStats.length, 'records');
     
     if (teamStats.length > 0) {
       console.log(`Game ${game.id} team stats sample:`, teamStats[0]);
