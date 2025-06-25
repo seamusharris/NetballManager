@@ -128,11 +128,6 @@ export default function Statistics() {
     async function fetchGameStats() {
       setLoadingGameStats(true);
       try {
-        if (!response.ok) throw new Error('Failed to fetch game stats');
-        const data = await response.json();
-        console.log(`Loaded ${data.length} game stat entries for game ${selectedGameId}`);
-        setGameStatsData(data);
-      } catch (error) {
         console.error('Error fetching game stats:', error);
         setGameStatsData([]);
       } finally {

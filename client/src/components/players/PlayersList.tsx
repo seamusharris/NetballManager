@@ -111,9 +111,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         body: JSON.stringify({ gameIds }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch batch rosters: ${response.statusText}`);
-      }
 
       const rostersMap = await response.json();
       console.log(`PlayersList: Batch roster fetch completed for ${Object.keys(rostersMap).length} games`);

@@ -169,9 +169,6 @@ export function GamesList({
         body: JSON.stringify({ gameIds: nonByeGameIds }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch batch rosters: ${response.statusText}`);
-      }
 
       return await response.json();
     },

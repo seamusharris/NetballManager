@@ -77,10 +77,6 @@ export default function PlayerClubsManager({
         body: JSON.stringify({ clubIds: selectedClubs })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`Failed to update clubs: ${errorData.message || response.statusText}`);
-      }
 
       const result = await response.json();
       console.log('Save response:', result);

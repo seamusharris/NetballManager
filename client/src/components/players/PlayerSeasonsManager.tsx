@@ -60,10 +60,6 @@ export default function PlayerSeasonsManager({
         body: JSON.stringify({ seasonIds: selectedSeasons })
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update seasons: ${errorText}`);
-      }
       
       // Success! Show a toast and refresh the data
       toast({

@@ -38,9 +38,6 @@ interface ClubWithStats extends Club {
 }
 
 async function fetchApi(url: string) {
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
   return response.json();
 }
 
@@ -56,9 +53,6 @@ export default function ClubManagement() {
           'Content-Type': 'application/json',
         }
       });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch clubs: ${response.status}`);
-      }
       return response.json() as ClubWithStats[];
     }
   });
@@ -70,10 +64,6 @@ export default function ClubManagement() {
         body: JSON.stringify(clubData)
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
 
       return response.json();
     },
@@ -101,10 +91,6 @@ export default function ClubManagement() {
         body: JSON.stringify(clubData)
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
 
       return response.json();
     },
@@ -131,10 +117,6 @@ export default function ClubManagement() {
         method: 'DELETE'
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
 
       return response.json();
     },

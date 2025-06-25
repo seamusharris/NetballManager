@@ -34,18 +34,12 @@ export default function PlayerTeamsManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch player's current teams
-      if (!response.ok) {
-        throw new Error('Failed to fetch player teams');
-      }
       return response.json();
     },
     enabled: !!player?.id,
   });
   
   // Fetch all available teams
-      if (!response.ok) {
-        throw new Error('Failed to fetch teams');
-      }
       return response.json();
     },
     enabled: !!player?.id,
@@ -95,10 +89,6 @@ export default function PlayerTeamsManager({
           })
         });
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to add player to team ${teamId}: ${errorText}`);
-        }
       }
       
       // Remove player from teams
@@ -106,10 +96,6 @@ export default function PlayerTeamsManager({
           method: 'DELETE',
         });
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to remove player from team ${teamId}: ${errorText}`);
-        }
       }
       
       // Success! Show a toast and refresh the data

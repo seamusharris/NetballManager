@@ -224,10 +224,6 @@ export default function LiveStatsByPosition() {
 
       const response = await apiRequest('PATCH', `/api/game-stats/${id}`, data);
 
-      if (!response.ok) {
-        console.error(`API error: ${response.status} ${response.statusText}`);
-        return false;
-      }
 
       return true;
     } catch (error) {

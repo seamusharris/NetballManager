@@ -635,10 +635,6 @@ export default function SimpleRosterManager({
 
   // Query to get players specifically assigned to this team
       if (!gameTeamId) return [];
-      if (!response.ok) {
-        // Fallback to filtering club players if team endpoint fails
-        return players.filter(player => player.active);
-      }
       return response.json();
     },
     enabled: !!gameTeamId,

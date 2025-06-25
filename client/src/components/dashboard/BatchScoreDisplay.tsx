@@ -66,9 +66,6 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           body: JSON.stringify({ gameIds }),
         });
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
-        }
         const batchStats = await response.json();
         
         console.log('BatchScoreDisplay: Received batch stats:', Object.keys(batchStats));
