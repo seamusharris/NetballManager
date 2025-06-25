@@ -81,7 +81,7 @@ import Preparation2 from './pages/Preparation2';
 // Import actual components for PlayerAvailability and RosterGame
 import PlayerAvailability from '@/pages/PlayerAvailability';
 import RosterGame from '@/pages/RosterGame';
-import TeamPlayersManager from './components/teams/TeamPlayersManager';
+import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 
 /**
