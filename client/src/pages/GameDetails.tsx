@@ -447,6 +447,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
   console.log('CourtPositionRoster received roster:', roster?.length, 'entries', roster?.slice(0, 3));
   console.log('CourtPositionRoster received players:', players?.length, 'players', players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName})));
+  console.log('CourtPositionRoster target player check:', {
+    player78: players?.find(p => p.id === 78),
+    player61: players?.find(p => p.id === 61),
+    player64: players?.find(p => p.id === 64),
+    playersType: typeof players,
+    isArray: Array.isArray(players)
+  });
 
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
@@ -483,20 +490,30 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
   // Helper to get player display name
   const getPlayerName = (playerId) => {
+    console.log('getPlayerName called with:', {
+      playerId,
+      playersType: typeof players,
+      playersIsArray: Array.isArray(players),
+      playersLength: players?.length,
+      playersFirstFew: players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName}))
+    });
+    
     if (!Array.isArray(players) || !playerId) {
-      console.log('getPlayerName: returning null - players:', players?.length, 'playerId:', playerId);
+      console.log('getPlayerName: early return - players array check failed');
       return null;
     }
+    
     const player = players.find(p => p.id === playerId);
+    console.log('getPlayerName: search result for ID', playerId, ':', player);
+    
     if (!player) {
       console.log('PLAYER NOT FOUND: ID', playerId, 'not in club players');
       console.log('Available player IDs:', players.map(p => p.id).sort((a, b) => a - b));
-      console.log('Roster is requesting players:', [78, 61, 64], 'but club only has:', players.slice(0, 5).map(p => p.id));
       return `Player ${playerId}`; // Show the ID when player not found
     } else {
-      console.log('getPlayerName: Found player', player.displayName || player.firstName, 'for ID', playerId);
+      console.log('getPlayerName: SUCCESS - Found player', player.displayName || player.firstName, 'for ID', playerId);
+      return player.displayName || `${player.firstName} ${player.lastName}`;
     }
-    return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
 
   // Function to get player color, converting from Tailwind class names to hex
@@ -1237,7 +1254,13 @@ export default function GameDetails() {
     isLoading: isLoadingPlayers
   } = useQuery({
     queryKey: ['players', currentClub?.id, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/players`),
+    queryFn: async () => {
+      console.log('GameDetails: Fetching players for club', currentClub?.id);
+      const result = await apiClient.get(`/api/clubs/${currentClub?.id}/players`);
+      console.log('GameDetails: Loaded players:', result?.length, 'players');
+      console.log('GameDetails: Target players found:', result?.filter(p => [78, 61, 64].includes(p.id)));
+      return result;
+    },
     enabled: !!currentClub?.id,
     select: (data) => Array.isArray(data) ? data : []
   });
@@ -1870,7 +1893,9 @@ export default function GameDetails() {
                         rosterEntries: roster.length,
                         playerCount: players.length,
                         sampleRoster: roster.slice(0, 2),
-                        samplePlayers: players.slice(0, 2)
+                        samplePlayers: players.slice(0, 2),
+                        playersDataType: typeof players,
+                        playersIsArray: Array.isArray(players)
                       })}
                       <CourtPositionRoster 
                         roster={roster || []} 
