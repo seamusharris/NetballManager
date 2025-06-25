@@ -58,13 +58,13 @@ export default function Players() {
 
   // Get all teams for the dropdown
   const { data: allTeams = [] } = useQuery({
-    queryKey: ['teams', currentClub?.id],
+    queryKey: ['teams', clubId],
     queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await apiClient.get(`/api/clubs/${currentClub.id}/teams`);
+      if (!clubId) return [];
+      const response = await apiClient.get(`/api/clubs/${clubId}/teams`);
       return response;
     },
-    enabled: !!currentClub?.id,
+    enabled: !!clubId,
   });
 
   // Get team details if viewing a specific team
@@ -139,7 +139,7 @@ export default function Players() {
 
       if (playerToAdd && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => [...old, playerToAdd]);
+        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => [...old, playerToAdd]);
 
         // Optimistically update available players
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
@@ -218,7 +218,7 @@ export default function Players() {
       // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
       queryClient.invalidateQueries({ queryKey: ['team-players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
@@ -255,7 +255,7 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
@@ -267,7 +267,7 @@ export default function Players() {
 
       if (playerToRemove && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => 
+        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => 
           old.filter(p => p.id !== playerId)
         );
 
@@ -615,11 +615,10 @@ export default function Players() {
                   <DialogTitle>Add New Player</DialogTitle>
                 </DialogHeader>
                 <PlayerForm
-                  clubId={currentClubId}
+                  clubId={clubId}
                   teamId={undefined}
                   onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ['players'] });
-                    queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                    queryClient.invalidateQueries({ queryKey: ['players', clubId] });
                     toast({ title: 'Success', description: 'Player created successfully' });
                     setIsAddPlayerDialogOpen(false);
                   }}
