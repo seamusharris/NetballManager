@@ -1,5 +1,6 @@
 import React from 'react';
-import { useClub } from '@/contexts/ClubContext';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,8 +16,13 @@ import { Building2, ChevronDown } from 'lucide-react';
 
 export function ClubSwitcher() {
   try {
-    const { currentClub, currentClubId, userClubs, switchClub, isLoading, isInitialized } = useClub();
     const [, setLocation] = useLocation();
+    
+    // Fetch user's clubs directly
+    const { data: userClubs = [], isLoading } = useQuery<any[]>({
+      queryKey: ['user-clubs'],
+      queryFn: () => apiClient.get('/api/user/clubs'),
+    });
 
     if (isLoading || !isInitialized) {
       return (
