@@ -105,6 +105,41 @@ export function PlayerBoxTest() {
               ))}
             </div>
           </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Availability Mode Testing</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {testPlayers.slice(0, 2).map(player => (
+                <PlayerBox
+                  key={`availability-${player.id}`}
+                  player={player}
+                  isSelectable={true}
+                  availabilityMode="availability"
+                  isAvailable={player.id === 1}
+                  onAvailabilityChange={(id, available) => 
+                    console.log(`Player ${id} availability: ${available}`)
+                  }
+                  size="md"
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Loading States</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {testPlayers.slice(0, 2).map(player => (
+                <PlayerBox
+                  key={`loading-${player.id}`}
+                  player={player}
+                  isSelectable={true}
+                  isSelected={true}
+                  isLoading={true}
+                  size="md"
+                />
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -33,12 +33,22 @@ interface PlayerBoxProps {
   onClick?: () => void;
   customBadge?: React.ReactNode;
   hasSelect?: boolean;
-  // New selection props
+  // Selection props
   isSelected?: boolean;
   isSelectable?: boolean;
   onSelectionChange?: (playerId: number, isSelected: boolean) => void;
   selectionMode?: 'checkbox' | 'toggle' | 'none';
   selectionPosition?: 'right' | 'left';
+  // Availability-specific props for migration safety
+  availabilityMode?: 'selection' | 'availability' | 'team-management';
+  isAvailable?: boolean;
+  onAvailabilityChange?: (playerId: number, isAvailable: boolean) => void;
+  // Status indicators for loading states
+  isLoading?: boolean;
+  isDisabled?: boolean;
+  // Quick action support
+  showQuickActions?: boolean;
+  quickActions?: React.ReactNode;
 }
 
 function PlayerBox({ 
@@ -52,12 +62,22 @@ function PlayerBox({
   onClick,
   customBadge,
   hasSelect = false,
-  // New selection props with defaults
+  // Selection props with defaults
   isSelected = false,
   isSelectable = false,
   onSelectionChange,
   selectionMode = 'checkbox',
-  selectionPosition = 'right'
+  selectionPosition = 'right',
+  // Availability-specific props for migration safety
+  availabilityMode = 'selection',
+  isAvailable,
+  onAvailabilityChange,
+  // Status indicators
+  isLoading = false,
+  isDisabled = false,
+  // Quick actions
+  showQuickActions = false,
+  quickActions
 }: PlayerBoxProps) {
   // Add null safety check
   if (!player) {
@@ -124,27 +144,43 @@ function PlayerBox({
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
   const borderColorHex = getBorderColorHex(player.avatarColor);
 
-  // Calculate styling based on selection state
+  // Calculate styling based on selection state with availability mode support
   const getSelectionStyling = () => {
-    // If the component is selectable, use the isSelected state
-    // If not selectable, always use the "selected" appearance
-    const shouldUseSelectedStyling = !isSelectable || isSelected;
+    // Migration-safe: handle both isSelected and isAvailable props
+    let effectiveSelected = false;
+    
+    if (availabilityMode === 'availability' && isAvailable !== undefined) {
+      effectiveSelected = isAvailable;
+    } else if (availabilityMode === 'team-management' && isSelected !== undefined) {
+      effectiveSelected = isSelected;
+    } else {
+      // Default selection mode
+      effectiveSelected = !isSelectable || isSelected;
+    }
 
-    if (shouldUseSelectedStyling) {
-      // Selected state or non-selectable: use medium background and player color border
+    // Apply loading/disabled states
+    let opacity = 1;
+    if (isLoading || isDisabled) {
+      opacity = 0.6;
+    } else if (!effectiveSelected && isSelectable) {
+      opacity = 0.8;
+    }
+
+    if (effectiveSelected) {
+      // Selected/Available state: use medium background and player color border
       return {
         backgroundColor: mediumBackgroundColor,
         borderColor: playerColorHex,
         color: borderColorHex,
-        opacity: 1
+        opacity
       };
     } else {
-      // Deselected state: use light background with proper border color and readable text
+      // Deselected/Unavailable state: use light background
       return {
         backgroundColor: lightBackgroundColor,
-        borderColor: playerColorHex, // Use full color for border visibility
-        color: borderColorHex, // Keep text color strong for readability
-        opacity: 0.8 // Slightly less opacity for better readability
+        borderColor: playerColorHex,
+        color: borderColorHex,
+        opacity
       };
     }
   };
@@ -160,41 +196,60 @@ function PlayerBox({
   // Always include border
   const borderClass = "border-2";
 
-  // Handle selection click
+  // Handle selection click with availability mode support
   const handleSelectionClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the main onClick
-    if (onSelectionChange && isSelectable) {
+    
+    if (isLoading || isDisabled) return;
+    
+    if (availabilityMode === 'availability' && onAvailabilityChange && isAvailable !== undefined) {
+      onAvailabilityChange(player.id, !isAvailable);
+    } else if (onSelectionChange && isSelectable) {
       onSelectionChange(player.id, !isSelected);
     }
   };
 
-  // Handle box click for selection
+  // Handle box click for selection with availability mode support
   const handleBoxClick = () => {
-    if (isSelectable && onSelectionChange) {
+    if (isLoading || isDisabled) return;
+    
+    if (availabilityMode === 'availability' && onAvailabilityChange && isAvailable !== undefined) {
+      onAvailabilityChange(player.id, !isAvailable);
+    } else if (isSelectable && onSelectionChange) {
       onSelectionChange(player.id, !isSelected);
     } else if (onClick) {
       onClick();
     }
   };
 
-  // Render selection checkbox
+  // Render selection checkbox with availability mode support
   const renderSelectionCheckbox = () => {
-    if (!isSelectable) return null;
+    if (!isSelectable && availabilityMode !== 'availability') return null;
+
+    // Determine effective checked state
+    let effectiveChecked = false;
+    if (availabilityMode === 'availability' && isAvailable !== undefined) {
+      effectiveChecked = isAvailable;
+    } else {
+      effectiveChecked = isSelected;
+    }
 
     const checkboxStyle = {
-      backgroundColor: isSelected ? playerColorHex : 'transparent',
-      borderColor: isSelected ? 'transparent' : borderColorHex, // Match the text color
-      border: isSelected ? 'none' : '2px solid',
-      color: 'white'
+      backgroundColor: effectiveChecked ? playerColorHex : 'transparent',
+      borderColor: effectiveChecked ? 'transparent' : borderColorHex,
+      border: effectiveChecked ? 'none' : '2px solid',
+      color: 'white',
+      cursor: (isLoading || isDisabled) ? 'not-allowed' : 'pointer',
+      opacity: (isLoading || isDisabled) ? 0.5 : 1
     };
 
     return (
       <div 
-        className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white transition-all duration-200 flex-shrink-0"
+        className="w-6 h-6 rounded flex items-center justify-center text-white transition-all duration-200 flex-shrink-0"
         style={checkboxStyle}
         onClick={handleSelectionClick}
       >
-        {isSelected && '✓'}
+        {isLoading ? '⟳' : (effectiveChecked && '✓')}
       </div>
     );
   };
