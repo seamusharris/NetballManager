@@ -440,7 +440,7 @@ export default function AdvancedTeamAnalytics({
 
     games.forEach(game => {
       const gameStats = statsMap[game.id] || [];
-      const quarterData: Record<number, { for: number; against: number }> = {};
+      
 
       gameStats.forEach(stat => {
         if (!quarterData[stat.quarter]) {
@@ -533,7 +533,7 @@ export default function AdvancedTeamAnalytics({
 
   const calculateOpponentStrengthMatrix = (games: Game[], statsMap: Record<number, GameStat[]>, opponents: Opponent[]) => {
     // First, calculate win rate against each opponent
-    const opponentPerformance: Record<string, { wins: number; total: number; winRate: number; totalScore: number }> = {};
+    
 
     games.forEach(game => {
       // Get opponent name - this works regardless of home/away since we use game stats perspective

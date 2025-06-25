@@ -31,7 +31,6 @@ export default function TeamAwareRosterManager({
   rosters,
   onRosterChange
 }: TeamAwareRosterManagerProps) {
-  const { toast } = useToast();
   const [teamInfo, setTeamInfo] = useState<any>(null);
   const [rosterStatus, setRosterStatus] = useState<'complete' | 'partial' | 'empty'>('empty');
   const [isCreatingFallback, setIsCreatingFallback] = useState(false);

@@ -149,7 +149,6 @@ export default function DragDropRosterManager({
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);

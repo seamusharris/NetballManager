@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
+import { useParams } from 'wouter';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { gameScoreService } from '@/lib/gameScoreService';
 
@@ -20,7 +21,10 @@ interface TeamPerformanceProps {
 
 // Team Performance Component
 const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats, centralizedScores }: TeamPerformanceProps) => {
-  const { currentTeamId } = // 
+  // ClubContext removed - get data from URL parameters
+  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+  
   const [isCalculating, setIsCalculating] = useState(false);
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;

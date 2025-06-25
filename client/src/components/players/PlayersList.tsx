@@ -1,4 +1,4 @@
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -52,7 +52,9 @@ interface SortConfig {
 }
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
-  const { clubId } = // 
+  // ClubContext removed - get data from URL parameters
+  const params = useParams<{ clubId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
 
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());
@@ -85,7 +87,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       console.log(`PlayersList: Fetching batch data for ${gameIds.length} games`);
 
-      const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
       return await dataFetcher.batchFetchGameData({
         gameIds,
         clubId: clubId!,

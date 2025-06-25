@@ -60,7 +60,6 @@ export default function RosterManager({
   }, []);
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [quarterToCopy, setQuarterToCopy] = useState<string | null>(null);
-  const { toast } = useToast();
   
   // Show all games, not just upcoming ones
   const allGames = games.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

@@ -27,7 +27,10 @@ export default function PlayerAvailabilityWidget({
   players,
   className 
 }: PlayerAvailabilityWidgetProps) {
-  const { currentTeamId } = // 
+  // ClubContext removed - get data from URL parameters
+  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+  
   const [availabilityData, setAvailabilityData] = useState<Record<number, GameAvailability>>({});
   const [loading, setLoading] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);

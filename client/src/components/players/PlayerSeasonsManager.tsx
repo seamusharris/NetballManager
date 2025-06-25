@@ -22,7 +22,7 @@ export default function PlayerSeasonsManager({
   isOpen, 
   onClose 
 }: PlayerSeasonsManagerProps) {
-  const { toast } = useToast();
+  
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
   
   // Fetch player's current seasons

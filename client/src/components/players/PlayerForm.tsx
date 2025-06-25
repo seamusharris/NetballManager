@@ -49,7 +49,6 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel }: PlayerFormProps) {
   const isEditing = !!player;
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Extract position preferences for default values

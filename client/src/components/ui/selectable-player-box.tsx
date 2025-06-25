@@ -42,7 +42,7 @@ export function SelectablePlayerBox({
   variant = 'detailed'
 }: SelectablePlayerBoxProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
+  
 
   const getPlayerColor = (player: Player) => {
     if (player.avatarColor?.startsWith('bg-')) {

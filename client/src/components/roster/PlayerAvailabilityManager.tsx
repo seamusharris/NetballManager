@@ -51,7 +51,6 @@ export default function PlayerAvailabilityManager({
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
   const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Use cached query for availability

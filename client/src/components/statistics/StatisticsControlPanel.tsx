@@ -18,7 +18,6 @@ export function StatisticsControlPanel({
   players,
   title = "Game Statistics" 
 }: StatisticsControlPanelProps) {
-  const { isLoading, error } = useGameStatistics(gameId);
   const [activeTab, setActiveTab] = React.useState('overview');
 
   if (isLoading) {

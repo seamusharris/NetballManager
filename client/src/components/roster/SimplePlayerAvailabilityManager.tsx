@@ -26,7 +26,6 @@ export default function SimplePlayerAvailabilityManager({
   onGameChange,
   hideGameSelection = false
 }: SimplePlayerAvailabilityManagerProps) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());

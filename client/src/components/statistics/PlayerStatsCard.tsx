@@ -19,7 +19,6 @@ export function PlayerStatsCard({
   gameIds, 
   showPositionBreakdown = true 
 }: PlayerStatsCardProps) {
-  const { performance, isLoading, error } = usePlayerPerformance(playerId, gameIds);
 
   if (isLoading) {
     return (

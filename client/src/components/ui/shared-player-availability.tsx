@@ -35,7 +35,7 @@ export function PlayerAvailabilityManager({
   variant = 'detailed'
 }: PlayerAvailabilityManagerProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
+  
 
   const getPlayerColor = (player: Player) => {
     if (player.avatarColor?.startsWith('bg-')) {

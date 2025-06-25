@@ -26,7 +26,6 @@ export default function BasicStatForm({
 }: BasicStatFormProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [statValues, setStatValues] = useState<Record<string, Record<number, Record<string, string>>>>({});
-  const { toast } = useToast();
   
   // Group rosters by quarter
   const rosterByQuarter: Record<string, Record<Position, number | null>> = {
@@ -391,7 +390,6 @@ export default function BasicStatForm({
     return { quarterTotals, gameTotals };
   };
   
-  const { quarterTotals, gameTotals } = calculateQuarterTotals();
   
   return (
     <div className="space-y-6">

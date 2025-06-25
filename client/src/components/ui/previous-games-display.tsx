@@ -120,7 +120,7 @@ export default function PreviousGamesDisplay({
                 <div className="ml-4 flex-shrink-0">
                   {!isSpecialStatus && hasQuarterData ? (
                     (() => {
-                      const { teamScores, opponentScores } = quarterData;
+                      
 
                       // Calculate cumulative scores
                       const teamCumulative = [];

@@ -30,7 +30,6 @@ export default function PlayerTeamsManager({
   isOpen, 
   onClose 
 }: PlayerTeamsManagerProps) {
-  const { toast } = useToast();
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   

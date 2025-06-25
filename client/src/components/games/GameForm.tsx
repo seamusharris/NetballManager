@@ -48,7 +48,6 @@ export default function GameForm({
   isSubmitting = false,
   isEditing = false,
 }: GameFormProps) {
-  const { toast } = useToast();
   
   // ClubContext removed - using URL-based club management
   const params = useParams<{ clubId?: string }>();

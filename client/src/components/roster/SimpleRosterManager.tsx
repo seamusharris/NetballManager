@@ -61,7 +61,6 @@ export default function SimpleRosterManager({
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   });
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Filter out BYE games since they don't have rosters
@@ -255,7 +254,6 @@ export default function SimpleRosterManager({
     });
 
     // Generate assignments for each quarter
-    const assignments: Array<{quarter: number, position: Position, playerId: number}> = [];
 
     // Initialize new roster state
     const newRosterState: RosterStateType = {

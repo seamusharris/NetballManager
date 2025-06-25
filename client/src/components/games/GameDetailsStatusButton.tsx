@@ -67,7 +67,6 @@ export function GameDetailsStatusButton({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const { data: gameStatuses = [] } = useQuery({
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),

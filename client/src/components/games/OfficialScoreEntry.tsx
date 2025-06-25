@@ -26,7 +26,6 @@ export function OfficialScoreEntry({
   awayTeamName, 
   isReadOnly = false 
 }: OfficialScoreEntryProps) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   
 
@@ -59,7 +58,6 @@ export function OfficialScoreEntry({
       const newScores = { ...quarterScores };
 
       // Group scores by quarter
-      const scoresByQuarter: Record<number, { [teamId: number]: { score: number; notes?: string } }> = {};
 
       officialScores.forEach((score: any) => {
         if (!scoresByQuarter[score.quarter]) {

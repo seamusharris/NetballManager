@@ -30,7 +30,7 @@ export function PlayerAvailabilitySelector({
   gameId
 }: PlayerAvailabilitySelectorProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
+  
 
   // Get player color using the player's own avatarColor property from their profile
   const getPlayerColor = (player: Player) => {

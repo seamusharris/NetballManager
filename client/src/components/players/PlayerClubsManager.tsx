@@ -27,7 +27,6 @@ export default function PlayerClubsManager({
   isOpen, 
   onClose 
 }: PlayerClubsManagerProps) {
-  const { toast } = useToast();
   const [selectedClubs, setSelectedClubs] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

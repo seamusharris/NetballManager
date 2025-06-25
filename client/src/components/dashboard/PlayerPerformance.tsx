@@ -79,7 +79,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
 
 
   // Use the batch stats hook instead of individual requests
-  const { statsMap: gameStatsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds, false);
+  
 
   // Fetch roster data for tracking games played
   const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
@@ -473,7 +473,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     }))
     .sort((a, b) => {
       // Sort by the selected field and direction
-      const { field, direction } = sortConfig;
+      
 
       // Handle name sorting separately
       if (field === 'name') {

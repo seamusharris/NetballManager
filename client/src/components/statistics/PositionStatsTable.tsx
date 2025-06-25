@@ -16,7 +16,6 @@ export function PositionStatsTable({
   quarter,
   title = "Position Statistics" 
 }: PositionStatsTableProps) {
-  const { positionStats, isLoading, error } = useGameStatistics(gameId);
 
   if (isLoading) {
     return (

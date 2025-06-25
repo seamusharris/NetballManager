@@ -50,7 +50,6 @@ export default function PlayerInterchangeTracker({
   const [reason, setReason] = useState<'tactical' | 'injury' | 'rest' | 'performance'>('tactical');
   const [showHistory, setShowHistory] = useState(false);
   const [playingTimes, setPlayingTimes] = useState<Record<number, PlayerPlayingTime>>({});
-  const { toast } = useToast();
 
   // Convert time string (e.g., "12:30") to seconds remaining in quarter
   const timeStringToSeconds = (timeStr: string): number => {

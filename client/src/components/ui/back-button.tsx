@@ -20,7 +20,7 @@ export default function BackButton({
   size = "sm"
 }: BackButtonProps) {
   const [, navigate] = useLocation();
-  const { getPreviousPath, getPreviousTitle, canGoBack } = useNavigationStack();
+  
 
   const handleBack = () => {
     if (canGoBack()) {

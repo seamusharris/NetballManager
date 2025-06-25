@@ -36,7 +36,7 @@ export default function UnifiedPlayerAvailability({
   autoSave = true
 }: UnifiedPlayerAvailabilityProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
+  
     const queryClient = useQueryClient();
 
   const getPlayerColorHex = (player: Player) => {

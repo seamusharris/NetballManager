@@ -16,7 +16,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
+  
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;

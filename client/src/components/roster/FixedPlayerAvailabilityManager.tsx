@@ -27,7 +27,6 @@ export default function FixedPlayerAvailabilityManager({
   hideGameSelection = false
 }: FixedPlayerAvailabilityManagerProps) {
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch availability data from API using team-based endpoint when possible
