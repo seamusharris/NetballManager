@@ -8,7 +8,6 @@ import { apiRequest, apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation, useParams } from 'wouter';
-import { useParams } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -25,17 +24,23 @@ interface QueryParams {
 }
 
 export default function Games() {
-  const { club, clubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
-  const params = useParams();
+  const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location] = useLocation();
+  const clubId = params.clubId ? Number(params.clubId) : null;
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
+
+  // Fetch club details directly from URL parameter
+  const { data: club, isLoading: clubLoading } = useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    enabled: !!clubId,
+  });
 
   // Detect if we're in club-wide games view
   const isClubWideGamesView = location.includes(`/club/${clubId}/games`);
 
   // For club-wide view, we should not use team context
-  const effectiveTeamId = isClubWideGamesView ? null : (teamIdFromUrl || currentTeamId);
-  const effectiveTeam = isClubWideGamesView ? null : currentTeam;
+  const effectiveTeamId = isClubWideGamesView ? null : teamIdFromUrl;
 
   // Clear team context when in club-wide view
   useEffect(() => {

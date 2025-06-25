@@ -18,8 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { // useClub removed } from 'wouter';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 
 interface Club {
   id: number;
@@ -51,7 +50,7 @@ export default function ClubManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<any>(null);
   const [deletingClub, setDeletingClub] = useState<any>(null);
-  const { currentClub, switchClub } = // useClub removed();
+  // ClubContext removed - using URL-based club management
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 
@@ -224,7 +223,7 @@ export default function ClubManagement() {
 
       <div className="grid gap-6">
         {clubs?.map((club) => (
-          <Card key={club.id} className={`${currentClub?.id === club.id ? 'ring-2 ring-primary' : ''}`}>
+          <Card key={club.id} className={`${club?.id === club.id ? 'ring-2 ring-primary' : ''}`}>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex items-center space-x-3">
@@ -237,7 +236,7 @@ export default function ClubManagement() {
                   <div>
                     <CardTitle className="flex items-center space-x-2">
                       <span>{club.name}</span>
-                      {currentClub?.id === club.id && (
+                      {club?.id === club.id && (
                         <Badge variant="default">Current</Badge>
                       )}
                       {!club.isActive && (
@@ -304,8 +303,8 @@ export default function ClubManagement() {
                     variant="outline" 
                     size="sm"
                     onClick={async () => {
-                      if (currentClub?.id !== club.id) {
-                        switchClub(club.id);
+                      if (club?.id !== club.id) {
+                        // switchClub removed(club.id);
                       }
                       navigate('/players');
                     }}
@@ -316,8 +315,8 @@ export default function ClubManagement() {
                     variant="outline" 
                     size="sm"
                     onClick={async () => {
-                      if (currentClub?.id !== club.id) {
-                        switchClub(club.id);
+                      if (club?.id !== club.id) {
+                        // switchClub removed(club.id);
                       }
                       navigate('/teams');
                     }}
@@ -328,8 +327,8 @@ export default function ClubManagement() {
                     variant="outline" 
                     size="sm"
                     onClick={async () => {
-                      if (currentClub?.id !== club.id) {
-                        switchClub(club.id);
+                      if (club?.id !== club.id) {
+                        // switchClub removed(club.id);
                       }
                       navigate('/games');
                     }}

@@ -1,5 +1,4 @@
 import { useLocation, useParams } from 'wouter';
-import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
@@ -32,15 +31,24 @@ import { cacheKeys } from '@/lib/cacheKeys';
 export default function Dashboard() {
   const params = useParams();
   const [, setLocation] = useLocation();
-  const { 
-    club, 
-    clubId, 
-    currentTeamId, 
-    currentTeam,
-    clubTeams, 
-    setCurrentTeamId,
-    isLoading: clubLoading 
-  } = useClub();
+  const clubId = params.clubId ? Number(params.clubId) : null;
+  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+
+  // Fetch club details directly from URL parameter
+  const { data: club, isLoading: clubLoading } = useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    enabled: !!clubId,
+  });
+
+  // Fetch teams for this club
+  const { data: clubTeams = [] } = useQuery({
+    queryKey: ['clubs', clubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    enabled: !!clubId,
+  });
+
+  const currentTeam = clubTeams.find(team => team.id === currentTeamId) || null;
 
   // Monitor request performance
   const requestMetrics = useRequestMonitor('Dashboard');
@@ -54,7 +62,7 @@ export default function Dashboard() {
       const teamExists = clubTeams?.some(team => team.id === targetTeamId);
       if (teamExists && currentTeamId !== targetTeamId) {
         console.log(`Dashboard: Setting team ${targetTeamId} from URL`);
-        setCurrentTeamId(targetTeamId);
+        
       } else if (!teamExists && clubTeams.length > 0) {
         console.log(`Dashboard: Team ${targetTeamId} not found, redirecting to teams page`);
         // Team doesn't exist, redirect to teams page
@@ -67,7 +75,7 @@ export default function Dashboard() {
       setLocation('/teams');
       return;
     }
-  }, [params.teamId, clubTeams, setLocation, currentTeamId, setCurrentTeamId]);
+  }, [params.teamId, clubTeams, setLocation, currentTeamId, 
 
   // Debug team switching
   useEffect(() => {
