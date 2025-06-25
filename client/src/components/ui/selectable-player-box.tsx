@@ -169,14 +169,24 @@ export function SelectablePlayerBox({
                       size={variant === 'compact' ? 'sm' : 'md'}
                     />
                     <div>
-                      <div className={cn(
-                        "font-medium",
-                        variant === 'compact' ? "text-sm" : ""
-                      )}>
+                      <div 
+                        className={cn(
+                          "font-medium",
+                          variant === 'compact' ? "text-sm" : ""
+                        )}
+                        style={{ 
+                          color: getPlayerColorHex(playerColor)
+                        }}
+                      >
                         {player.displayName}
                       </div>
                       {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
-                        <div className="text-xs text-gray-500">
+                        <div 
+                          className="text-xs"
+                          style={{ 
+                            color: `color-mix(in srgb, ${getPlayerColorHex(playerColor)} 70%, #6b7280 30%)`
+                          }}
+                        >
                           {player.positionPreferences.join(', ')}
                         </div>
                       )}
