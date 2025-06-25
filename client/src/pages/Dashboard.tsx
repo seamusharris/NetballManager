@@ -35,9 +35,17 @@ export default function Dashboard() {
   const currentTeamId = params.teamId ? Number(params.teamId) : null;
 
   // Fetch club details directly from URL parameter
+  const { data: club } = useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    enabled: !!clubId,
   });
 
   // Fetch teams for this club
+  const { data: teams = [] } = useQuery({
+    queryKey: ['clubs', clubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    enabled: !!clubId,
   });
 
   const currentTeam = teams.find(team => team.id === currentTeamId) || null;

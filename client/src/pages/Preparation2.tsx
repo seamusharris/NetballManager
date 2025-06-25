@@ -738,6 +738,7 @@ export default function Preparation2() {
       });
 
       // Save roster via API (you'll need to create this endpoint)
+      const response = await fetch('/api/roster', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

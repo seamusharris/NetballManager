@@ -152,28 +152,33 @@ const calculateScoringTrends = (gameResults: any[], clubId: number) => {
 };
 
 export default function TeamAnalysis() {
-  
+  const params = useParams<{ teamId?: string; clubId?: string }>();
   const [, navigate] = useLocation();
+  const teamId = params.teamId ? Number(params.teamId) : null;
+  const clubId = params.clubId ? Number(params.clubId) : null;
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentTeamId],
-    queryFn: async () => {
-      const headers: Record<string, string> = {};
-      if (currentTeamId) {
-        headers['x-current-team-id'] = currentTeamId.toString();
-      }
-      return apiClient.get('/api/games', { headers });
-    },
-    enabled: !!currentTeamId
+    queryKey: ['teams', teamId, 'games'],
+    queryFn: () => apiClient.get(`/api/teams/${teamId}/games`),
+    enabled: !!teamId
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
+    queryKey: ['clubs', clubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    enabled: !!clubId
   });
 
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
+    queryKey: ['teams', teamId, 'opponents'],
+    queryFn: () => apiClient.get(`/api/teams/${teamId}/opponents`),
+    enabled: !!teamId
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
+    queryKey: ['clubs', clubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    enabled: !!clubId
   });
 
   // Get completed games for stats

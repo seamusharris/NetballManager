@@ -232,8 +232,8 @@ export default function PreviousGamesDisplay({
                 notes: score.notes
               })) : [];
 
-              const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
-              const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+              const quarterTeamScore = transformedScores.find(s => s.teamId === teamId && s.quarter === quarter)?.score || 0;
+              const quarterOpponentScore = transformedScores.find(s => s.teamId !== teamId && s.quarter === quarter)?.score || 0;
 
               totalTeamScore += quarterTeamScore;
               totalOpponentScore += quarterOpponentScore;
