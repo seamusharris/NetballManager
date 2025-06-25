@@ -23,8 +23,6 @@ export default function TeamPlayers() {
   const { toast } = useToast();
   
   // State for UI interactions
-  const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
-  const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   // Get active season
@@ -75,37 +73,109 @@ export default function TeamPlayers() {
     enabled: !!teamId && !!activeSeason?.id,
   });
 
-  // Mutation to add player to team
+  // Mutation to add player to team with optimistic updates
   const addPlayerToTeam = useMutation({
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'Player added to team' });
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+    onMutate: async (playerId: number) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+
+      // Snapshot previous values
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId]);
+      const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
+
+      // Find the player being added
+      const playerToAdd = availablePlayersForTeam.find(p => p.id === playerId);
+      
+      if (playerToAdd) {
+        // Optimistically update team players
+        queryClient.setQueryData(['team-players', teamId], (old: any[]) => {
+          return [...(old || []), playerToAdd];
+        });
+
+        // Optimistically remove from available players
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => {
+          return (old || []).filter(p => p.id !== playerId);
+        });
+      }
+
+      return { previousTeamPlayers, previousAvailablePlayers };
     },
-    onError: (error: any) => {
+    onError: (err, playerId, context) => {
+      // Rollback on error
+      if (context?.previousTeamPlayers) {
+        queryClient.setQueryData(['team-players', teamId], context.previousTeamPlayers);
+      }
+      if (context?.previousAvailablePlayers) {
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
+      }
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add player to team',
+        description: 'Failed to add player to team',
         variant: 'destructive',
       });
+    },
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Player added to team' });
+    },
+    onSettled: () => {
+      // Refetch to ensure data is in sync
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
 
-  // Mutation to remove player from team
+  // Mutation to remove player from team with optimistic updates
   const removePlayerFromTeam = useMutation({
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'Player removed from team' });
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+    onMutate: async (playerId: number) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+
+      // Snapshot previous values
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId]);
+      const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
+
+      // Find the player being removed
+      const playerToRemove = teamPlayersData.find(p => p.id === playerId);
+      
+      if (playerToRemove) {
+        // Optimistically remove from team players
+        queryClient.setQueryData(['team-players', teamId], (old: any[]) => {
+          return (old || []).filter(p => p.id !== playerId);
+        });
+
+        // Optimistically add to available players
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => {
+          return [...(old || []), playerToRemove];
+        });
+      }
+
+      return { previousTeamPlayers, previousAvailablePlayers };
     },
-    onError: (error: any) => {
+    onError: (err, playerId, context) => {
+      // Rollback on error
+      if (context?.previousTeamPlayers) {
+        queryClient.setQueryData(['team-players', teamId], context.previousTeamPlayers);
+      }
+      if (context?.previousAvailablePlayers) {
+        queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
+      }
       toast({
         title: 'Error',
-        description: error.message || 'Failed to remove player from team',
+        description: 'Failed to remove player from team',
         variant: 'destructive',
       });
+    },
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Player removed from team' });
+    },
+    onSettled: () => {
+      // Refetch to ensure data is in sync
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
 
@@ -129,31 +199,13 @@ export default function TeamPlayers() {
     );
   }
 
-  // Event handlers
+  // Event handlers with optimistic UI updates
   const handleRemovePlayer = (playerId: number) => {
-    setRemovingPlayerIds(prev => new Set([...prev, playerId]));
-    removePlayerFromTeam.mutate(playerId, {
-      onSettled: () => {
-        setRemovingPlayerIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    });
+    removePlayerFromTeam.mutate(playerId);
   };
 
   const handleAddPlayer = (playerId: number) => {
-    setAddingPlayerIds(prev => new Set([...prev, playerId]));
-    addPlayerToTeam.mutate(playerId, {
-      onSettled: () => {
-        setAddingPlayerIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    });
+    addPlayerToTeam.mutate(playerId);
   };
 
   const pageTitle = `${teamData.name} Players`;
@@ -222,7 +274,7 @@ export default function TeamPlayers() {
               showQuickActions={false}
               mode="team-management"
               onRemovePlayer={handleRemovePlayer}
-              removingPlayerIds={removingPlayerIds}
+              removingPlayerIds={new Set()}
               variant="detailed"
             />
           )}
@@ -255,7 +307,7 @@ export default function TeamPlayers() {
               title="Available Players"
               showQuickActions={false}
               mode="selection"
-              addingPlayerIds={addingPlayerIds}
+              addingPlayerIds={new Set()}
               variant="detailed"
             />
           )}
