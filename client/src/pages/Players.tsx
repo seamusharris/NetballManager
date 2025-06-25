@@ -60,10 +60,18 @@ export default function Players() {
   // Handle club ID from URL parameter (but not team ID)
   useEffect(() => {
     const clubIdFromUrl = params.clubId;
+    console.log('Players page URL club ID effect:', { 
+      clubIdFromUrl, 
+      teamId: params.teamId, 
+      currentClubId: currentClub?.id,
+      needsSwitch: clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId && currentClub?.id !== Number(clubIdFromUrl)
+    });
+    
     // Only switch clubs if we have a clubId parameter that's not a team ID
     if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId) {
       const targetClubId = Number(clubIdFromUrl);
       if (currentClub?.id !== targetClubId) {
+        console.log('Players page: switching club from', currentClub?.id, 'to', targetClubId);
         switchClub(targetClubId);
       }
     }
@@ -593,7 +601,7 @@ export default function Players() {
 
   // Regular club players view
   const pageTitle = 'Players';
-  const pageSubtitle = `Manage your club's players - ${currentClub?.name}`;
+  const pageSubtitle = currentClub?.name ? `Manage your club's players - ${currentClub.name}` : 'Manage your club\'s players';
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Players' }
@@ -659,13 +667,29 @@ export default function Players() {
         }
       >
         <ContentSection variant="elevated">
-          <PlayersList
-            players={filteredPlayers}
-            isLoading={isLoading}
-            onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
-            onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
-          />
-        </ContentSection>
+          {isPlayersLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">Loading players...</p>
+            </div>
+          ) : playersError ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">Error loading players: {playersError.message}</p>
+            </div>
+          ) : filteredPlayers.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No players found for this club</p>
+              <p className="text-xs text-gray-500">Club: {currentClub?.name} (ID: {currentClub?.id})</p>
+              <p className="text-xs text-gray-500">Players array length: {players.length}</p>
+              <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id && !teamId ? 'YES' : 'NO'}</p>
+            </div>
+          ) : (
+            <PlayersList
+              players={filteredPlayers}
+              isLoading={isLoading}
+              onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
+              onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
+            />
+          )}</ContentSection>
       </PageTemplate>
     </>
   );
