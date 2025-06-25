@@ -233,6 +233,9 @@ export default function GamePreparation() {
       // Get all games for the current team using team-specific API
       const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
 
+      // Calculate opponent team ID correctly based on current team perspective
+      const opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
+
       // Filter for completed games against this specific opponent
       const historicalMatches = allGames.filter((g: any) => {
         // Skip the current game
@@ -243,13 +246,13 @@ export default function GamePreparation() {
 
         // Check if this game was against the same opponent team ID
         const gameOpponentId = g.homeTeamId === currentTeamId ? g.awayTeamId : g.homeTeamId;
-        return gameOpponentId === game.opponentTeamId;
+        return gameOpponentId === opponentTeamId;
       });
 
-      console.log(`Historical games against opponent team ${game.opponentTeamId}:`, historicalMatches);
+      console.log(`Historical games against opponent team ${opponentTeamId}:`, historicalMatches);
       return historicalMatches;
     },
-    enabled: !!game && !!currentTeamId && !!game.opponentTeamId
+    enabled: !!game && !!currentTeamId
   });
 
   // Strategy data will be handled by StrategyTab component internally
@@ -434,8 +437,9 @@ export default function GamePreparation() {
     );
   }
 
-  const opponent = game.teamPerspective === 'home' ? game.awayTeamName : game.homeTeamName;
-  const isHomeGame = game.teamPerspective === 'home';
+  // Calculate opponent name correctly based on which team we are
+  const opponent = game.homeTeamId === currentTeamId ? game.awayTeamName : game.homeTeamName;
+  const isHomeGame = game.homeTeamId === currentTeamId;
 
   return (
     <PageTemplate 
@@ -848,13 +852,27 @@ export default function GamePreparation() {
                       <CardContent>
                         {(() => {
                           // Calculate position-based statistics for historical games
+                          console.log('=== POSITION STATS DEBUG ===');
                           console.log('Historical games for position calculation:', historicalGames.length);
                           console.log('Batch stats keys:', Object.keys(batchStats || {}));
                           console.log('Current team ID:', currentTeamId);
+                          console.log('Game opponent calculation:', {
+                            gameHomeTeamId: game.homeTeamId,
+                            gameAwayTeamId: game.awayTeamId,
+                            currentTeamId: currentTeamId,
+                            calculatedOpponent: opponent
+                          });
+
+                          // Check if we have stats for any of the historical games
+                          const gamesWithStats = historicalGames.filter(g => 
+                            batchStats[g.id] && batchStats[g.id].length > 0
+                          );
+                          console.log('Games with stats:', gamesWithStats.length, 'out of', historicalGames.length);
 
                           const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
 
                           console.log('Historical position averages calculated:', historicalPositionAverages);
+                          console.log('=== END POSITION STATS DEBUG ===');
 
                           if (historicalPositionAverages.gamesWithPositionStats === 0) {
                             return (

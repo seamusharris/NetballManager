@@ -44,7 +44,8 @@ export function calculatePositionAverages(
   games.forEach(game => {
     console.log(`Processing game ${game.id} for team ${currentTeamId}`);
     
-    const gameStats = batchStats[game.id.toString()];
+    // Try both string and number keys for the game ID
+    const gameStats = batchStats[game.id.toString()] || batchStats[game.id];
     console.log(`Game ${game.id} stats:`, gameStats?.length || 0, 'records');
     
     if (gameStats && gameStats.length > 0) {
@@ -61,6 +62,12 @@ export function calculatePositionAverages(
     
     if (teamStats.length > 0) {
       console.log(`Game ${game.id} team stats sample:`, teamStats[0]);
+      console.log(`Game ${game.id} all team stats:`, teamStats.map(s => ({ 
+        position: s.position, 
+        quarter: s.quarter,
+        goalsFor: s.goalsFor, 
+        goalsAgainst: s.goalsAgainst 
+      })));
     }
 
     if (teamStats.length === 0) {
@@ -73,19 +80,19 @@ export function calculatePositionAverages(
     teamStats.forEach(stat => {
       console.log(`Game ${game.id} stat:`, { position: stat.position, goalsFor: stat.goalsFor, goalsAgainst: stat.goalsAgainst });
 
-      if (stat.position === 'GS' && stat.goalsFor !== undefined) {
+      if (stat.position === 'GS' && typeof stat.goalsFor === 'number') {
         gsGoalsFor += stat.goalsFor;
         hasPositionStats = true;
       }
-      if (stat.position === 'GA' && stat.goalsFor !== undefined) {
+      if (stat.position === 'GA' && typeof stat.goalsFor === 'number') {
         gaGoalsFor += stat.goalsFor;
         hasPositionStats = true;
       }
-      if (stat.position === 'GD' && stat.goalsAgainst !== undefined) {
+      if (stat.position === 'GD' && typeof stat.goalsAgainst === 'number') {
         gdGoalsAgainst += stat.goalsAgainst;
         hasPositionStats = true;
       }
-      if (stat.position === 'GK' && stat.goalsAgainst !== undefined) {
+      if (stat.position === 'GK' && typeof stat.goalsAgainst === 'number') {
         gkGoalsAgainst += stat.goalsAgainst;
         hasPositionStats = true;
       }
@@ -93,6 +100,7 @@ export function calculatePositionAverages(
 
     if (hasPositionStats) {
       gamesWithPositionStats++;
+      console.log(`Game ${game.id} counted as having position stats`);
     }
   });
 
