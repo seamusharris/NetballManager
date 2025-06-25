@@ -18,14 +18,14 @@ const PlayerBoxTestPage = () => {
   };
 
   const samplePlayers = [
-    { id: 1, displayName: 'Sarah M', firstName: 'Sarah', lastName: 'Mitchell', isActive: true, color: '#FF6B6B' },
-    { id: 2, displayName: 'Emma J', firstName: 'Emma', lastName: 'Johnson', isActive: true, color: '#4ECDC4' },
-    { id: 3, displayName: 'Olivia B', firstName: 'Olivia', lastName: 'Brown', isActive: true, color: '#45B7D1' },
-    { id: 4, displayName: 'Ava W', firstName: 'Ava', lastName: 'Wilson', isActive: false, color: '#96CEB4' },
-    { id: 5, displayName: 'Isabella D', firstName: 'Isabella', lastName: 'Davis', isActive: true, color: '#FECA57' },
-    { id: 6, displayName: 'Sophia M', firstName: 'Sophia', lastName: 'Miller', isActive: true, color: '#FF9FF3' },
-    { id: 7, displayName: 'Charlotte A', firstName: 'Charlotte', lastName: 'Anderson', isActive: false, color: '#54A0FF' },
-    { id: 8, displayName: 'Mia T', firstName: 'Mia', lastName: 'Taylor', isActive: true, color: '#5F27CD' },
+    { id: 1, displayName: 'Sarah M', firstName: 'Sarah', lastName: 'Mitchell', isActive: true, avatarColor: 'bg-red-500', positionPreferences: ['GA', 'GS'] },
+    { id: 2, displayName: 'Emma J', firstName: 'Emma', lastName: 'Johnson', isActive: true, avatarColor: 'bg-teal-500', positionPreferences: ['C', 'WA'] },
+    { id: 3, displayName: 'Olivia B', firstName: 'Olivia', lastName: 'Brown', isActive: true, avatarColor: 'bg-blue-500', positionPreferences: ['WD', 'GD'] },
+    { id: 4, displayName: 'Ava W', firstName: 'Ava', lastName: 'Wilson', isActive: false, avatarColor: 'bg-green-500', positionPreferences: ['GK'] },
+    { id: 5, displayName: 'Isabella D', firstName: 'Isabella', lastName: 'Davis', isActive: true, avatarColor: 'bg-yellow-500', positionPreferences: ['GA', 'WA'] },
+    { id: 6, displayName: 'Sophia M', firstName: 'Sophia', lastName: 'Miller', isActive: true, avatarColor: 'bg-pink-500', positionPreferences: ['C', 'WD'] },
+    { id: 7, displayName: 'Charlotte A', firstName: 'Charlotte', lastName: 'Anderson', isActive: false, avatarColor: 'bg-indigo-500', positionPreferences: ['GD', 'GK'] },
+    { id: 8, displayName: 'Mia T', firstName: 'Mia', lastName: 'Taylor', isActive: true, avatarColor: 'bg-purple-500', positionPreferences: ['GA', 'GS'] },
   ];
 
   return (
@@ -231,10 +231,9 @@ const PlayerBoxTestPage = () => {
                 <div key={`color-${player.id}`} className="space-y-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: player.color }}
+                      className={`w-3 h-3 rounded-full ${player.avatarColor}`}
                     />
-                    {player.color}
+                    {player.avatarColor}
                   </div>
                   <PlayerBox
                     player={player}
