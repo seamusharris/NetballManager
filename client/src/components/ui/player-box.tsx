@@ -28,6 +28,12 @@ interface PlayerBoxProps {
   onClick?: () => void;
   customBadge?: React.ReactNode;
   hasSelect?: boolean;
+  // New selection props
+  isSelected?: boolean;
+  isSelectable?: boolean;
+  onSelectionChange?: (playerId: number, isSelected: boolean) => void;
+  selectionMode?: 'checkbox' | 'toggle' | 'none';
+  selectionPosition?: 'right' | 'left';
 }
 
 function PlayerBox({ 
@@ -40,7 +46,13 @@ function PlayerBox({
   style = {},
   onClick,
   customBadge,
-  hasSelect = false
+  hasSelect = false,
+  // New selection props with defaults
+  isSelected = false,
+  isSelectable = false,
+  onSelectionChange,
+  selectionMode = 'checkbox',
+  selectionPosition = 'right'
 }: PlayerBoxProps) {
   // Add null safety check
   if (!player) {
@@ -107,17 +119,70 @@ function PlayerBox({
   const lightBackgroundColor = getLighterColorHex(player.avatarColor);
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
 
-  // Always apply default background and border, but allow overrides
-  // Use medium background as default to match selected availability styling
+  // Determine if this is effectively "selected" (either explicitly selected or not selectable)
+  const effectivelySelected = isSelectable ? isSelected : true;
+  
+  // Calculate styling based on selection state
+  const getSelectionStyling = () => {
+    if (effectivelySelected) {
+      // Selected state: use medium background and player color border
+      return {
+        backgroundColor: mediumBackgroundColor,
+        borderColor: playerColorHex,
+        color: darkerBorderColor,
+        opacity: 1
+      };
+    } else {
+      // Deselected state: use light background with reduced opacity
+      return {
+        backgroundColor: lightBackgroundColor,
+        borderColor: `${playerColorHex}80`, // 50% opacity
+        color: `${darkerBorderColor}B3`, // 70% opacity
+        opacity: 0.7
+      };
+    }
+  };
+
+  const selectionStyling = getSelectionStyling();
+  
+  // Merge with any external style overrides
   const defaultStyle = {
-    backgroundColor: mediumBackgroundColor,
-    borderColor: playerColorHex, // Use base player color for visible but lighter borders
-    color: darkerBorderColor, // Keep darker color for text for better readability
+    ...selectionStyling,
     ...style
   };
 
   // Always include border
   const borderClass = "border-2";
+
+  // Handle selection click
+  const handleSelectionClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the main onClick
+    if (onSelectionChange && isSelectable) {
+      onSelectionChange(player.id, !isSelected);
+    }
+  };
+
+  // Render selection checkbox
+  const renderSelectionCheckbox = () => {
+    if (!isSelectable) return null;
+
+    const checkboxStyle = {
+      backgroundColor: isSelected ? playerColorHex : 'transparent',
+      borderColor: isSelected ? 'transparent' : `${playerColorHex}B3`, // 70% opacity for deselected
+      border: isSelected ? 'none' : '2px solid',
+      color: 'white'
+    };
+
+    return (
+      <div 
+        className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white transition-all duration-200 flex-shrink-0"
+        style={checkboxStyle}
+        onClick={handleSelectionClick}
+      >
+        {isSelected && '✓'}
+      </div>
+    );
+  };
 
   const playerBoxContent = (
     <div 
@@ -187,7 +252,7 @@ function PlayerBox({
           <div className={cn(
             "flex space-x-6 ml-6",
             // Adjust right margin based on select box presence and size
-            hasSelect 
+            (hasSelect || isSelectable) 
               ? (size === 'sm' ? "mr-12" : size === 'ms' ? "mr-13" : size === 'md' ? "mr-14" : "mr-16") // More space when select is present
               : (sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-2.5" ? "mr-2.5" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4") // Match avatar spacing when no select
           )}>
@@ -202,7 +267,22 @@ function PlayerBox({
               </div>
             ))}
           </div>
-        )}</div>
+        )}
+
+        {/* Selection checkbox */}
+        {isSelectable && selectionPosition === 'right' && (
+          <div className="flex items-center ml-3">
+            {renderSelectionCheckbox()}
+          </div>
+        )}
+      </div>
+
+      {/* Selection checkbox on left if positioned there */}
+      {isSelectable && selectionPosition === 'left' && (
+        <div className="flex items-center mr-3">
+          {renderSelectionCheckbox()}
+        </div>
+      )}</div>
     </div>
   );
 
