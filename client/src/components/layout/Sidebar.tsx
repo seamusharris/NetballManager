@@ -43,6 +43,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
 
     const devLinks = [
       { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" />, section: 'dev' },
+      { path: '/player-box-test', label: 'PlayerBox Tests', icon: <Users className="w-5 h-5" />, section: 'dev' },
     ];
 
     // Team-specific links following proposed architecture
