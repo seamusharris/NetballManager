@@ -56,9 +56,9 @@ export default function TeamPlayersManager() {
   });
 
   const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
-    queryKey: ['team-players', teamId, clubId],
+    queryKey: ['team-players', teamId],
     queryFn: () => apiClient.get(`/api/teams/${teamId}/players`),
-    enabled: !!teamId && !!clubId,
+    enabled: !!teamId,
   });
 
   const { data: availablePlayers = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
