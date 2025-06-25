@@ -28,6 +28,7 @@ import UpcomingGamesWidget from '@/components/ui/upcoming-games-widget';
 import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
 import { cacheKeys } from '@/lib/cacheKeys';
+import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
 
 export default function Dashboard() {
   const params = useParams();

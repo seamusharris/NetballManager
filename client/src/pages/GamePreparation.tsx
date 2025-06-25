@@ -37,6 +37,7 @@ import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import { unifiedDataFetcher } from '@/lib/unifiedDataFetcher';
 import { calculatePositionStats } from '@/lib/gameScoreService';
 import { calculatePositionAverages } from '@/lib/positionStatsCalculator';
+import AttackDefenseDisplay from '@/components/dashboard/AttackDefenseDisplay';
 
 
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
@@ -826,8 +827,7 @@ export default function GamePreparation() {
                               })()}
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
+                        </div>                      </CardContent>
                     </Card>
                   </div>
 
@@ -1318,79 +1318,71 @@ export default function GamePreparation() {
                                 gamesWithPositionStats 
                               } = positionAverages;
 
-                              return (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  {/* Attack */}
-                                  <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-lg font-bold text-gray-800">Season Attack</span>
-                                      <span className="text-2xl font-bold text-green-600">{attackingPositionsTotal.toFixed(1)}</span>
-                                    </div>
-                                    {gamesWithPositionStats > 0 ? (
-                                      <>
-                                        <div className="space-y-2">
-                                          <div className="flex justify-between text-sm font-semibold">
-                                            <span>GS: {gsAvgGoalsFor.toFixed(1)}</span>
-                                            <span>GA: {gaAvgGoalsFor.toFixed(1)}</span>
-                                          </div>
-                                          <div className="w-full bg-gray-200 rounded-full h-3 flex">
-                                            <div
-                                              className="bg-green-600 h-3 rounded-l-full"
-                                              style={{ width: attackingPositionsTotal > 0 ? `${(gsAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
-                                            ></div>
-                                            <div
-                                              className="bg-green-400 h-3 rounded-r-full"
-                                              style={{ width: attackingPositionsTotal > 0 ? `${(gaAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
-                                            ></div>
-                                          </div>
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          Based on position stats from {gamesWithPositionStats} season games
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="text-xs text-gray-500">
-                                        No position statistics available
-                                      </div>
-                                    )}
-                                  </div>
+                                // Calculate quarter-by-quarter breakdown
+                                const quarterBreakdown = seasonGames
+                                  .filter(game => game.statusAllowsStatistics && seasonBatchStats[game.id])
+                                  .reduce((quarters: any[], game) => {
+                                    const gameStats = seasonBatchStats[game.id] || [];
+                                    const teamStats = gameStats.filter(stat => 
+                                      (game.homeTeamId === currentTeamId && stat.teamId === currentTeamId) ||
+                                      (game.awayTeamId === currentTeamId && stat.teamId === currentTeamId)
+                                    );
 
-                                  {/* Defence */}
-                                  <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-lg font-bold text-gray-800">Season Defence</span>
-                                      <span className="text-2xl font-bold text-red-600">{defendingPositionsTotal.toFixed(1)}</span>
-                                    </div>
-                                    {gamesWithPositionStats > 0 ? (
-                                      <>
-                                        <div className="space-y-2">
-                                          <div className="flex justify-between text-sm font-semibold">
-                                            <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
-                                            <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
-                                          </div>
-                                          <div className="w-full bg-gray-200 rounded-full h-3 flex">
-                                            <div
-                                              className="bg-red-600 h-3 rounded-l-full"
-                                              style={{ width: defendingPositionsTotal > 0 ? `${(gdAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
-                                            ></div>
-                                            <div
-                                              className="bg-red-400 h-3 rounded-r-full"
-                                              style={{ width: defendingPositionsTotal > 0 ? `${(gkAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
-                                            ></div>
-                                          </div>
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          Based on position stats from {gamesWithPositionStats} season games
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="text-xs text-gray-500">
-                                        No position statistics available
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              );
+                                    // Group by quarter
+                                    [1, 2, 3, 4].forEach(quarter => {
+                                      const quarterStats = teamStats.filter(stat => stat.quarter === quarter);
+                                      const existingQuarter = quarters.find(q => q.quarter === quarter);
+
+                                      const gsGoals = quarterStats.filter(s => s.position === 'GS').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                      const gaGoals = quarterStats.filter(s => s.position === 'GA').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                      const gdGoals = quarterStats.filter(s => s.position === 'GD').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+                                      const gkGoals = quarterStats.filter(s => s.position === 'GK').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+
+                                      if (existingQuarter) {
+                                        existingQuarter.gsGoalsFor += gsGoals;
+                                        existingQuarter.gaGoalsFor += gaGoals;
+                                        existingQuarter.gdGoalsAgainst += gdGoals;
+                                        existingQuarter.gkGoalsAgainst += gkGoals;
+                                        existingQuarter.games += 1;
+                                      } else {
+                                        quarters.push({
+                                          quarter,
+                                          gsGoalsFor: gsGoals,
+                                          gaGoalsFor: gaGoals,
+                                          gdGoalsAgainst: gdGoals,
+                                          gkGoalsAgainst: gkGoals,
+                                          games: 1
+                                        });
+                                      }
+                                    });
+
+                                    return quarters;
+                                  }, [])
+                                  .map(q => ({
+                                    quarter: q.quarter,
+                                    gsGoalsFor: q.games > 0 ? q.gsGoalsFor / q.games : 0,
+                                    gaGoalsFor: q.games > 0 ? q.gaGoalsFor / q.games : 0,
+                                    gdGoalsAgainst: q.games > 0 ? q.gdGoalsAgainst / q.games : 0,
+                                    gkGoalsAgainst: q.games > 0 ? q.gkGoalsAgainst / q.games : 0
+                                  }))
+                                  .sort((a, b) => a.quarter - b.quarter);
+
+                                return (
+                                  <AttackDefenseDisplay
+                                    averages={{
+                                      gsAvgGoalsFor,
+                                      gaAvgGoalsFor,
+                                      gdAvgGoalsAgainst,
+                                      gkAvgGoalsAgainst,
+                                      attackingPositionsTotal,
+                                      defendingPositionsTotal,
+                                      gamesWithPositionStats
+                                    }}
+                                    label="Season Attack vs Defense Performance"
+                                    showQuarterBreakdown={true}
+                                    quarterData={quarterBreakdown}
+                                  />
+                                )
                             })()}
                           </div>
                         )}

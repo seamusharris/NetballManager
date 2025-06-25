@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Calendar } from 'lucide-react';
 import GameResultCard from '@/components/ui/game-result-card';
+import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
 
 interface SeasonGamesDisplayProps {
   seasonGames: any[];
@@ -538,78 +538,19 @@ export default function SeasonGamesDisplay({
                 const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
 
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Attack */}
-                    <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-gray-800">Season Attack</span>
-                        <span className="text-2xl font-bold text-green-600">{attackingPositionsTotal.toFixed(1)}</span>
-                      </div>
-                      {gamesWithPositionStats > 0 ? (
-                        <>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm font-semibold">
-                              <span>GS: {gsAvgGoalsFor.toFixed(1)}</span>
-                              <span>GA: {gaAvgGoalsFor.toFixed(1)}</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-3 flex">
-                              <div
-                                className="bg-green-600 h-3 rounded-l-full"
-                                style={{ width: attackingPositionsTotal > 0 ? `${(gsAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
-                              ></div>
-                              <div
-                                className="bg-green-400 h-3 rounded-r-full"
-                                style={{ width: attackingPositionsTotal > 0 ? `${(gaAvgGoalsFor / attackingPositionsTotal) * 100}%` : '50%' }}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Based on position stats from {gamesWithPositionStats} season games
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-xs text-gray-500">
-                          No position statistics available
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Defence */}
-                    <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-gray-800">Season Defence</span>
-                        <span className="text-2xl font-bold text-red-600">{defendingPositionsTotal.toFixed(1)}</span>
-                      </div>
-                      {gamesWithPositionStats > 0 ? (
-                        <>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm font-semibold">
-                              <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
-                              <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-3 flex">
-                              <div
-                                className="bg-red-600 h-3 rounded-l-full"
-                                style={{ width: defendingPositionsTotal > 0 ? `${(gdAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
-                              ></div>
-                              <div
-                                className="bg-red-400 h-3 rounded-r-full"
-                                style={{ width: defendingPositionsTotal > 0 ? `${(gkAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Based on position stats from {gamesWithPositionStats} season games
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-xs text-gray-500">
-                          No position statistics available
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
+          <AttackDefenseDisplay
+            averages={{
+              gsAvgGoalsFor,
+              gaAvgGoalsFor,
+              gdAvgGoalsAgainst,
+              gkAvgGoalsAgainst,
+              attackingPositionsTotal,
+              defendingPositionsTotal,
+              gamesWithPositionStats
+            }}
+            label="Season Attack vs Defense Performance"
+          />
+        )
               })()}
             </div>
           )}

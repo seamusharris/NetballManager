@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { calculateTeamWinRate } from '@/lib/winRateCalculator';
 import GameResultCard from '@/components/ui/game-result-card';
+import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
 
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
@@ -57,9 +58,7 @@ export default function PreviousGamesDisplay({
   return (
     <Card className={className}>
       <CardHeader className="pb-6">
-        <CardTitle>
-          {opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`}
-        </CardTitle>
+        {opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`}
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -471,82 +470,23 @@ export default function PreviousGamesDisplay({
               const gaContribution = gaAvgGoalsFor;
               const gsContribution = gsAvgGoalsFor;
 
-              const gdConceded = gdAvgGoalsAgainst;
-              const gkConceded = gkAvgGoalsAgainst;
+              const gdContribution = gdAvgGoalsAgainst;
+              const gkContribution = gkAvgGoalsAgainst;
 
               return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Attack Unit */}
-                  <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-800">Attack</span>
-                      <span className="text-2xl font-bold text-green-600">{attackUnitPerformance.toFixed(1)}</span>
-                    </div>
-                    {gamesWithPositionStats > 0 ? (
-                      <>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm font-semibold">
-                            <span>GA: {gaContribution.toFixed(1)}</span>
-                            <span>GS: {gsContribution.toFixed(1)}</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3 flex">
-                            <div
-                              className="bg-green-400 h-3 rounded-l-full"
-                              style={{ width: attackUnitPerformance > 0 ? `${(gaContribution / attackUnitPerformance) * 100}%` : '48%' }}
-                            ></div>
-                            <div
-                              className="bg-green-600 h-3 rounded-r-full"
-                              style={{ width: attackUnitPerformance > 0 ? `${(gsContribution / attackUnitPerformance) * 100}%` : '52%' }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Based on {gamesWithPositionStats} games with position statistics recorded
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-xs text-gray-500">
-                        No quarter-by-quarter data available
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Defense Unit */}
-                  <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-800">Defence</span>
-                      <span className="text-2xl font-bold text-red-600">{defenseUnitPerformance.toFixed(1)}</span>
-                    </div>
-                    {gamesWithPositionStats > 0 ? (
-                      <>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm font-semibold">
-                            <span>GD: {gdConceded.toFixed(1)}</span>
-                            <span>GK: {gkConceded.toFixed(1)}</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3 flex">
-                            <div
-                              className="bg-red-400 h-3 rounded-l-full"
-                              style={{ width: defenseUnitPerformance > 0 ? `${(gdConceded / defenseUnitPerformance) * 100}%` : '45%' }}
-                            ></div>
-                            <div
-                              className="bg-red-600 h-3 rounded-r-full"
-                              style={{ width: defenseUnitPerformance > 0 ? `${(gkConceded / defenseUnitPerformance) * 100}%` : '55%' }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Based on {gamesWithPositionStats} games with position statistics recorded
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-xs text-gray-500">
-                        No quarter-by-quarter data available
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
+                  <AttackDefenseDisplay
+                    averages={{
+                      gsAvgGoalsFor: gsContribution,
+                      gaAvgGoalsFor: gaContribution,
+                      gdAvgGoalsAgainst: gdContribution,
+                      gkAvgGoalsAgainst: gkContribution,
+                      attackingPositionsTotal: attackUnitPerformance,
+                      defendingPositionsTotal: defenseUnitPerformance,
+                      gamesWithPositionStats
+                    }}
+                    label={`${opponentName} Performance`}
+                  />
+                )
             })()}
           </div>
         )}
