@@ -8,7 +8,7 @@ import GameResultCard from '@/components/ui/game-result-card';
 
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
-  currentTeamId: number;
+  teamId: number;
   clubId: number;
   batchScores: Record<string, any[]>;
   batchStats?: Record<string, any[]>;
@@ -18,7 +18,7 @@ interface PreviousGamesDisplayProps {
 
 export default function PreviousGamesDisplay({
   historicalGames,
-  currentTeamId,
+  teamId,
   clubId,
   batchScores,
   batchStats,

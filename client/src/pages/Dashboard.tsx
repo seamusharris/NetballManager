@@ -87,20 +87,26 @@ export default function Dashboard() {
   }, [currentTeamId, currentTeam?.name, teams.length]);
 
   // Players data using REST endpoint - Stage 4
+  const { data: players = [] } = useQuery({
+    queryKey: ['clubs', clubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    enabled: !!clubId,
     staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
   // Fetch games with team context - use team-specific endpoint to completely avoid cache pollution
+  const { data: games = [] } = useQuery({
+    queryKey: ['teams', currentTeamId, 'games'],
+    queryFn: () => {
       console.log(`Dashboard: Fetching games via team-specific endpoint for team ${currentTeamId}`);
       if (!currentTeamId) {
         throw new Error('No team ID available for games query');
       }
-      // Use team-specific endpoint to completely bypass club-wide cache
-      const result = await apiClient.get(`/api/teams/${currentTeamId}/games`);
-      console.log(`Dashboard: Received ${result?.length || 0} games for team ${currentTeamId}`);
-      return result;
+      return apiClient.get(`/api/teams/${currentTeamId}/games`);
     },
+    enabled: !!currentTeamId,
+  });
     staleTime: 0, // No cache for debugging
     gcTime: 0, // No cache for debugging
     refetchOnMount: true,

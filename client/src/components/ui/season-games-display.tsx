@@ -7,7 +7,7 @@ import GameResultCard from '@/components/ui/game-result-card';
 
 interface SeasonGamesDisplayProps {
   seasonGames: any[];
-  currentTeamId?: number;
+  teamId?: number;
   seasonName?: string;
   isLoading?: boolean;
   batchScores?: Record<string, any[]>;
@@ -17,7 +17,7 @@ interface SeasonGamesDisplayProps {
 
 export default function SeasonGamesDisplay({
   seasonGames,
-  currentTeamId,
+  teamId,
   seasonName,
   isLoading = false,
   batchScores,

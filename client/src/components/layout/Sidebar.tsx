@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useRoute } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useNextGame } from '@/hooks/use-next-game';
 import { 
@@ -16,7 +16,12 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
+  const [matchClub] = useRoute('/club/:clubId/*');
+  const [matchTeam] = useRoute('/team/:teamId/*');
   
+  // Extract IDs from URL
+  const clubId = matchClub?.clubId ? Number(matchClub.clubId) : null;
+  const teamId = matchTeam?.teamId ? Number(matchTeam.teamId) : null;
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;

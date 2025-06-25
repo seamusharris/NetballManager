@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useLocation, useRoute } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 
 interface TeamSwitcherProps {
   mode?: 'optional' | 'required' | 'hidden';
@@ -14,6 +16,19 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
+  const [matchClub] = useRoute('/club/:clubId/*');
+  const [matchTeam] = useRoute('/team/:teamId/*');
+  
+  // Extract IDs from URL
+  const clubId = matchClub?.clubId ? Number(matchClub.clubId) : null;
+  const teamId = matchTeam?.teamId ? Number(matchTeam.teamId) : null;
+
+  // Fetch teams for this club
+  const { data: teams = [] } = useQuery({
+    queryKey: ['clubs', clubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    enabled: !!clubId,
+  });
 
   // Compute derived values (these are NOT hooks)
   const validTeams = teams.filter(team => team.isActive !== false);
@@ -22,7 +37,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   // ALL useEffect hooks must be called on every render
   useEffect(() => {
     if (!shouldRender) return;
-    const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
+    const newValue = teamId?.toString() || (mode === 'required' ? '' : 'all');
     console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
     setInternalValue(newValue);
   }, [currentTeamId, mode, shouldRender]);
