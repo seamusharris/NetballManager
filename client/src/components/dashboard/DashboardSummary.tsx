@@ -23,7 +23,6 @@ import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
-import { // useClub removed } from 'wouter';
 import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';

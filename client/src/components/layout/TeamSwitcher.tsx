@@ -11,7 +11,7 @@ interface TeamSwitcherProps {
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   // ALL HOOKS MUST BE AT THE TOP - NEVER CALL HOOKS CONDITIONALLY
-  const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId, currentClub } = // // ClubContext removed removed();
+  
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 

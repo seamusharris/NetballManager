@@ -27,7 +27,6 @@ import PlayerClubsManager from '@/components/players/PlayerClubsManager';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
 import PlayerTeamsManager from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
-import { // useClub removed } from 'wouter';
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +34,7 @@ export default function PlayerDetails() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { currentClubId } = // useClub removed();
+  
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);

@@ -16,7 +16,6 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  // ClubContext removed - using URL-based club management
   const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
 
   const isActive = (path: string) => {
@@ -29,9 +28,9 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   const getNavLinks = () => {
     const clubWideLinks = [
       { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" />, section: 'club' },
-      { path: `/club/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
-      { path: `/club/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
-      { path: `/club/${currentClubId}/games`, label: 'All Games', icon: <Calendar className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${clubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${clubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${clubId}/games`, label: 'All Games', icon: <Calendar className="w-5 h-5" />, section: 'club' },
     ];
 
     const adminLinks = [

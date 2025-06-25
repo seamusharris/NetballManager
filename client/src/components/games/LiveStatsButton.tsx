@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { ActivitySquare } from 'lucide-react';
 import { Game } from '@shared/schema';
-import { // useClub removed } from 'wouter';
 
 interface LiveStatsButtonProps {
   game: Game;
@@ -11,7 +10,7 @@ interface LiveStatsButtonProps {
 
 export default function LiveStatsButton({ game, className = "" }: LiveStatsButtonProps) {
   const [, navigate] = useLocation();
-  const { currentTeam } = // useClub removed();
+  
 
   // Show the button if the game allows statistics
   if (!game.statusAllowsStatistics) {

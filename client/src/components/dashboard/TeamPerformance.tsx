@@ -8,7 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { gameScoreService } from '@/lib/gameScoreService';
-import { // useClub removed } from 'wouter';
 
 interface TeamPerformanceProps {
   games: Game[];

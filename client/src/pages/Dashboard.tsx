@@ -75,7 +75,7 @@ export default function Dashboard() {
       setLocation('/teams');
       return;
     }
-  }, [params.teamId, clubTeams, setLocation, currentTeamId, 
+  }, [params.teamId, clubTeams, setLocation, currentTeamId]);
 
   // Debug team switching
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function Dashboard() {
       currentTeamName: currentTeam?.name,
       clubTeamsCount: clubTeams.length
     });
-  }, [currentTeamId, currentTeam, clubTeams.length]);
+  }, [currentTeamId, currentTeam?.name, clubTeams.length]);
 
   // Players data using REST endpoint - Stage 4
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({

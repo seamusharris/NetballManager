@@ -7,7 +7,6 @@ import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
-import { // useClub removed } from 'wouter';
 import { useQueries } from '@tanstack/react-query';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 

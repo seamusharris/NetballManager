@@ -7,7 +7,6 @@ import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { GameBadge } from '@/components/ui/game-badge';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
-import { // useClub removed } from 'wouter';
 
 interface UpcomingGamesProps {
   games: Game[];

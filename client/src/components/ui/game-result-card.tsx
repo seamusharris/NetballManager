@@ -50,7 +50,6 @@ export default function GameResultCard({
   clubTeams = [],
   currentClubId: propCurrentClubId
 }: GameResultCardProps) {
-  // ClubContext removed - using URL-based club management
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
   

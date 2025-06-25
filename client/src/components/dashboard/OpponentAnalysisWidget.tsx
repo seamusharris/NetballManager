@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { LoadingState } from '@/components/ui/loading-state';
-import { // useClub removed } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { TrendingUp, Trophy, Target, ArrowRight } from 'lucide-react';
 import { getWinLoseLabel } from '@/lib/utils';

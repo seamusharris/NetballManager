@@ -4,7 +4,6 @@ import { isForfeitGame, getForfeitGameScore } from '@/lib/utils';
 import { Game, GameStat } from '@shared/schema';
 import { getCachedScores, cacheScores } from '@/lib/scoresCache';
 import { statisticsService } from '@/lib/statisticsService';
-import { // useClub removed } from 'wouter';
 
 interface BatchScoreDisplayProps {
   games: Game[];

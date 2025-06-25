@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Users, ArrowLeftRight, Plus, Trash2 } from 'lucide-react';
 import { apiRequest } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
-import { // useClub removed } from 'wouter';
 
 interface BorrowingRequest {
   id: number;
@@ -42,7 +41,7 @@ interface AvailablePlayer {
 }
 
 export default function PlayerBorrowing() {
-  const { currentClub } = // useClub removed();
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedGame, setSelectedGame] = useState<number | null>(null);

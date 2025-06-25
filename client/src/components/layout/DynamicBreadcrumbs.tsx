@@ -23,7 +23,6 @@ interface DynamicBreadcrumbsProps {
 
 export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBreadcrumbsProps) {
   const [location, navigate] = useLocation();
-  // ClubContext removed - using URL-based club management
 
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     if (customItems) {

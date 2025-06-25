@@ -50,7 +50,6 @@ export default function ClubManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<any>(null);
   const [deletingClub, setDeletingClub] = useState<any>(null);
-  // ClubContext removed - using URL-based club management
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 

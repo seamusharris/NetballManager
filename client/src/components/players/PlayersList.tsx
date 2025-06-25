@@ -33,7 +33,6 @@ import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, positionGroups } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
-import { // useClub removed } from 'wouter';
 import { usePlayerStatsMapping, PlayerStats } from '@/hooks/usePlayerStatsMapping';
 
 interface PlayersListProps {
