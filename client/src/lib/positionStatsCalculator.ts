@@ -29,43 +29,99 @@ export function calculatePositionAverages(
   batchStats: Record<string, any[]>,
   currentTeamId: number
 ): PositionAverages {
+  console.log(`🔍 POSITION CALCULATOR - Starting calculation for team ${currentTeamId}`, {
+    gamesCount: games.length,
+    gameIds: games.map(g => g.id),
+    batchStatsKeys: Object.keys(batchStats),
+    batchStatsSize: Object.keys(batchStats).length
+  });
+
   // Simplified calculation - assume stats are already filtered by the API for the correct team
   let gsGoalsFor = 0;
   let gaGoalsFor = 0;
   let gdGoalsAgainst = 0;
   let gkGoalsAgainst = 0;
   let gamesWithPositionStats = 0;
+  let debugInfo = [];
 
-  games.forEach(game => {
+  games.forEach((game, index) => {
     const gameStats = batchStats[game.id.toString()] || batchStats[game.id];
+    
+    console.log(`🔍 POSITION CALCULATOR - Game ${game.id} (${index + 1}/${games.length}):`, {
+      gameId: game.id,
+      hasStats: !!gameStats,
+      statsCount: gameStats?.length || 0,
+      statsTeamIds: gameStats?.map(s => s.teamId) || [],
+      currentTeamId
+    });
 
     if (!gameStats || gameStats.length === 0) {
+      debugInfo.push({
+        gameId: game.id,
+        status: 'NO_STATS',
+        reason: 'No stats in batch data'
+      });
+      return;
+    }
+
+    // Filter stats for current team only
+    const teamStats = gameStats.filter(stat => Number(stat.teamId) === Number(currentTeamId));
+    console.log(`🔍 POSITION CALCULATOR - Game ${game.id} team filtering:`, {
+      allStatsCount: gameStats.length,
+      teamStatsCount: teamStats.length,
+      teamStats: teamStats.map(s => ({ position: s.position, goalsFor: s.goalsFor, goalsAgainst: s.goalsAgainst }))
+    });
+
+    if (teamStats.length === 0) {
+      debugInfo.push({
+        gameId: game.id,
+        status: 'NO_TEAM_STATS',
+        reason: `No stats found for team ${currentTeamId}`,
+        availableTeamIds: gameStats.map(s => s.teamId)
+      });
       return;
     }
 
     let hasPositionStats = false;
+    let gamePositionData = {};
 
-    gameStats.forEach(stat => {
+    teamStats.forEach(stat => {
       if (stat.position === 'GS' && typeof stat.goalsFor === 'number') {
         gsGoalsFor += stat.goalsFor;
         hasPositionStats = true;
+        gamePositionData['GS'] = stat.goalsFor;
       }
       if (stat.position === 'GA' && typeof stat.goalsFor === 'number') {
         gaGoalsFor += stat.goalsFor;
         hasPositionStats = true;
+        gamePositionData['GA'] = stat.goalsFor;
       }
       if (stat.position === 'GD' && typeof stat.goalsAgainst === 'number') {
         gdGoalsAgainst += stat.goalsAgainst;
         hasPositionStats = true;
+        gamePositionData['GD'] = stat.goalsAgainst;
       }
       if (stat.position === 'GK' && typeof stat.goalsAgainst === 'number') {
         gkGoalsAgainst += stat.goalsAgainst;
         hasPositionStats = true;
+        gamePositionData['GK'] = stat.goalsAgainst;
       }
     });
 
     if (hasPositionStats) {
       gamesWithPositionStats++;
+      debugInfo.push({
+        gameId: game.id,
+        status: 'HAS_POSITION_STATS',
+        positionData: gamePositionData
+      });
+    } else {
+      debugInfo.push({
+        gameId: game.id,
+        status: 'NO_POSITION_STATS',
+        reason: 'No valid position stats found',
+        teamStatsPositions: teamStats.map(s => s.position)
+      });
     }
   });
 
@@ -77,7 +133,7 @@ export function calculatePositionAverages(
   const attackingPositionsTotal = gsAvgGoalsFor + gaAvgGoalsFor;
   const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
 
-  return {
+  const result = {
     gsAvgGoalsFor,
     gaAvgGoalsFor,
     gdAvgGoalsAgainst,
@@ -86,6 +142,28 @@ export function calculatePositionAverages(
     defendingPositionsTotal,
     gamesWithPositionStats
   };
+
+  console.log(`🔍 POSITION CALCULATOR - Final calculation for team ${currentTeamId}:`, {
+    inputGames: games.length,
+    gamesWithPositionStats,
+    totals: {
+      gsGoalsFor,
+      gaGoalsFor,
+      gdGoalsAgainst,
+      gkGoalsAgainst
+    },
+    averages: {
+      gsAvgGoalsFor,
+      gaAvgGoalsFor,
+      gdAvgGoalsAgainst,
+      gkAvgGoalsAgainst
+    },
+    attackingPositionsTotal,
+    defendingPositionsTotal,
+    debugInfo
+  });
+
+  return result;
 }
 
 /**
