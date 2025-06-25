@@ -112,12 +112,15 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
-- June 25, 2025: COMPLETED - Final 5% of API migration to full REST architecture
-  - Created club-scoped batch endpoints: `/api/clubs/{clubId}/games/stats/batch`, `/api/clubs/{clubId}/games/scores/batch`, `/api/clubs/{clubId}/games/rosters/batch`
-  - Updated UnifiedDataFetcher to use new club-scoped batch endpoints instead of header-based ones
-  - Fixed Players.tsx to use `/api/clubs/{clubId}/teams` instead of legacy `/api/teams` endpoint
-  - Maintained legacy endpoints for backward compatibility during transition period
-  - Migration now 100% complete - all endpoints follow consistent REST URL patterns with club context
+- June 25, 2025: API MIGRATION STATUS - 85% Complete, Mixed Architecture Currently Active
+  - COMPLETED: Core batch endpoints migrated to club-scoped REST: `/api/clubs/{clubId}/games/stats/batch`, `/api/clubs/{clubId}/games/scores/batch`, `/api/clubs/{clubId}/games/rosters/batch`
+  - COMPLETED: UnifiedDataFetcher uses new club-scoped batch endpoints for dashboard performance
+  - COMPLETED: Players API fully migrated to `/api/clubs/{clubId}/players` with fallbacks
+  - COMPLETED: Teams list page uses correct `/team/{id}/players` URLs (fixed plural routing issue)
+  - COMPLETED: Team-based game endpoints: `/api/teams/{teamId}/games/{gameId}/availability`, `/api/teams/{teamId}/games/{gameId}/rosters`
+  - REMAINING: ~50 legacy endpoints still use header-based club context instead of URL-based routing
+  - REMAINING: Individual game operations still use `/api/games/{gameId}/*` pattern instead of club-scoped
+  - STATUS: Hybrid system working well - critical paths migrated, non-critical paths use legacy with headers
 - June 25, 2025: RESOLVED - Player names displaying as "Player ID" in roster positions
   - Fixed React Query configuration for players data loading with proper CACHE_KEYS import
   - Added currentClubId fallback to handle club context loading timing issues  
