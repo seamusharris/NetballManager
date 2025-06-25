@@ -39,6 +39,7 @@ import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
 import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
+import { getPlayerColorHex } from '@/lib/playerColorUtils';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -463,13 +464,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       console.log('Roster is not an array:', roster);
       return {};
     }
-    
+
     const grouped = roster.reduce((acc, entry) => {
       if (!acc[entry.quarter]) acc[entry.quarter] = {};
       acc[entry.quarter][entry.position] = entry;
       return acc;
     }, {});
-    
+
     console.log('Grouped roster by quarter:', grouped);
     console.log('Quarter 1 positions:', Object.keys(grouped[1] || {}));
     return grouped;
@@ -495,7 +496,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     if (!Array.isArray(players) || players.length === 0 || !playerId) {
       return `Player ${playerId}`;
     }
-    
+
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : `Player ${playerId}`;
   }, [players]);
@@ -734,8 +735,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                   intercepts: positionStat.intercepts || 0,
                   badPass: positionStat.badPass || 0,
                   handlingError: positionStat.handlingError || 0,
-                  pickUp: positionStat.pickUp || 0,
-                  infringement: positionStat.infringement || 0
+                  pickUp: positionStat.infringement || 0
                 }
               };
             }
@@ -1547,7 +1547,7 @@ export default function GameDetails() {
 
   return (
     <div className="container py-8 mx-auto">
-      
+
 <Helmet>
         <title>{`Game Details | Netball Stats Tracker`}</title>
       </Helmet>
