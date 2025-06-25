@@ -486,7 +486,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { Archive, ArrowLeft } from 'lucide-react';
 
-export default function OpponentDetailed() {
+function OpponentDetailedDuplicate() {
   const [, navigate] = useLocation();
 
   return (

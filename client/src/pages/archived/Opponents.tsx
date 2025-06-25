@@ -93,7 +93,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { Archive, ArrowRight } from 'lucide-react';
 
-export default function Opponents() {
+function OpponentsDuplicate() {
   const [, navigate] = useLocation();
 
   return (
