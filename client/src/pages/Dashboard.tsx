@@ -114,43 +114,25 @@ export default function Dashboard() {
 
   const { statsMap: batchStats = {}, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIds);
   const { data: batchScores = {}, isLoading: isLoadingBatchScores } = useBatchGameScores(gameIds);
-      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
 
-      try {
-        const result = await dataFetcher.batchFetchGameData({
-          gameIds: gameIdsArray,
-          clubId: clubId!,
-          teamId: currentTeamId ?? undefined,
-          includeStats: true,
-          includeRosters: true,
-          includeScores: true
-        });
+  // Loading state and team validation
+  const isLoading = isLoadingBatchStats || isLoadingBatchScores;
 
         console.log('Dashboard batch data result for team', currentTeamId, ':', result);
         return result;
       } catch (error) {
-        console.error('Dashboard batch data fetch error:', error);
-        throw error;
-      }
-    },
-    staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates  
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // Don't refetch on mount to use cached data when possible
-    refetchOnReconnect: false, // Don't refetch on reconnect
-    retry: false, // Don't retry failed requests to prevent cache thrashing
-    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading states
-  });
+  // Early return if no team is selected
+  if (!currentTeamId || !currentTeam) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Select a Team</h1>
+        <TeamSwitcher mode="required" />
+      </div>
+    );
+  }
 
-  const gameStatsMap = batchData?.stats || {};
-  const gameRostersMap = batchData?.rosters || {};
-  const gameScoresMap = batchData?.scores || {};
-  const isLoadingStats = isLoadingBatchData;
-
-  // Debug batch data
-  useEffect(() => {
+  return (
     if (batchData) {
       console.log('Dashboard received batch data:', {
         statsGames: Object.keys(batchData.stats || {}),
