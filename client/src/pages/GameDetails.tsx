@@ -1256,21 +1256,34 @@ export default function GameDetails() {
     enabled: !!gameId,
   });
 
-  // Fetch players using REST endpoint - Stage 4
+  // Fetch players using REST endpoint with CACHE_KEYS
   const { 
     data: players = [],
-    isLoading: isLoadingPlayers
+    isLoading: isLoadingPlayers,
+    error: playersError
   } = useQuery({
-    queryKey: ['players', currentClub?.id, 'rest'],
+    queryKey: CACHE_KEYS.clubPlayers(currentClub?.id),
     queryFn: async () => {
       console.log('GameDetails: Fetching players for club', currentClub?.id);
-      const result = await apiClient.get(`/api/clubs/${currentClub?.id}/players`);
-      console.log('GameDetails: Loaded players:', result?.length, 'players');
-      console.log('GameDetails: Target players found:', result?.filter(p => [78, 61, 64].includes(p.id)));
-      return result;
+      if (!currentClub?.id) {
+        console.log('GameDetails: No club ID available');
+        return [];
+      }
+      try {
+        const result = await apiClient.get(`/api/clubs/${currentClub?.id}/players`);
+        console.log('GameDetails: PLAYERS QUERY SUCCESS - Raw result:', result);
+        console.log('GameDetails: PLAYERS QUERY SUCCESS - Count:', result?.length);
+        console.log('GameDetails: PLAYERS QUERY SUCCESS - Target players:', result?.filter(p => [78, 61, 64].includes(p.id)));
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error('GameDetails: PLAYERS QUERY ERROR:', error);
+        return [];
+      }
     },
     enabled: !!currentClub?.id,
-    select: (data) => Array.isArray(data) ? data : []
+    staleTime: 1 * 60 * 1000, // Reduced cache time
+    refetchOnWindowFocus: true, // Enable refetch to force data loading
+    retry: 3
   });
 
   // Fetch game statuses
@@ -1903,7 +1916,20 @@ export default function GameDetails() {
                         </div>
                       ) : players.length === 0 ? (
                         <div className="flex items-center justify-center p-8">
-                          <p className="text-red-500">No players found for this club</p>
+                          <div className="text-center">
+                            <p className="text-red-500">No players found for this club</p>
+                            <p className="text-xs text-gray-500 mt-2">Club ID: {currentClub?.id}</p>
+                            <p className="text-xs text-gray-500">Error: {playersError?.message}</p>
+                            <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id ? 'YES' : 'NO'}</p>
+                            <p className="text-xs text-gray-500">Cache key: {JSON.stringify(CACHE_KEYS.clubPlayers(currentClub?.id))}</p>
+                            <Button 
+                              size="sm" 
+                              onClick={() => window.location.reload()}
+                              className="mt-2"
+                            >
+                              Refresh Page
+                            </Button>
+                          </div>
                         </div>
                       ) : (
                         <>
