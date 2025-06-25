@@ -839,6 +839,28 @@ export default function GamePreparation() {
                     opponentName={opponent}
                   />
 
+                  {/* Historical Attack vs Defense Performance */}
+                  {historicalGames.length > 0 && batchStats && Object.keys(batchStats).some(gameId => batchStats[gameId]?.length > 0) && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Historical vs {opponent} - Position Performance</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {(() => {
+                          // Calculate position-based statistics for historical games
+                          const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
+                          
+                          return (
+                            <AttackDefenseDisplay
+                              averages={historicalPositionAverages}
+                              label={`Historical Attack vs Defense vs ${opponent}`}
+                            />
+                          );
+                        })()}
+                      </CardContent>
+                    </Card>
+                  )}
+
 
 
 
