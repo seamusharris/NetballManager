@@ -1,4 +1,5 @@
 import { useLocation, useParams } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
@@ -31,24 +32,15 @@ import { cacheKeys } from '@/lib/cacheKeys';
 export default function Dashboard() {
   const params = useParams();
   const [, setLocation] = useLocation();
-  const clubId = params.clubId ? Number(params.clubId) : null;
-  const currentTeamId = params.teamId ? Number(params.teamId) : null;
-
-  // Fetch club details directly from URL parameter
-  const { data: club } = useQuery({
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
-  });
-
-  // Fetch teams for this club
-  const { data: teams = [] } = useQuery({
-    queryKey: ['clubs', clubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
-    enabled: !!clubId,
-  });
-
-  const currentTeam = teams.find(team => team.id === currentTeamId) || null;
+  const { 
+    currentClub, 
+    currentClubId, 
+    currentTeamId, 
+    currentTeam,
+    clubTeams, 
+    setCurrentTeamId,
+    isLoading: clubLoading 
+  } = useClub();
 
   // Monitor request performance
   const requestMetrics = useRequestMonitor('Dashboard');
@@ -59,11 +51,11 @@ export default function Dashboard() {
     if (teamIdFromUrl && !isNaN(Number(teamIdFromUrl))) {
       const targetTeamId = Number(teamIdFromUrl);
       // Check if the team exists in the current club
-      const teamExists = teams?.some(team => team.id === targetTeamId);
+      const teamExists = clubTeams?.some(team => team.id === targetTeamId);
       if (teamExists && currentTeamId !== targetTeamId) {
         console.log(`Dashboard: Setting team ${targetTeamId} from URL`);
-        
-      } else if (!teamExists && teams.length > 0) {
+        setCurrentTeamId(targetTeamId);
+      } else if (!teamExists && clubTeams.length > 0) {
         console.log(`Dashboard: Team ${targetTeamId} not found, redirecting to teams page`);
         // Team doesn't exist, redirect to teams page
         setLocation('/teams');
@@ -75,64 +67,111 @@ export default function Dashboard() {
       setLocation('/teams');
       return;
     }
-  }, [params.teamId, teams, setLocation, currentTeamId]);
+  }, [params.teamId, clubTeams, setLocation, currentTeamId, setCurrentTeamId]);
 
   // Debug team switching
   useEffect(() => {
     console.log('Dashboard: Team context updated:', {
       currentTeamId,
       currentTeamName: currentTeam?.name,
-      teamsCount: teams.length
+      clubTeamsCount: clubTeams.length
     });
-  }, [currentTeamId, currentTeam?.name, teams.length]);
+  }, [currentTeamId, currentTeam, clubTeams]);
 
   // Players data using REST endpoint - Stage 4
-  const { data: players = [] } = useQuery({
-    queryKey: ['clubs', clubId, 'players'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId,
+  const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
+    queryKey: ['players', currentClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
+    enabled: !!currentClubId && !!currentTeamId,
     staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
   // Fetch games with team context - use team-specific endpoint to completely avoid cache pollution
-  const { data: games = [] } = useQuery({
-    queryKey: ['teams', currentTeamId, 'games'],
-    queryFn: () => {
+  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
+    queryKey: [`team-games-${currentTeamId}`, currentClubId, currentTeamId, Date.now()], // Force cache invalidation
+    queryFn: async () => {
       console.log(`Dashboard: Fetching games via team-specific endpoint for team ${currentTeamId}`);
       if (!currentTeamId) {
         throw new Error('No team ID available for games query');
       }
-      return apiClient.get(`/api/teams/${currentTeamId}/games`);
+      // Use team-specific endpoint to completely bypass club-wide cache
+      const result = await apiClient.get(`/api/teams/${currentTeamId}/games`);
+      console.log(`Dashboard: Received ${result?.length || 0} games for team ${currentTeamId}`);
+      return result;
     },
-    enabled: !!currentTeamId,
+    enabled: !!currentClubId && !!currentTeamId,
+    staleTime: 0, // No cache for debugging
+    gcTime: 0, // No cache for debugging
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
-  // Batch fetch statistics for completed games
-  const completedGames = games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
-  const gameIds = completedGames.map(game => game.id);
+  // Opponents system has been completely removed
 
-  const { statsMap: batchStats = {}, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIds);
-  const { data: batchScores = {}, isLoading: isLoadingBatchScores } = useBatchGameScores(gameIds);
+  const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
+    queryKey: ['seasons', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons'),
+    enabled: !!currentClubId,
+    staleTime: 60 * 60 * 1000, // 1 hour cache for seasons (rarely change) - increased
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
+  });
 
+  const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
+    queryKey: ['seasons', 'active', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons/active'),
+    enabled: !!currentClubId,
+    staleTime: 60 * 60 * 1000, // 1 hour cache for active season - increased
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
+  });
 
-  // Loading state and team validation
-  const isLoading = isLoadingBatchStats || isLoadingBatchScores;
+  // Centralized roster fetching for all games - optimized for team switching
+  const gameIdsArray = games?.map(g => g.id).sort() || [];
+  const gameIds = gameIdsArray.join(',');
+
+  // Use unified data fetcher with proper team switching
+  const { data: batchData, isLoading: isLoadingBatchData, error: batchDataError } = useQuery({
+    queryKey: ['batch-data', currentClubId, currentTeamId, gameIds],
+    queryFn: async () => {
+      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
+
+      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
+
+      try {
+        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
+        const result = await dataFetcher.batchFetchGameData({
+          gameIds: gameIdsArray,
+          clubId: currentClubId!,
+          teamId: currentTeamId ?? undefined,
+          includeStats: true,
+          includeRosters: true,
+          includeScores: true
+        });
 
         console.log('Dashboard batch data result for team', currentTeamId, ':', result);
         return result;
       } catch (error) {
-  // Early return if no team is selected
-  if (!currentTeamId || !currentTeam) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Select a Team</h1>
-        <TeamSwitcher mode="required" />
-      </div>
-    );
-  }
+        console.error('Dashboard batch data fetch error:', error);
+        throw error;
+      }
+    },
+    enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
+    staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates  
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't refetch on mount to use cached data when possible
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    retry: false, // Don't retry failed requests to prevent cache thrashing
+    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading states
+  });
 
-  return (
+  const gameStatsMap = batchData?.stats || {};
+  const gameRostersMap = batchData?.rosters || {};
+  const gameScoresMap = batchData?.scores || {};
+  const isLoadingStats = isLoadingBatchData;
+
+  // Debug batch data
+  useEffect(() => {
     if (batchData) {
       console.log('Dashboard received batch data:', {
         statsGames: Object.keys(batchData.stats || {}),
@@ -147,14 +186,14 @@ export default function Dashboard() {
   }, [batchData, batchDataError, gameIdsArray.length]);
 
   // NOW we can do conditional returns after all hooks are called
-  if (clubLoading || !clubId) {
-    console.log('Dashboard waiting for club context:', { clubLoading, hasCurrentClub: !!club, clubId });
+  if (clubLoading || !currentClubId) {
+    console.log('Dashboard waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub, currentClubId });
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin" />
           <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-          {!clubId && <p className="text-xs text-muted-foreground">Initializing club context...</p>}
+          {!currentClubId && <p className="text-xs text-muted-foreground">Initializing club context...</p>}
         </div>
       </div>
     );
@@ -164,6 +203,7 @@ export default function Dashboard() {
 
   // Improved loading state - wait for both core data AND batch data for better UX
   const hasBasicData = players.length > 0 && games.length > 0;
+  const hasBatchData = batchData && (Object.keys(batchData.stats || {}).length > 0 || gameIdsArray.length === 0);
   const isLoading = (isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingBatchData) && (!hasBasicData || !hasBatchData);
 
   // Show error state if any query fails
@@ -245,7 +285,7 @@ export default function Dashboard() {
             <PreviousGamesDisplay
               historicalGames={recentGames}
               currentTeamId={currentTeamId || 0}
-              clubId={clubId || 0}
+              currentClubId={currentClubId || 0}
               batchScores={gameScoresMap}
               batchStats={gameStatsMap}
               opponentName="Recent Form"
@@ -258,13 +298,13 @@ export default function Dashboard() {
         <UpcomingGamesWidget
           games={games || []}
           teamId={currentTeamId}
-          clubId={clubId}
+          clubId={currentClubId}
           limit={5}
           title="Upcoming Games"
           className="mb-8"
           centralizedScores={gameScoresMap}
           gameStats={gameStatsMap}
-          teams={teams || []}
+          clubTeams={clubTeams || []}
           showDate={true}
           showRound={true}
           showScore={false}
@@ -280,7 +320,7 @@ export default function Dashboard() {
           centralizedStats={gameStatsMap}
           centralizedScores={gameScoresMap}
           isBatchDataLoading={isLoadingBatchData}
-          teams={teams}
+          teams={clubTeams}
         />
       </div>
     </>

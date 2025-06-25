@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
+import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
 import FixedPlayerAvailabilityManager from '@/components/roster/FixedPlayerAvailabilityManager';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +16,7 @@ import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
   const params = useParams();
-  
+  const { currentClub, isInitialized } = useClub();
 
   // Extract parameters from URL - always call these hooks
   const gameId = React.useMemo(() => {
@@ -40,6 +41,8 @@ export default function PlayerAvailability() {
   
   // Fetch specific game
   const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
+    queryKey: ['game', gameId],
+    queryFn: async () => {
       console.log(`Fetching specific game ${gameId}`);
       const result = await apiRequest('GET', `/api/games/${gameId}`) as Promise<Game>;
       console.log(`Game ${gameId} response:`, result);
@@ -52,6 +55,8 @@ export default function PlayerAvailability() {
 
   // Fetch team players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
+    queryKey: ['teams', teamId, 'players'],
+    queryFn: async () => {
       console.log(`Fetching players for team ${teamId}`);
       const result = await apiRequest('GET', `/api/teams/${teamId}/players`) as Promise<Player[]>;
       console.log(`Team ${teamId} players response:`, result?.length, 'players');

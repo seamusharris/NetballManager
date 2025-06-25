@@ -20,13 +20,14 @@ import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { exportStatsToPDF, exportStatsToExcel } from '@/lib/exportUtils';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 
 export default function Statistics() {
   const [location, navigate] = useLocation();
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const { toast } = useToast();
-  
+  const { currentClubId } = useClub();
 
   // Parse game ID from URL query parameter or route
   useEffect(() => {
@@ -55,13 +56,20 @@ export default function Statistics() {
 
   // NEW: Use club-scoped data instead of global
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
+    queryKey: ['/api/clubs', currentClubId, 'games'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/games`),
+    enabled: !!currentClubId
   });
 
   // Keep opponents for now (will remove later)
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<Opponent[]>({
+    queryKey: ['/api/opponents'],
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
+    queryKey: ['/api/clubs', currentClubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
+    enabled: !!currentClubId
   });
 
   // Use state to store roster data
@@ -73,7 +81,7 @@ export default function Statistics() {
     if (!selectedGameId) return;
 
     async function fetchRosters() {
-      if (!clubId) return;
+      if (!currentClubId) return;
       
       setLoadingRosters(true);
       try {
@@ -83,14 +91,14 @@ export default function Statistics() {
         
         const rosterPromises = [];
         
-        if (game.homeClubId === clubId) {
+        if (game.homeClubId === currentClubId) {
           rosterPromises.push(
             fetch(`/api/game/${selectedGameId}/team/${game.homeTeamId}/rosters`)
               .then(res => res.json())
           );
         }
         
-        if (game.awayClubId === clubId && game.awayTeamId) {
+        if (game.awayClubId === currentClubId && game.awayTeamId) {
           rosterPromises.push(
             fetch(`/api/game/${selectedGameId}/team/${game.awayTeamId}/rosters`)
               .then(res => res.json())
@@ -111,7 +119,7 @@ export default function Statistics() {
     }
 
     fetchRosters();
-  }, [selectedGameId, clubId, games]);
+  }, [selectedGameId, currentClubId, games]);
 
   // Use our manually fetched roster data instead of the query result
   const rosters = rosterData;
@@ -128,6 +136,12 @@ export default function Statistics() {
     async function fetchGameStats() {
       setLoadingGameStats(true);
       try {
+        const response = await fetch(`/api/games/${selectedGameId}/stats`);
+        if (!response.ok) throw new Error('Failed to fetch game stats');
+        const data = await response.json();
+        console.log(`Loaded ${data.length} game stat entries for game ${selectedGameId}`);
+        setGameStatsData(data);
+      } catch (error) {
         console.error('Error fetching game stats:', error);
         setGameStatsData([]);
       } finally {

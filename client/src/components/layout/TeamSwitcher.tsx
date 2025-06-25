@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { useClub } from '@/contexts/ClubContext';
 import { useLocation, useRoute } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
 
 interface TeamSwitcherProps {
   mode?: 'optional' | 'required' | 'hidden';
@@ -13,44 +12,31 @@ interface TeamSwitcherProps {
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   // ALL HOOKS MUST BE AT THE TOP - NEVER CALL HOOKS CONDITIONALLY
-  
+  const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId, currentClub } = useClub();
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
-  const [matchClub] = useRoute('/club/:clubId/*');
-  const [matchTeam] = useRoute('/team/:teamId/*');
-  
-  // Extract IDs from URL
-  const clubId = matchClub?.clubId ? Number(matchClub.clubId) : null;
-  const teamId = matchTeam?.teamId ? Number(matchTeam.teamId) : null;
-
-  // Fetch teams for this club
-  const { data: teams = [] } = useQuery({
-    queryKey: ['clubs', clubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
-    enabled: !!clubId,
-  });
 
   // Compute derived values (these are NOT hooks)
-  const validTeams = teams.filter(team => team.isActive !== false);
+  const validTeams = clubTeams.filter(team => team.isActive !== false);
   const shouldRender = mode !== 'hidden' && validTeams.length > 1;
 
   // ALL useEffect hooks must be called on every render
   useEffect(() => {
     if (!shouldRender) return;
-    const newValue = teamId?.toString() || (mode === 'required' ? '' : 'all');
-    console.log('TeamSwitcher: Context changed, updating internal value:', { teamId, newValue });
+    const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
+    console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
     setInternalValue(newValue);
-  }, [teamId, mode, shouldRender]);
+  }, [currentTeamId, mode, shouldRender]);
 
   useEffect(() => {
     if (!shouldRender) return;
-    if (mode === 'required' && !teamId && validTeams.length > 0) {
+    if (mode === 'required' && !currentTeamId && validTeams.length > 0) {
       const firstTeam = validTeams[0];
       console.log('TeamSwitcher: Auto-selecting first team:', firstTeam.id, firstTeam.name);
-      
+      setCurrentTeamId(firstTeam.id);
       onTeamChange?.(firstTeam.id);
     }
-  }, [mode, currentTeamId, validTeams, 
+  }, [mode, currentTeamId, validTeams, setCurrentTeamId, onTeamChange, shouldRender]);
 
   // useCallback MUST be called on every render
   const handleTeamSelect = useCallback((teamId: string) => {
@@ -59,12 +45,12 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     // Handle "all" selection
     if (teamId === 'all') {
       setInternalValue(teamId);
-      
+      setCurrentTeamId(null);
       onTeamChange?.(null);
       
       // Navigate to club-wide view if currently on a team page
       if (location.startsWith('/team/') && location.includes('/games')) {
-        const clubId = club?.id;
+        const clubId = currentClub?.id;
         if (clubId) {
           setLocation(`/club/${clubId}/games`);
         }
@@ -84,13 +70,13 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     setInternalValue(teamId);
     
     // Update context immediately
-    
+    setCurrentTeamId(numericTeamId);
     
     // Call external handler if provided
     onTeamChange?.(numericTeamId);
 
     // Get the team data to determine the navigation target
-    const selectedTeam = teams?.find(t => t.id === numericTeamId);
+    const selectedTeam = clubTeams?.find(t => t.id === numericTeamId);
     if (selectedTeam) {
       console.log('TeamSwitcher: Selected team:', selectedTeam.name);
 
@@ -107,7 +93,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         setLocation(`/team/${numericTeamId}`);
       }
     }
-  }, [
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, currentClub]);
 
   // ONLY AFTER ALL HOOKS - we can conditionally return null
   if (!shouldRender) {

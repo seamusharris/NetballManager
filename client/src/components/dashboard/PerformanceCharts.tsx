@@ -61,12 +61,16 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
   const gameIds = filteredGames.map(game => game.id);
 
   // Fetch game stats for all completed games
+  const { data: gameStatsMap, isLoading } = useQuery({
+    queryKey: ['performanceChartStats', ...gameIds],
+    queryFn: async () => {
       if (gameIds.length === 0) {
         return {};
       }
 
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/stats`);
         const stats = await response.json();
         return { gameId, stats };
       });

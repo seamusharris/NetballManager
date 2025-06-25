@@ -1,4 +1,4 @@
-import { useLocation, useParams } from 'wouter';
+import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,7 @@ import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, positionGroups } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 import { usePlayerStatsMapping, PlayerStats } from '@/hooks/usePlayerStatsMapping';
 
 interface PlayersListProps {
@@ -52,9 +53,7 @@ interface SortConfig {
 }
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
-  // ClubContext removed - get data from URL parameters
-  const params = useParams<{ clubId?: string }>();
-  const clubId = params.clubId ? Number(params.clubId) : null;
+  const { currentClubId } = useClub();
 
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());
@@ -67,6 +66,9 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const itemsPerPage = 20;
 
   // Fetch games to calculate player statistics
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
+    queryKey: ['/api/games'],
+    queryFn: () => apiClient.get('/api/games'),
   });
 
   // Get completed games using same filtering as Team Dashboard PlayerAnalyticsWidget
@@ -77,18 +79,23 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const enableQuery = gameIds.length > 0;
 
   // Use unified data fetcher for consistency with Dashboard
+  const { data: batchData, isLoading: isLoadingBatchData, error: batchError } = useQuery({
+    queryKey: ['players-batch-data', currentClubId, gameIds.sort().join(',')],
+    queryFn: async () => {
       if (gameIds.length === 0) return { stats: {}, rosters: {} };
 
       console.log(`PlayersList: Fetching batch data for ${gameIds.length} games`);
 
+      const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
       return await dataFetcher.batchFetchGameData({
         gameIds,
-        clubId: clubId!,
+        clubId: currentClubId!,
         includeStats: true,
         includeRosters: true,
         includeScores: false // Players page doesn't need scores
       });
     },
+    enabled: enableQuery && !!currentClubId && gameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry failed requests
@@ -100,22 +107,31 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const isLoadingStats = isLoadingBatchData;
 
   // Use batch endpoint for roster data with improved caching
+  const { data: gameRostersMapOld, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
+    queryKey: ['batchRosters', currentClubId, gameIds.sort().join(',')],
+    queryFn: async () => {
       if (gameIds.length === 0) return {};
 
       console.log(`PlayersList: Using batch endpoint for roster fetch of ${gameIds.length} games`);
       
       // Use batch endpoint instead of individual calls
+      const response = await fetch('/api/games/rosters/batch', {
         method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ gameIds }),
       });
 
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch rosters: ${response.statusText}`);
+      }
 
       const rostersMap = await response.json();
       console.log(`PlayersList: Batch roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
+    enabled: enableQuery && !!currentClubId,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
@@ -171,6 +187,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
     }))
     .sort((a, b) => {
       // Sort by the selected field and direction
+      const { field, direction } = sortConfig;
 
       // Handle name sorting separately
       if (field === 'name') {
@@ -178,6 +195,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         const bName = b.displayName || `${b.firstName || ''} ${b.lastName || ''}`.trim();
         if (direction === 'asc') {
           return aName.localeCompare(bName);
+        } else {
           return bName.localeCompare(aName);
         }
       }
@@ -188,6 +206,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       if (direction === 'asc') {
         return aValue - bValue;
+      } else {
         return bValue - aValue;
       }
     });

@@ -8,6 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
+import { useClub } from '../../contexts/ClubContext';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
 
@@ -48,15 +49,13 @@ export default function GameForm({
   isSubmitting = false,
   isEditing = false,
 }: GameFormProps) {
-  
-  // ClubContext removed - using URL-based club management
-  const params = useParams<{ clubId?: string }>();
-  const clubId = params.clubId ? Number(params.clubId) : null;
-
-  // Fetch club teams
-  });
+  const { toast } = useToast();
+  const { currentClubId } = useClub();
 
   // Fetch all teams for inter-club games
+  const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({
+    queryKey: ['teams', 'all'],
+    queryFn: () => apiClient.get('/api/teams/all'),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -73,6 +72,7 @@ export default function GameForm({
     },
   });
 
+  const { watch } = form;
 
   console.log("GameForm useEffect triggered:", {
     game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,
@@ -161,6 +161,7 @@ export default function GameForm({
 
     if (isEditing && game) {
       console.log("Updating game with ID:", game.id, "and data:", gameData);
+    } else {
       console.log("Creating new game with data:", gameData);
     }
 

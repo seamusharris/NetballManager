@@ -42,7 +42,7 @@ export function SelectablePlayerBox({
   variant = 'detailed'
 }: SelectablePlayerBoxProps) {
   const [isSaving, setIsSaving] = useState(false);
-  
+  const { toast } = useToast();
 
   const getPlayerColor = (player: Player) => {
     if (player.avatarColor?.startsWith('bg-')) {
@@ -69,10 +69,12 @@ export function SelectablePlayerBox({
       } else if (!isSelected && onAddPlayer) {
         onAddPlayer(playerId);
       }
+    } else {
       // For availability mode, toggle selection
       const newSelectedIds = new Set(selectedPlayerIds);
       if (newSelectedIds.has(playerId)) {
         newSelectedIds.delete(playerId);
+      } else {
         newSelectedIds.add(playerId);
       }
       onSelectionChange(newSelectedIds);

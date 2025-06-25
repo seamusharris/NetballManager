@@ -26,12 +26,15 @@ export default function SimplePlayerAvailabilityManager({
   onGameChange,
   hideGameSelection = false
 }: SimplePlayerAvailabilityManagerProps) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch existing availability data
+  const { data: availabilityResponse, refetch } = useQuery({
+    queryKey: ['/api/games', gameId, 'availability'],
     enabled: !!gameId,
   });
 
@@ -47,6 +50,7 @@ export default function SimplePlayerAvailabilityManager({
       const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => playerIds.includes(id));
       setSelectedPlayers(new Set(filteredAvailableIds));
       onAvailabilityChange?.(filteredAvailableIds);
+    } else {
       // Default: all active players are available
       const activePlayerIds = players.filter(p => p.active !== false).map(p => p.id);
       setSelectedPlayers(new Set(activePlayerIds));
@@ -60,6 +64,7 @@ export default function SimplePlayerAvailabilityManager({
     
     if (isSelected) {
       newSelectedPlayers.add(playerId);
+    } else {
       newSelectedPlayers.delete(playerId);
     }
     

@@ -20,15 +20,17 @@ export default function BackButton({
   size = "sm"
 }: BackButtonProps) {
   const [, navigate] = useLocation();
-  
+  const { getPreviousPath, getPreviousTitle, canGoBack } = useNavigationStack();
 
   const handleBack = () => {
     if (canGoBack()) {
       const previousPath = getPreviousPath(fallbackPath);
       navigate(previousPath);
+    } else {
       // Fallback to browser back or specific route if no navigation history
       if (window.history.length > 1) {
         window.history.back();
+      } else {
         navigate(fallbackPath);
       }
     }

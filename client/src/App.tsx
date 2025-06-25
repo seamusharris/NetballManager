@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-// ClubProvider removed - using URL-based club management
+import ClubProvider from '@/contexts/ClubContext';
 import { initializeCacheManager } from '@/lib/cacheManager';
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +24,7 @@ import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
-// useClub removed - using URL-based club management
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 
 // Import GameDetails directly for now
@@ -280,16 +280,37 @@ export { queryClient };
 initializeCacheManager(queryClient);
 
 function AppContent() {
-  return <Router />;
+  try {
+    const { isInitialized } = useClub();
+
+    if (!isInitialized) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner message="Initializing application..." />
+        </div>
+      );
+    }
+
+    return <Router />;
+  } catch (error) {
+    console.error('AppContent error:', error);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner message="Loading club context..." />
+      </div>
+    );
+  }
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AppContent />
-        <Toaster />
-      </TooltipProvider>
+      <ClubProvider>
+        <TooltipProvider>
+          <AppContent />
+          <Toaster />
+        </TooltipProvider>
+      </ClubProvider>
     </QueryClientProvider>
   );
 }

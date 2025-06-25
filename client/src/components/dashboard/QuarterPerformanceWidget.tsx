@@ -45,6 +45,9 @@ export default function QuarterPerformanceWidget({
   const gameIdsKey = validGameIds.join(',');
 
   // Fetch scores for all valid games (we need scores, not stats, for quarter performance)
+  const { data: gameScoresMap, isLoading } = useQuery({
+    queryKey: ['quarterPerformanceScores', gameIdsKey, seasonId],
+    queryFn: async () => {
       if (validGameIds.length === 0) {
         return {};
       }
@@ -91,6 +94,7 @@ export default function QuarterPerformanceWidget({
       }))
     });
 
+    const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
       1: { team: 0, opponent: 0, count: 0 },
       2: { team: 0, opponent: 0, count: 0 },
       3: { team: 0, opponent: 0, count: 0 },
@@ -116,6 +120,7 @@ export default function QuarterPerformanceWidget({
         // Use the provided current team ID to determine our team vs opponent
         ourTeamId = currentTeamId;
         opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
+      } else {
         // Fallback: try to determine from game structure
         console.warn('QuarterPerformanceWidget: No currentTeamId provided, using fallback logic');
         ourTeamId = game.homeTeamId;
@@ -123,6 +128,7 @@ export default function QuarterPerformanceWidget({
       }
 
       // Group scores by quarter for this game
+      const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
         1: { team: 0, opponent: 0 },
         2: { team: 0, opponent: 0 },
         3: { team: 0, opponent: 0 },

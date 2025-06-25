@@ -12,7 +12,7 @@ interface PlayerCombinationAnalysisProps {
   players: any[];
   centralizedStats: Record<number, any[]>;
   centralizedRosters: Record<number, any[]>;
-  clubId?: number;
+  currentClubId?: number;
 }
 
 interface CombinationResult {
@@ -39,7 +39,7 @@ function PlayerCombinationAnalysis({
   players, 
   centralizedStats, 
   centralizedRosters,
-  clubId 
+  currentClubId 
 }: PlayerCombinationAnalysisProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
@@ -56,8 +56,8 @@ function PlayerCombinationAnalysis({
       games
         .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
         .map(game => {
-          const isHomeGame = game.homeClubId === clubId;
-          const isAwayGame = game.awayClubId === clubId;
+          const isHomeGame = game.homeClubId === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId;
 
           if (isHomeGame && !isAwayGame) {
             return game.awayTeamName;
@@ -70,7 +70,7 @@ function PlayerCombinationAnalysis({
         .filter(teamName => teamName !== 'Bye')
     ));
     setOpponents(uniqueOpponents);
-  }, [games, clubId]);
+  }, [games, currentClubId]);
 
   // Calculate player combinations effectiveness
   useEffect(() => {
@@ -79,7 +79,7 @@ function PlayerCombinationAnalysis({
     }
 
     calculateCombinations();
-  }, [centralizedStats, centralizedRosters, combinationSize, selectedPositions, selectedOpponent, clubId]);
+  }, [centralizedStats, centralizedRosters, combinationSize, selectedPositions, selectedOpponent, currentClubId]);
 
   const getPlayerCombinations = (playerIds: number[], size: number): number[][] => {
     if (size > playerIds.length) return [];
@@ -184,8 +184,8 @@ function PlayerCombinationAnalysis({
 
         // Track opponent-specific performance - determine which team is the opponent
         let opponent = null;
-        const isHomeGame = game.homeClubId === clubId;
-        const isAwayGame = game.awayClubId === clubId;
+        const isHomeGame = game.homeClubId === currentClubId;
+        const isAwayGame = game.awayClubId === currentClubId;
 
         if (isHomeGame && !isAwayGame) {
           // We are home team, opponent is away team

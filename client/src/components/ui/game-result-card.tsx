@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
 import { QuarterScoresDisplay } from './quarter-scores-display';
 
@@ -29,8 +30,8 @@ interface GameResultCardProps {
   showQuarterScores?: boolean;
   compact?: boolean;
   currentTeamId?: number;
-  teams?: any[];
-  clubId?: number;
+  clubTeams?: any[];
+  currentClubId?: number;
 }
 
 export default function GameResultCard({ 
@@ -47,17 +48,18 @@ export default function GameResultCard({
   showQuarterScores = false,
   compact = false,
   currentTeamId: propCurrentTeamId,
-  teams = [],
-  clubId: propCurrentClubId
+  clubTeams = [],
+  currentClubId: propCurrentClubId
 }: GameResultCardProps) {
+  const { currentTeamId, currentClubId, currentClubTeams } = useClub();
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
   
   // Extract club ID from URL or use prop - more reliable than context
   const urlClubId = useMemo(() => {
     const clubMatch = location.match(/\/club\/(\d+)/);
-    return clubMatch ? parseInt(clubMatch[1]) : (propCurrentClubId || clubId);
-  }, [location, propCurrentClubId, clubId]);
+    return clubMatch ? parseInt(clubMatch[1]) : (propCurrentClubId || currentClubId);
+  }, [location, propCurrentClubId, currentClubId]);
   const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data
@@ -70,6 +72,9 @@ export default function GameResultCard({
   }
 
   // Fetch club teams based on URL club ID for reliable team perspective
+  const { data: urlClubTeams = [] } = useQuery<any[]>({
+    queryKey: ['clubs', urlClubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${urlClubId}/teams`),
     enabled: !!urlClubId,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
@@ -280,6 +285,7 @@ export default function GameResultCard({
           homeScore = scores.finalScore.against;
           awayScore = scores.finalScore.for;
         }
+      } else {
         // Club-wide view - scores should already be in correct format
         homeScore = scores.finalScore.for;
         awayScore = scores.finalScore.against;
@@ -375,6 +381,7 @@ export default function GameResultCard({
                   homeScore = scores.finalScore.against;
                   awayScore = scores.finalScore.for;
                 }
+              } else {
                 // Club-wide view - assume scores are already in home/away format
                 homeScore = scores.finalScore.for;
                 awayScore = scores.finalScore.against;

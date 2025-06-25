@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,21 +55,27 @@ interface GameAnalysis {
 }
 
 export default function OpponentPreparation() {
-  
+  const { currentClub, currentClubId, currentTeamId, isLoading: clubLoading } = useClub();
   const [selectedOpponent, setSelectedOpponent] = useState<string>('');
   const [opponents, setOpponents] = useState<OpponentTeam[]>([]);
   const [selectedGameAnalysis, setSelectedGameAnalysis] = useState<GameAnalysis | null>(null);
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+    queryKey: ['games', currentClubId, currentTeamId],
+    queryFn: () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
         headers['x-current-team-id'] = currentTeamId.toString();
       }
       return apiClient.get('/api/games', headers);
     },
+    enabled: !!currentClubId,
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
+    queryKey: ['players', currentClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
+    enabled: !!currentClubId,
   });
 
   // Get completed games for stats
@@ -96,8 +103,8 @@ export default function OpponentPreparation() {
       let opponentClubName = '';
       let opponentDivision = '';
 
-      const isHomeGame = game.homeClubId === clubId;
-      const isAwayGame = game.awayClubId === clubId;
+      const isHomeGame = game.homeClubId === currentClubId;
+      const isAwayGame = game.awayClubId === currentClubId;
 
       // Check if we're involved in this game at all
       const weAreHome = currentTeamId && game.homeTeamId === currentTeamId;
@@ -177,7 +184,7 @@ export default function OpponentPreparation() {
     opponentsList.sort((a, b) => new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime());
 
     setOpponents(opponentsList);
-  }, [centralizedStats, games, clubId, currentTeamId]);
+  }, [centralizedStats, games, currentClubId, currentTeamId]);
 
   const analyzeGame = (game: any): GameAnalysis => {
     const gameStats = centralizedStats[game.id] || [];
@@ -239,7 +246,7 @@ export default function OpponentPreparation() {
     };
   };
 
-  if (clubLoading || !clubId) {
+  if (clubLoading || !currentClubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -269,7 +276,7 @@ export default function OpponentPreparation() {
   return (
     <>
       <Helmet>
-        <title>Opponent Preparation | {club?.name} Stats Tracker</title>
+        <title>Opponent Preparation | {currentClub?.name} Stats Tracker</title>
         <meta name="description" content={`Prepare for upcoming games by analyzing previous performance against opposing teams`} />
       </Helmet>
 

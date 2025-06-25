@@ -59,6 +59,7 @@ export default function QuarterStatistics({
       }
       
       return playerIds;
+    } else {
       // For totals, show all players with stats
       return Object.keys(stats).map(Number);
     }

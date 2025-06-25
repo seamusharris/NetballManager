@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { useParams } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 
 interface TeamGameResult {
   id: number;
@@ -19,7 +19,7 @@ interface TeamGameResult {
 }
 
 export function useTeamGame(gameId: number) {
-  
+  const { currentTeamId } = useClub();
 
   return useQuery({
     queryKey: ['teams', currentTeamId, 'games', gameId],
@@ -40,7 +40,7 @@ export function useTeamGame(gameId: number) {
 }
 
 export function useTeamGames() {
-  
+  const { currentTeamId } = useClub();
 
   return useQuery({
     queryKey: ['teams', currentTeamId, 'games'],

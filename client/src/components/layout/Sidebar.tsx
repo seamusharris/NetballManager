@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useRoute } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useNextGame } from '@/hooks/use-next-game';
 import { 
@@ -7,6 +7,7 @@ import {
   BarChart, Database, SettingsIcon, Zap, Trophy, Building2, Target
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
+import { useClub } from '@/contexts/ClubContext';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -16,12 +17,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  const [matchClub] = useRoute('/club/:clubId/*');
-  const [matchTeam] = useRoute('/team/:teamId/*');
-  
-  // Extract IDs from URL
-  const clubId = matchClub?.clubId ? Number(matchClub.clubId) : null;
-  const teamId = matchTeam?.teamId ? Number(matchTeam.teamId) : null;
+  const { currentTeamId, currentTeam, currentClubId } = useClub();
+  const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;
@@ -33,9 +30,9 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   const getNavLinks = () => {
     const clubWideLinks = [
       { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" />, section: 'club' },
-      { path: `/club/${clubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
-      { path: `/club/${clubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
-      { path: `/club/${clubId}/games`, label: 'All Games', icon: <Calendar className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${currentClubId}/games`, label: 'All Games', icon: <Calendar className="w-5 h-5" />, section: 'club' },
     ];
 
     const adminLinks = [

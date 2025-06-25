@@ -31,6 +31,7 @@ interface TeamFormProps {
 }
 
 export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFormProps) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -105,6 +106,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           onSuccess?.();
         }
       });
+    } else {
       createMutation.mutate(data, {
         onSuccess: () => {
           form.reset();

@@ -20,7 +20,7 @@ interface AnalysisTabProps {
   playerStats: any[];
   teamStats: any;
   players: Player[];
-  clubId: number;
+  currentClubId: number;
 }
 
 interface AnalysisSection {
@@ -59,7 +59,7 @@ export default function AnalysisTab({
   playerStats,
   teamStats,
   players,
-  clubId
+  currentClubId
 }: AnalysisTabProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const [analysisData, setAnalysisData] = useState<{
@@ -90,6 +90,8 @@ export default function AnalysisTab({
   const gameIds = opponentGames.map(game => game.id);
   
   // Fetch statistics for opponent games
+  const { statsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
+  const { rostersMap, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
   // Debug roster data
   useEffect(() => {
@@ -169,6 +171,7 @@ export default function AnalysisTab({
       } else if (teamGoals < opponentGoals) {
         losses++;
         recentForm.push('L');
+      } else {
         draws++;
         recentForm.push('D');
       }
@@ -557,7 +560,7 @@ export default function AnalysisTab({
             players={players}
             centralizedStats={statsMap}
             centralizedRosters={rostersMap}
-            clubId={clubId}
+            currentClubId={currentClubId}
           />
         </div>
       </CardContent>

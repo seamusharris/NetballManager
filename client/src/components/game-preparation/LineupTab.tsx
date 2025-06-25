@@ -54,6 +54,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate, teamId }: Li
     4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const { toast } = useToast();
 
   // Initialize player availability
   useEffect(() => {
@@ -66,6 +67,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate, teamId }: Li
             initialData[player.id] = response.availablePlayerIds.includes(player.id);
           });
           setPlayerAvailability(initialData);
+        } else {
           // Default all active players to available
           const defaultData: PlayerAvailabilityData = {};
           players.forEach(player => {
@@ -94,6 +96,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate, teamId }: Li
     const availablePlayers = players.filter(p => playerAvailability[p.id] === true);
     if (availablePlayers.length >= 7) {
       generateLineupRecommendations(availablePlayers);
+    } else {
       setRecommendations([]);
     }
   }, [playerAvailability, players]);

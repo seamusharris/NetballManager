@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { ActivitySquare } from 'lucide-react';
 import { Game } from '@shared/schema';
+import { useClub } from '@/contexts/ClubContext';
 
 interface LiveStatsButtonProps {
   game: Game;
@@ -10,7 +11,7 @@ interface LiveStatsButtonProps {
 
 export default function LiveStatsButton({ game, className = "" }: LiveStatsButtonProps) {
   const [, navigate] = useLocation();
-  
+  const { currentTeam } = useClub();
 
   // Show the button if the game allows statistics
   if (!game.statusAllowsStatistics) {
@@ -25,12 +26,14 @@ export default function LiveStatsButton({ game, className = "" }: LiveStatsButto
     
     if (userTeamId && (userTeamId === game.homeTeamId || userTeamId === game.awayTeamId)) {
       targetTeamId = userTeamId;
+    } else {
       // Fallback to home team (could be away team based on user preference)
       targetTeamId = game.homeTeamId;
     }
     
     if (targetTeamId) {
       navigate(`/game/${game.id}/team/${targetTeamId}/stats/record`);
+    } else {
       // Last resort: legacy stats
       navigate(`/game/${game.id}/livestats`);
     }

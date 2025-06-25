@@ -10,6 +10,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+import { useClub } from '@/contexts/ClubContext';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
@@ -21,7 +22,7 @@ import { GamesContainer } from '@/components/ui/games-container';
 
 const Preparation = () => {
   const queryClient = useQueryClient();
-  
+  const { currentTeamId } = useClub();
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [teams, setTeams] = useState<any[]>([]);
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster' | 'analysis'>('game-selection');
@@ -40,13 +41,19 @@ const Preparation = () => {
   const nextGame = useNextGame();
 
   const { data: players, isLoading: isLoadingPlayers, error: errorPlayers } = useQuery({
+    queryKey: ['teamPlayers', currentTeamId],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
     enabled: !!currentTeamId,
   });
 
   const { data: allGames, isLoading: isLoadingGames, error: errorGames } = useQuery({
+    queryKey: ['games'],
+    queryFn: () => apiClient.get('/api/games'),
   });
 
   const { data: team, isLoading: isLoadingTeam, error: errorTeam } = useQuery({
+    queryKey: ['team', currentTeamId],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
     enabled: !!currentTeamId,
   });
 
@@ -310,7 +317,7 @@ const Preparation = () => {
                 players={playersData}
                 centralizedStats={gamePerformances}
                 centralizedRosters={{}}
-                clubId={team?.club_id}
+                currentClubId={team?.club_id}
               />
             </div>
           )}

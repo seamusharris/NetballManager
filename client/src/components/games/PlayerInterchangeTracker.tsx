@@ -50,6 +50,7 @@ export default function PlayerInterchangeTracker({
   const [reason, setReason] = useState<'tactical' | 'injury' | 'rest' | 'performance'>('tactical');
   const [showHistory, setShowHistory] = useState(false);
   const [playingTimes, setPlayingTimes] = useState<Record<number, PlayerPlayingTime>>({});
+  const { toast } = useToast();
 
   // Convert time string (e.g., "12:30") to seconds remaining in quarter
   const timeStringToSeconds = (timeStr: string): number => {
@@ -83,6 +84,7 @@ export default function PlayerInterchangeTracker({
     });
 
     // Track position assignments for each quarter
+    const quarterAssignments: Record<number, Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>> = {
       1: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
       2: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
       3: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,

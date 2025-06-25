@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import GameResultCard from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { statisticsService } from '@/lib/statisticsService';
 
@@ -23,9 +24,7 @@ interface RecentGamesProps {
 }
 
 function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
-  // ClubContext removed - using URL-based management
-  const params = useParams<{ clubId?: string; teamId?: string }>();
-  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+  const { currentTeam } = useClub();
 
   // Filter for recent completed games using the new status system
   const recentGames = (games || [])
@@ -73,6 +72,7 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
         console.error(`RecentGames: Error transforming scores for game ${game.id}:`, error);
         transformedScores[game.id] = [];
       }
+    } else {
       transformedScores[game.id] = [];
       console.log(`RecentGames: Game ${game.id} has no scores in batch data - setting empty array`);
     }
@@ -108,7 +108,7 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
                 showScore={true}
                 className="mb-4"
                 currentTeamId={clubWide ? null : currentTeam?.id}
-                teams={teams || []}
+                clubTeams={teams || []}
                 showLink={true}
               />
             ))

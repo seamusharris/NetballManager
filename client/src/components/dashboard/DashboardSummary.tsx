@@ -22,9 +22,8 @@ import QuickActionsWidget from './QuickActionsWidget';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useParams } from 'wouter';
-import { apiClient } from '@/lib/apiClient';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
+import { useClub } from '@/contexts/ClubContext';
 import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
@@ -60,23 +59,14 @@ export default function DashboardSummary({
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
-  // ClubContext removed - get data from URL parameters
-  const params = useParams<{ clubId?: string; teamId?: string }>();
-  const clubId = params.clubId ? Number(params.clubId) : null;
-  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+  const { currentClub, currentTeamId, clubTeams, isLoading: clubLoading } = useClub();
 
-  // Fetch club details directly
-  });
-
-  // Fetch teams for this club
-  });
-
-  // Derive currentTeam from currentTeamId and teams
-  const currentTeam = currentTeamId ? teams?.find(team => team.id === currentTeamId) : null;
+  // Derive currentTeam from currentTeamId and clubTeams
+  const currentTeam = currentTeamId ? clubTeams?.find(team => team.id === currentTeamId) : null;
 
   // Early return if club context isn't ready
-  if (clubLoading || !club) {
-    console.log('DashboardSummary waiting for club context:', { clubLoading, hasCurrentClub: !!club });
+  if (clubLoading || !currentClub) {
+    console.log('DashboardSummary waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub });
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -112,6 +102,7 @@ export default function DashboardSummary({
     // This prevents cache thrashing and duplicate API calls
     if (selectedSeasonId !== 'current') {
       queryClient.invalidateQueries({ 
+        queryKey: ['seasons', selectedSeasonId],
         exact: false 
       });
     }
@@ -260,7 +251,7 @@ export default function DashboardSummary({
             />
             <OpponentMatchups 
               games={filteredGames} 
-              clubId={club?.id || 0}
+              currentClubId={currentClub?.id || 0}
               centralizedStats={centralizedStats}
               centralizedScores={centralizedScores}
             />
@@ -295,14 +286,14 @@ export default function DashboardSummary({
               players={players} 
               centralizedStats={centralizedStats}
               centralizedRosters={centralizedRosters}
-              clubId={club?.id || 0}
+              currentClubId={currentClub?.id || 0}
             />
             <TeamPositionAnalysis 
               games={filteredGames} 
               players={players} 
               centralizedStats={centralizedStats}
               centralizedRosters={centralizedRosters}
-              clubId={club?.id || 0}
+              currentClubId={currentClub?.id || 0}
             />
           </>
         )}
@@ -316,7 +307,7 @@ export default function DashboardSummary({
             players={players}
             centralizedStats={centralizedStats}
             centralizedRosters={centralizedRosters}
-            clubId={club?.id}
+            currentClubId={currentClub?.id}
           />
         </div>
       )}

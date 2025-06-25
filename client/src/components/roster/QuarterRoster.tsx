@@ -85,6 +85,7 @@ export default function QuarterRoster({
               onValueChange={(value) => {
                 if (value !== 'none') {
                   onAssignPlayer(position, Number(value));
+                } else {
                   // Handle clearing position (passing null)
                   onAssignPlayer(position, 0);
                 }

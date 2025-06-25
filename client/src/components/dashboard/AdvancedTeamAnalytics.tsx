@@ -339,6 +339,7 @@ export default function AdvancedTeamAnalytics({
     for (let i = results.length - 2; i >= 0; i--) {
       if (results[i] === results[results.length - 1]) {
         currentStreak.count++;
+      } else {
         break;
       }
     }
@@ -358,6 +359,7 @@ export default function AdvancedTeamAnalytics({
         currentLossStreak++;
         currentWinStreak = 0;
         longestLossStreak = Math.max(longestLossStreak, currentLossStreak);
+      } else {
         currentWinStreak = 0;
         currentLossStreak = 0;
       }
@@ -429,6 +431,7 @@ export default function AdvancedTeamAnalytics({
   };
 
   const calculatePeakPerformanceWindows = (games: Game[], statsMap: Record<number, GameStat[]>) => {
+    const quarterTrends: Record<number, { totalFor: number; totalAgainst: number; games: number }> = {
       1: { totalFor: 0, totalAgainst: 0, games: 0 },
       2: { totalFor: 0, totalAgainst: 0, games: 0 },
       3: { totalFor: 0, totalAgainst: 0, games: 0 },
@@ -437,7 +440,7 @@ export default function AdvancedTeamAnalytics({
 
     games.forEach(game => {
       const gameStats = statsMap[game.id] || [];
-      
+      const quarterData: Record<number, { for: number; against: number }> = {};
 
       gameStats.forEach(stat => {
         if (!quarterData[stat.quarter]) {
@@ -530,7 +533,7 @@ export default function AdvancedTeamAnalytics({
 
   const calculateOpponentStrengthMatrix = (games: Game[], statsMap: Record<number, GameStat[]>, opponents: Opponent[]) => {
     // First, calculate win rate against each opponent
-    
+    const opponentPerformance: Record<string, { wins: number; total: number; winRate: number; totalScore: number }> = {};
 
     games.forEach(game => {
       // Get opponent name - this works regardless of home/away since we use game stats perspective

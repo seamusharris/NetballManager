@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet';
 import { useLocation, useParams } from 'wouter';
 import { useMemo, useEffect } from 'react';
 import { TEAM_NAME } from '@/lib/settings';
+import { useClub } from '@/contexts/ClubContext';
 import { calculateTeamWinRate, calculateClubWinRate } from '@/lib/winRateCalculator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award } from 'lucide-react';
@@ -17,46 +18,74 @@ import { cn } from '@/lib/utils';
 import { winRateCalculator } from '@/lib/winRateCalculator';
 
 export default function ClubDashboard() {
-  const params = useParams<{ clubId?: string }>();
-  const clubId = params.clubId ? Number(params.clubId) : null;
-  
-  // Fetch club details directly from URL parameter
-  const { data: club, isLoading: clubLoading } = useQuery({
-  });
+  const params = useParams();
+  const clubIdFromUrl = params.clubId ? parseInt(params.clubId) : null;
+  const { currentClub, currentClubId, setCurrentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
+  const [, navigate] = useLocation();
 
-  // Players data using REST endpoint
+  // Use URL club ID if available, otherwise fall back to context
+  const effectiveClubId = clubIdFromUrl || currentClubId;
+
+  // Set club context from URL if different
+  useEffect(() => {
+    if (clubIdFromUrl && clubIdFromUrl !== currentClubId) {
+      setCurrentClubId(clubIdFromUrl);
+    }
+  }, [clubIdFromUrl, currentClubId, setCurrentClubId]);
+
+  // Players data using REST endpoint - Stage 4
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
+    queryKey: ['players', effectiveClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/players`),
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
-  // Get games data using REST endpoint
+  // Get games data using REST endpoint - Stage 3
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 60 * 60 * 1000 // 1 hour
+    queryKey: [CACHE_KEYS.games, effectiveClubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/games`),
+    enabled: !!effectiveClubId && !clubLoading,
+    staleTime: 15 * 60 * 1000, // 15 minutes (increased for club-wide data)
+    gcTime: 60 * 60 * 1000 // 1 hour (much longer for club-wide data)
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
+    queryKey: ['clubs', effectiveClubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/teams`),
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
+    queryKey: ['/api/seasons', effectiveClubId],
+    queryFn: () => apiClient.get('/api/seasons'),
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (seasons change infrequently)
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
+    queryKey: ['/api/seasons/active', effectiveClubId],
+    queryFn: () => apiClient.get('/api/seasons/active'),
+    enabled: !!effectiveClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   // Fetch user's club access
   const { data: userClubs = [], isLoading: isLoadingClubs } = useQuery<any[]>({
+    queryKey: ['user-clubs'],
+    queryFn: () => apiClient.get('/api/user/clubs'),
   });
 
   // Fetch current club details - only if we have a valid club ID that the user has access to
   const { data: clubDetails = null, isLoading: isLoadingClubDetails } = useQuery<any>({
+    queryKey: ['club-details', effectiveClubId],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}`),
+    enabled: !!effectiveClubId && userClubs.some(club => club.clubId === effectiveClubId),
   });
 
   // Fetch official scores for completed games only
@@ -72,6 +101,8 @@ export default function ClubDashboard() {
     }, [games]);
 
   const { data: officialScores = {}, isLoading: isLoadingScores } = useQuery({
+    queryKey: ['club-official-scores', allGameIds],
+    queryFn: async () => {
       if (allGameIds.length === 0) return {};
 
       console.log('ClubDashboard: Fetching official scores for games:', allGameIds);
@@ -87,6 +118,8 @@ export default function ClubDashboard() {
 
   // Use unified data fetcher for consistency with other pages
   const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
+    queryKey: ['club-dashboard-batch-data', currentClubId, allGameIds.sort().join(',')],
+    queryFn: async () => {
       if (allGameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
       console.log(`ClubDashboard fetching batch data for ${allGameIds.length} games`);
@@ -95,7 +128,7 @@ export default function ClubDashboard() {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
           gameIds: allGameIds,
-          clubId: clubId!,
+          clubId: currentClubId!,
           teamId: undefined, // Club-wide, no specific team
           includeStats: true,
           includeRosters: false, // Don't need rosters for club dashboard
@@ -109,6 +142,7 @@ export default function ClubDashboard() {
         throw error;
       }
     },
+    enabled: !!currentClubId && !clubLoading && allGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
@@ -128,7 +162,7 @@ export default function ClubDashboard() {
     const upcomingGames = safeGames.filter(game => !game.statusIsCompleted);
 
     // Calculate club-wide win rate using official scores
-    const clubWinRateData = calculateClubWinRate(safeGames, clubId!, officialScores);
+    const clubWinRateData = calculateClubWinRate(safeGames, currentClubId!, officialScores);
 
     return {
       activeTeams,
@@ -138,7 +172,7 @@ export default function ClubDashboard() {
       activePlayers: safePlayers.filter(player => player.active),
       clubWinRate: clubWinRateData
     };
-  }, [teams, games, players, clubId, officialScores]);
+  }, [teams, games, players, currentClubId, officialScores]);
 
   // Memoize expensive calculations separately to prevent cascading re-renders
   const gamesHashKey = useMemo(() => 
@@ -162,7 +196,7 @@ export default function ClubDashboard() {
       );
 
       // Use shared win rate calculator for consistent logic with official scores
-      const winRateData = calculateTeamWinRate(teamGames, team.id, clubId!, officialScores);
+      const winRateData = calculateTeamWinRate(teamGames, team.id, currentClubId!, officialScores);
 
       console.log(`Team ${team.name} (${team.id}): ${teamGames.length} games, win rate data:`, winRateData);
 
@@ -177,7 +211,7 @@ export default function ClubDashboard() {
 
       return teamPerf;
     });
-  }, [activeTeams, gamesHashKey, scoresHashKey, clubId]);
+  }, [activeTeams, gamesHashKey, scoresHashKey, currentClubId]);
 
   // Recent games across all teams (memoized)
   const recentGames = useMemo(() => 
@@ -190,7 +224,7 @@ export default function ClubDashboard() {
   // Now handle loading states after all hooks are called
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isLoadingScores || isLoadingClubs || isLoadingClubDetails;
 
-  if (clubLoading || !clubId) {
+  if (clubLoading || !currentClubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -216,8 +250,8 @@ export default function ClubDashboard() {
   return (
     <>
       <Helmet>
-        <title>{`Club Dashboard | ${club?.name || 'Loading'} Stats Tracker`}</title>
-        <meta name="description" content={`View ${club?.name || 'club'} overall performance metrics and team statistics`} />
+        <title>{`Club Dashboard | ${currentClub?.name || 'Loading'} Stats Tracker`}</title>
+        <meta name="description" content={`View ${currentClub?.name || 'club'} overall performance metrics and team statistics`} />
       </Helmet>
 
       <div className="container py-8 mx-auto space-y-8">
@@ -228,7 +262,7 @@ export default function ClubDashboard() {
               Club Dashboard
             </h1>
             <p className="text-lg text-muted-foreground">
-              Overview of {club?.name} performance across all teams
+              Overview of {currentClub?.name} performance across all teams
             </p>
           </div>
           <div className="text-right space-y-2">
@@ -328,7 +362,7 @@ export default function ClubDashboard() {
                   onClick={async () => {
                     // First set the team in context, then navigate
                     console.log(`ClubDashboard: Setting team context to ${team.id} (${team.name})`);
-                    
+                    setCurrentTeamId(team.id);
                     
                     // Small delay to ensure context is set before navigation
                     await new Promise(resolve => setTimeout(resolve, 50));

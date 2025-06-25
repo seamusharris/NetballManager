@@ -8,6 +8,7 @@ import { apiRequest, apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation, useParams } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 import { Badge } from '@/components/ui/badge';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,29 +25,27 @@ interface QueryParams {
 }
 
 export default function Games() {
-  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const { currentClub, currentClubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
+  const params = useParams();
   const [location] = useLocation();
-  const clubId = params.clubId ? Number(params.clubId) : null;
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
 
-  // Fetch club details directly from URL parameter
-  });
-
   // Detect if we're in club-wide games view
-  const isClubWideGamesView = location.includes(`/club/${clubId}/games`);
+  const isClubWideGamesView = location.includes(`/club/${currentClubId}/games`);
 
   // For club-wide view, we should not use team context
-  const effectiveTeamId = isClubWideGamesView ? null : teamIdFromUrl;
+  const effectiveTeamId = isClubWideGamesView ? null : (teamIdFromUrl || currentTeamId);
+  const effectiveTeam = isClubWideGamesView ? null : currentTeam;
 
   // Clear team context when in club-wide view
   useEffect(() => {
     if (isClubWideGamesView && currentTeamId) {
-      
+      setCurrentTeamId(null);
     }
-  }, [isClubWideGamesView, currentTeamId, 
+  }, [isClubWideGamesView, currentTeamId, setCurrentTeamId]);
 
   // Don't render anything until club context is fully loaded
-  if (clubLoading || !club) {
+  if (clubLoading || !currentClub) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -57,6 +56,7 @@ export default function Games() {
     );
   }
 
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
@@ -72,12 +72,16 @@ export default function Games() {
   }, []);
 
   // Fetch teams - for club-wide view we need club teams, for team view we need all teams
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
+    queryKey: isClubWideGamesView ? ['clubs', currentClubId, 'teams'] : ['teams', currentClubId],
+    queryFn: () => {
       if (isClubWideGamesView) {
-        return apiClient.get(`/api/clubs/${clubId}/teams`);
+        return apiClient.get(`/api/clubs/${currentClubId}/teams`);
       } else {
         return apiClient.get('/api/teams');
       }
     },
+    enabled: !!currentClubId,
   });
 
   // Auto-select team from URL if provided - but not for club-wide view
@@ -86,35 +90,43 @@ export default function Games() {
       const targetTeam = teams.find(t => t.id === teamIdFromUrl);
       if (targetTeam && currentTeamId !== teamIdFromUrl) {
         console.log(`Games: Setting team ${teamIdFromUrl} from URL`);
-        
+        setCurrentTeamId(teamIdFromUrl);
       }
     }
-  }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, 
+  }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
 
   // Fetch games - use team-specific endpoint when we have a team ID for better perspective handling
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+    queryKey: ['games', currentClubId, effectiveTeamId],
+    queryFn: () => {
       if (isClubWideGamesView) {
-        return apiClient.get(`/api/clubs/${clubId}/games`);
+        return apiClient.get(`/api/clubs/${currentClubId}/games`);
       } else if (effectiveTeamId) {
         // Use team-specific endpoint for better filtering and automatic perspective calculation
         return apiClient.get(`/api/teams/${effectiveTeamId}/games`);
       } else {
-        return apiClient.get(`/api/clubs/${clubId}/games`);
+        return apiClient.get(`/api/clubs/${currentClubId}/games`);
       }
     },
+    enabled: !!currentClubId,
   });
 
   // Centralized batch data fetching (same as Dashboard)
   const gameIdsArray = games?.map(g => g.id).sort() || [];
   const gameIds = gameIdsArray.join(',');
 
+  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
+    queryKey: ['games-batch-data', currentClubId, effectiveTeamId, gameIds],
+    queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
       console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${effectiveTeamId}:`, gameIdsArray);
 
       try {
+        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
           gameIds: gameIdsArray,
-          clubId: clubId!,
+          clubId: currentClubId!,
           teamId: effectiveTeamId ?? undefined,
           includeStats: true,
           includeRosters: true,
@@ -128,6 +140,7 @@ export default function Games() {
         throw error;
       }
     },
+    enabled: !!currentClubId && (isClubWideGamesView || !!effectiveTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
     staleTime: 2 * 60 * 1000, // 2 minutes - shorter for dynamic game data
     gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
     refetchOnWindowFocus: false,
@@ -141,16 +154,28 @@ export default function Games() {
   const gameScoresMap = batchData?.scores || {};
 
   // Fetch seasons - no club context needed
+  const { data: seasons = [] } = useQuery({
+    queryKey: ['seasons'], 
+    queryFn: () => apiClient.get('/api/seasons')
   });
 
   // Fetch active season - no club context needed
+  const { data: activeSeason } = useQuery({
+    queryKey: ['seasons', 'active'],
+    queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Fetch game statuses
+  const { data: gameStatuses = [], isLoading: isLoadingGameStatuses } = useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,
   });
 
   // Fetch players
+  const { data: players = [] } = useQuery<Player[]>({
+    queryKey: ['players'],
+    queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
   });
 
   const handleCreate = async (game: Game) => {
@@ -171,9 +196,10 @@ export default function Games() {
       await apiRequest('POST', '/api/games', game);
 
       // Invalidate games queries using the correct query keys that match the actual queries
-      if (clubId) {
+      if (currentClubId) {
         // Invalidate the specific games query for current team (matches the actual query key pattern)
         queryClient.invalidateQueries({
+          queryKey: ['games', currentClubId, effectiveTeamId]
         });
 
         // Invalidate team-specific games queries if we have a team
@@ -193,7 +219,7 @@ export default function Games() {
             const key = query.queryKey;
             return Array.isArray(key) && 
                    key[0] === 'games' && 
-                   key[1] === clubId;
+                   key[1] === currentClubId;
           }
         });
 
@@ -203,7 +229,7 @@ export default function Games() {
             const key = query.queryKey;
             return Array.isArray(key) && 
                    (key[0] === 'games-batch-data' || key[0] === 'batch-game-data') && 
-                   key[1] === clubId;
+                   key[1] === currentClubId;
           }
         });
       }
@@ -273,24 +299,27 @@ export default function Games() {
   };
 
   // Fetch all teams for inter-club games
+  const { data: allTeams = [] } = useQuery({
+    queryKey: ['teams', 'all'],
+    queryFn: () => apiRequest('GET', '/api/teams/all')
   });
 
   // Debug club context
   console.log('Games page club context:', {
-    club: club?.name,
-    clubId,
+    currentClub: currentClub?.name,
+    currentClubId,
     isClubWideGamesView,
     clubLoading
   });
 
   // Generate page title with context
   const pageTitle = isClubWideGamesView 
-    ? `All Games - ${club?.name || 'Club'}` 
+    ? `All Games - ${currentClub?.name || 'Club'}` 
     : effectiveTeam 
       ? `Games - ${effectiveTeam.name}` 
       : 'Games';
   const pageSubtitle = isClubWideGamesView
-    ? `View all game schedules and results for ${club?.name || 'the club'}`
+    ? `View all game schedules and results for ${currentClub?.name || 'the club'}`
     : effectiveTeamId 
       ? `Manage and view game schedules and results for ${effectiveTeam?.name || 'Selected Team'}`
       : 'Manage and view game schedules and results';
@@ -304,7 +333,7 @@ export default function Games() {
   return (
     <>
        <Helmet>
-        <title>{`Games - ${club?.name || 'Club'}`}</title>
+        <title>{`Games - ${currentClub?.name || 'Club'}`}</title>
       </Helmet>
       <PageTemplate
         title={pageTitle}

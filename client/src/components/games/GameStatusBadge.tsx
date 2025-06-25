@@ -113,6 +113,10 @@ export function GameStatusButton({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.gameStatus?.name as GameStatus || 'upcoming');
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: gameStatuses = [] } = useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -139,10 +143,12 @@ export function GameStatusButton({
 
       // Force immediate refetch of this specific game
       queryClient.fetchQuery({
+        queryKey: [`/api/games/${game.id}`]
       });
 
       // Force immediate refetch of all games list
       queryClient.fetchQuery({
+        queryKey: ['/api/games']
       });
 
       // Update the local game object directly for immediate UI feedback

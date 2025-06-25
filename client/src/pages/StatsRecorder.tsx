@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Minus, ArrowLeft, Save, Undo, Redo } from 'lucide-react';
+import { useClub } from '@/contexts/ClubContext';
 
 // Define the types of statistics we track
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -62,7 +63,7 @@ export default function StatsRecorder() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+  const { currentClubId } = useClub();
 
   // State variables - must declare all state first
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
@@ -73,20 +74,29 @@ export default function StatsRecorder() {
 
   // NEW: Game data with team context
   const { data: game, isLoading: isLoadingGame } = useQuery<any>({
+    queryKey: ['/api/game', gameId, 'team', teamId],
+    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 
   // NEW: Club-scoped players instead of global
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
+    queryKey: ['/api/clubs', currentClubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
+    enabled: !!currentClubId
   });
 
   // NEW: Game-centric roster endpoint
   const { data: rosters = [], isLoading: isLoadingRoster } = useQuery<Roster[]>({
+    queryKey: ['/api/game', gameId, 'team', teamId, 'rosters'],
+    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/rosters`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 
   // NEW: Game-centric stats endpoint
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
+    queryKey: ['/api/game', gameId, 'team', teamId, 'stats'],
+    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 

@@ -13,10 +13,17 @@ import { formatDate, getWinLoseLabel } from '@/lib/utils';
 import { apiRequest } from '@/lib/apiClient';
 
 export default function OpponentDetailed() {
+  const { opponentId } = useParams();
   const [, navigate] = useLocation();
 
+  const { data: games = [], isLoading: gamesLoading } = useQuery({
+    queryKey: ['games'],
+    queryFn: () => apiRequest('GET', '/api/games')
   });
 
+  const { data: opponents = [], isLoading: opponentsLoading } = useQuery({
+    queryKey: ['opponents'],
+    queryFn: async () => {
       try {
         const result = await apiRequest('GET', '/api/opponents');
         return Array.isArray(result) ? result : [];
@@ -32,6 +39,9 @@ export default function OpponentDetailed() {
     game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
   ).map((game: Game) => game.id);
 
+  const { data: centralizedStats = {} } = useQuery({
+    queryKey: ['dashboardStats', completedGameIds.join(',')],
+    queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       try {
@@ -112,6 +122,7 @@ export default function OpponentDetailed() {
   const calculateQuarterAnalysis = (gameResults: any[]) => {
     if (gameResults.length === 0) return null;
 
+    const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
       1: { team: 0, opponent: 0, count: 0 },
       2: { team: 0, opponent: 0, count: 0 },
       3: { team: 0, opponent: 0, count: 0 },
@@ -120,6 +131,7 @@ export default function OpponentDetailed() {
 
     gameResults.forEach(result => {
       const gameStats = result.gameStats || [];
+      const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
         1: { team: 0, opponent: 0 },
         2: { team: 0, opponent: 0 },
         3: { team: 0, opponent: 0 },
@@ -141,6 +153,7 @@ export default function OpponentDetailed() {
       });
     });
 
+    const byQuarter: Record<number, { avgTeamScore: number, avgOpponentScore: number }> = {};
     Object.keys(quarterScores).forEach(quarterStr => {
       const quarter = parseInt(quarterStr);
       const count = quarterScores[quarter].count || 1;
@@ -486,7 +499,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { Archive, ArrowLeft } from 'lucide-react';
 
-function OpponentDetailedDuplicate() {
+export default function OpponentDetailed() {
   const [, navigate] = useLocation();
 
   return (

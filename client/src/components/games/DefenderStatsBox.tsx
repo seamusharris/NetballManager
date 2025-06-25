@@ -5,6 +5,7 @@ interface DefenderStatsBoxProps {
   stats: any;
 }
 
+export const DefenderStatsBox: React.FC<DefenderStatsBoxProps> = ({ stats }) => {
   return (
     <div className="flex flex-col space-y-2 text-sm">
       {/* Position-specific stats for defenders (GD, GK) */}

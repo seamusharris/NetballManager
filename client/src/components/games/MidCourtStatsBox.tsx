@@ -5,6 +5,7 @@ interface MidCourtStatsBoxProps {
   stats: any;
 }
 
+export const MidCourtStatsBox: React.FC<MidCourtStatsBoxProps> = ({ stats }) => {
   return (
     <div className="flex flex-col space-y-2 text-sm">
       {/* Position-specific stats for mid-court positions (WA, C, WD) */}

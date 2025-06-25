@@ -149,6 +149,7 @@ export default function DragDropRosterManager({
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
@@ -284,6 +285,9 @@ export default function DragDropRosterManager({
   const queryClient = useQueryClient();
 
   // Fetch existing roster data using team-specific endpoint
+  const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
+    queryKey: ['teams', teamId, 'games', gameId, 'roster'],
+    queryFn: () => {
       if (!teamId) {
         throw new Error('TeamId is required for roster operations in team-based routing');
       }
@@ -428,14 +432,18 @@ export default function DragDropRosterManager({
 
       // Invalidate all related roster cache keys to ensure fresh data everywhere
       queryClient.invalidateQueries({
+        queryKey: ['rosters', gameId]
       });
       queryClient.invalidateQueries({
+        queryKey: ['teams', teamId, 'games', gameId, 'roster']
       });
       queryClient.invalidateQueries({
+        queryKey: CACHE_KEYS.gameRoster(gameId)
       });
       
       // Also refetch to ensure immediate UI update across all components
       await queryClient.refetchQueries({
+        queryKey: ['teams', teamId, 'games', gameId, 'roster']
       });
 
       toast({
@@ -783,6 +791,7 @@ interface PlayerAvatarProps {
   className?: string;
 }
 
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, size = 'md', className }) => {
   const avatarSizes = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',

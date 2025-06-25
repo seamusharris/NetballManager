@@ -49,6 +49,7 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel }: PlayerFormProps) {
   const isEditing = !!player;
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Extract position preferences for default values
@@ -100,6 +101,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       });
 
       const apiPromise = apiClient.post('/api/players', playerData, {
+        headers: {
           'x-current-club-id': clubId.toString(),
           ...(teamId && { 'x-current-team-id': teamId.toString() })
         }
@@ -294,6 +296,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     console.log('PlayerForm: Final position preferences array:', positionPreferences);
 
     // Remove position fields from the data object
+    const { position1, position2, position3, position4, ...rest } = values;
 
     // Create the player data
     const playerData = {
@@ -314,6 +317,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
             onSuccess?.();
           }
         });
+      } else {
         console.log('PlayerForm: Calling createPlayer.mutate for new player');
         console.log('PlayerForm: About to call createPlayer mutation at:', new Date().toISOString());
         console.log('PlayerForm: Mutation state before call:', {

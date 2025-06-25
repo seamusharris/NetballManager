@@ -31,6 +31,7 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
   const [playerStats, setPlayerStats] = useState<Record<string, Record<number, Record<string, string>>>>({});
   const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
   const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
+  const { toast } = useToast();
   
   // Initialize player stats from database values
   const initPlayerStats = () => {
@@ -128,6 +129,7 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
   
   // Calculate quarter totals
   const calculateQuarterTotals = () => {
+    const totals: Record<string, { goalsFor: number, goalsAgainst: number }> = {
       '1': { goalsFor: 0, goalsAgainst: 0 },
       '2': { goalsFor: 0, goalsAgainst: 0 },
       '3': { goalsFor: 0, goalsAgainst: 0 },
@@ -267,6 +269,7 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
         if (existingStat) {
           // Update existing
           promises.push(apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, statsData));
+        } else {
           // Create new
           promises.push(apiRequest('POST', `/api/games/${gameId}/stats`, statsData));
         }

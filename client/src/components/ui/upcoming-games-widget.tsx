@@ -12,7 +12,7 @@ interface UpcomingGamesWidgetProps {
   className?: string;
   centralizedScores?: any[];
   gameStats?: any[];
-  teams?: any[];
+  clubTeams?: any[];
   showDate?: boolean;
   showRound?: boolean;
   showScore?: boolean;
@@ -27,7 +27,7 @@ export default function UpcomingGamesWidget({
   className = "",
   centralizedScores = [],
   gameStats = [],
-  teams = [],
+  clubTeams = [],
   showDate = true,
   showRound = true,
   showScore = false
@@ -83,7 +83,7 @@ export default function UpcomingGamesWidget({
             currentTeamId={teamId}
             centralizedScores={centralizedScores}
             gameStats={gameStats}
-            teams={teams}
+            clubTeams={clubTeams}
             showDate={showDate}
             showRound={showRound}
             showScore={showScore}

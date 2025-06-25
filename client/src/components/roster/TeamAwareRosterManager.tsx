@@ -31,6 +31,7 @@ export default function TeamAwareRosterManager({
   rosters,
   onRosterChange
 }: TeamAwareRosterManagerProps) {
+  const { toast } = useToast();
   const [teamInfo, setTeamInfo] = useState<any>(null);
   const [rosterStatus, setRosterStatus] = useState<'complete' | 'partial' | 'empty'>('empty');
   const [isCreatingFallback, setIsCreatingFallback] = useState(false);
@@ -41,6 +42,7 @@ export default function TeamAwareRosterManager({
       setRosterStatus('empty');
     } else if (rosters.length < 28) { // 7 positions x 4 quarters
       setRosterStatus('partial');
+    } else {
       setRosterStatus('complete');
     }
   }, [rosters]);

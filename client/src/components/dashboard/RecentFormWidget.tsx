@@ -4,7 +4,7 @@ import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 interface RecentFormWidgetProps {
   games: any[];
   currentTeamId: number | null;
-  clubId: number | null;
+  currentClubId: number | null;
   gameScoresMap: Record<number, any[]>;
   gameStatsMap: Record<number, any[]>;
   className?: string;
@@ -13,7 +13,7 @@ interface RecentFormWidgetProps {
 export function RecentFormWidget({ 
   games, 
   currentTeamId, 
-  clubId, 
+  currentClubId, 
   gameScoresMap, 
   gameStatsMap,
   className = ""
@@ -43,7 +43,7 @@ export function RecentFormWidget({
         <PreviousGamesDisplay
           historicalGames={recentGames}
           currentTeamId={currentTeamId || 0}
-          clubId={clubId || 0}
+          currentClubId={currentClubId || 0}
           batchScores={gameScoresMap}
           batchStats={gameStatsMap}
           opponentName="Recent Opponents"

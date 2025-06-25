@@ -79,15 +79,19 @@ export default function PlayerPerformance({ players, games, className, seasonFil
 
 
   // Use the batch stats hook instead of individual requests
-  
+  const { statsMap: gameStatsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds, false);
 
   // Fetch roster data for tracking games played
+  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
+    queryKey: ['gameRosters', ...gameIds],
+    queryFn: async () => {
       if (gameIds.length === 0) {
         return {};
       }
 
       // Fetch rosters for each game to count games played
       const rosterPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/rosters`);
         const rosters = await response.json();
         return { gameId, rosters };
       });
@@ -407,6 +411,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
       // Update with the most recent rating we found, or calculate a default
       if (mostRecentRating !== null) {
         newPlayerStatsMap[player.id].rating = mostRecentRating;
+      } else {
         // Calculate default rating based on performance stats
         const calculatedRating = 5 + 
           (newPlayerStatsMap[player.id].goals * 0.2) +
@@ -468,12 +473,13 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     }))
     .sort((a, b) => {
       // Sort by the selected field and direction
-      
+      const { field, direction } = sortConfig;
 
       // Handle name sorting separately
       if (field === 'name') {
         if (direction === 'asc') {
           return a.displayName.localeCompare(b.displayName);
+        } else {
           return b.displayName.localeCompare(a.displayName);
         }
       }
@@ -484,6 +490,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
 
       if (direction === 'asc') {
         return aValue - bValue;
+      } else {
         return bValue - aValue;
       }
     });

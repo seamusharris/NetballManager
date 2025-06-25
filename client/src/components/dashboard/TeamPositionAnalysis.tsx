@@ -12,7 +12,7 @@ interface TeamPositionAnalysisProps {
   players: any[];
   centralizedStats: Record<number, any[]>;
   centralizedRosters: Record<number, any[]>;
-  clubId?: number;
+  currentClubId?: number;
 }
 
 interface PositionLineup {
@@ -39,7 +39,7 @@ function TeamPositionAnalysis({
   players = [], 
   centralizedStats = {}, 
   centralizedRosters = {},
-  clubId 
+  currentClubId 
 }: TeamPositionAnalysisProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('all');
@@ -61,8 +61,8 @@ function TeamPositionAnalysis({
       games
         .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
         .map(game => {
-          const isHomeGame = game.homeClubId === clubId;
-          const isAwayGame = game.awayClubId === clubId;
+          const isHomeGame = game.homeClubId === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId;
 
           if (isHomeGame && !isAwayGame) {
             return game.awayTeamName;
@@ -75,7 +75,7 @@ function TeamPositionAnalysis({
         .filter(teamName => teamName !== 'Bye')
     ));
     setOpponents(uniqueOpponents);
-  }, [games, clubId]);
+  }, [games, currentClubId]);
 
   // Calculate position lineup effectiveness
   useEffect(() => {
@@ -84,7 +84,7 @@ function TeamPositionAnalysis({
       rostersKeys: Object.keys(centralizedRosters || {}),
       gamesLength: games?.length,
       selectedQuarter,
-      clubId
+      currentClubId
     });
 
     // Debug roster data structure
@@ -97,6 +97,7 @@ function TeamPositionAnalysis({
         firstFewEntries: sampleRoster?.slice(0, 3),
         allPositions: sampleRoster?.map(r => r.position).filter((pos, idx, arr) => arr.indexOf(pos) === idx)
       });
+    } else {
       console.log('TeamPositionAnalysis: No roster data available - this is the root cause');
     }
 
@@ -111,7 +112,7 @@ function TeamPositionAnalysis({
     }
 
     calculatePositionLineups();
-  }, [centralizedStats, centralizedRosters, selectedQuarter, clubId]);
+  }, [centralizedStats, centralizedRosters, selectedQuarter, currentClubId]);
 
   const calculatePositionLineups = () => {
     // Ensure games is an array before processing
@@ -257,8 +258,8 @@ function TeamPositionAnalysis({
 
           // Track opponent-specific performance
           let opponent = null;
-          const isHomeGame = game.homeClubId === clubId;
-          const isAwayGame = game.awayClubId === clubId;
+          const isHomeGame = game.homeClubId === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId;
 
           if (isHomeGame && !isAwayGame) {
             opponent = game.awayTeamName;

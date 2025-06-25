@@ -26,6 +26,7 @@ export default function BasicStatForm({
 }: BasicStatFormProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [statValues, setStatValues] = useState<Record<string, Record<number, Record<string, string>>>>({});
+  const { toast } = useToast();
   
   // Group rosters by quarter
   const rosterByQuarter: Record<string, Record<Position, number | null>> = {
@@ -100,6 +101,7 @@ export default function BasicStatForm({
       quarterKey: string, 
       stats: Record<number, Record<string, number>>
     }) => {
+      const { quarterKey, stats } = data;
       const quarter = parseInt(quarterKey);
       const savePromises = [];
       
@@ -138,6 +140,7 @@ export default function BasicStatForm({
           savePromises.push(
             apiRequest('PATCH', `/api/games/${existingStat.gameId}/stats/${existingStat.id}`, completeStats)
           );
+        } else {
           // Create new stat
           console.log(`Creating new stat for player ${playerId}`);
           savePromises.push(
@@ -210,6 +213,7 @@ export default function BasicStatForm({
         const numValue = value === '' ? 0 : parseInt(value, 10);
         if (!isNaN(numValue)) {
           numericStats[playerId][field] = numValue;
+        } else {
           numericStats[playerId][field] = 0;
         }
       });
@@ -222,6 +226,7 @@ export default function BasicStatForm({
         quarterKey: quarter, 
         stats: numericStats 
       });
+    } else {
       toast({
         title: "No statistics to save",
         description: "There are no player statistics to save for this quarter.",
@@ -336,6 +341,7 @@ export default function BasicStatForm({
   
   // Calculate quarter-by-quarter totals and game summary
   const calculateQuarterTotals = () => {
+    const quarterTotals: Record<string, { goalsFor: number, goalsAgainst: number }> = {
       '1': { goalsFor: 0, goalsAgainst: 0 },
       '2': { goalsFor: 0, goalsAgainst: 0 },
       '3': { goalsFor: 0, goalsAgainst: 0 },
@@ -385,6 +391,7 @@ export default function BasicStatForm({
     return { quarterTotals, gameTotals };
   };
   
+  const { quarterTotals, gameTotals } = calculateQuarterTotals();
   
   return (
     <div className="space-y-6">

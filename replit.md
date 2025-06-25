@@ -112,15 +112,6 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
-- June 25, 2025: COMPLETED - Removed ClubContext entirely in favor of URL-based club management
-  - All components migrated to extract club ID directly from URL parameters
-  - ClubContext.tsx moved to backup - no longer used in application
-  - Simplified architecture: URL parameters → direct API calls
-  - Eliminated complex context state synchronization issues
-  - ClubSwitcher now uses simple URL navigation instead of context switching
-  - App.tsx no longer wraps components in ClubProvider
-  - Fixed all syntax errors and import issues across 50+ components
-  - Significantly improved performance and code maintainability
 - June 25, 2025: COMPLETED - Final 5% of API migration to full REST architecture
   - Created club-scoped batch endpoints: `/api/clubs/{clubId}/games/stats/batch`, `/api/clubs/{clubId}/games/scores/batch`, `/api/clubs/{clubId}/games/rosters/batch`
   - Updated UnifiedDataFetcher to use new club-scoped batch endpoints instead of header-based ones

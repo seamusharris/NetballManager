@@ -2,19 +2,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Users, Calendar, BarChart3 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 import { useEffect } from 'react';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 
 export default function HomePage() {
-  
+  const { currentClubId, isLoading } = useClub();
   const [, setLocation] = useLocation();
 
   // Redirect to club dashboard if club context is set
   useEffect(() => {
-    if (!isLoading && clubId) {
-      setLocation(`/club/${clubId}`);
+    if (!isLoading && currentClubId) {
+      setLocation(`/club/${currentClubId}`);
     }
-  }, [clubId, isLoading, setLocation]);
+  }, [currentClubId, isLoading, setLocation]);
 
   // Show loading while checking club context
   if (isLoading) {
@@ -29,7 +30,7 @@ export default function HomePage() {
   }
 
   // Show club selector if no club context
-  if (!clubId) {
+  if (!currentClubId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="container mx-auto px-4 py-16">

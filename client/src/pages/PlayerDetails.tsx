@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams, Link, useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,12 +28,15 @@ import PlayerClubsManager from '@/components/players/PlayerClubsManager';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
 import PlayerTeamsManager from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { useClub } from '@/contexts/ClubContext';
 
 export default function PlayerDetails() {
+  const { id } = useParams<{ id: string }>();
   const playerId = parseInt(id);
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
-  
+  const { toast } = useToast();
+  const { currentClubId } = useClub();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
@@ -40,13 +44,22 @@ export default function PlayerDetails() {
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
 
   // Fetch player data
+  const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
+    queryKey: [`/api/players/${playerId}`],
+    queryFn: () => apiClient.get(`/api/players/${playerId}`),
     enabled: !isNaN(playerId),
   });
 
   // Fetch all games with club context
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
+    queryKey: ['/api/games'],
+    queryFn: () => apiClient.get('/api/games'),
   });
 
   // Fetch all seasons for the seasons manager
+  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
+    queryFn: () => apiClient.get('/api/seasons'),
   });
 
   // Get completed games using same filtering as Team Dashboard PlayerAnalyticsWidget
@@ -56,6 +69,9 @@ export default function PlayerDetails() {
   const completedGameIds = completedGames.map(game => game.id);
 
   // Use Team Dashboard's exact cache keys to share data - stats
+  const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
+    queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
+    queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       console.log(`PlayerDetails: Using batch endpoint for stats fetch of ${completedGameIds.length} completed games`);
@@ -84,11 +100,15 @@ export default function PlayerDetails() {
         return statsMap;
       }
     },
+    enabled: !!currentClubId && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
 
   // Use Team Dashboard's exact cache keys to share data - rosters
+  const { data: allGameRosters = {}, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
+    queryKey: ['centralized-rosters', currentClubId, completedGameIds.sort().join(',')],
+    queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       console.log(`PlayerDetails: Using individual requests for roster fetch of ${completedGameIds.length} games`);
@@ -108,6 +128,7 @@ export default function PlayerDetails() {
       console.log(`PlayerDetails: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
+    enabled: !!currentClubId && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
@@ -388,6 +409,7 @@ export default function PlayerDetails() {
           title: "Success",
           description: "Player deleted successfully",
         });
+      } else {
         toast({
           title: "Error", 
           description: error.message || "Failed to delete player",

@@ -7,7 +7,7 @@ import GameResultCard from '@/components/ui/game-result-card';
 
 interface SeasonGamesDisplayProps {
   seasonGames: any[];
-  teamId?: number;
+  currentTeamId?: number;
   seasonName?: string;
   isLoading?: boolean;
   batchScores?: Record<string, any[]>;
@@ -17,7 +17,7 @@ interface SeasonGamesDisplayProps {
 
 export default function SeasonGamesDisplay({
   seasonGames,
-  teamId,
+  currentTeamId,
   seasonName,
   isLoading = false,
   batchScores,
@@ -109,6 +109,7 @@ export default function SeasonGamesDisplay({
                   if (quarterIndex >= 0 && quarterIndex < 4) {
                     if (score.teamId === currentTeamId) {
                       teamScores[quarterIndex] = score.score;
+                    } else {
                       opponentScores[quarterIndex] = score.score;
                     }
                   }
@@ -165,6 +166,7 @@ export default function SeasonGamesDisplay({
                               if (quarterIndex >= 0 && quarterIndex < 4) {
                                 if (score.teamId === currentTeamId) {
                                   teamScores[quarterIndex] = score.score;
+                                } else {
                                   opponentScores[quarterIndex] = score.score;
                                 }
                               }
@@ -181,6 +183,7 @@ export default function SeasonGamesDisplay({
                                 // Current team is home
                                 homeScore = teamScore;
                                 awayScore = opponentScore;
+                              } else {
                                 // Current team is away
                                 homeScore = opponentScore;
                                 awayScore = teamScore;
@@ -211,6 +214,7 @@ export default function SeasonGamesDisplay({
                               if (quarterIndex >= 0 && quarterIndex < 4) {
                                 if (score.teamId === currentTeamId) {
                                   teamScores[quarterIndex] = score.score;
+                                } else {
                                   opponentScores[quarterIndex] = score.score;
                                 }
                               }
@@ -240,6 +244,7 @@ export default function SeasonGamesDisplay({
                                 // Current team is home
                                 homeCum = teamCum;
                                 awayCum = opponentCum;
+                              } else {
                                 // Current team is away
                                 homeCum = opponentCum;
                                 awayCum = teamCum;
@@ -294,8 +299,8 @@ export default function SeasonGamesDisplay({
                   notes: score.notes
                 })) : [];
 
-                const quarterTeamScore = transformedScores.find(s => s.teamId === teamId && s.quarter === quarter)?.score || 0;
-                const quarterOpponentScore = transformedScores.find(s => s.teamId !== teamId && s.quarter === quarter)?.score || 0;
+                const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
                 totalTeamScore += quarterTeamScore;
                 totalOpponentScore += quarterOpponentScore;
@@ -388,6 +393,7 @@ export default function SeasonGamesDisplay({
                   gameScores.forEach(score => {
                     if (score.teamId === currentTeamId) {
                       gameGoalsFor += score.score;
+                    } else {
                       gameGoalsAgainst += score.score;
                     }
                   });

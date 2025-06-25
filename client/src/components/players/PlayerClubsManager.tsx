@@ -27,14 +27,19 @@ export default function PlayerClubsManager({
   isOpen, 
   onClose 
 }: PlayerClubsManagerProps) {
+  const { toast } = useToast();
   const [selectedClubs, setSelectedClubs] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all clubs
+  const { data: allClubs = [], isLoading: isClubsLoading } = useQuery<Club[]>({
+    queryKey: ['/api/clubs'],
     enabled: !!player?.id,
   });
 
   // Fetch player's current clubs
+  const { data: playerClubs = [], isLoading: isPlayerClubsLoading } = useQuery<Club[]>({
+    queryKey: [`/api/players/${player.id}/clubs`],
     enabled: !!player?.id,
   });
 
@@ -43,6 +48,7 @@ export default function PlayerClubsManager({
     if (playerClubs) {
       console.log(`Setting selected clubs for player ${player.id}:`, playerClubs.map(c => c.id));
       setSelectedClubs(playerClubs.map(club => club.id));
+    } else {
       // Reset to empty if no clubs
       setSelectedClubs([]);
     }
@@ -56,6 +62,7 @@ export default function PlayerClubsManager({
         const newClubs = current.filter(id => id !== clubId);
         console.log(`Removing club ${clubId}, new clubs:`, newClubs);
         return newClubs;
+      } else {
         const newClubs = [...current, clubId];
         console.log(`Adding club ${clubId}, new clubs:`, newClubs);
         return newClubs;
@@ -71,10 +78,16 @@ export default function PlayerClubsManager({
       console.log(`Updating clubs for player ${player.id}:`, selectedClubs);
       console.log('Current selected clubs state:', selectedClubs);
 
+      const response = await fetch(`/api/players/${player.id}/clubs`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clubIds: selectedClubs })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(`Failed to update clubs: ${errorData.message || response.statusText}`);
+      }
 
       const result = await response.json();
       console.log('Save response:', result);

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +51,7 @@ interface Game {
 }
 
 export default function TeamPreparation() {
-  
+  const { currentClubId, currentTeamId } = useClub();
   const params = useParams();
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
@@ -68,29 +68,37 @@ export default function TeamPreparation() {
   }, [params.opponentId]);
 
   // Get all teams from current club
-  const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
+  const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
+    queryKey: ['teams', currentClubId],
+    enabled: !!currentClubId,
   });
 
   // Get selected team details
   const { data: selectedTeam } = useQuery<Team>({
+    queryKey: ['/api/teams', currentTeamId],
     enabled: !!currentTeamId,
   });
 
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
+    queryKey: ['games', currentClubId, currentTeamId],
+    queryFn: () => apiClient.get('/api/games'),
+    enabled: !!currentClubId && !!currentTeamId,
   });
 
   // Get all teams across all clubs to find opponent teams
   const { data: allTeams = [] } = useQuery<Team[]>({
+    queryKey: ['/api/teams/all'],
+    enabled: !!currentClubId,
   });
 
   // Debug logging
   console.log('Team loading debug:', {
-    clubId,
-    teams,
+    currentClubId,
+    clubTeams,
     teamsLoading,
     teamsError,
-    dataLength: teams?.length,
+    dataLength: clubTeams?.length,
     currentTeamId,
     gamesCount: allGames?.length,
     gamesLoading,
@@ -166,11 +174,15 @@ export default function TeamPreparation() {
   // Get scores for games
   const gameIds = allGames.map(game => game.id);
   const { data: scoresMap = {} } = useQuery<Record<string, any[]>>({
+    queryKey: ['scores', gameIds],
+    queryFn: () => apiClient.post('/api/games/scores/batch', { gameIds }),
     enabled: gameIds.length > 0,
   });
 
   // Get stats for games
   const { data: statsMap = {} } = useQuery<Record<string, any[]>>({
+    queryKey: ['stats', gameIds],
+    queryFn: () => apiClient.post('/api/games/stats/batch', { gameIds }),
     enabled: gameIds.length > 0,
   });
 
@@ -335,7 +347,7 @@ export default function TeamPreparation() {
                   <PreviousGamesDisplay
                     historicalGames={historicalGames}
                     currentTeamId={currentTeamId || 0}
-                    clubId={clubId || 0}
+                    currentClubId={currentClubId || 0}
                     batchScores={scoresMap}
                     batchStats={statsMap}
                     opponentName={selectedOpponent?.name || 'Unknown'}

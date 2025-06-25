@@ -7,8 +7,8 @@ import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 import { useQueries } from '@tanstack/react-query';
-import { useParams } from 'wouter';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 interface PlayerAvailabilityWidgetProps {
@@ -28,10 +28,7 @@ export default function PlayerAvailabilityWidget({
   players,
   className 
 }: PlayerAvailabilityWidgetProps) {
-  // ClubContext removed - get data from URL parameters
-  const params = useParams<{ clubId?: string; teamId?: string }>();
-  const currentTeamId = params.teamId ? Number(params.teamId) : null;
-  
+  const { currentTeamId } = useClub();
   const [availabilityData, setAvailabilityData] = useState<Record<number, GameAvailability>>({});
   const [loading, setLoading] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
@@ -68,8 +65,11 @@ export default function PlayerAvailabilityWidget({
   // Use cached queries for availability data with team-specific endpoint when possible
   const availabilityQueries = useQueries({
     queries: upcomingGames.map(game => ({
+      queryKey: CACHE_KEYS.playerAvailability(game.id),
+      queryFn: () => {
         if (currentTeamId) {
           return apiClient.get(`/api/teams/${currentTeamId}/availability/${game.id}`);
+        } else {
           return apiClient.get(`/api/games/${game.id}/availability`);
         }
       },
@@ -102,6 +102,7 @@ export default function PlayerAvailabilityWidget({
           availableCount: availableTeamPlayerIds.length,
           totalPlayers: totalActiveTeamPlayers
         };
+      } else {
         // Default to all players available if no data
         newAvailabilityData[game.id] = {
           gameId: game.id,
@@ -139,6 +140,7 @@ export default function PlayerAvailabilityWidget({
       <div className="space-y-3">
         {upcomingGames.map(game => {
           const availability = availabilityData[game.id];
+          const { color, status } = availability ? 
             getAvailabilityStatus(availability.availableCount, availability.totalPlayers) :
             { color: 'bg-gray-400', status: 'Unknown' };
 

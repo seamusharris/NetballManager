@@ -14,7 +14,7 @@ import {
   TrendingUp, AlertCircle, CheckCircle, Copy, Save,
   History, BarChart3, Zap, Star, ChevronRight
 } from 'lucide-react';
-
+import { useClub } from '@/contexts/ClubContext';
 import { useStandardQuery } from '@/hooks/use-standard-query';
 import { useToast } from '@/hooks/use-toast';
 import { formatShortDate } from '@/lib/utils';
@@ -77,7 +77,7 @@ const GameResultBox = ({ homeScore, awayScore, isHomeTeam, size = 'md' }: {
 
 export default function Preparation2() {
   const [location, navigate] = useLocation();
-  
+  const { currentClubId, currentTeamId } = useClub();
   const { toast } = useToast();
   
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
@@ -149,8 +149,8 @@ export default function Preparation2() {
   }, [selectedGameId, allPlayers, upcomingGames]);
 
   const getOpponentName = (game: any): string => {
-    const isHomeGame = game.homeClubId === clubId;
-    const isAwayGame = game.awayClubId === clubId;
+    const isHomeGame = game.homeClubId === currentClubId;
+    const isAwayGame = game.awayClubId === currentClubId;
 
     if (isHomeGame && !isAwayGame) {
       return game.awayTeamName;
@@ -738,11 +738,11 @@ export default function Preparation2() {
       });
 
       // Save roster via API (you'll need to create this endpoint)
-      const response = await fetch('/api/roster', {
+      const response = await fetch('/api/game-rosters', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-current-club-id': clubId?.toString() || '',
+          'x-current-club-id': currentClubId?.toString() || '',
           'x-current-team-id': currentTeamId?.toString() || ''
         },
         body: JSON.stringify({
@@ -785,7 +785,7 @@ export default function Preparation2() {
   // Debug logging to understand team context
   console.log('Preparation2 Debug:', {
     currentTeamId,
-    clubId,
+    currentClubId,
     upcomingGamesCount: upcomingGames.length,
     nextGame,
     selectedGame
@@ -914,7 +914,7 @@ export default function Preparation2() {
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Venue:</span>
                         <span className="font-medium">
-                          {selectedGame.homeClubId === clubId ? 'Home' : 'Away'}
+                          {selectedGame.homeClubId === currentClubId ? 'Home' : 'Away'}
                         </span>
                       </div>
                     </>

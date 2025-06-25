@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
+import { useClub } from '@/contexts/ClubContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,31 +21,69 @@ import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 
 export default function Players() {
-  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const params = useParams();
   const [location, setLocation] = useLocation();
-  
-  // Extract IDs directly from URL parameters
-  const clubId = params.clubId ? Number(params.clubId) : null;
-  const teamId = params.teamId ? Number(params.teamId) : null;
+  const { 
+    currentClub, 
+    currentClubId, 
+    currentTeamId, 
+    currentTeam,
+    clubTeams, 
+    setCurrentTeamId,
+    switchClub,
+    isLoading: clubLoading 
+  } = useClub();
 
   // Redirect to club-scoped URL if accessing /players without club ID
   useEffect(() => {
-    if (location === '/players') {
-      // Default to club 54 (Warrandyte) for backward compatibility
-      setLocation('/club/54/players');
+    if (location === '/players' && currentClubId) {
+      setLocation(`/club/${currentClubId}/players`);
       return;
     }
-  }, [location, setLocation]);
+  }, [location, currentClubId, setLocation]);
+
+  // Don't render anything until club context is fully loaded
+  if (clubLoading || !currentClub) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
 
-  // Fetch club details directly from URL parameter
-  const { data: club } = useQuery({
-  });
+  // Handle club ID from URL parameter (but not team ID)
+  useEffect(() => {
+    const clubIdFromUrl = params.clubId;
+    console.log('Players page URL club ID effect:', { 
+      clubIdFromUrl, 
+      teamId: params.teamId, 
+      currentClubId: currentClub?.id,
+      needsSwitch: clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId && currentClub?.id !== Number(clubIdFromUrl)
+    });
+    
+    // Only switch clubs if we have a clubId parameter that's not a team ID
+    if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId) {
+      const targetClubId = Number(clubIdFromUrl);
+      if (currentClub?.id !== targetClubId) {
+        console.log('Players page: switching club from', currentClub?.id, 'to', targetClubId);
+        switchClub(targetClubId);
+      }
+    }
+  }, [params.clubId, currentClub?.id, switchClub, params.teamId]);
+
+  // Determine if this is team-specific or club-wide players
+  const teamId = params.teamId ? parseInt(params.teamId) : null;
 
   // Get active season for team assignments
   const { data: activeSeason } = useQuery({
+    queryKey: ['seasons', 'active'],
+    queryFn: async () => {
       const response = await apiClient.get('/api/seasons/active');
       return response;
     },
@@ -51,14 +91,19 @@ export default function Players() {
 
   // Get all teams for the dropdown
   const { data: allTeams = [] } = useQuery({
-      if (!clubId) return [];
-      const response = await apiClient.get(`/api/clubs/${clubId}/teams`);
+    queryKey: ['teams', currentClub?.id],
+    queryFn: async () => {
+      if (!currentClub?.id) return [];
+      const response = await apiClient.get(`/api/clubs/${currentClub.id}/teams`);
       return response;
     },
+    enabled: !!currentClub?.id,
   });
 
   // Get team details if viewing a specific team
   const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
+    queryKey: ['team', teamId],
+    queryFn: async () => {
       const response = await apiClient.get(`/api/teams/${teamId}`);
       return response;
     },
@@ -68,11 +113,20 @@ export default function Players() {
   });
 
   const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
-      return apiClient.get(`/api/teams/${teamId}/players`);
+    queryKey: ['team-players', teamId, currentClubId],
+    queryFn: () => {
+      const headers: Record<string, string> = {};
+      if (currentClubId) {
+        headers['x-current-club-id'] = currentClubId.toString();
+      }
+      return apiClient.get(`/api/teams/${teamId}/players`, { headers });
     },
+    enabled: !!teamId && !!currentClubId,
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
+    queryKey: ['team-available-players', teamId, activeSeason?.id],
+    queryFn: () => {
       return apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
     },
     enabled: !!teamId && !!activeSeason?.id,
@@ -81,13 +135,15 @@ export default function Players() {
   // Team filter state for main players view
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
 
-  // Get players for non-team view using URL-based club ID
-  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
-      console.log('Players query: fetching for club', clubId);
-      const response = await apiClient.get(`/api/clubs/${clubId}/players`);
-      console.log('Players query: received', response?.length, 'players');
+  // Get players for non-team view
+  const { data: players = [], isLoading: isPlayersLoading } = useQuery({
+    queryKey: ['players', currentClub?.id],
+    queryFn: async () => {
+      if (!currentClub?.id) return [];
+      const response = await apiClient.get(`/api/clubs/${currentClub.id}/players`);
       return response;
     },
+    enabled: !!currentClub?.id && !teamId,
   });
 
   // Filter players based on team selection
@@ -107,11 +163,11 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
       const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being added
@@ -119,7 +175,7 @@ export default function Players() {
 
       if (playerToAdd && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => [...old, playerToAdd]);
+        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => [...old, playerToAdd]);
 
         // Optimistically update available players
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
@@ -153,7 +209,7 @@ export default function Players() {
 
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
@@ -167,7 +223,7 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
@@ -175,13 +231,13 @@ export default function Players() {
   // Standardized player creation mutation that handles both club and team contexts
   const createPlayer = useMutation({
     mutationFn: async (playerData: any) => {
-      if (!club?.id) {
+      if (!currentClub?.id) {
         throw new Error('No club selected');
       }
 
       // Prepare headers with club context and optional team context
       const headers: Record<string, string> = {
-        'x-current-club-id': club.id.toString()
+        'x-current-club-id': currentClub.id.toString()
       };
 
       // Add team context if we're in team-specific view
@@ -198,7 +254,7 @@ export default function Players() {
       // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
       queryClient.invalidateQueries({ queryKey: ['team-players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
@@ -235,11 +291,11 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
       const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being removed
@@ -247,7 +303,7 @@ export default function Players() {
 
       if (playerToRemove && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => 
+        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => 
           old.filter(p => p.id !== playerId)
         );
 
@@ -283,7 +339,7 @@ export default function Players() {
 
       // Revert optimistic updates
       if (context?.previousTeamPlayers) {
-        queryClient.setQueryData(['team-players', teamId, clubId], context.previousTeamPlayers);
+        queryClient.setQueryData(['team-players', teamId, currentClubId], context.previousTeamPlayers);
       }
       if (context?.previousAvailablePlayers) {
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], context.previousAvailablePlayers);
@@ -297,7 +353,7 @@ export default function Players() {
     },
     onSettled: () => {
       // Invalidate to ensure eventual consistency
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClubId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
   });
@@ -306,8 +362,8 @@ export default function Players() {
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post('/api/players', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', clubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
       toast({
         title: "Success",
         description: "Player created successfully",
@@ -325,8 +381,8 @@ export default function Players() {
   const updateMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', clubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
       toast({
         title: "Success",
         description: "Player updated successfully",
@@ -344,8 +400,8 @@ export default function Players() {
   const deleteMutation = useMutation({
     mutationFn: (playerId: number) => apiClient.delete(`/api/players/${playerId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', clubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
       toast({
         title: "Success",
         description: "Player deleted successfully",
@@ -487,7 +543,7 @@ export default function Players() {
                       <DialogTitle>Add New Player</DialogTitle>
                     </DialogHeader>
                     <PlayerForm
-                      clubId={clubId}
+                      clubId={currentClubId}
                       teamId={teamId}
                       onSuccess={() => {
                         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
@@ -545,7 +601,7 @@ export default function Players() {
 
   // Regular club players view
   const pageTitle = 'Players';
-  const pageSubtitle = club?.name ? `Manage your club's players - ${club.name}` : 'Manage your club\'s players';
+  const pageSubtitle = currentClub?.name ? `Manage your club's players - ${currentClub.name}` : 'Manage your club\'s players';
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Players' }
@@ -595,10 +651,11 @@ export default function Players() {
                   <DialogTitle>Add New Player</DialogTitle>
                 </DialogHeader>
                 <PlayerForm
-                  clubId={clubId}
+                  clubId={currentClubId}
                   teamId={undefined}
                   onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ['players', clubId] });
+                    queryClient.invalidateQueries({ queryKey: ['players'] });
+                    queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
                     toast({ title: 'Success', description: 'Player created successfully' });
                     setIsAddPlayerDialogOpen(false);
                   }}
@@ -621,9 +678,9 @@ export default function Players() {
           ) : filteredPlayers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">No players found for this club</p>
-              <p className="text-xs text-gray-500">Club: {club?.name} (ID: {clubId})</p>
+              <p className="text-xs text-gray-500">Club: {currentClub?.name} (ID: {currentClub?.id})</p>
               <p className="text-xs text-gray-500">Players array length: {players.length}</p>
-              <p className="text-xs text-gray-500">Query enabled: {!!clubId && !teamId ? 'YES' : 'NO'}</p>
+              <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id && !teamId ? 'YES' : 'NO'}</p>
             </div>
           ) : (
             <PlayersList

@@ -48,18 +48,19 @@ export default function RosterManager({
   localRosterState
 }: RosterManagerProps) {
   // Get team context from URL or headers if available
-  const [currentTeamId, 
+  const [currentTeamId, setCurrentTeamId] = useState<number | null>(null);
   
   useEffect(() => {
     // Try to get team ID from URL params or other context
     const urlParams = new URLSearchParams(window.location.search);
     const teamParam = urlParams.get('teamId');
     if (teamParam) {
-      
+      setCurrentTeamId(parseInt(teamParam, 10));
     }
   }, []);
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [quarterToCopy, setQuarterToCopy] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Show all games, not just upcoming ones
   const allGames = games.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -342,6 +343,7 @@ export default function RosterManager({
           ),
           { quarter: quarterNum, position, playerId }
         ]);
+      } else {
         // For clearing, just mark that the position is cleared in pending changes
         const quarterNum = parseInt(quarter);
         setPendingChanges(prev => 

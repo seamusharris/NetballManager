@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { useParams } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 
 interface Game {
   id: number;
@@ -13,9 +13,7 @@ interface Game {
 }
 
 export function useNextGame() {
-  const params = useParams<{ clubId?: string; teamId?: string }>();
-  const clubId = params.clubId ? Number(params.clubId) : null;
-  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+  const { currentTeamId } = useClub();
 
   return useQuery({
     queryKey: ['next-game', currentTeamId],

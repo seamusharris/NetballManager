@@ -12,6 +12,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { invalidateGameCache } from '@/lib/cacheInvalidation';
 import { invalidateScoresOnly } from '@/lib/cacheKeys';
+import { useClub } from '@/contexts/ClubContext';
 
 interface OfficialScoreEntryProps {
   gameId: number;
@@ -26,8 +27,9 @@ export function OfficialScoreEntry({
   awayTeamName, 
   isReadOnly = false 
 }: OfficialScoreEntryProps) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+  const { currentClub } = useClub();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingQuarter, setEditingQuarter] = useState<number | null>(null);
@@ -39,10 +41,16 @@ export function OfficialScoreEntry({
   });
 
   // Fetch game data to get proper team mapping
+  const { data: gameData } = useQuery({
+    queryKey: ['/api/games', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
     enabled: !isNaN(gameId)
   });
 
   // Fetch existing official scores
+  const { data: officialScores, isLoading } = useQuery({
+    queryKey: ['/api/games', gameId, 'scores'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/scores`),
     enabled: !isNaN(gameId)
   });
 
@@ -52,6 +60,7 @@ export function OfficialScoreEntry({
       const newScores = { ...quarterScores };
 
       // Group scores by quarter
+      const scoresByQuarter: Record<number, { [teamId: number]: { score: number; notes?: string } }> = {};
 
       officialScores.forEach((score: any) => {
         if (!scoresByQuarter[score.quarter]) {
@@ -125,13 +134,13 @@ export function OfficialScoreEntry({
         });
 
         // Invalidate games lists for dashboard updates
-        if (club?.id) {
+        if (currentClub?.id) {
           queryClient.invalidateQueries({
             predicate: (query) => {
               const queryKey = query.queryKey;
               return Array.isArray(queryKey) && 
                      queryKey[0] === 'games' && 
-                     queryKey[1] === club.id;
+                     queryKey[1] === currentClub.id;
             }
           });
 

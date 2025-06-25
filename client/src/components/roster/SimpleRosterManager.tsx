@@ -61,6 +61,7 @@ export default function SimpleRosterManager({
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   });
 
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Filter out BYE games since they don't have rosters
@@ -91,6 +92,7 @@ export default function SimpleRosterManager({
     if (selectedGameId) {
       const fetchRoster = async () => {
         try {
+          const response = await fetch(`/api/games/${selectedGameId}/rosters`);
           if (response.ok) {
             const rosters: RosterType[] = await response.json();
 
@@ -169,6 +171,7 @@ export default function SimpleRosterManager({
         ),
         { quarter: quarterNum, position, playerId: actualPlayerId }
       ]);
+    } else {
       // For clearing, just mark that the position is cleared in pending changes
       const quarterNum = parseInt(quarter);
       setPendingChanges(prev => 
@@ -252,6 +255,7 @@ export default function SimpleRosterManager({
     });
 
     // Generate assignments for each quarter
+    const assignments: Array<{quarter: number, position: Position, playerId: number}> = [];
 
     // Initialize new roster state
     const newRosterState: RosterStateType = {
@@ -472,6 +476,7 @@ export default function SimpleRosterManager({
         setPendingChanges([]);
         setHasUnsavedChanges(false);
       }
+    } else {
       setSelectedGameId(Number(gameId));
     }
   };
@@ -632,7 +637,15 @@ export default function SimpleRosterManager({
   }, [selectedGame, currentTeam]);
 
   // Query to get players specifically assigned to this team
+  const { data: teamPlayers = [] } = useQuery({
+    queryKey: ['teamPlayers', gameTeamId],
+    queryFn: async () => {
       if (!gameTeamId) return [];
+      const response = await fetch(`/api/teams/${gameTeamId}/players`);
+      if (!response.ok) {
+        // Fallback to filtering club players if team endpoint fails
+        return players.filter(player => player.active);
+      }
       return response.json();
     },
     enabled: !!gameTeamId,

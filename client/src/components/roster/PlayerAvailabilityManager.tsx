@@ -51,6 +51,7 @@ export default function PlayerAvailabilityManager({
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
   const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Use cached query for availability
@@ -60,6 +61,8 @@ export default function PlayerAvailabilityManager({
     error: availabilityError,
     refetch: refetchAvailability
   } = useQuery<{availablePlayerIds: number[]}>({
+    queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/availability`),
     enabled: !!gameId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 30 * 60 * 1000, // 30 minutes
@@ -101,6 +104,7 @@ export default function PlayerAvailabilityManager({
       });
       console.log(`Filtered ${filteredPlayers.length} players from ${players.length} total for team ${teamToLoad}`);
       setTeamPlayers(filteredPlayers);
+    } else {
       setTeamPlayers([]);
     }
   }, [gameId, games, players]); // Depend on all necessary data
@@ -110,6 +114,7 @@ export default function PlayerAvailabilityManager({
     if (gameId) {
       console.log('PlayerAvailabilityManager: gameId changed, refetching availability for game:', gameId);
       queryClient.invalidateQueries({ 
+        queryKey: CACHE_KEYS.playerAvailability(gameId)
       });
       refetchAvailability();
     }
@@ -154,6 +159,7 @@ export default function PlayerAvailabilityManager({
       if (onAvailabilityChange) {
         onAvailabilityChange(filteredAvailableIds);
       }
+    } else {
       console.log('PlayerAvailabilityManager: No saved availability data, defaulting all active players to available');
       // Default to all active team players available (this is the proper default behavior)
       const activeTeamPlayerIds = teamPlayers.filter(p => p.active !== false).map(p => p.id);

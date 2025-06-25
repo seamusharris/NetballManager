@@ -22,10 +22,12 @@ export default function PlayerSeasonsManager({
   isOpen, 
   onClose 
 }: PlayerSeasonsManagerProps) {
-  
+  const { toast } = useToast();
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
   
   // Fetch player's current seasons
+  const { data: playerSeasons = [], isLoading: isSeasonsLoading } = useQuery<Season[]>({
+    queryKey: [`/api/players/${player.id}/seasons`],
     enabled: !!player?.id, // Always fetch when player ID is available
   });
   
@@ -43,6 +45,7 @@ export default function PlayerSeasonsManager({
     setSelectedSeasons(current => {
       if (current.includes(seasonId)) {
         return current.filter(id => id !== seasonId);
+      } else {
         return [...current, seasonId];
       }
     });
@@ -55,10 +58,16 @@ export default function PlayerSeasonsManager({
     try {
       console.log(`Updating seasons for player ${player.id}:`, selectedSeasons);
       
+      const response = await fetch(`/api/players/${player.id}/seasons`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ seasonIds: selectedSeasons })
       });
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update seasons: ${errorText}`);
+      }
       
       // Success! Show a toast and refresh the data
       toast({

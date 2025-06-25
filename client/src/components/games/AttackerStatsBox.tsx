@@ -5,6 +5,7 @@ interface AttackerStatsBoxProps {
   stats: any;
 }
 
+export const AttackerStatsBox: React.FC<AttackerStatsBoxProps> = ({ stats }) => {
   return (
     <div className="flex flex-col space-y-2 text-sm">
       {/* Position-specific stats for attackers (GS, GA) */}

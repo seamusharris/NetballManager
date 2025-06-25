@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { useClub } from '@/contexts/ClubContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -182,13 +183,13 @@ const statLabels: Record<StatType, string> = {
 };
 
 export default function LiveStats() {
+  const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id);
   const [, navigate] = useLocation();
 
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  // Extract club ID from URL for API calls
-  const params = useParams<{ clubId?: string }>();
-  const clubId = params.clubId ? Number(params.clubId) : null;
+  const { currentTeam, clubTeams } = useClub();
 
   const [activeTab, setActiveTab] = useState('stats');
   const [currentQuarter, setCurrentQuarter] = useState(1);
@@ -206,18 +207,30 @@ export default function LiveStats() {
   const [pendingStatChange, setPendingStatChange] = useState<any>(null);
 
   // Fetch game details - use direct game endpoint to bypass team filtering
+  const { data: game, isLoading: gameLoading } = useQuery({
+    queryKey: ['/api/games', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch opponent details if we have a game
+  const { data: opponent, isLoading: opponentLoading } = useQuery({
+    queryKey: ['/api/opponents', game?.opponentId],
+    queryFn: () => apiClient.get(`/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
   });
 
   // Fetch player roster for this game
+  const { data: rosters, isLoading: rostersLoading } = useQuery({
+    queryKey: ['/api/games', gameId, 'rosters'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
     enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch existing stats for this game with forced refresh when needed
+  const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ['/api/games', gameId, 'stats'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     staleTime: 0, // Consider it always stale to fetch fresh data
     refetchOnMount: 'always', // Always refetch when component mounts
@@ -225,10 +238,16 @@ export default function LiveStats() {
   });
 
   // Fetch current club first
+  const { data: currentClub } = useQuery({
+    queryKey: ['/api/clubs/current'],
+    queryFn: () => apiClient.get('/api/clubs/current'),
   });
 
   // Fetch players for the team - Stage 4 REST endpoint
-    enabled: !!club?.id
+  const { data: allPlayers, isLoading: allPlayersLoading } = useQuery({
+    queryKey: ['players', currentClub?.id, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/players`),
+    enabled: !!currentClub?.id
   });
 
   // Filter to only show players assigned to the current team
@@ -256,8 +275,8 @@ export default function LiveStats() {
 
   // Get team names for display
   const currentTeamName = currentTeam?.name || 'Our Team';
-  const homeTeamName = teams?.find(t => t.id === game?.homeTeamId)?.name || game?.homeTeamName || 'Home Team';
-  const awayTeamName = teams?.find(t => t.id === game?.awayTeamId)?.name || opponent?.teamName || 'Away Team';
+  const homeTeamName = clubTeams?.find(t => t.id === game?.homeTeamId)?.name || game?.homeTeamName || 'Home Team';
+  const awayTeamName = clubTeams?.find(t => t.id === game?.awayTeamId)?.name || opponent?.teamName || 'Away Team';
 
   // Determine display names based on team context
   const ourTeamDisplayName = hasTeamContext ? currentTeamName : homeTeamName;
@@ -469,6 +488,7 @@ export default function LiveStats() {
 
   const handleConfirmStatChange = () => {
     if (pendingStatChange) {
+      const { position, stat, value } = pendingStatChange;
       executeStatChange(position, stat, value);
     }
   };

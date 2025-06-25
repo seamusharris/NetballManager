@@ -42,6 +42,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   // State for reset confirmation dialogs
   const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
   const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   // Function to calculate game totals across all quarters
   const calculateGameTotals = () => {
@@ -116,6 +117,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
 
         totals[Number(playerId)] = playerTotals;
       }
+    } else {
       // Fallback to using form values if no database stats are available
       for (const quarter of ['1', '2', '3', '4']) {
         const quarterValues = formValues[quarter] || {};
@@ -146,6 +148,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     };
 
     // Keep track of player ratings and their stat IDs 
+    const firstQuarterRatings: Record<number, { rating: number, statId: number }> = {};
 
     // Initialize with zeros for all players in each quarter
     rosters.forEach(roster => {
@@ -529,6 +532,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           console.log(`UPDATING RATING: Player ${playerId} - changing from ${newestStat.rating} to ${rating} (and deleting ${existingQuarter1Stats.length - 1} duplicates)`);
           const ratingUpdatePromise = apiRequest(`/api/games/${gameId}/stats/${newestStat.id}`, {
             method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               rating: rating
             })
@@ -540,6 +544,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           console.log(`UPDATING RATING: Player ${playerId} - changing from ${existingQuarter1Stats[0].rating} to ${rating}`);
           const ratingUpdatePromise = apiRequest(`/api/games/${gameId}/stats/${existingQuarter1Stats[0].id}`, {
             method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               rating: rating
             })
@@ -561,6 +566,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             // Create a new stat record for quarter 1 with the rating (default to 5 if not provided)
             const createRatingPromise = apiRequest(`/api/games/${gameId}/stats`, {
               method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 gameId,
                 position: playerPositionInQ1.position, // Position-based instead of player-based
@@ -578,6 +584,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
               })
             });
             ratingPromises.push(createRatingPromise);
+          } else {
             console.error(`No position assignment found for player ${playerId} in quarter 1`);
           }
         }
@@ -657,6 +664,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             // Update the newest stat with new values
             const updatePromise = apiRequest(`/api/games/${gameId}/stats/${newestStat.id}`, {
               method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(statData)
             });
             savePromises.push(updatePromise);
@@ -665,6 +673,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           else if (existingStats.length === 1) {
             const updatePromise = apiRequest(`/api/games/${gameId}/stats/${existingStats[0].id}`, {
               method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(statData)
             });
             savePromises.push(updatePromise);
@@ -675,6 +684,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             // Create a new stat record with the stat data (which already includes position)
             const newStatPromise = apiRequest(`/api/games/${gameId}/stats`, {
               method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 gameId: statData.gameId,
                 position: statData.position,
@@ -708,6 +718,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       // First, manually fetch the latest stats to update our local view without refreshing
       try {
         // Manually fetch latest game stats
+        const freshStats = await fetch(`/api/games/${gameId}/stats`).then(res => res.json());
         console.log(`Manually fetched ${freshStats.length} fresh stats after saving in SimpleStats`);
 
         // Silently update cache with fresh data in the background
@@ -790,14 +801,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         queryClient.invalidateQueries({ queryKey: ['stats', gameId] });
 
         // 4. Invalidate dashboard and analysis queries
-        if (club?.id) {
+        if (currentClub?.id) {
           queryClient.invalidateQueries({
             predicate: (query) => {
               const queryKey = query.queryKey;
               return Array.isArray(queryKey) && (
                 queryKey[0] === 'dashboard' ||
                 queryKey[0] === 'team-performance' ||
-                (queryKey[0] === 'batch-game-data' && queryKey[1] === club.id)
+                (queryKey[0] === 'batch-game-data' && queryKey[1] === currentClub.id)
               );
             }
           });

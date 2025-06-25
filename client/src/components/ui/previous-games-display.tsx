@@ -8,8 +8,8 @@ import GameResultCard from '@/components/ui/game-result-card';
 
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
-  teamId: number;
-  clubId: number;
+  currentTeamId: number;
+  currentClubId: number;
   batchScores: Record<string, any[]>;
   batchStats?: Record<string, any[]>;
   opponentName: string;
@@ -18,8 +18,8 @@ interface PreviousGamesDisplayProps {
 
 export default function PreviousGamesDisplay({
   historicalGames,
-  teamId,
-  clubId,
+  currentTeamId,
+  currentClubId,
   batchScores,
   batchStats,
   opponentName,
@@ -50,7 +50,7 @@ export default function PreviousGamesDisplay({
   const winRateResult = calculateTeamWinRate(
     historicalGames,
     currentTeamId,
-    clubId,
+    currentClubId,
     batchScores || {}
   );
 
@@ -93,6 +93,7 @@ export default function PreviousGamesDisplay({
                 if (quarterIndex >= 0 && quarterIndex < 4) {
                   if (score.teamId === currentTeamId) {
                     teamScores[quarterIndex] = score.score;
+                  } else {
                     opponentScores[quarterIndex] = score.score;
                   }
                 }
@@ -119,7 +120,7 @@ export default function PreviousGamesDisplay({
                 <div className="ml-4 flex-shrink-0">
                   {!isSpecialStatus && hasQuarterData ? (
                     (() => {
-                      
+                      const { teamScores, opponentScores } = quarterData;
 
                       // Calculate cumulative scores
                       const teamCumulative = [];
@@ -150,6 +151,7 @@ export default function PreviousGamesDisplay({
                                   // Current team is home
                                   homeScore = teamScore;
                                   awayScore = opponentScore;
+                                } else {
                                   // Current team is away
                                   homeScore = opponentScore;
                                   awayScore = teamScore;
@@ -181,6 +183,7 @@ export default function PreviousGamesDisplay({
                                   // Current team is home
                                   homeCum = teamCum;
                                   awayCum = opponentCum;
+                                } else {
                                   // Current team is away
                                   homeCum = opponentCum;
                                   awayCum = teamCum;
@@ -232,8 +235,8 @@ export default function PreviousGamesDisplay({
                 notes: score.notes
               })) : [];
 
-              const quarterTeamScore = transformedScores.find(s => s.teamId === teamId && s.quarter === quarter)?.score || 0;
-              const quarterOpponentScore = transformedScores.find(s => s.teamId !== teamId && s.quarter === quarter)?.score || 0;
+              const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+              const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
               totalTeamScore += quarterTeamScore;
               totalOpponentScore += quarterOpponentScore;
@@ -321,6 +324,7 @@ export default function PreviousGamesDisplay({
                 gameScores.forEach(score => {
                   if (score.teamId === currentTeamId) {
                     gameGoalsFor += score.score;
+                  } else {
                     gameGoalsAgainst += score.score;
                   }
                 });

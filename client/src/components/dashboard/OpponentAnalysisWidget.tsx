@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { TrendingUp, Trophy, Target, ArrowRight } from 'lucide-react';
 import { getWinLoseLabel } from '@/lib/utils';
@@ -16,13 +17,21 @@ interface OpponentAnalysisWidgetProps {
 }
 
 export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProps) {
+  const { currentClubId, currentTeamId } = useClub();
   const [selectedOpponentTeamId, setSelectedOpponentTeamId] = useState<number | null>(null);
 
   // Fetch games
+  const { data: games = [], isLoading: gamesLoading } = useQuery({
+    queryKey: ['games', currentClubId, currentTeamId],
+    queryFn: () => apiClient.get('/api/games'),
+    enabled: !!currentClubId && !!currentTeamId,
     staleTime: 2 * 60 * 1000,
   });
 
   // Fetch stats for opponent games
+  const { data: gameStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['opponent-analysis-stats', selectedOpponentTeamId, currentTeamId],
+    queryFn: async () => {
       if (!selectedOpponentTeamId || !currentTeamId) return {};
 
       const opponentGames = games.filter(game => 
@@ -101,6 +110,7 @@ export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProp
           recentForm.push('W');
         } else if (result === 'Loss') {
           recentForm.push('L');
+        } else {
           recentForm.push('D');
         }
 

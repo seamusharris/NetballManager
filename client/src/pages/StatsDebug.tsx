@@ -8,12 +8,12 @@ import { GameStat, Position, allPositions } from '@shared/schema';
 import SingleStatTester from '@/components/statistics/SingleStatTester';
 
 export default function StatsDebug() {
-  const params = useParams<{ id?: string }>();
-  const gameId = params.id ? parseInt(params.id) : null;
+  const { id } = useParams<{ id: string }>();
+  const gameId = parseInt(id);
   
-  const { data: stats = [] } = useQuery({
-    queryKey: ['stats-debug', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
+  const { data: stats = [], isLoading } = useQuery<GameStat[]>({
+    queryKey: ['/api/games', gameId, 'stats'],
+    queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     refetchInterval: 2000 // Auto refresh every 2 seconds
   });
@@ -42,13 +42,16 @@ export default function StatsDebug() {
         rating: null
       };
       
+      const response = await fetch('/api/game-stats', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
       if (response.ok) {
         const result = await response.json();
         setStatusMessage(`Test stat created with ID: ${result.id}`);
+      } else {
         setStatusMessage(`Failed to create test stat: ${response.status}`);
       }
     } catch (error) {

@@ -37,6 +37,7 @@ export default function GameStatistics({
   isLoading
 }: GameStatisticsProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
+  const { toast } = useToast();
   const pendingChangesRef = React.useRef<Record<number, Record<number, Record<string, any>>>>({});
   
   // Transform rosters to more usable format
@@ -55,6 +56,7 @@ export default function GameStatistics({
     // This happens sometimes due to API path confusion
     if (rosters.length > 0 && 'date' in rosters[0] && 'opponentId' in rosters[0]) {
       console.log("WARNING: Received game object instead of roster entries");
+    } else {
       // Process actual roster entries
       rosters.forEach(roster => {
         // Check if this is a roster entry with all needed fields
@@ -291,6 +293,7 @@ export default function GameStatistics({
       if (existingStat) {
         // Update existing stats using standardized endpoint pattern
         return await apiRequest('PATCH', `/api/games/${game.id}/stats/${existingStat.id}`, stats);
+      } else {
         // Create new stats using standardized endpoint pattern
         return await apiRequest('POST', `/api/games/${game.id}/stats`, {
           gameId: game.id,
@@ -436,13 +439,16 @@ export default function GameStatistics({
             savePromises.push(
               apiRequest(`/api/games/${gameId}/stats/${existingStat.id}`, {
                 method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(quarterChanges)
               })
             );
+          } else {
             // Create new stats with defaults - position-based
             savePromises.push(
               apiRequest(`/api/games/${gameId}/stats`, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   gameId: game.id,
                   position, // Position is primary identifier, no player ID needed
@@ -506,6 +512,7 @@ export default function GameStatistics({
     
     if (hasChanges) {
       batchSaveStatsMutation.mutate();
+    } else {
       toast({
         title: "No Changes",
         description: "No changes to save",
@@ -675,6 +682,7 @@ export default function GameStatistics({
                                 <TableCell>{stat?.infringement || 0}</TableCell>
                               </TableRow>
                             );
+                          } else {
                             // For totals, render based on player ID
                             const playerId = parseInt(posOrId);
                             const player = players.find(p => p.id === playerId);

@@ -11,7 +11,7 @@ interface UpcomingGameRecommendationsProps {
   players: any[];
   centralizedStats: Record<number, any[]>;
   centralizedRosters: Record<number, any[]>;
-  clubId?: number;
+  currentClubId?: number;
 }
 
 interface GameRecommendation {
@@ -39,14 +39,14 @@ export function UpcomingGameRecommendations({
   players, 
   centralizedStats, 
   centralizedRosters,
-  clubId 
+  currentClubId 
 }: UpcomingGameRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<GameRecommendation[]>([]);
   const [, navigate] = useLocation();
 
   useEffect(() => {
     calculateRecommendations();
-  }, [games, centralizedStats, centralizedRosters, clubId]);
+  }, [games, centralizedStats, centralizedRosters, currentClubId]);
 
   const calculateRecommendations = () => {
     // Get upcoming games against teams we've played before
@@ -67,8 +67,8 @@ export function UpcomingGameRecommendations({
     upcomingGames.forEach(upcomingGame => {
       // Determine opponent
       let opponent = null;
-      const isHomeGame = upcomingGame.homeClubId === clubId;
-      const isAwayGame = upcomingGame.awayClubId === clubId;
+      const isHomeGame = upcomingGame.homeClubId === currentClubId;
+      const isAwayGame = upcomingGame.awayClubId === currentClubId;
 
       if (isHomeGame && !isAwayGame) {
         opponent = upcomingGame.awayTeamName;
@@ -80,8 +80,8 @@ export function UpcomingGameRecommendations({
 
       // Find historical games against this opponent
       const historicalGames = completedGames.filter(game => {
-        const gameIsHome = game.homeClubId === clubId;
-        const gameIsAway = game.awayClubId === clubId;
+        const gameIsHome = game.homeClubId === currentClubId;
+        const gameIsAway = game.awayClubId === currentClubId;
 
         if (gameIsHome && !gameIsAway) {
           return game.awayTeamName === opponent;

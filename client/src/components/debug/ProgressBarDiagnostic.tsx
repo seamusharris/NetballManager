@@ -33,6 +33,7 @@ export const ProgressBarDiagnostic: React.FC<ProgressBarDiagnosticProps> = ({
   );
 };
 
+export const SpacingDiagnostic: React.FC<{ children: React.ReactNode; label: string }> = ({ 
   children, 
   label 
 }) => {

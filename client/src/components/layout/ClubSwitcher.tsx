@@ -1,6 +1,5 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,12 +15,10 @@ import { Building2, ChevronDown } from 'lucide-react';
 
 export function ClubSwitcher() {
   try {
+    const { currentClub, currentClubId, userClubs, switchClub, isLoading, isInitialized } = useClub();
     const [, setLocation] = useLocation();
-    
-    // Fetch user's clubs directly
-    });
 
-    if (isLoading) {
+    if (isLoading || !isInitialized) {
       return (
         <Button variant="outline" size="sm" disabled>
           <Building2 className="w-4 h-4 mr-2" />
@@ -39,13 +36,21 @@ export function ClubSwitcher() {
       );
     }
 
-    // Default to first club for now - could be enhanced with URL parsing
-    const currentUserClub = userClubs[0];
+    // Find the current club from userClubs data or fall back to first club
+    // Use the currentClubId from context to find the right club
+
+    const currentUserClub = userClubs.find(club => 
+      club.clubId === (currentClub?.id || currentClubId)
+    );
 
     const displayClub = currentUserClub ? {
       id: currentUserClub.clubId,
       name: currentUserClub.clubName,
       code: currentUserClub.clubCode
+    } : userClubs.length > 0 ? {
+      id: userClubs[0].clubId,
+      name: userClubs[0].clubName,
+      code: userClubs[0].clubCode
     } : null;
 
     if (!displayClub) {

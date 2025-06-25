@@ -30,16 +30,31 @@ export default function PlayerTeamsManager({
   isOpen, 
   onClose 
 }: PlayerTeamsManagerProps) {
+  const { toast } = useToast();
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch player's current teams
+  const { data: playerTeams = [], isLoading: isTeamsLoading } = useQuery<Team[]>({
+    queryKey: ['players', player.id, 'teams'],
+    queryFn: async () => {
+      const response = await fetch(`/api/players/${player.id}/teams`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch player teams');
+      }
       return response.json();
     },
     enabled: !!player?.id,
   });
   
   // Fetch all available teams
+  const { data: allTeams = [], isLoading: isLoadingAllTeams } = useQuery<Team[]>({
+    queryKey: ['teams', 'all'],
+    queryFn: async () => {
+      const response = await fetch('/api/teams/all');
+      if (!response.ok) {
+        throw new Error('Failed to fetch teams');
+      }
       return response.json();
     },
     enabled: !!player?.id,
@@ -50,6 +65,7 @@ export default function PlayerTeamsManager({
     if (playerTeams && playerTeams.length > 0) {
       console.log(`Setting selected teams for player ${player.id}:`, playerTeams.map(t => t.id));
       setSelectedTeams(playerTeams.map(team => team.id));
+    } else {
       setSelectedTeams([]);
     }
   }, [playerTeams, player.id]);
@@ -59,6 +75,7 @@ export default function PlayerTeamsManager({
     setSelectedTeams(current => {
       if (current.includes(teamId)) {
         return current.filter(id => id !== teamId);
+      } else {
         return [...current, teamId];
       }
     });
@@ -80,20 +97,31 @@ export default function PlayerTeamsManager({
       
       // Add player to new teams
       for (const teamId of teamsToAdd) {
+        const response = await fetch(`/api/teams/${teamId}/players`, {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             playerId: player.id,
             isRegular: true 
           })
         });
         
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to add player to team ${teamId}: ${errorText}`);
+        }
       }
       
       // Remove player from teams
       for (const teamId of teamsToRemove) {
+        const response = await fetch(`/api/teams/${teamId}/players/${player.id}`, {
           method: 'DELETE',
         });
         
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to remove player from team ${teamId}: ${errorText}`);
+        }
       }
       
       // Success! Show a toast and refresh the data

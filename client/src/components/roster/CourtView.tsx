@@ -8,6 +8,7 @@ interface CourtViewProps {
   players: any[];
 }
 
+export const CourtView = ({ quarter, roster, players }: CourtViewProps) => {
   // Group roster by quarter and position for the position list
   const rosterByQuarter = React.useMemo(() => {
     return roster.reduce((acc: any, entry: any) => {

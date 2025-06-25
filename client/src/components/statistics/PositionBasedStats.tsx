@@ -63,6 +63,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
   existingStats,
   onStatsUpdated
 }) => {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeQuarter, setActiveQuarter] = useState<string>("1");
   const [isSaving, setIsSaving] = useState(false);
@@ -164,9 +165,11 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
   };
   
   // Mutation for saving game statistics
+  const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => 
       apiRequest(`/api/games/${gameId}/stats`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameStat)
       })
   });
@@ -287,6 +290,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
       
       // First, manually fetch the latest stats to update our local view without refreshing
       try {
+        const freshStats = await fetch(`/api/games/${gameId}/stats?t=${Date.now()}`).then(res => res.json());
         console.log(`Manually fetched ${freshStats.length} fresh stats after saving in PositionBasedStats`);
         
         // Silently update cache with fresh data in the background

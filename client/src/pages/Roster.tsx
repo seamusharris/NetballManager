@@ -11,13 +11,13 @@ import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityMan
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import { useLocation, useParams } from 'wouter';
 import { Game, Player, Opponent } from '@shared/schema';
-// ClubContext removed - using URL-based club management
+import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
 
 export default function Roster() {
   const params = useParams();
   const [, navigate] = useLocation();
-  
+  const { currentClub } = useClub();
 
   // Extract gameId from URL params more reliably
   const gameIdFromUrl = React.useMemo(() => {
@@ -35,15 +35,24 @@ export default function Roster() {
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
 
   // Fetch games
+  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
+    queryKey: ['games', currentClub?.id],
+    queryFn: () => apiRequest('GET', '/api/games'),
     retry: 1,
-    enabled: !!club?.id
+    enabled: !!currentClub?.id
   });
 
   // Fetch players
-    enabled: !!club?.id
+  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
+    queryKey: ['players', currentClub?.id],
+    queryFn: () => apiRequest('GET', '/api/players'),
+    enabled: !!currentClub?.id
   });
 
   // Fetch opponents for legacy support
+  const { data: opponents = [], isLoading: opponentsLoading, error: opponentsError } = useQuery({
+    queryKey: ['opponents'],
+    queryFn: async () => {
       try {
         const result = await apiRequest('GET', '/api/opponents');
         return Array.isArray(result) ? result : [];
@@ -76,6 +85,7 @@ export default function Roster() {
             // Set current step based on what was completed
             if (state.lineup && Object.values(state.lineup).every(p => p !== null)) {
               setCurrentStep('roster');
+            } else {
               setCurrentStep('availability');
             }
 
@@ -85,6 +95,7 @@ export default function Roster() {
         } catch (error) {
           console.error('Error restoring preparation state:', error);
         }
+      } else {
         // No preparation state, go directly to roster management for game from URL
         setCurrentStep('roster');
       }
@@ -216,7 +227,7 @@ export default function Roster() {
   return (
     <PageTemplate
       title="Roster Management"
-      subtitle={`Manage game rosters for ${club?.name || 'your club'}`}
+      subtitle={`Manage game rosters for ${currentClub?.name || 'your club'}`}
       breadcrumbs={breadcrumbs}
       actions={pageActions}
     >

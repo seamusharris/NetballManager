@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import BackButton from "@/components/ui/back-button";
 
 export default function DataManagement() {
+  const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -39,6 +40,7 @@ export default function DataManagement() {
       setError(null);
 
       // Export all data
+      const { fileContents, filename } = await exportAllData();
 
       // Create and download file
       const blob = new Blob([fileContents], { type: 'application/json' });
@@ -133,6 +135,7 @@ export default function DataManagement() {
       reader.onload = () => {
         if (typeof reader.result === 'string') {
           resolve(reader.result);
+        } else {
           reject(new Error('Failed to read file'));
         }
       };

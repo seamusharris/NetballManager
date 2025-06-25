@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { GameBadge } from '@/components/ui/game-badge';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { useClub } from '@/contexts/ClubContext';
 
 interface UpcomingGamesProps {
   games: Game[];
@@ -19,6 +20,7 @@ interface UpcomingGamesProps {
 }
 
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
+  const { currentTeam } = useClub();
 
   console.log('UpcomingGames render:', {
     totalGames: games?.length || 0,
