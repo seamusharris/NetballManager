@@ -854,58 +854,73 @@ export default function GamePreparation() {
                     opponentName={opponent}
                   />
 
-                  {/* Historical Attack vs Defense Performance */}
-                  {historicalGames.length > 0 && batchStats && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Historical vs {opponent} - Position Performance</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {(() => {
-                          // Calculate position-based statistics for historical games
-                          console.log('=== POSITION STATS DEBUG ===');
-                          console.log('Historical games for position calculation:', historicalGames.length);
-                          console.log('Batch stats keys:', Object.keys(batchStats || {}));
-                          console.log('Current team ID:', currentTeamId);
-                          console.log('Game opponent calculation:', {
-                            gameHomeTeamId: game.homeTeamId,
-                            gameAwayTeamId: game.awayTeamId,
-                            currentTeamId: currentTeamId,
-                            calculatedOpponent: opponent
-                          });
+                  {/* Position Performance Stats */}
+                  <div className="space-y-6">
+                    {/* Historical vs Opponent Position Performance */}
+                    {historicalGames.length > 0 && batchStats && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Historical vs {opponent} - Position Performance</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
 
-                          // Check if we have stats for any of the historical games
-                          const gamesWithStats = historicalGames.filter(g => 
-                            batchStats[g.id] && batchStats[g.id].length > 0
-                          );
-                          console.log('Games with stats:', gamesWithStats.length, 'out of', historicalGames.length);
-
-                          const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
-
-                          console.log('Historical position averages calculated:', historicalPositionAverages);
-                          console.log('=== END POSITION STATS DEBUG ===');
-
-                          if (historicalPositionAverages.gamesWithPositionStats === 0) {
-                            return (
-                              <div className="text-center py-8">
-                                <div className="text-gray-500">No position statistics available for historical games vs {opponent}</div>
-                                <div className="text-xs text-gray-400 mt-2">
-                                  Historical games: {historicalGames.length}, Games with stats: {historicalPositionAverages.gamesWithPositionStats}
+                            if (historicalPositionAverages.gamesWithPositionStats === 0) {
+                              return (
+                                <div className="text-center py-8">
+                                  <div className="text-gray-500">No position statistics available for historical games vs {opponent}</div>
+                                  <div className="text-xs text-gray-400 mt-2">
+                                    Historical games: {historicalGames.length}, Games with stats: {historicalPositionAverages.gamesWithPositionStats}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          }
+                              );
+                            }
 
-                          return (
-                            <AttackDefenseDisplay
-                              averages={historicalPositionAverages}
-                              label={`Historical Attack vs Defense vs ${opponent} (${historicalPositionAverages.gamesWithPositionStats} games)`}
-                            />
-                          );
-                        })()}
-                      </CardContent>
-                    </Card>
-                  )}
+                            return (
+                              <AttackDefenseDisplay
+                                averages={historicalPositionAverages}
+                                label={`Historical Attack vs Defense vs ${opponent} (${historicalPositionAverages.gamesWithPositionStats} games)`}
+                              />
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Recent Season Position Performance */}
+                    {seasonGames.length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some(gameId => seasonBatchStats[gameId]?.length > 0) && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Recent Season Position Performance</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            // Calculate position-based statistics using shared utility
+                            const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats, currentTeamId);
+                            
+                            if (positionAverages.gamesWithPositionStats === 0) {
+                              return (
+                                <div className="text-center py-8">
+                                  <div className="text-gray-500">No position statistics available for season games</div>
+                                  <div className="text-xs text-gray-400 mt-2">
+                                    Season games: {seasonGames.length}, Games with stats: {positionAverages.gamesWithPositionStats}
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <AttackDefenseDisplay
+                                averages={positionAverages}
+                                label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`}
+                              />
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
 
 
 
