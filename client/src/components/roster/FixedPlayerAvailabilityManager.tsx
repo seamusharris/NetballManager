@@ -61,7 +61,7 @@ export default function FixedPlayerAvailabilityManager({
       availableIds: availableIds,
       optimisticUpdates
     });
-    
+
     players.forEach(player => {
       // Use optimistic update if available, otherwise use API data
       if (player.id in optimisticUpdates) {
@@ -343,7 +343,7 @@ export default function FixedPlayerAvailabilityManager({
                       className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                       style={{ 
                         backgroundColor: isSelected ? darkerTextColor : 'transparent', 
-                        border: isSelected ? 'none' : `2px solid ${darkerTextColor}`
+                        border: isSelected ? 'none' : `2px solid ${darkerTextColor}20`
                       }}
                       onClick={() => handlePlayerToggle(player.id)}
                     >
