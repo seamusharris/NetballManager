@@ -38,13 +38,13 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   useEffect(() => {
     if (!shouldRender) return;
     const newValue = teamId?.toString() || (mode === 'required' ? '' : 'all');
-    console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
+    console.log('TeamSwitcher: Context changed, updating internal value:', { teamId, newValue });
     setInternalValue(newValue);
-  }, [currentTeamId, mode, shouldRender]);
+  }, [teamId, mode, shouldRender]);
 
   useEffect(() => {
     if (!shouldRender) return;
-    if (mode === 'required' && !currentTeamId && validTeams.length > 0) {
+    if (mode === 'required' && !teamId && validTeams.length > 0) {
       const firstTeam = validTeams[0];
       console.log('TeamSwitcher: Auto-selecting first team:', firstTeam.id, firstTeam.name);
       

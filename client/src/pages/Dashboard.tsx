@@ -107,27 +107,13 @@ export default function Dashboard() {
     },
     enabled: !!currentTeamId,
   });
-    staleTime: 0, // No cache for debugging
-    gcTime: 0, // No cache for debugging
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-  });
 
-  // Opponents system has been completely removed
+  // Batch fetch statistics for completed games
+  const completedGames = games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
+  const gameIds = completedGames.map(game => game.id);
 
-    staleTime: 60 * 60 * 1000, // 1 hour cache for seasons (rarely change) - increased
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
-  });
-
-    staleTime: 60 * 60 * 1000, // 1 hour cache for active season - increased
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
-  });
-
-  // Centralized roster fetching for all games - optimized for team switching
-  const gameIdsArray = games?.map(g => g.id).sort() || [];
-  const gameIds = gameIdsArray.join(',');
-
-  // Use unified data fetcher with proper team switching
+  const { statsMap: batchStats = {}, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIds);
+  const { data: batchScores = {}, isLoading: isLoadingBatchScores } = useBatchGameScores(gameIds);
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
       console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
