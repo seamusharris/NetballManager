@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
@@ -20,7 +19,7 @@ import { apiClient } from '@/lib/apiClient';
 export default function TeamPlayersManager() {
   const params = useParams<{ teamId?: string }>();
   const teamId = params.teamId ? parseInt(params.teamId) : null;
-  
+
   const {
     clubId,
     clubTeams,
@@ -75,7 +74,7 @@ export default function TeamPlayersManager() {
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
     onSuccess: () => {
       toast({ title: 'Success', description: 'Player added to team' });
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
     onError: (error: any) => {
@@ -91,7 +90,7 @@ export default function TeamPlayersManager() {
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
     onSuccess: () => {
       toast({ title: 'Success', description: 'Player removed from team' });
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
     onError: (error: any) => {
