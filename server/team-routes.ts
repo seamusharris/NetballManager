@@ -547,29 +547,22 @@ export function registerTeamRoutes(app: Express) {
   });
 
   // Get players for a specific team
-  app.get("/api/teams/:teamId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/teams/:teamId/players", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
-      const seasonId = await db.execute(sql`SELECT season_id FROM teams WHERE id = ${teamId}`);
-      const parsedSeasonId = seasonId.rows[0]?.season_id;
-      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
 
-      // Get team details to check club access
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+
+      // Verify team exists
       const team = await db.execute(sql`
-        SELECT club_id FROM teams WHERE id = ${teamId}
+        SELECT id FROM teams WHERE id = ${teamId}
       `);
 
       if (team.rows.length === 0) {
         return res.status(404).json({ error: 'Team not found' });
       }
-
-      const teamClubId = team.rows[0].club_id;
-
-      // Check if user has access to this team's club
-      if (!userClubs.includes(teamClubId)) {
-        return res.status(403).json({ error: 'Access denied to this team' });
-      }
-
 
       const result = await db.execute(sql`
         SELECT 
@@ -605,7 +598,7 @@ export function registerTeamRoutes(app: Express) {
         teamPositionPreferences: row.team_position_preferences ? JSON.parse(row.team_position_preferences) : []
       }));
 
-      // Return just the team players array (not wrapped in an object)
+      console.log(`Found ${players.length} players for team ${teamId}`);
       res.json(players);
     } catch (error) {
       console.error("Error fetching team players:", error);
