@@ -7,7 +7,7 @@ import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { useQueries } from '@tanstack/react-query';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 
@@ -28,7 +28,7 @@ export default function PlayerAvailabilityWidget({
   players,
   className 
 }: PlayerAvailabilityWidgetProps) {
-  const { currentTeamId } = useClub();
+  const { currentTeamId } = // useClub removed();
   const [availabilityData, setAvailabilityData] = useState<Record<number, GameAvailability>>({});
   const [loading, setLoading] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);

@@ -10,7 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 
 interface BreadcrumbItem {
   label: string;
@@ -24,7 +24,7 @@ interface DynamicBreadcrumbsProps {
 
 export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBreadcrumbsProps) {
   const [location, navigate] = useLocation();
-  const { currentClub } = useClub();
+  const { currentClub } = // useClub removed();
 
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     if (customItems) {

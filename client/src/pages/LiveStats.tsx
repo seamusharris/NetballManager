@@ -189,7 +189,9 @@ export default function LiveStats() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentTeam, clubTeams } = useClub();
+  // Extract club ID from URL for API calls
+  const params = useParams<{ clubId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
 
   const [activeTab, setActiveTab] = useState('stats');
   const [currentQuarter, setCurrentQuarter] = useState(1);

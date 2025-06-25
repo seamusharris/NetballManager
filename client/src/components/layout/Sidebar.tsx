@@ -7,7 +7,7 @@ import {
   BarChart, Database, SettingsIcon, Zap, Trophy, Building2, Target
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -17,7 +17,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  const { currentTeamId, currentTeam, currentClubId } = useClub();
+  const { currentTeamId, currentTeam, currentClubId } = // useClub removed();
   const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
 
   const isActive = (path: string) => {

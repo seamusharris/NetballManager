@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import ClubProvider from '@/contexts/ClubContext';
+// ClubProvider removed - using URL-based club management
 import { initializeCacheManager } from '@/lib/cacheManager';
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +24,7 @@ import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
-import { useClub } from '@/contexts/ClubContext';
+// useClub removed - using URL-based club management
 import { apiClient } from '@/lib/apiClient';
 
 // Import GameDetails directly for now

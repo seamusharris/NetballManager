@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useClub } from '@/contexts/ClubContext';
+import { useClub } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

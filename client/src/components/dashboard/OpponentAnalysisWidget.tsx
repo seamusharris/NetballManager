@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { LoadingState } from '@/components/ui/loading-state';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { TrendingUp, Trophy, Target, ArrowRight } from 'lucide-react';
 import { getWinLoseLabel } from '@/lib/utils';
@@ -17,7 +17,7 @@ interface OpponentAnalysisWidgetProps {
 }
 
 export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProps) {
-  const { currentClubId, currentTeamId } = useClub();
+  const { currentClubId, currentTeamId } = // useClub removed();
   const [selectedOpponentTeamId, setSelectedOpponentTeamId] = useState<number | null>(null);
 
   // Fetch games

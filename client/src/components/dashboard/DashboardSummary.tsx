@@ -23,7 +23,7 @@ import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
@@ -59,7 +59,7 @@ export default function DashboardSummary({
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
-  const { currentClub, currentTeamId, clubTeams, isLoading: clubLoading } = useClub();
+  const { currentClub, currentTeamId, clubTeams, isLoading: clubLoading } = // useClub removed();
 
   // Derive currentTeam from currentTeamId and clubTeams
   const currentTeam = currentTeamId ? clubTeams?.find(team => team.id === currentTeamId) : null;

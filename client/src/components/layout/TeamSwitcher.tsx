@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { useLocation, useRoute } from 'wouter';
 
 interface TeamSwitcherProps {
@@ -12,7 +12,7 @@ interface TeamSwitcherProps {
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   // ALL HOOKS MUST BE AT THE TOP - NEVER CALL HOOKS CONDITIONALLY
-  const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId, currentClub } = useClub();
+  const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId, currentClub } = // useClub removed();
   const [location, setLocation] = useLocation();
   const [internalValue, setInternalValue] = useState<string>('');
 

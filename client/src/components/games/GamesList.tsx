@@ -36,7 +36,7 @@ import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
 import { GameStatusButton } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { gameScoreService } from '@/lib/gameScoreService';
 import GameResultCard from '@/components/ui/game-result-card';
@@ -111,7 +111,7 @@ export function GamesList({
   const [sortColumn, setSortColumn] = useState<string>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [, setLocation] = useLocation();
-  const { currentClub } = useClub();
+  const { currentClub } = // useClub removed();
 
   // Helper function to get game status
   const getGameStatus = (game: any) => {

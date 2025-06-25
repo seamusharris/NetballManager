@@ -33,7 +33,7 @@ import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, positionGroups } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { usePlayerStatsMapping, PlayerStats } from '@/hooks/usePlayerStatsMapping';
 
 interface PlayersListProps {
@@ -53,7 +53,7 @@ interface SortConfig {
 }
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
-  const { currentClubId } = useClub();
+  const { currentClubId } = // useClub removed();
 
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());

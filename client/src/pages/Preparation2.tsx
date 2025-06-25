@@ -14,7 +14,7 @@ import {
   TrendingUp, AlertCircle, CheckCircle, Copy, Save,
   History, BarChart3, Zap, Star, ChevronRight
 } from 'lucide-react';
-import { useClub } from '@/contexts/ClubContext';
+import { useClub } from 'wouter';
 import { useStandardQuery } from '@/hooks/use-standard-query';
 import { useToast } from '@/hooks/use-toast';
 import { formatShortDate } from '@/lib/utils';

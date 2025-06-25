@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { gameScoreService } from '@/lib/gameScoreService';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 
 interface TeamPerformanceProps {
   games: Game[];
@@ -21,7 +21,7 @@ interface TeamPerformanceProps {
 
 // Team Performance Component
 const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats, centralizedScores }: TeamPerformanceProps) => {
-  const { currentTeamId } = useClub();
+  const { currentTeamId } = // useClub removed();
   const [isCalculating, setIsCalculating] = useState(false);
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;

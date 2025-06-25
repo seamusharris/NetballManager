@@ -150,7 +150,7 @@ import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { apiClient } from '@/lib/apiClient';
-import { useParams } from 'wouter';
+// useParams already imported above
 import { gameScoreService } from '@/lib/gameScoreService';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 

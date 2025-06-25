@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
-import { useClub } from '@/contexts/ClubContext';
+import { useClub } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';

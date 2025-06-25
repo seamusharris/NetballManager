@@ -12,7 +12,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { invalidateGameCache } from '@/lib/cacheInvalidation';
 import { invalidateScoresOnly } from '@/lib/cacheKeys';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 
 interface OfficialScoreEntryProps {
   gameId: number;
@@ -29,7 +29,7 @@ export function OfficialScoreEntry({
 }: OfficialScoreEntryProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentClub } = useClub();
+  const { currentClub } = // useClub removed();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingQuarter, setEditingQuarter] = useState<number | null>(null);

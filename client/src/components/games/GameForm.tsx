@@ -8,7 +8,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
-import { useClub } from '../../contexts/ClubContext';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
 
@@ -50,7 +49,7 @@ export default function GameForm({
   isEditing = false,
 }: GameFormProps) {
   const { toast } = useToast();
-  const { currentClubId } = useClub();
+  const { currentClubId } = // useClub removed();
 
   // Fetch all teams for inter-club games
   const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({

@@ -20,7 +20,7 @@ import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { exportStatsToPDF, exportStatsToExcel } from '@/lib/exportUtils';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
-import { useClub } from '@/contexts/ClubContext';
+import { useClub } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 
 export default function Statistics() {

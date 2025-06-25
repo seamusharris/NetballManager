@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { useLocation } from 'wouter';
 
 interface Club {
@@ -51,7 +51,7 @@ export default function ClubManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<any>(null);
   const [deletingClub, setDeletingClub] = useState<any>(null);
-  const { currentClub, switchClub } = useClub();
+  const { currentClub, switchClub } = // useClub removed();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 

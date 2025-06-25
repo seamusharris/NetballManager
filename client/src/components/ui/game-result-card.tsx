@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { useLocation } from 'wouter';
 import { QuarterScoresDisplay } from './quarter-scores-display';
 
@@ -51,7 +51,7 @@ export default function GameResultCard({
   clubTeams = [],
   currentClubId: propCurrentClubId
 }: GameResultCardProps) {
-  const { currentTeamId, currentClubId, currentClubTeams } = useClub();
+  const { currentTeamId, currentClubId, currentClubTeams } = // useClub removed();
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
   

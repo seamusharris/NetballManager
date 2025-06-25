@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import GameResultCard from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { statisticsService } from '@/lib/statisticsService';
 
@@ -24,7 +24,7 @@ interface RecentGamesProps {
 }
 
 function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
-  const { currentTeam } = useClub();
+  const { currentTeam } = // useClub removed();
 
   // Filter for recent completed games using the new status system
   const recentGames = (games || [])

@@ -4,7 +4,7 @@ import { isForfeitGame, getForfeitGameScore } from '@/lib/utils';
 import { Game, GameStat } from '@shared/schema';
 import { getCachedScores, cacheScores } from '@/lib/scoresCache';
 import { statisticsService } from '@/lib/statisticsService';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 
 interface BatchScoreDisplayProps {
   games: Game[];
@@ -17,7 +17,7 @@ interface BatchScoreDisplayProps {
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
   // Access the current club context
-  const { currentClub } = useClub();
+  const { currentClub } = // useClub removed();
 
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {

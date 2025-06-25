@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams } from 'wouter';
 import { Plus, Activity, Users, Edit, Trash2, MoreVertical, Trophy, Calendar } from 'lucide-react';
-import { useClub } from '@/contexts/ClubContext';
+import { useClub } from 'wouter';
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

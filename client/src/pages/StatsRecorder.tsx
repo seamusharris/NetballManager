@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Minus, ArrowLeft, Save, Undo, Redo } from 'lucide-react';
-import { useClub } from '@/contexts/ClubContext';
+import { useClub } from 'wouter';
 
 // Define the types of statistics we track
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 

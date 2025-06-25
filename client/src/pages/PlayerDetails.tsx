@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams, Link, useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +27,7 @@ import PlayerClubsManager from '@/components/players/PlayerClubsManager';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
 import PlayerTeamsManager from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
-import { useClub } from '@/contexts/ClubContext';
+import { // useClub removed } from 'wouter';
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +35,7 @@ export default function PlayerDetails() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { currentClubId } = useClub();
+  const { currentClubId } = // useClub removed();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
