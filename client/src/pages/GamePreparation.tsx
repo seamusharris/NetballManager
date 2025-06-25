@@ -850,6 +850,16 @@ export default function GamePreparation() {
                           // Calculate position-based statistics for historical games
                           const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
                           
+                          console.log('Historical position averages calculated:', historicalPositionAverages);
+                          
+                          if (historicalPositionAverages.gamesWithPositionStats === 0) {
+                            return (
+                              <div className="text-center py-8">
+                                <div className="text-gray-500">No position statistics available for historical games vs {opponent}</div>
+                              </div>
+                            );
+                          }
+                          
                           return (
                             <AttackDefenseDisplay
                               averages={historicalPositionAverages}
@@ -1323,11 +1333,12 @@ export default function GamePreparation() {
                         </div>
 
                         {/* Season Position Performance - Side by Side */}
-                        {seasonGames.length > 0 && seasonBatchScores && Object.keys(seasonBatchScores).some(gameId => seasonBatchScores[gameId]?.length > 0) && (
+                        {seasonGames.length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some(gameId => seasonBatchStats[gameId]?.length > 0) && (
                           <div className="mt-6">
                             {(() => {
                               // Calculate position-based statistics using shared utility
                               const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats, currentTeamId);
+                              console.log('Season position averages calculated:', positionAverages);
                               const { 
                                 gsAvgGoalsFor, 
                                 gaAvgGoalsFor, 
