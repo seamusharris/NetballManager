@@ -162,6 +162,15 @@ function PlayerBox({
     }
   };
 
+  // Handle box click for selection
+  const handleBoxClick = () => {
+    if (isSelectable && onSelectionChange) {
+      onSelectionChange(player.id, !isSelected);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   // Render selection checkbox
   const renderSelectionCheckbox = () => {
     if (!isSelectable) return null;
@@ -190,10 +199,11 @@ function PlayerBox({
         "flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200",
         borderClass,
         sizeClasses[size],
-        onClick && PLAYER_BOX_STYLES.interactive
+        (onClick || isSelectable) && PLAYER_BOX_STYLES.interactive,
+        isSelectable && "cursor-pointer"
       )}
       style={defaultStyle}
-      onClick={onClick}
+      onClick={handleBoxClick}
     >
       <div 
         className={cn(
