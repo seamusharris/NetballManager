@@ -1907,16 +1907,16 @@ export default function GameDetails() {
                     <div className="text-center py-10 border rounded-lg bg-gray-50">
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
-                      {teamId && (
+                      {currentTeam && (
                         <Button asChild className="mr-2">
-                          <Link to={`/team/${teamId}/roster/game/${gameId}`}>
+                          <Link to={`/team/${currentTeam.id}/roster/game/${gameId}`}>
                             <ClipboardList className="mr-2 h-4 w-4" />
                             Manage Roster
                           </Link>
                         </Button>
                       )}
                       <Button asChild>
-                        <Link to={`/team/${teamId}/availability/${gameId}`}>
+                        <Link to={`/team/${currentTeam?.id}/availability/${gameId}`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Set Player Availability
                         </Link>
