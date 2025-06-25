@@ -446,23 +446,13 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
   const [quarter, setQuarter] = useState(initialQuarter);
 
-  console.log('CourtPositionRoster RENDER START');
-  console.log('CourtPositionRoster received roster:', roster?.length, 'entries');
-  console.log('CourtPositionRoster received players:', players?.length, 'players');
-  console.log('CourtPositionRoster players type check:', {
-    playersType: typeof players,
-    isArray: Array.isArray(players),
-    isEmpty: players?.length === 0,
-    hasTargetPlayers: players?.filter(p => [78, 61, 64].includes(p.id))?.length || 0
-  });
+
 
   // Don't render with actual player data if players haven't loaded yet
   if (!Array.isArray(players) || players.length === 0) {
-    console.log('CourtPositionRoster: Early return - no players loaded yet');
     return (
       <div className="p-4 text-center text-gray-500">
-        <p>Loading players... ({players?.length || 0} loaded)</p>
-        <p className="text-xs mt-2">Roster has {roster?.length || 0} entries waiting for player data</p>
+        <p>Loading players...</p>
       </div>
     );
   }
@@ -500,29 +490,14 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     return positionMap[position] || '';
   };
 
-  // Helper to get player display name - moved outside component to receive fresh players data
+  // Helper to get player display name
   const getPlayerName = useCallback((playerId) => {
-    console.log('getPlayerName called with:', {
-      playerId,
-      playersLength: players?.length,
-      playersType: typeof players,
-      targetPlayerExists: players?.some(p => p.id === playerId)
-    });
-    
     if (!Array.isArray(players) || players.length === 0 || !playerId) {
-      console.log('getPlayerName: early return - no valid players array or playerId');
       return `Player ${playerId}`;
     }
     
     const player = players.find(p => p.id === playerId);
-    
-    if (!player) {
-      console.log('PLAYER NOT FOUND: ID', playerId, 'not found in', players.length, 'players');
-      return `Player ${playerId}`;
-    } else {
-      console.log('getPlayerName: SUCCESS - Found player', player.displayName || player.firstName);
-      return player.displayName || `${player.firstName} ${player.lastName}`;
-    }
+    return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : `Player ${playerId}`;
   }, [players]);
 
   // Function to get player color, converting from Tailwind class names to hex
@@ -1268,19 +1243,14 @@ export default function GameDetails() {
   } = useQuery({
     queryKey: CACHE_KEYS.players(currentClubId),
     queryFn: async () => {
-      console.log('GameDetails: Fetching players for club', currentClubId);
       if (!currentClubId) {
-        console.log('GameDetails: No club ID available');
         return [];
       }
       try {
         const result = await apiClient.get(`/api/clubs/${currentClubId}/players`);
-        console.log('GameDetails: PLAYERS QUERY SUCCESS - Raw result:', result);
-        console.log('GameDetails: PLAYERS QUERY SUCCESS - Count:', result?.length);
-        console.log('GameDetails: PLAYERS QUERY SUCCESS - Target players:', result?.filter(p => [78, 61, 64].includes(p.id)));
         return Array.isArray(result) ? result : [];
       } catch (error) {
-        console.error('GameDetails: PLAYERS QUERY ERROR:', error);
+        console.error('Error fetching players:', error);
         return [];
       }
     },
@@ -1920,32 +1890,11 @@ export default function GameDetails() {
                         </div>
                       ) : players.length === 0 ? (
                         <div className="flex items-center justify-center p-8">
-                          <div className="text-center">
-                            <p className="text-red-500">No players found for this club</p>
-                            <p className="text-xs text-gray-500 mt-2">Club ID: {currentClubId} (context: {currentClub?.id})</p>
-                            <p className="text-xs text-gray-500">Error: {playersError?.message}</p>
-                            <p className="text-xs text-gray-500">Query enabled: {!!currentClubId ? 'YES' : 'NO'}</p>
-                            <p className="text-xs text-gray-500">Cache key: {JSON.stringify(CACHE_KEYS?.players?.(currentClubId) || 'undefined')}</p>
-                            <Button 
-                              size="sm" 
-                              onClick={() => window.location.reload()}
-                              className="mt-2"
-                            >
-                              Refresh Page
-                            </Button>
-                          </div>
+                          <p className="text-gray-500">No players found for this club</p>
                         </div>
                       ) : (
                         <>
-                          {console.log('About to render CourtPositionRoster with:', {
-                            rosterEntries: roster.length,
-                            playerCount: players.length,
-                            sampleRoster: roster.slice(0, 2),
-                            samplePlayers: players.slice(0, 2),
-                            playersDataType: typeof players,
-                            playersIsArray: Array.isArray(players),
-                            hasTargetPlayers: players.filter(p => [78, 61, 64].includes(p.id)).length
-                          })}
+
                           <CourtPositionRoster 
                             roster={roster || []} 
                             players={players || []}

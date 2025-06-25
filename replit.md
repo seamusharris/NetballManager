@@ -112,6 +112,11 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 25, 2025: RESOLVED - Player names displaying as "Player ID" in roster positions
+  - Fixed React Query configuration for players data loading with proper CACHE_KEYS import
+  - Added currentClubId fallback to handle club context loading timing issues  
+  - Player names now display correctly in roster (Emily, Isla, Mila etc.) instead of ID numbers
+  - Cleaned up debug logging and temporary code added during troubleshooting
 - June 24, 2025: FIXED - Game details roster display and manage roster button
   - Added "Manage Roster" button to game details pages with correct URL: `/team/{teamId}/roster/game/{gameId}`
   - Fixed GameResultCard links to use team-based URLs: `/team/{teamId}/games/{gameId}` instead of `/game/{gameId}`
