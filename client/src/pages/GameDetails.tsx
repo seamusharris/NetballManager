@@ -194,1280 +194,70 @@ const getOpponentName = (opponents: any[], opponentId: number | null) => {
   return opponent ? opponent.teamName : 'Unknown Opponent';
 };
 
-// We now use the shared GameStatusButton component instead
-
-// Using the imported StatItemBox from components
-
-// Component to display player statistics from their positions played
-const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], players: any[], gameStats: any[] }) => {
-  const [activeQuarter, setActiveQuarter] = useState<number>(0); // 0 means all quarters
-
-  // Calculate player statistics by combining all positions they played
-  const playerStats = useMemo(() => {
-    // Create a set of all unique player IDs in the roster
-    const uniquePlayerIds = new Set<number>();
-
-    // Create a mapping of player ID to positions they played in each quarter
-    const playerPositions: Record<number, { playerId: number, positions: Record<number, string> }> = {};
-
-    // Add all players from roster
-    roster.forEach(entry => {
-      if (!entry.playerId) return;
-
-      uniquePlayerIds.add(entry.playerId);
-
-      if (!playerPositions[entry.playerId]) {
-        playerPositions[entry.playerId] = {
-          playerId: entry.playerId,
-          positions: {}
-        };
-      }
-
-      playerPositions[entry.playerId].positions[entry.quarter] = entry.position;
-    });
-
-    // For each player in the game, calculate their statistics
-    const result: Record<number, any> = {};
-
-    // Make sure all players in the roster are included
-    players.forEach(player => {
-      if (!uniquePlayerIds.has(player.id)) return;
-
-      // Initialize stats for every player in the roster
-      result[player.id] = {
-        playerId: player.id,
-        name: getPlayerName(players, player.id),
-        color: getPlayerColor(players, player.id),
-        quarterStats: {} as Record<number, any>,
-        totalStats: {
-          goals: 0,
-          missedGoals: 0,
-          goalsAgainst: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0
-        }
-      };
-    });
-
-    // Then calculate stats based on positions played
-    Object.values(playerPositions).forEach(player => {
-      // Get the player stats entry we created
-      const playerStat = result[player.playerId];
-
-      // Get stats for each quarter the player played in
-      Object.entries(player.positions).forEach(([quarter, position]) => {
-        const quarterNum = parseInt(quarter);
-        // Find stat for this position and quarter
-        const positionStat = gameStats.find(
-          stat => stat.position === position && stat.quarter === quarterNum
-        );
-
-        if (positionStat) {
-          // Initialize quarter stats if not already there
-          if (!playerStat.quarterStats[quarterNum]) {
-            playerStat.quarterStats[quarterNum] = {
-              position,
-              goals: 0,
-              missedGoals: 0,
-              goalsAgainst: 0,
-              rebounds: 0,
-              intercepts: 0,
-              badPass: 0,
-              handlingError: 0,
-              pickUp: 0,
-              infringement: 0
-            };
-          }
-
-          // Add stats from this position in this quarter
-          const stats = playerStat.quarterStats[quarterNum];
-
-          // Increment stats based on what was recorded for this position
-          if (position === 'GS' || position === 'GA') {
-            stats.goals += positionStat.goalsFor || 0;
-            stats.missedGoals += positionStat.missedGoals || 0;
-          }
-
-          if (position === 'GD' || position === 'GK') {
-            stats.goalsAgainst += positionStat.goalsAgainst || 0;
-          }
-
-          // Common stats for all positions
-          stats.rebounds += positionStat.rebounds || 0;
-          stats.intercepts += positionStat.intercepts || 0;
-          stats.badPass += positionStat.badPass || 0;
-          stats.handlingError += positionStat.handlingError || 0;
-          stats.pickUp += positionStat.pickUp || 0;
-          stats.infringement += positionStat.infringement || 0;
-
-          // Add to total stats
-          playerStat.totalStats.goals += position === 'GS' || position === 'GA' ? (positionStat.goalsFor || 0) : 0;
-          playerStat.totalStats.missedGoals += position === 'GS' || position === 'GA' ? (positionStat.missedGoals || 0) : 0;
-          playerStat.totalStats.goalsAgainst += position === 'GD' || position === 'GK' ? (positionStat.goalsAgainst || 0) : 0;
-          playerStat.totalStats.rebounds += positionStat.rebounds || 0;
-          playerStat.totalStats.intercepts += positionStat.intercepts || 0;
-          playerStat.totalStats.badPass += positionStat.badPass || 0;
-          playerStat.totalStats.handlingError += positionStat.handlingError || 0;
-          playerStat.totalStats.pickUp += positionStat.pickUp || 0;
-          playerStat.totalStats.infringement += positionStat.infringement || 0;
-        }
-      });
-
-      // Add player to results
-      result[player.playerId] = playerStat;
-    });
-
-    return Object.values(result);
-  }, [roster, players, gameStats]);
-
-  // Helper function to get player name (moved from elsewhere in the file)
-  function getPlayerName(players: any[], playerId: number) {
-    if (!Array.isArray(players) || !playerId) return null;
-    const player = players.find(p => p.id === playerId);
-    return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
-  }
-
-  // Helper function to get player color (moved from elsewhere in the file)
-  function getPlayerColor(players: any[], playerId: number) {
-    if (!Array.isArray(players) || !playerId) return '#cccccc';
-    const player = players.find(p => p.id === playerId);
-
-    // First, check if we need to use a default color
-    if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
-      // Use a very obvious, distinctive color based on player ID for maximum visibility
-      const defaultColors = [
-        '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
-        '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
-      ];
-      return defaultColors[playerId % defaultColors.length];
-    }
-
-    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
-    if (player.avatarColor.startsWith('bg-')) {
-      return convertTailwindToHex(player.avatarColor);
-    }
-
-    // If it's already a hex color, return it
-    return player.avatarColor;
-  }
-
-
-
-  // Render a quarter tab/button
-  const renderQuarterButton = (quarter: number) => (
-    <Button 
-      key={quarter} 
-      variant={activeQuarter === quarter ? "default" : "outline"} 
-      size="sm"
-      onClick={() => setActiveQuarter(quarter)}
-      className="min-w-[60px]"
-    >
-      {quarter === 0 ? "All" : `Q${quarter}`}
-    </Button>
-  );
-
-  // Render a player's statistics box
-  const renderPlayerStatsBox = (player: any) => {
-    // For 'All' quarters, use totalStats
-    // For specific quarters, use quarterStats or create empty stats if not available
-    let relevantStats;
-
-    if (activeQuarter === 0) {
-      relevantStats = player.totalStats;
-    } else {
-      // If no stats for this quarter, create empty stats object with zeros
-      if (!player.quarterStats[activeQuarter]) {
-        // Find position from roster
-        const rosterEntry = roster.find(r => 
-          r.playerId === player.playerId && r.quarter === activeQuarter
-        );
-
-        relevantStats = {
-          position: rosterEntry?.position || 'N/A',
-          goals: 0,
-          missedGoals: 0,
-          goalsAgainst: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0
-        };
-      } else {
-        relevantStats = player.quarterStats[activeQuarter];
-      }
-    }
-
-    // These stats are displayed for all players regardless of position
-    return (
-      <div 
-        key={player.playerId}
-        className="p-3 border rounded-md shadow-sm mb-4"
-        style={{ 
-          backgroundColor: `${player.color}10`,
-          borderColor: player.color
-        }}
-      >
-        <div className="flex justify-between items-center mb-3">
-          <div 
-            className="font-semibold text-lg"
-            style={{ color: player.color }}
-          >
-            {player.name}
-          </div>
-          {activeQuarter > 0 && (
-            <div className="text-sm bg-gray-100 px-2 py-1 rounded">
-              {relevantStats.position || "N/A"}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              {/* Left column stats - shown for all players */}
-              <StatItemBox label="Goals" value={relevantStats.goals || 0} />
-              <StatItemBox label="Missed Goals" value={relevantStats.missedGoals || 0} />
-              <StatItemBox label="Goals Against" value={relevantStats.goalsAgainst || 0} />
-              <StatItemBox label="Rebounds" value={relevantStats.rebounds || 0} />
-              <StatItemBox label="Intercepts" value={relevantStats.intercepts || 0} />
-            </div>
-            <div className="space-y-2">
-              {/* Right column stats - shown for all players */}
-              <StatItemBox label="Bad Pass" value={relevantStats.badPass || 0} />
-              <StatItemBox label="Handling Errors" value={relevantStats.handlingError || 0} />
-              <StatItemBox label="Pick Ups" value={relevantStats.pickUp || 0} />
-              <StatItemBox label="Infringements" value={relevantStats.infringement || 0} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div>
-      <div className="mb-4 flex justify-center items-center">
-        <div className="flex gap-2">
-          {[0, 1, 2, 3, 4].map(q => renderQuarterButton(q))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {playerStats
-          .sort((a, b) => {
-            // Sort players alphabetically by display name
-            if (!a.name) return 1;
-            if (!b.name) return -1;
-            return a.name.localeCompare(b.name);
-          })
-          .map(player => renderPlayerStatsBox(player))
-        }
-      </div>
-    </div>
-  );
-};
-
-
-
-// Court position roster component
-const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
-  const [quarter, setQuarter] = useState(initialQuarter);
-
-
-
-  // Don't render with actual player data if players haven't loaded yet
-  if (!Array.isArray(players) || players.length === 0) {
-    return (
-      <div className="p-4 text-center text-gray-500">
-        <p>Loading players...</p>
-      </div>
-    );
-  }
-
-  // Group roster by quarter and position
-  const rosterByQuarter = useMemo(() => {
-    if (!roster || !Array.isArray(roster)) {
-      console.log('Roster is not an array:', roster);
-      return {};
-    }
-
-    const grouped = roster.reduce((acc, entry) => {
-      if (!acc[entry.quarter]) acc[entry.quarter] = {};
-      acc[entry.quarter][entry.position] = entry;
-      return acc;
-    }, {});
-
-    console.log('Grouped roster by quarter:', grouped);
-    console.log('Quarter 1 positions:', Object.keys(grouped[1] || {}));
-    return grouped;
-  }, [roster]);
-
-  // Helper to get position coordinates on court diagram
-  const getPositionCoordinates = (position: Position) => {
-    const positionMap = {
-      'GS': 'top-12 left-1/2 transform -translate-x-1/2',
-      'GA': 'top-28 right-16',
-      'WD': 'top-1/2 right-14', // Swapped WD and WA
-      'C': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
-      'WA': 'bottom-1/2 left-14', // Swapped WA and WD
-      'GD': 'bottom-28 left-16',
-      'GK': 'bottom-12 left-1/2 transform -translate-x-1/2',
-    };
-
-    return positionMap[position] || '';
-  };
-
-  // Helper to get player display name
-  const getPlayerName = useCallback((playerId) => {
-    if (!Array.isArray(players) || players.length === 0 || !playerId) {
-      return `Player ${playerId}`;
-    }
-
-    const player = players.find(p => p.id === playerId);
-    return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : `Player ${playerId}`;
-  }, [players]);
-
-  // Function to get player color, converting from Tailwind class names to hex
-  const getPlayerColor = (playerId) => {
-    if (!Array.isArray(players) || !playerId) return '#cccccc';
-    const player = players.find(p => p.id === playerId);
-
-    // If player doesn't exist or has no color, return a default gray
-    if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
-      return '#cccccc'; // Simple gray fallback for all players without colors
-    }
-
-    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
-    if (player.avatarColor.startsWith('bg-')) {
-      const hexColor = tailwindToHex(player.avatarColor);
-      return hexColor;
-    }
-
-    // If it's already a hex color, return it
-    return player.avatarColor;
-  };
-
-  // Get player performance stats for display from the actual game statistics
-  const getPlayerPerformanceStats = (position) => {
-    const entry = rosterByQuarter[quarter]?.[position];
-
-    // Find the statistics for this position in this quarter
-    const positionStat = gameStats?.find?.(
-      stat => stat.position === position && stat.quarter === quarter
-    );
-
-    // If we have no entry in the roster (player) and no stats, return null
-    if (!entry && !positionStat) return null;
-
-    // Return position-specific relevant statistics
-    const stats = {
-      // Common stats for all positions
-      intercepts: positionStat?.intercepts || 0,
-      badPass: positionStat?.badPass || 0,
-      handlingError: positionStat?.handlingError || 0
-    };
-
-    // Get player name if we have a player assigned
-    const playerName = entry?.playerId ? getPlayerName(entry.playerId) : "Unassigned";
-
-    // Add position-specific stats
-    if (position === 'GS' || position === 'GA') {
-      // Attacking positions
-      return {
-        playerId: entry?.playerId || 0,
-        name: playerName,
-        stats: {
-          ...stats,
-          goals: positionStat?.goalsFor || 0,
-          missedGoals: positionStat?.missedGoals || 0,
-          rebounds: positionStat?.rebounds || 0
-        }
-      };
-    } else if (position === 'GD' || position === 'GK') {
-      // Defending positions
-      return {
-        playerId: entry?.playerId || 0,
-        name: playerName,
-        stats: {
-          ...stats,
-          goalsAgainst: positionStat?.goalsAgainst || 0,
-          rebounds: positionStat?.rebounds || 0,
-          pickUp: positionStat?.pickUp || 0
-        }
-      };
-    } else {
-      // Mid-court positions (WA, C, WD)
-      return {
-        playerId: entry?.playerId || 0,
-        name: playerName,
-        stats: {
-          ...stats,
-          pickUp: positionStat?.pickUp || 0,
-          rebounds: positionStat?.rebounds || 0,
-          infringement: positionStat?.infringement || 0
-        }
-      };
-    }
-  };
-
-  // Helper function to render position-specific stats
-  const renderPositionStats = (position, playerStats) => {
-    if (position === 'GS' || position === 'GA') {
-      return (
-        <>
-          <StatItemBox label="Goals" value={playerStats.stats.goals} />
-          <StatItemBox label="Missed Goals" value={playerStats.stats.missedGoals} />
-          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-        </>
-      );
-    } else if (position === 'GD' || position === 'GK') {
-      return (
-        <>
-          <StatItemBox label="Goals Against" value={playerStats.stats.goalsAgainst} />
-          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-          <StatItemBox label="Pick Ups" value={playerStats.stats.pickUp} />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <StatItemBox label="Pick Ups" value={playerStats.stats.pickUp} />
-          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-          <StatItemBox label="Infringements" value={playerStats.stats.infringement} />
-        </>
-      );
-    }
-  };
-
-  return (
-    <div className="mt-4">
-      <div className="mb-4 flex justify-center items-center">
-        <div className="flex gap-2">
-          {[1, 2, 3, 4].map(q => (
-            <Button 
-              key={q} 
-              variant={q === quarter ? "default" : "outline"} 
-              size="sm"
-              onClick={() => setQuarter(q)}
-            >
-              Q{q}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Horizontal court layout with stats below */}
-      <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
-        {/* Horizontal court diagram - significantly taller and more proportional to an actual netball court */}
-        <div className="flex justify-center">
-          <div className="relative w-full max-w-4xl h-96 bg-green-100 rounded-lg border border-green-300 shadow-md">
-          {/* Court markings - only the three equal vertical sections for horizontal layout */}
-          <div className="absolute inset-0 flex flex-row">
-            <div className="w-1/3 border-r border-green-500"></div>
-            <div className="w-1/3 border-r border-green-500"></div>
-            <div className="w-1/3"></div>
-          </div>
-
-          {/* Updated position coordinates for horizontal court */}
-          {POSITIONS.map(position => {
-            const entry = rosterByQuarter[quarter]?.[position];
-            const playerName = getPlayerName(entry?.playerId);
-            const playerColor = getPlayerColor(entry?.playerId);
-
-            // Use the player's avatar color for the background
-            const bgColor = playerName ? playerColor : 'white';
-
-            // Use white text for player positions, red for unassigned
-            const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
-
-            // New position coordinates for horizontal court with horizontal offsets
-            const horizontalPositions = {
-              // Attack end - left side
-              'GS': 'top-[25%] left-[10%] -translate-x-1/2 -translate-y-1/2',
-              'GA': 'top-[75%] left-[23%] -translate-x-1/2 -translate-y-1/2',
-
-              // Mid-court - center
-              'WA': 'top-[25%] left-[43%] -translate-x-1/2 -translate-y-1/2',
-              'C': 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
-              'WD': 'top-[75%] left-[57%] -translate-x-1/2 -translate-y-1/2',
-
-              // Defense end - right side
-              'GD': 'top-[25%] left-[77%] -translate-x-1/2 -translate-y-1/2',
-              'GK': 'top-[75%] left-[90%] -translate-x-1/2 -translate-y-1/2',
-            };
-
-            const positionClass = horizontalPositions[position] || '';
-
-            return (
-              <div key={position} className={`absolute ${positionClass}`}>
-                <div 
-                  style={{ 
-                    backgroundColor: playerName ? bgColor : '#e11d48', // Red for unassigned
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                    border: '3px solid white',
-                    width: '5rem',
-                    height: '5rem',
-                    borderRadius: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: '0.25rem'
-                  }}
-                >
-                  <div 
-                    className="font-bold text-center text-lg" 
-                    style={{ color: playerName ? textColor : 'white' }}
-                  >
-                    {position}
-                  </div>
-                  {playerName && (
-                    <div className="text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
-                  )}
-                  {!playerName && (
-                    <div className="text-sm text-center font-medium leading-tight text-white" style={{ letterSpacing: '2px' }}>—</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          </div>
-        </div>
-
-        {/* Stats boxes in horizontal grid below the court */}
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
-          {/* All positions in a single row */}
-          {POSITIONS.map(position => {
-            const entry = rosterByQuarter[quarter]?.[position];
-            const playerName = getPlayerName(entry?.playerId);
-            const playerColor = getPlayerColor(entry?.playerId);
-
-            // Find position stats directly, regardless of whether a player is assigned
-            const positionStat = gameStats?.find(stat => 
-              stat.position === position && stat.quarter === quarter
-            );
-
-            // Get performance stats (for players) or create stats object (for unassigned positions)
-            let playerStats = getPlayerPerformanceStats(position);
-
-            // If no player stats but we have position stats, create a stats object
-            if (!playerStats && positionStat) {
-              playerStats = {
-                stats: {
-                  goalsFor: positionStat.goalsFor || 0,
-                  goalsAgainst: positionStat.goalsAgainst || 0,
-                  missedGoals: positionStat.missedGoals || 0,
-                  rebounds: positionStat.rebounds || 0,
-                  intercepts: positionStat.intercepts || 0,
-                  badPass: positionStat.badPass || 0,
-                  handlingError: positionStat.handlingError || 0,
-                  pickUp: positionStat.infringement || 0
-                }
-              };
-            }
-
-            return (
-              <div
-                key={position} 
-                className="col-span-1"
-              >
-                <PositionBox
-                  position={position as Position}
-                  playerName={playerName}
-                  playerColor={playerColor}
-                  playerStats={playerStats}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Position statistics renderer
-const StatisticsByPosition = ({ gameStats }) => {
-  const [expanded, setExpanded] = useState<string | null>(null);
-
-  // Group stats by position
-  const statsByPosition = useMemo(() => {
-    return gameStats.reduce((acc, stat) => {
-      if (!acc[stat.position]) {
-        acc[stat.position] = {};
-      }
-
-      if (!acc[stat.position][stat.quarter]) {        acc[stat.position][stat.quarter] = {};
-      }
-
-      acc[stat.position][stat.quarter] = stat;
-      return acc;
-    }, {} as Record<string, Record<number, any>>);
-  }, [gameStats]);
-
-  // Get combined stats across quarters
-  const combinedStats = useMemo(() => {
-    return Object.entries(statsByPosition).reduce((acc: any, [position, quarters]) => {
-      acc[position] = Object.values(quarters).reduce((stats: any, curr: any) => {
-        stats.goalsFor = (stats.goalsFor || 0) + (curr.goalsFor || 0);
-        stats.goalsAgainst = (stats.goalsAgainst || 0) + (curr.goalsAgainst || 0);
-        stats.missedGoals = (stats.missedGoals || 0) + (curr.missedGoals || 0);
-        stats.intercepts = (stats.intercepts || 0) + (curr.intercepts || 0);
-        stats.rebounds = (stats.rebounds || 0) + (curr.rebounds || 0);
-        stats.handlingError = (stats.handlingError || 0) + (curr.handlingError || 0);
-        stats.badPass = (stats.badPass || 0) + (curr.badPass || 0);
-        stats.pickUp = (stats.pickUp || 0) + (curr.pickUp || 0);
-        stats.infringement = (stats.infringement || 0) + (curr.infringement || 0);
-        return stats;
-      }, {});
-      return acc;
-    }, {});
-  }, [statsByPosition]);
-
-  return (
-    <div className="space-y-4">
-      {POSITIONS.map(position => {
-        const stats = combinedStats[position] || {};
-        const isEmpty = Object.values(stats).every(val => !val);
-
-        return (
-          <Card key={position} className={isEmpty ? 'border-dashed' : ''}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-base">Position {position}</CardTitle>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setExpanded(expanded === position ? null : position)}
-                >
-                  {expanded === position ? 'Hide Details' : 'Show Details'}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isEmpty ? (
-                <div className="text-center text-gray-400 py-2">No statistics recorded</div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Goals For:</span>
-                    <span className="font-medium">{stats.goalsFor || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Goals Against:</span>
-                    <span className="font-medium">{stats.goalsAgainst || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Intercepts:</span>
-                    <span className="font-medium">{stats.intercepts || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Rebounds:</span>
-                    <span className="font-medium">{stats.rebounds || 0}</span>
-                  </div>
-                </div>
-              )}
-
-              {expanded === position && !isEmpty && (
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="font-medium mb-2">Quarter Breakdown</h4>
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4].map(quarter => {
-                      const quarterStats = statsByPosition[position]?.[quarter] || {};
-                      const hasStats = Object.values(quarterStats).some(val => val);
-
-                      if (!hasStats) return (
-                        <div key={quarter} className="text-sm text-gray-400">
-                          Q{quarter}: No statistics recorded
-                        </div>
-                      );
-
-                      return (
-                        <div key={quarter} className="bg-gray-50 p-3 rounded-md">
-                          <div className="font-medium mb-2">Quarter {quarter}</div>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-y-1 gap-x-4 text-sm">
-                            {quarterStats.goalsFor !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Goals For:</span>
-                                <span>{quarterStats.goalsFor}</span>
-                              </div>
-                            )}
-                            {quarterStats.goalsAgainst !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Goals Against:</span>
-                                <span>{quarterStats.goalsAgainst}</span>
-                              </div>
-                            )}
-                            {quarterStats.missedGoals !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Missed Goals:</span>
-                                <span>{quarterStats.missedGoals}</span>
-                              </div>
-                            )}
-                            {quarterStats.intercepts !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Intercepts:</span>
-                                <span>{quarterStats.intercepts}</span>
-                              </div>
-                            )}
-                            {quarterStats.rebounds !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Rebounds:</span>
-                                <span>{quarterStats.rebounds}</span>
-                              </div>
-                            )}
-                            {quarterStats.handlingError !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Handling Errors:</span>
-                                <span>{quarterStats.handlingError}</span>
-                              </div>
-                            )}
-                            {quarterStats.badPass !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Bad Passes:</span>
-                                <span>{quarterStats.badPass}</span>
-                              </div>
-                            )}
-                            {quarterStats.pickUp !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Pick Ups:</span>
-                                <span>{quarterStats.pickUp}</span>
-                              </div>
-                            )}
-                            {quarterStats.infringement !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Infringements:</span>
-                                <span>{quarterStats.infringement}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
-};
-
-// Quarter scores display
-const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, contextualOpponentScore, isByeGame, isUpcomingGame }) => {
-  // For BYE and upcoming games, show special styling
-  if (isByeGame || isUpcomingGame) {
-    const bgColor = isByeGame ? 'bg-gray-500' : 'bg-blue-500';
-    const borderColor = isByeGame ? 'border-gray-300' : 'border-blue-300';
-    const displayText = isByeGame ? 'BYE' : '—';
-
-    return (
-      <div>
-        <div className="mt-4 max-w-2xl mx-auto">
-          <div className={`rounded-md overflow-hidden border ${borderColor}`}>
-            <div className={`text-white p-4 text-center ${bgColor}`}>
-              <div className="flex justify-center items-center text-xl">
-                <span className="font-bold text-3xl">{displayText}</span>
-              </div>
-              {gameStatus && (
-                <div className="mt-1 text-sm font-medium">
-                  {isByeGame ? 'BYE Round' : gameStatus.charAt(0).toUpperCase() + gameStatus.slice(1).replace('-', ' ')}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Reshape the data to be quarter-by-quarter for easier rendering
-  const scoringByQuarter = useMemo(() => {
-    if (!quarterScores || !Array.isArray(quarterScores)) {
-      return [];
-    }
-    return quarterScores.reduce((acc, current, index) => {
-      acc.push({
-        quarter: index + 1,
-        teamScore: current.teamScore,
-        opponentScore: current.opponentScore
-      });
-      return acc;
-    }, []);
-  }, [quarterScores]);
-
-  // Use contextual scores instead of raw scores
-  const totalTeamScore = contextualTeamScore;
-  const totalOpponentScore = contextualOpponentScore;
-
-  // Calculate cumulative scores by quarter
-  const cumulativeScores = useMemo(() => {
-    if (!scoringByQuarter || scoringByQuarter.length === 0) {
-      return [];
-    }
-
-    let teamRunningTotal = 0;
-    let opponentRunningTotal = 0;
-
-    return scoringByQuarter.map(score => {
-      teamRunningTotal += score.teamScore;
-      opponentRunningTotal += score.opponentScore;
-
-      return {
-        quarter: score.quarter,
-        teamScore: score.teamScore,
-        opponentScore: score.opponentScore,
-        cumulativeTeamScore: teamRunningTotal,
-        cumulativeOpponentScore: opponentRunningTotal
-      };
-    });
-  }, [scoringByQuarter]);
-
-  // Check if the team is winning, losing, or tied
-  let scoreStatus;
-  let statusColor;
-
-  if (totalTeamScore > totalOpponentScore) {
-    scoreStatus = 'winning';
-    statusColor = 'bg-green-500';
-  } else if (totalTeamScore < totalOpponentScore) {
-    scoreStatus = 'losing';
-    statusColor = 'bg-red-500';
-  } else {
-    scoreStatus = 'tied';
-    statusColor = 'bg-amber-500';
-  }
-
-  return (
-    <div>
-      <div className="mt-4 max-w-2xl mx-auto">
-        <div className={`rounded-md overflow-hidden border ${
-          totalTeamScore > totalOpponentScore ? 'border-green-300' :
-          totalTeamScore < totalOpponentScore ? 'border-red-300' : 'border-amber-300'
-        }`}>
-          <div className={`text-white p-4 text-center ${statusColor}`}>
-            <div className="flex justify-center items-center text-xl">
-              <span className="font-bold text-3xl">{totalTeamScore}</span>
-              <span className="mx-4">-</span>
-              <span className="font-bold text-3xl">{totalOpponentScore}</span>
-            </div>
-            {gameStatus && (
-              <div className="mt-1 text-sm font-medium">
-                {gameStatus.charAt(0).toUpperCase() + gameStatus.slice(1).replace('-', ' ')}
-              </div>
-            )}
-          </div>
-          <div className="bg-white p-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="flex flex-col items-center">
-                <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter Scores</div>
-                <div className="grid grid-cols-4 gap-1 w-full max-w-xs">
-                  {scoringByQuarter.map(score => {
-                    const quarterWin = score.teamScore > score.opponentScore;
-                    const quarterLoss = score.teamScore < score.opponentScore;
-                    const quarterDraw = score.teamScore === score.opponentScore;
-
-                    const quarterBgColor = quarterWin 
-                      ? 'bg-green-100 border-green-300' 
-                      : quarterLoss 
-                        ? 'bg-red-100 border-red-300' 
-                        : 'bg-amber-100 border-amber-300';
-
-                    return (
-                      <div key={`q-${score.quarter}`} className="text-center">
-                        <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                        <div className={`font-medium text-sm p-2 rounded border ${quarterBgColor} min-h-[2.5rem] flex items-center justify-center`}>
-                          {score.teamScore}-{score.opponentScore}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="text-center mb-3 font-medium text-base text-gray-700">Game Scores</div>
-                <div className="grid grid-cols-4 gap-1 w-full max-w-xs">
-                  {cumulativeScores.map(score => {
-                    const gameWin = score.cumulativeTeamScore > score.cumulativeOpponentScore;
-                    const gameLoss = score.cumulativeTeamScore < score.cumulativeOpponentScore;
-                    const gameDraw = score.cumulativeTeamScore === score.cumulativeOpponentScore;
-
-                    const gameBgColor = gameWin 
-                      ? 'bg-green-100 border-green-300' 
-                      : gameLoss 
-                        ? 'bg-red-100 border-red-300' 
-                        : 'bg-amber-100 border-amber-300';
-
-                    return (
-                      <div key={`cumulative-${score.quarter}`} className="text-center">
-                        <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                        <div className={`font-medium text-sm p-2 rounded border ${gameBgColor} min-h-[2.5rem] flex items-center justify-center`}>
-                          {score.cumulativeTeamScore}-{score.cumulativeOpponentScore}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function GameDetails() {
   const params = useParams();
-  // Handle both /game/:id and /team/:teamId/games/:gameId URL patterns
-  const gameId = params.gameId ? parseInt(params.gameId) : parseInt(params.id);
-  const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
-  const queryClient = useQueryClient();
+  const gameId = params.gameId ? parseInt(params.gameId) : parseInt(params.id!);
+  const teamId = params.teamId ? parseInt(params.teamId) : undefined;
+  const { currentClub, currentTeam } = useClub();
   const { toast } = useToast();
-  const { currentTeam } = useClub();
-  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
-  // State for edit game dialog
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  // State for game notes
-  const [gameNotes, setGameNotes] = useState<string>("");
-  const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
-
-  // State for award winner
-  const [isEditingAward, setIsEditingAward] = useState<boolean>(false);
-  // Team Awards Management
-  const [selectedAwardWinner, setSelectedAwardWinner] = useState<number | null>(null);
-
-  // Fetch team awards
-  const { data: teamAwards } = useQuery({
-    queryKey: ['teamAwards', gameId, currentTeam?.id],
-    queryFn: async () => {
-      if (!gameId) return [];
-
-      const response = await fetch(`/api/games/${gameId}/team-awards`, {
-        headers: {
-          'x-current-club-id': currentClub?.id?.toString() || '',
-          'x-current-team-id': currentTeam?.id?.toString() || '',
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) return [];
-        throw new Error('Failed to fetch team awards');
-      }
-
-      return response.json();
-    },
-    enabled: !!gameId && !!currentTeam?.id
-  });
-
-  // Set initial award winner from team awards
-  useEffect(() => {
-    console.log('Team awards effect triggered:', { teamAwards, gameId, currentTeamId: currentTeam?.id });
-
-    if (teamAwards !== undefined) {
-      if (teamAwards.length > 0) {
-        const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
-        const winnerId = playerOfMatch?.playerId || null;
-        console.log('Setting award winner from team awards:', winnerId);
-        setSelectedAwardWinner(winnerId);
-      } else {
-        // Clear selection if no awards exist
-        console.log('No team awards found, clearing selection');
-        setSelectedAwardWinner(null);
-      }
-    }
-  }, [teamAwards, gameId, currentTeam?.id]);
-
-  // Reset editing state when game changes (but don't reset the award winner here)
-  useEffect(() => {
-    setIsEditingAward(false);
-  }, [gameId]);
-
-  const updateAwardWinner = useMutation({
-    mutationFn: async (playerId: number | null) => {
-      if (!game || !currentTeam) throw new Error("No game or team selected");
-
-      if (!playerId) {
-        // Handle removing award - we'd need a DELETE endpoint for this
-        throw new Error("Removing awards not yet implemented");
-      }
-
-      return await apiClient.post(`/api/games/${gameId}/team-awards`, {
-        playerId,
-        awardType: 'player_of_match',
-        teamId: currentTeam.id
-      });
-    },
-    onSuccess: () => {
-      // Targeted invalidation for immediate responsiveness
-      queryClient.invalidateQueries({ queryKey: ['teamAwards', gameId, currentTeam?.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-
-      // Also invalidate games list to update award winner display
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey;
-          return Array.isArray(key) && key[0] === '/api/games' && key.length === 1;
-        }
-      });
-
-      toast({
-        title: "Success",
-        description: "Player of the match updated successfully"
-      });
-    },
-    onError: (error: any) => {
-      console.error('Award winner update error:', error);
-      toast({
-        title: "Error",
-        description: `Failed to update player of the match: ${error.message || 'Unknown error'}`,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const [activeTab, setActiveTab] = useState('overview');
-
-    // Fetch current club using apiClient
-    const { data: currentClub } = useQuery({
-      queryKey: ['/api/clubs/current'],
-      queryFn: () => apiClient.get('/api/clubs/current'),
-    });
-
-  // Extract club ID from URL as fallback when club context is not available
-  const currentClubId = currentClub?.id || 54;
-
-  // Fetch game data using team-perspective endpoint when possible
-  const effectiveTeamId = teamIdFromUrl || currentTeam?.id;
+  // Fetch game details
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
-    queryKey: effectiveTeamId ? ['teams', effectiveTeamId, 'games', gameId] : ['/api/games', gameId],
-    queryFn: () => {
-      if (effectiveTeamId) {
-        return apiClient.get<Game>(`/api/teams/${effectiveTeamId}/games/${gameId}`);
-      } else {
-        return apiClient.get<Game>(`/api/games/${gameId}`);
-      }
-    },
-    enabled: !!gameId,
-  });
-
-  const { data: teamGameNotes } = useQuery({
-    queryKey: ['/api/games', gameId, 'team-notes'],
-    queryFn: () => apiClient.get<{ notes: string; enteredBy: number; createdAt: string; updatedAt: string }>(`/api/games/${gameId}/team-notes`),
-    enabled: !!gameId,
-  });
-
-  // Fetch players using REST endpoint with CACHE_KEYS
-  const { 
-    data: players = [],
-    isLoading: isLoadingPlayers,
-    error: playersError
-  } = useQuery({
-    queryKey: CACHE_KEYS.players(currentClubId),
-    queryFn: async () => {
-      if (!currentClubId) {
-        return [];
-      }
-      try {
-        const result = await apiClient.get(`/api/clubs/${currentClubId}/players`);
-        return Array.isArray(result) ? result : [];
-      } catch (error) {
-        console.error('Error fetching players:', error);
-        return [];
-      }
-    },
-    enabled: !!currentClubId,
-    staleTime: 1 * 60 * 1000, // Reduced cache time
-    refetchOnWindowFocus: true, // Enable refetch to force data loading
-    retry: 3
-  });
-
-  // Fetch game statuses
-  const { 
-    data: gameStatuses = [],
-    isLoading: isLoadingGameStatuses
-  } = useQuery({
-    queryKey: ['/api/game-statuses'],
-    queryFn: () => apiClient.get('/api/game-statuses'),
-    select: (data) => Array.isArray(data) ? data : []
+    queryKey: ['/api/games', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
+    enabled: !!gameId && !!currentClub
   });
 
   // Fetch teams
-  const { 
-    data: teams = [],
-    isLoading: isLoadingTeams,
-    error: teamsError
-  } = useQuery({
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
     queryKey: ['/api/teams'],
     queryFn: () => apiClient.get('/api/teams'),
-    select: (data) => Array.isArray(data) ? data : [],
-    enabled: !!currentClubId
+    enabled: !!currentClub
   });
 
-  // Fetch all teams
-  const {
-    data: allTeams = [],
-    isLoading: isLoadingAllTeams,
-    error: allTeamsError
-  } = useQuery({
-    queryKey: ['/api/teams/all'],
-    queryFn: () => apiClient.get('/api/teams/all'),
-    select: (data) => Array.isArray(data) ? data : [],
-    enabled: true
+  // Fetch players
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
+    queryKey: ['/api/players'],
+    queryFn: () => apiClient.get('/api/players'),
+    enabled: !!currentClub
   });
 
-  // Fetch roster for this game using team-specific endpoint when possible
-  const { 
-    data: roster,
-    isLoading: isLoadingRoster,
-    refetch: refetchRosters
-  } = useQuery({
-    queryKey: effectiveTeamId ? ['teams', effectiveTeamId, 'games', gameId, 'roster'] : ['/api/games', gameId, 'rosters'],
+  // Fetch game roster
+  const { data: roster = [], isLoading: isLoadingRoster, refetch: refetchRosters } = useQuery({
+    queryKey: teamId ? ['/api/teams', teamId, 'games', gameId, 'rosters'] : ['/api/games', gameId, 'rosters'],
     queryFn: () => {
-      if (effectiveTeamId) {
-        return apiClient.get(`/api/teams/${effectiveTeamId}/games/${gameId}/rosters`);
-      } else {
-        return apiClient.get(`/api/games/${gameId}/rosters`);
+      if (teamId) {
+        return apiClient.get(`/api/teams/${teamId}/games/${gameId}/rosters`);
       }
+      return apiClient.get(`/api/games/${gameId}/rosters`);
     },
-    enabled: !isNaN(gameId)
+    enabled: !!gameId
   });
 
-  // Fetch seasons data
-  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
-    queryKey: ['/api/seasons'],
-    queryFn: () => apiClient.get('/api/seasons'),
-    select: (data) => Array.isArray(data) ? data : []
-  });
-
-  // Fetch active season
-  const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active'],
-    queryFn: () => apiClient.get('/api/seasons/active')
-  });
-
-  // Force refetch when component mounts or route changes
-  useEffect(() => {
-    if (gameId && !isNaN(gameId)) {
-      console.log("Loaded roster data:", roster?.length, "entries");
-      console.log("Roster first entry:", roster?.[0]);
-      console.log("Players data:", { players, isLoadingPlayers, playersLength: players?.length });
-      console.log("Teams data:", { teams, isLoadingTeams, teamsLength: teams?.length });
-      console.log("Current club:", currentClub);
-      console.log("Current team:", currentTeam);
-      console.log("Effective team ID:", effectiveTeamId);
-      // Always refetch roster data when navigating to this page
-      refetchRosters();
-    }
-  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub, roster, currentTeam, players, isLoadingPlayers, effectiveTeamId]);
-
-  // Fetch game stats
-  const { 
-    data: gameStats,
-    isLoading: isLoadingStats,
-    refetch: refetchGameStats
-  } = useQuery({
-    queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
-    enabled: !isNaN(gameId),
-    staleTime: 0, // Always consider stale to get fresh data
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnMount: 'always' // Always refetch when component mounts
-  });
-
-  const homeTeamId = game?.homeTeamId;
-  const awayTeamId = game?.awayTeamId;
-  const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
-
-  // Fetch official scores
-  const { data: officialScores } = useQuery({
+  // Fetch game scores
+  const { data: quarterScores = [], isLoading: scoresLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'scores'],
     queryFn: () => apiClient.get(`/api/games/${gameId}/scores`),
-    enabled: !isNaN(gameId)
+    enabled: !!gameId && !!game
   });
 
-  // Calculate scores using official score priority for game details
-  const gameScores = useMemo(() => {
-    if (!game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
+  // Fetch game stats
+  const { data: gameStats = [], isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/games', gameId, 'stats'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
+    enabled: !!gameId && !!game
+  });
 
-    // Ensure we always pass the current team ID for consistent perspective
-    const effectiveCurrentTeamId = currentTeam?.id || currentClub?.id;
+  // Fetch game statuses
+  const { data: gameStatuses = [] } = useQuery({
+    queryKey: ['/api/game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses')
+  });
 
-    // Game details should prioritize official scores
-    return gameScoreService.calculateGameScoresSync(
-      gameStats || [], 
-      game.status, 
-      { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
-      isInterClub,
-      homeTeamId,
-      awayTeamId,
-      effectiveCurrentTeamId,
-      officialScores || undefined
-    );
-  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id, currentClub?.id, officialScores]);
+  const isLoading = gameLoading || isLoadingTeams || isLoadingPlayers || isLoadingRoster || scoresLoading || statsLoading;
 
-  const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
-
-  // Check for score mismatches in inter-club games
-  let scoreMismatchWarning = null;
-  if (isInterClub && homeTeamId && awayTeamId && gameStats && gameStats.length > 0) {
-    const homeStats = gameStats.filter(s => s.teamId === homeTeamId);
-    const awayStats = gameStats.filter(s => s.teamId === awayTeamId);
-
-    const homeTeamStats = {
-      teamId: homeTeamId,
-      goalsFor: homeStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
-      goalsAgainst: homeStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
-    };
-
-    const awayTeamStats = {
-      teamId: awayTeamId,
-      goalsFor: awayStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
-      goalsAgainst: awayStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
-    };
-
-    const validation = validateInterClubScores(homeTeamStats, awayTeamStats);
-    if (validation.hasDiscrepancy) {
-      scoreMismatchWarning = getScoreDiscrepancyWarning(validation);
-    }
-  }
-
-  // Calculate quarter scores and cumulative scores for display
-  const scoringByQuarter = quarterScores?.map(q => ({
-    quarter: q.quarter,
-    teamScore: q.teamScore,
-    opponentScore: q.opponentScore
-  })) || [];
-
-  const cumulativeScores = quarterScores?.map((_, index) => {
-    const cumulativeTeamScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.teamScore, 0);
-    const cumulativeOpponentScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.opponentScore, 0);
-    return {
-      quarter: index + 1,
-      cumulativeTeamScore,
-      cumulativeOpponentScore
-    };
-  }) || [];
-
-  // Debug game data
-  useEffect(() => {
-    if (game) {
-
-    }
-  }, [game]);
-
-  // Loading state - wait for both players and roster to load before showing the page
-  if (isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams || gameLoading || !game) { // Removed isLoadingOpponents
+  if (isLoading) {
     return (
       <div className="py-10 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
@@ -1476,49 +266,315 @@ export default function GameDetails() {
     );
   }
 
-  if (!game) {
+  if (gameError || !game) {
     return (
       <div className="py-10 text-center">
         <h1 className="text-2xl font-bold mb-4">Game Not Found</h1>
         <p className="mb-6">The game you're looking for doesn't exist or has been removed.</p>
         <Button variant="outline" asChild>
-          <Link to="/games">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Games
-          </Link>
+          <Link href="/games">Back to Games</Link>
         </Button>
       </div>
     );
   }
 
-  // Check if this is a forfeit game, which has special display and restrictions
-  const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
-  //const opponentName = getOpponentName(opponents || [], game.opponentId); // Removed opponentName
+  const homeTeam = teams.find(t => t.id === game.homeTeamId);
+  const awayTeam = teams.find(t => t.id === game.awayTeamId);
+  const gameStatus = gameStatuses.find(s => s.id === game.statusId);
 
-  // Check game status using status ID (matching games list logic)
-  const isByeGame = game?.statusId === 6;
-  const isUpcomingGame = game?.statusId === 1;
-  const isInProgressGame = game?.statusId === 2;
-  const isCompletedGame = game?.statusId === 3;
+  return (
+    <div className="p-4 space-y-6">
+      <Helmet>
+        <title>{game.homeTeamName} vs {game.awayTeamName || 'BYE'} - {TEAM_NAME}</title>
+      </Helmet>
 
-  // Helper function to get score display with correct team context
-  const finalTeamScore = quarterScores?.reduce((sum, q) => sum + q.teamScore, 0) || 0;
-  const finalOpponentScore = quarterScores?.reduce((sum, q) => sum + q.opponentScore, 0) || 0;
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
+            <h1 className="text-2xl font-bold">
+              {game.homeTeamName} vs {game.awayTeamName || 'BYE'}
+            </h1>
+            <p className="text-muted-foreground">
+              {formatDate(game.date)} at {game.time}
+            </p>
+          </div>
+        </div>
 
-  // Determine if we need to flip the perspective for inter-club games
-  const getCorrectScoreContext = () => {
-    if (!game || !currentTeam) {
-      return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
-    }
+        <div className="flex items-center gap-2">
+          {teamId && (
+            <Button 
+              variant="outline" 
+              asChild
+              className="bg-primary/10 border-primary/20 hover:bg-primary/20"
+            >
+              <Link href={`/team/${teamId}/roster/game/${gameId}`}>
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Manage Roster
+              </Link>
+            </Button>
+          )}
+          {game.statusAllowsStatistics && (
+            <LiveStatsButton gameId={gameId} teamId={teamId || game.homeTeamId} />
+          )}
+        </div>
+      </div>
 
-    // Check if this is an inter-club game (both teams from same club)
-    const isInterClubGame = game.homeTeamId && game.awayTeamId && 
-                           teams.some(t => t.id === game.homeTeamId) && 
-                           teams.some(t => t.id === game.awayTeamId);
+      <Separator />
 
-    if (isInterClubGame) {
-      // For inter-club games, use reconciled scores to ensure consistency
-      const homeTeamStats = gameStats?.filter(stat => stat.teamId === game.homeTeamId) || [];
-      const awayTeamStats = gameStats?.filter(stat => stat.teamId === game.awayTeamId) || [];
+      {/* Game Overview Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            Game Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3">
+              <CalendarRange className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">{formatDate(game.date)}</p>
+                <p className="text-sm text-muted-foreground">Date</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <ActivitySquare className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">{game.time}</p>
+                <p className="text-sm text-muted-foreground">Time</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Edit className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">{game.venue || 'TBA'}</p>
+                <p className="text-sm text-muted-foreground">Venue</p>
+              </div>
+            </div>
+          </div>
 
-      const homeTeamTotals = {
+          <Separator className="my-4" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-lg">{game.homeTeamName}</h3>
+              <p className="text-sm text-muted-foreground">Home Team</p>
+              <p className="text-xs text-muted-foreground mt-1">{homeTeam?.division}</p>
+            </div>
+            {game.awayTeamName && game.awayTeamName !== 'BYE' ? (
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <h3 className="font-semibold text-lg">{game.awayTeamName}</h3>
+                <p className="text-sm text-muted-foreground">Away Team</p>
+                <p className="text-xs text-muted-foreground mt-1">{awayTeam?.division}</p>
+              </div>
+            ) : (
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-lg">BYE</h3>
+                <p className="text-sm text-muted-foreground">No opponent</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex items-center justify-center">
+            <Badge variant="secondary" className="px-3 py-1">
+              {gameStatus?.displayName || 'Unknown Status'}
+            </Badge>
+          </div>
+
+          {quarterScores.length > 0 && (
+            <>
+              <Separator className="my-4" />
+              <GameScoreDisplay 
+                scores={quarterScores}
+                homeTeamName={game.homeTeamName}
+                awayTeamName={game.awayTeamName}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tabs for detailed information */}
+      <Tabs defaultValue="roster" className="w-full">
+        <TabsList>
+          <TabsTrigger value="roster">Roster</TabsTrigger>
+          <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          <TabsTrigger value="scores">Scores</TabsTrigger>
+          <TabsTrigger value="actions">Actions</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="roster" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5" />
+                Team Rosters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {roster && roster.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold mb-2">{game.homeTeamName}</h4>
+                      <div className="space-y-2">
+                        {roster
+                          .filter(r => r.teamId === game.homeTeamId)
+                          .map((assignment, index) => {
+                            const player = players.find(p => p.id === assignment.playerId);
+                            return (
+                              <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                <span className="font-medium">{assignment.position}</span>
+                                <span>{player?.displayName || 'Not assigned'}</span>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+                    </div>
+                    {game.awayTeamName && game.awayTeamName !== 'BYE' && (
+                      <div>
+                        <h4 className="font-semibold mb-2">{game.awayTeamName}</h4>
+                        <div className="space-y-2">
+                          {roster
+                            .filter(r => r.teamId === game.awayTeamId)
+                            .map((assignment, index) => {
+                              const player = players.find(p => p.id === assignment.playerId);
+                              return (
+                                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                  <span className="font-medium">{assignment.position}</span>
+                                  <span>{player?.displayName || 'Not assigned'}</span>
+                                </div>
+                              );
+                            })
+                          }
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No roster data available</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="statistics" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Game Statistics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {gameStats && gameStats.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {gameStats.filter(s => s.statType === 'goal').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Goals</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {gameStats.filter(s => s.statType === 'intercept').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Intercepts</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {gameStats.filter(s => s.statType === 'rebound').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Rebounds</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {gameStats.filter(s => s.statType === 'error').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Errors</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No statistics recorded yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="scores" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quarter Scores</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {quarterScores.length > 0 ? (
+                <GameScoreDisplay 
+                  scores={quarterScores}
+                  homeTeamName={game.homeTeamName}
+                  awayTeamName={game.awayTeamName}
+                />
+              ) : (
+                <p className="text-muted-foreground">No scores recorded yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="actions" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Edit className="w-5 h-5" />
+                Game Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button variant="outline" className="h-auto p-4" asChild>
+                  <Link href={`/team/${teamId}/roster/game/${gameId}`}>
+                    <div className="text-center">
+                      <ClipboardList className="w-6 h-6 mx-auto mb-2" />
+                      <div className="font-medium">Manage Roster</div>
+                      <div className="text-sm text-muted-foreground">Set player positions</div>
+                    </div>
+                  </Link>
+                </Button>
+                {game.statusAllowsStatistics && (
+                  <Button variant="outline" className="h-auto p-4" asChild>
+                    <Link href={`/game/${gameId}/team/${teamId || game.homeTeamId}/stats/record`}>
+                      <div className="text-center">
+                        <BarChart3 className="w-6 h-6 mx-auto mb-2" />
+                        <div className="font-medium">Record Stats</div>
+                        <div className="text-sm text-muted-foreground">Live statistics entry</div>
+                      </div>
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="outline" className="h-auto p-4">
+                  <div className="text-center">
+                    <Printer className="w-6 h-6 mx-auto mb-2" />
+                    <div className="font-medium">Print Reports</div>
+                    <div className="text-sm text-muted-foreground">Game summaries</div>
+                  </div>
+                </Button>
+                <Button variant="outline" className="h-auto p-4">
+                  <div className="text-center">
+                    <FileText className="w-6 h-6 mx-auto mb-2" />
+                    <div className="font-medium">Export Data</div>
+                    <div className="text-sm text-muted-foreground">Game statistics</div>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
