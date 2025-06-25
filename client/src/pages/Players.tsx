@@ -165,6 +165,108 @@ export default function Players() {
     );
   }
 
+  // TEAM VIEW RENDERING (if teamId exists)
+  if (teamId && teamData) {
+    const teamPlayers = teamPlayersData || [];
+    const availablePlayers = availablePlayersForTeam || [];
+
+    const pageTitle = teamData?.name 
+      ? `${teamData.name} Players`
+      : 'Team Players';
+    
+    const pageSubtitle = teamData?.name 
+      ? `Manage players for ${teamData.name} (${teamData.division})`
+      : 'Manage team players';
+
+    const breadcrumbs = [
+      { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
+      { label: 'Teams', href: `/club/${clubId}/teams` },
+      { label: teamData?.name || 'Team' }
+    ];
+
+    return (
+      <>
+        <Helmet>
+          <title>Team Players | Team Manager</title>
+        </Helmet>
+
+        <PageTemplate
+          title={pageTitle}
+          subtitle={pageSubtitle}
+          breadcrumbs={breadcrumbs}
+        >
+          <ContentSection 
+            title="Current Team Players"
+            variant="elevated"
+          >
+            {isLoadingTeamPlayers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading team players...</span>
+              </div>
+            ) : !teamPlayers || teamPlayers.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">Players currently assigned to {teamData.name}:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {teamPlayers.map((player: any) => (
+                    <div key={player.id} className="p-4 border rounded-lg bg-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{player.displayName}</h3>
+                          <p className="text-sm text-gray-500">
+                            {player.positionPreferences?.join(', ') || 'No positions'}
+                          </p>
+                        </div>
+                        <div className={`w-8 h-8 rounded-full ${player.avatarColor || 'bg-gray-300'}`}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </ContentSection>
+
+          <ContentSection 
+            title="Available Players"
+            variant="elevated"
+          >
+            {isLoadingAvailablePlayers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading available players...</span>
+              </div>
+            ) : availablePlayers.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">
+                No unassigned players available. All active players are already assigned to teams this season.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">Players available for assignment:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {availablePlayers.map((player: any) => (
+                    <div key={player.id} className="p-4 border rounded-lg bg-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{player.displayName}</h3>
+                          <p className="text-sm text-gray-500">
+                            {player.positionPreferences?.join(', ') || 'No positions'}
+                          </p>
+                        </div>
+                        <div className={`w-8 h-8 rounded-full ${player.avatarColor || 'bg-gray-300'}`}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </ContentSection>
+        </PageTemplate>
+      </>
+    );
+  }
+
   // CLUB VIEW RENDERING
   const pageTitle = club?.name ? `${club.name} Players` : 'Players';
   const pageSubtitle = club?.name ? `Manage players for ${club.name}` : 'Manage club players';
