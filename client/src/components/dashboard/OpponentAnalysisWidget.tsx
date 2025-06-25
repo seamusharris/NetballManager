@@ -17,7 +17,7 @@ interface OpponentAnalysisWidgetProps {
 }
 
 export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProps) {
-  const { currentClubId, currentTeamId } = // useClub removed();
+  const { currentClubId, currentTeamId } = // 
   const [selectedOpponentTeamId, setSelectedOpponentTeamId] = useState<number | null>(null);
 
   // Fetch games

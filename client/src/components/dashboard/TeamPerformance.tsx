@@ -21,7 +21,7 @@ interface TeamPerformanceProps {
 
 // Team Performance Component
 const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats, centralizedScores }: TeamPerformanceProps) => {
-  const { currentTeamId } = // useClub removed();
+  const { currentTeamId } = // 
   const [isCalculating, setIsCalculating] = useState(false);
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;

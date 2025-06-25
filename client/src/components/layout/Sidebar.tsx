@@ -7,7 +7,6 @@ import {
   BarChart, Database, SettingsIcon, Zap, Trophy, Building2, Target
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
-import { // ClubContext removed } from 'wouter';
 
 interface SidebarProps {
   isMobileOpen: boolean;

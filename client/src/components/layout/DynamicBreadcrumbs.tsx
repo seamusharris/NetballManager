@@ -10,7 +10,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { // ClubContext removed } from 'wouter';
 
 interface BreadcrumbItem {
   label: string;

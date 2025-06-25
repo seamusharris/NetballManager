@@ -7,10 +7,7 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-import { useClub } from '../contexts/ClubContext';
-
-// These functions are no longer used - context is set via setClubContext()
-// Keeping them for potential future use but they should not be called in request method
+// ClubContext removed - using URL-based club management
 
 // Create a singleton API client that can access club context
 interface ClubContext {

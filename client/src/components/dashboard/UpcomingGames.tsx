@@ -20,7 +20,7 @@ interface UpcomingGamesProps {
 }
 
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
-  const { currentTeam } = // useClub removed();
+  const { currentTeam } = // 
 
   console.log('UpcomingGames render:', {
     totalGames: games?.length || 0,

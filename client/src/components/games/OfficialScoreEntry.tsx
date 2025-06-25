@@ -29,7 +29,7 @@ export function OfficialScoreEntry({
 }: OfficialScoreEntryProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentClub } = // useClub removed();
+  
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingQuarter, setEditingQuarter] = useState<number | null>(null);

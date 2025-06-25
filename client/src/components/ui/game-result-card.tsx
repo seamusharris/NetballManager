@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
-import { // ClubContext removed } from 'wouter';
 import { useLocation } from 'wouter';
 import { QuarterScoresDisplay } from './quarter-scores-display';
 

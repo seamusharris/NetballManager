@@ -84,7 +84,7 @@ export default function Dashboard() {
       currentTeamName: currentTeam?.name,
       clubTeamsCount: clubTeams.length
     });
-  }, [currentTeamId, currentTeam, clubTeams]);
+  }, [currentTeamId, currentTeam, clubTeams.length]);
 
   // Players data using REST endpoint - Stage 4
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({

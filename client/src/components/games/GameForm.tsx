@@ -49,7 +49,7 @@ export default function GameForm({
   isEditing = false,
 }: GameFormProps) {
   const { toast } = useToast();
-  const { currentClubId } = // useClub removed();
+  const { currentClubId } = // 
 
   // Fetch all teams for inter-club games
   const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({

@@ -59,7 +59,7 @@ export default function DashboardSummary({
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
-  const { currentClub, currentTeamId, clubTeams, isLoading: clubLoading } = // useClub removed();
+  const { currentClub, currentTeamId, clubTeams, isLoading: clubLoading } = // 
 
   // Derive currentTeam from currentTeamId and clubTeams
   const currentTeam = currentTeamId ? clubTeams?.find(team => team.id === currentTeamId) : null;

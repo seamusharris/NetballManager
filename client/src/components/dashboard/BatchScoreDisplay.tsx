@@ -17,7 +17,7 @@ interface BatchScoreDisplayProps {
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
   // Access the current club context
-  const { currentClub } = // useClub removed();
+  const { currentClub } = // 
 
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {

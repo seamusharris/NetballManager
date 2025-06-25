@@ -53,7 +53,7 @@ interface SortConfig {
 }
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
-  const { currentClubId } = // useClub removed();
+  const { currentClubId } = // 
 
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());
