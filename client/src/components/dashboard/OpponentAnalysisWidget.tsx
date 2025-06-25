@@ -16,14 +16,14 @@ interface OpponentAnalysisWidgetProps {
 }
 
 export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProps) {
-  const { currentClubId, currentTeamId } = // 
+  const { clubId, currentTeamId } = // 
   const [selectedOpponentTeamId, setSelectedOpponentTeamId] = useState<number | null>(null);
 
   // Fetch games
   const { data: games = [], isLoading: gamesLoading } = useQuery({
-    queryKey: ['games', currentClubId, currentTeamId],
+    queryKey: ['games', clubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId && !!currentTeamId,
+    enabled: !!clubId && !!currentTeamId,
     staleTime: 2 * 60 * 1000,
   });
 

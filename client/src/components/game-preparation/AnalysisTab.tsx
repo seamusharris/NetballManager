@@ -20,7 +20,7 @@ interface AnalysisTabProps {
   playerStats: any[];
   teamStats: any;
   players: Player[];
-  currentClubId: number;
+  clubId: number;
 }
 
 interface AnalysisSection {
@@ -59,7 +59,7 @@ export default function AnalysisTab({
   playerStats,
   teamStats,
   players,
-  currentClubId
+  clubId
 }: AnalysisTabProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const [analysisData, setAnalysisData] = useState<{
@@ -560,7 +560,7 @@ export default function AnalysisTab({
             players={players}
             centralizedStats={statsMap}
             centralizedRosters={rostersMap}
-            currentClubId={currentClubId}
+            clubId={clubId}
           />
         </div>
       </CardContent>

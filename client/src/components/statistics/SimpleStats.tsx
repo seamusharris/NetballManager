@@ -801,14 +801,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         queryClient.invalidateQueries({ queryKey: ['stats', gameId] });
 
         // 4. Invalidate dashboard and analysis queries
-        if (currentClub?.id) {
+        if (club?.id) {
           queryClient.invalidateQueries({
             predicate: (query) => {
               const queryKey = query.queryKey;
               return Array.isArray(queryKey) && (
                 queryKey[0] === 'dashboard' ||
                 queryKey[0] === 'team-performance' ||
-                (queryKey[0] === 'batch-game-data' && queryKey[1] === currentClub.id)
+                (queryKey[0] === 'batch-game-data' && queryKey[1] === club.id)
               );
             }
           });

@@ -271,16 +271,16 @@ export function GamesList({
 
   const getOpponentName = (game: any) => {
     // Use current club context to determine opponent
-    const currentClubId = currentClub?.id;
-    if (!currentClubId) return "TBA";
+    const clubId = club?.id;
+    if (!clubId) return "TBA";
 
     // Check if this is our home game (we are the home team)
-    if (game.homeClubId === currentClubId && game.awayTeamName) {
+    if (game.homeClubId === clubId && game.awayTeamName) {
       return game.awayTeamName;
     }
 
     // Check if this is our away game (we are the away team)  
-    if (game.awayClubId === currentClubId && game.homeTeamName) {
+    if (game.awayClubId === clubId && game.homeTeamName) {
       return game.homeTeamName;
     }
 
@@ -290,11 +290,11 @@ export function GamesList({
 
   // Helper to determine if we are home or away team and get correct score orientation
   const getGameScoreForTeam = (game: any, scores: any) => {
-    const currentClubId = currentClub?.id;
-    if (!currentClubId || !scores) return null;
+    const clubId = club?.id;
+    if (!clubId || !scores) return null;
 
     // For inter-club games, we need to check if we're home or away to get the right score perspective
-    const isHomeTeam = game.homeClubId === currentClubId;
+    const isHomeTeam = game.homeClubId === clubId;
 
     if (isHomeTeam) {
       // We are the home team, so our score is 'for' and opponent is 'against'
@@ -376,7 +376,7 @@ export function GamesList({
   };
 
     // Use the scores we already calculated via useGamesScores hook
-    const currentTeamId = currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id;
+    const currentTeamId = club?.currentTeam?.id || club?.teams?.[0]?.id;
 
   return (
     <div className="space-y-6">
@@ -469,7 +469,7 @@ export function GamesList({
                     showLink={true}
                     currentTeamId={urlTeamId || currentTeamId}
                     clubTeams={teams || []}
-                    currentClubId={currentClub?.id}
+                    clubId={club?.id}
                   />
 
                   {/* Action buttons overlay */}

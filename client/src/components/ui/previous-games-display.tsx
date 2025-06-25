@@ -9,7 +9,7 @@ import GameResultCard from '@/components/ui/game-result-card';
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
   currentTeamId: number;
-  currentClubId: number;
+  clubId: number;
   batchScores: Record<string, any[]>;
   batchStats?: Record<string, any[]>;
   opponentName: string;
@@ -19,7 +19,7 @@ interface PreviousGamesDisplayProps {
 export default function PreviousGamesDisplay({
   historicalGames,
   currentTeamId,
-  currentClubId,
+  clubId,
   batchScores,
   batchStats,
   opponentName,
@@ -50,7 +50,7 @@ export default function PreviousGamesDisplay({
   const winRateResult = calculateTeamWinRate(
     historicalGames,
     currentTeamId,
-    currentClubId,
+    clubId,
     batchScores || {}
   );
 

@@ -52,7 +52,7 @@ interface SortConfig {
 }
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
-  const { currentClubId } = // 
+  const { clubId } = // 
 
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());
@@ -79,7 +79,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
   // Use unified data fetcher for consistency with Dashboard
   const { data: batchData, isLoading: isLoadingBatchData, error: batchError } = useQuery({
-    queryKey: ['players-batch-data', currentClubId, gameIds.sort().join(',')],
+    queryKey: ['players-batch-data', clubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return { stats: {}, rosters: {} };
 
@@ -88,13 +88,13 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
       return await dataFetcher.batchFetchGameData({
         gameIds,
-        clubId: currentClubId!,
+        clubId: clubId!,
         includeStats: true,
         includeRosters: true,
         includeScores: false // Players page doesn't need scores
       });
     },
-    enabled: enableQuery && !!currentClubId && gameIds.length > 0,
+    enabled: enableQuery && !!clubId && gameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry failed requests
@@ -107,7 +107,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
   // Use batch endpoint for roster data with improved caching
   const { data: gameRostersMapOld, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['batchRosters', currentClubId, gameIds.sort().join(',')],
+    queryKey: ['batchRosters', clubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
 
@@ -130,7 +130,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       console.log(`PlayersList: Batch roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: enableQuery && !!currentClubId,
+    enabled: enableQuery && !!clubId,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });

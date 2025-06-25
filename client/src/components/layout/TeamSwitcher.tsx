@@ -49,7 +49,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
       
       // Navigate to club-wide view if currently on a team page
       if (location.startsWith('/team/') && location.includes('/games')) {
-        const clubId = currentClub?.id;
+        const clubId = club?.id;
         if (clubId) {
           setLocation(`/club/${clubId}/games`);
         }
@@ -92,7 +92,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         setLocation(`/team/${numericTeamId}`);
       }
     }
-  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, currentClub]);
+  }, [setCurrentTeamId, clubTeams, location, currentTeamId, setLocation, onTeamChange, club]);
 
   // ONLY AFTER ALL HOOKS - we can conditionally return null
   if (!shouldRender) {

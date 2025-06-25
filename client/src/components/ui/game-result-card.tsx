@@ -30,7 +30,7 @@ interface GameResultCardProps {
   compact?: boolean;
   currentTeamId?: number;
   clubTeams?: any[];
-  currentClubId?: number;
+  clubId?: number;
 }
 
 export default function GameResultCard({ 
@@ -48,7 +48,7 @@ export default function GameResultCard({
   compact = false,
   currentTeamId: propCurrentTeamId,
   clubTeams = [],
-  currentClubId: propCurrentClubId
+  clubId: propCurrentClubId
 }: GameResultCardProps) {
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
@@ -56,8 +56,8 @@ export default function GameResultCard({
   // Extract club ID from URL or use prop - more reliable than context
   const urlClubId = useMemo(() => {
     const clubMatch = location.match(/\/club\/(\d+)/);
-    return clubMatch ? parseInt(clubMatch[1]) : (propCurrentClubId || currentClubId);
-  }, [location, propCurrentClubId, currentClubId]);
+    return clubMatch ? parseInt(clubMatch[1]) : (propCurrentClubId || clubId);
+  }, [location, propCurrentClubId, clubId]);
   const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data

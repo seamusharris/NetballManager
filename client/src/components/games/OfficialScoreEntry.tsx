@@ -133,13 +133,13 @@ export function OfficialScoreEntry({
         });
 
         // Invalidate games lists for dashboard updates
-        if (currentClub?.id) {
+        if (club?.id) {
           queryClient.invalidateQueries({
             predicate: (query) => {
               const queryKey = query.queryKey;
               return Array.isArray(queryKey) && 
                      queryKey[0] === 'games' && 
-                     queryKey[1] === currentClub.id;
+                     queryKey[1] === club.id;
             }
           });
 

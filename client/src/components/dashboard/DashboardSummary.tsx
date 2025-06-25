@@ -22,6 +22,8 @@ import QuickActionsWidget from './QuickActionsWidget';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useParams } from 'wouter';
+import { apiClient } from '@/lib/apiClient';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
@@ -58,14 +60,31 @@ export default function DashboardSummary({
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
-  const { currentClub, currentTeamId, clubTeams, isLoading: clubLoading } = // 
+  // ClubContext removed - get data from URL parameters
+  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
+  const currentTeamId = params.teamId ? Number(params.teamId) : null;
+
+  // Fetch club details directly
+  const { data: club, isLoading: clubLoading } = useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    enabled: !!clubId,
+  });
+
+  // Fetch teams for this club
+  const { data: clubTeams = [] } = useQuery({
+    queryKey: ['clubs', clubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    enabled: !!clubId,
+  });
 
   // Derive currentTeam from currentTeamId and clubTeams
   const currentTeam = currentTeamId ? clubTeams?.find(team => team.id === currentTeamId) : null;
 
   // Early return if club context isn't ready
-  if (clubLoading || !currentClub) {
-    console.log('DashboardSummary waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub });
+  if (clubLoading || !club) {
+    console.log('DashboardSummary waiting for club context:', { clubLoading, hasCurrentClub: !!club });
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -250,7 +269,7 @@ export default function DashboardSummary({
             />
             <OpponentMatchups 
               games={filteredGames} 
-              currentClubId={currentClub?.id || 0}
+              clubId={club?.id || 0}
               centralizedStats={centralizedStats}
               centralizedScores={centralizedScores}
             />
@@ -285,14 +304,14 @@ export default function DashboardSummary({
               players={players} 
               centralizedStats={centralizedStats}
               centralizedRosters={centralizedRosters}
-              currentClubId={currentClub?.id || 0}
+              clubId={club?.id || 0}
             />
             <TeamPositionAnalysis 
               games={filteredGames} 
               players={players} 
               centralizedStats={centralizedStats}
               centralizedRosters={centralizedRosters}
-              currentClubId={currentClub?.id || 0}
+              clubId={club?.id || 0}
             />
           </>
         )}
@@ -306,7 +325,7 @@ export default function DashboardSummary({
             players={players}
             centralizedStats={centralizedStats}
             centralizedRosters={centralizedRosters}
-            currentClubId={currentClub?.id}
+            clubId={club?.id}
           />
         </div>
       )}

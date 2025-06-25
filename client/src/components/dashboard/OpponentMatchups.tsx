@@ -28,7 +28,7 @@ interface TeamMatchup {
 
 interface TeamMatchupsProps {
   games: Game[];
-  currentClubId: number;
+  clubId: number;
   centralizedStats?: Record<number, any[]>;
   centralizedScores?: Record<number, any[]>;
   className?: string;
@@ -36,7 +36,7 @@ interface TeamMatchupsProps {
 
 export default function TeamMatchups({ 
   games, 
-  currentClubId,
+  clubId,
   centralizedStats = {},
   centralizedScores = {},
   className 
@@ -54,7 +54,7 @@ export default function TeamMatchups({
       games.forEach(game => {
         if (isGameValidForStatistics(game)) {
           console.log(`OpponentMatchups - Processing valid game ${game.id}: ${game.homeTeamName} vs ${game.awayTeamName}`);
-          console.log(`OpponentMatchups - Game ${game.id}: homeClubId=${game.homeClubId}, awayClubId=${game.awayClubId}, currentClubId=${currentClubId}`);
+          console.log(`OpponentMatchups - Game ${game.id}: homeClubId=${game.homeClubId}, awayClubId=${game.awayClubId}, clubId=${clubId}`);
 
           // Determine which team is the opposing team
           let opposingTeamId: number | null = null;
@@ -62,8 +62,8 @@ export default function TeamMatchups({
 
           if (game.homeTeamId && game.awayTeamId) {
             // Find which team belongs to current club
-            const isHomeTeamOurs = game.homeClubId === currentClubId;
-            const isAwayTeamOurs = game.awayClubId === currentClubId;
+            const isHomeTeamOurs = game.homeClubId === clubId;
+            const isAwayTeamOurs = game.awayClubId === clubId;
 
             console.log(`OpponentMatchups - Game ${game.id}: isHomeTeamOurs=${isHomeTeamOurs}, isAwayTeamOurs=${isAwayTeamOurs}`);
 
@@ -100,8 +100,8 @@ export default function TeamMatchups({
           if (!isGameValidForStatistics(game)) return false;
 
           // Check if this game involves the opposing team
-          const isHomeTeamOurs = game.homeClubId === currentClubId;
-          const isAwayTeamOurs = game.awayClubId === currentClubId;
+          const isHomeTeamOurs = game.homeClubId === clubId;
+          const isAwayTeamOurs = game.awayClubId === clubId;
 
           const homeMatch = isHomeTeamOurs && game.awayTeamId === team.id && !isAwayTeamOurs;
           const awayMatch = isAwayTeamOurs && game.homeTeamId === team.id && !isHomeTeamOurs;
@@ -131,7 +131,7 @@ export default function TeamMatchups({
 
           if (officialScores.length > 0) {
             // Calculate from official scores
-            const isHomeTeamOurs = game.homeClubId === currentClubId;
+            const isHomeTeamOurs = game.homeClubId === clubId;
             const homeTeamId = game.homeTeamId;
             const awayTeamId = game.awayTeamId;
             
@@ -217,7 +217,7 @@ export default function TeamMatchups({
     };
 
     calculateMatchups();
-  }, [games, currentClubId, centralizedStats]);
+  }, [games, clubId, centralizedStats]);
 
   const bestMatchup = matchups.length > 0 ? matchups[0] : null;
   const worstMatchup = matchups.length > 0 ? matchups[matchups.length - 1] : null;
@@ -274,7 +274,7 @@ export default function TeamMatchups({
 
       if (officialScores.length > 0) {
         // Use official scores
-        const isHomeTeamOurs = game.homeClubId === currentClubId;
+        const isHomeTeamOurs = game.homeClubId === clubId;
         const homeTeamId = game.homeTeamId;
         const awayTeamId = game.awayTeamId;
         

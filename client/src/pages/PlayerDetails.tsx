@@ -68,7 +68,7 @@ export default function PlayerDetails() {
 
   // Use Team Dashboard's exact cache keys to share data - stats
   const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
+    queryKey: ['centralized-stats', clubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -98,14 +98,14 @@ export default function PlayerDetails() {
         return statsMap;
       }
     },
-    enabled: !!currentClubId && completedGameIds.length > 0,
+    enabled: !!clubId && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
 
   // Use Team Dashboard's exact cache keys to share data - rosters
   const { data: allGameRosters = {}, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['centralized-rosters', currentClubId, completedGameIds.sort().join(',')],
+    queryKey: ['centralized-rosters', clubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -126,7 +126,7 @@ export default function PlayerDetails() {
       console.log(`PlayerDetails: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: !!currentClubId && completedGameIds.length > 0,
+    enabled: !!clubId && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });

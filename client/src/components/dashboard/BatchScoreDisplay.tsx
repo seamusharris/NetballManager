@@ -16,7 +16,7 @@ interface BatchScoreDisplayProps {
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
   // Access the current club context
-  const { currentClub } = // 
+  const { club } = // 
 
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {
@@ -61,7 +61,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-current-club-id': currentClub?.id?.toString() || '',
+            'x-current-club-id': club?.id?.toString() || '',
           },
           body: JSON.stringify({ gameIds }),
         });
@@ -102,7 +102,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
     }
 
     loadAndCacheBatchStats();
-  }, [gameIds, completedGames, currentClub]);
+  }, [gameIds, completedGames, club]);
 
   // This component doesn't render anything directly
   // It just efficiently loads and caches scores for other components to use

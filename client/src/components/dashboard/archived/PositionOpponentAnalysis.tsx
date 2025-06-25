@@ -5,10 +5,10 @@ import { Archive } from 'lucide-react';
 
 interface PositionOpponentAnalysisProps {
   seasonId?: number;
-  currentClubId: number;
+  clubId: number;
 }
 
-export default function PositionOpponentAnalysis({ seasonId, currentClubId }: PositionOpponentAnalysisProps) {
+export default function PositionOpponentAnalysis({ seasonId, clubId }: PositionOpponentAnalysisProps) {
   return (
     <Card>
       <CardHeader>

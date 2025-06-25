@@ -56,9 +56,9 @@ export default function Statistics() {
 
   // NEW: Use club-scoped data instead of global
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
-    queryKey: ['/api/clubs', currentClubId, 'games'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/games`),
-    enabled: !!currentClubId
+    queryKey: ['/api/clubs', clubId, 'games'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/games`),
+    enabled: !!clubId
   });
 
   // Keep opponents for now (will remove later)
@@ -67,9 +67,9 @@ export default function Statistics() {
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
-    queryKey: ['/api/clubs', currentClubId, 'players'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId
+    queryKey: ['/api/clubs', clubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    enabled: !!clubId
   });
 
   // Use state to store roster data
@@ -81,7 +81,7 @@ export default function Statistics() {
     if (!selectedGameId) return;
 
     async function fetchRosters() {
-      if (!currentClubId) return;
+      if (!clubId) return;
       
       setLoadingRosters(true);
       try {
@@ -91,14 +91,14 @@ export default function Statistics() {
         
         const rosterPromises = [];
         
-        if (game.homeClubId === currentClubId) {
+        if (game.homeClubId === clubId) {
           rosterPromises.push(
             fetch(`/api/game/${selectedGameId}/team/${game.homeTeamId}/rosters`)
               .then(res => res.json())
           );
         }
         
-        if (game.awayClubId === currentClubId && game.awayTeamId) {
+        if (game.awayClubId === clubId && game.awayTeamId) {
           rosterPromises.push(
             fetch(`/api/game/${selectedGameId}/team/${game.awayTeamId}/rosters`)
               .then(res => res.json())
@@ -119,7 +119,7 @@ export default function Statistics() {
     }
 
     fetchRosters();
-  }, [selectedGameId, currentClubId, games]);
+  }, [selectedGameId, clubId, games]);
 
   // Use our manually fetched roster data instead of the query result
   const rosters = rosterData;

@@ -12,7 +12,7 @@ interface TeamPositionAnalysisProps {
   players: any[];
   centralizedStats: Record<number, any[]>;
   centralizedRosters: Record<number, any[]>;
-  currentClubId?: number;
+  clubId?: number;
 }
 
 interface PositionLineup {
@@ -39,7 +39,7 @@ function TeamPositionAnalysis({
   players = [], 
   centralizedStats = {}, 
   centralizedRosters = {},
-  currentClubId 
+  clubId 
 }: TeamPositionAnalysisProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
   const [selectedQuarter, setSelectedQuarter] = useState<string>('all');
@@ -61,8 +61,8 @@ function TeamPositionAnalysis({
       games
         .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
         .map(game => {
-          const isHomeGame = game.homeClubId === currentClubId;
-          const isAwayGame = game.awayClubId === currentClubId;
+          const isHomeGame = game.homeClubId === clubId;
+          const isAwayGame = game.awayClubId === clubId;
 
           if (isHomeGame && !isAwayGame) {
             return game.awayTeamName;
@@ -75,7 +75,7 @@ function TeamPositionAnalysis({
         .filter(teamName => teamName !== 'Bye')
     ));
     setOpponents(uniqueOpponents);
-  }, [games, currentClubId]);
+  }, [games, clubId]);
 
   // Calculate position lineup effectiveness
   useEffect(() => {
@@ -84,7 +84,7 @@ function TeamPositionAnalysis({
       rostersKeys: Object.keys(centralizedRosters || {}),
       gamesLength: games?.length,
       selectedQuarter,
-      currentClubId
+      clubId
     });
 
     // Debug roster data structure
@@ -112,7 +112,7 @@ function TeamPositionAnalysis({
     }
 
     calculatePositionLineups();
-  }, [centralizedStats, centralizedRosters, selectedQuarter, currentClubId]);
+  }, [centralizedStats, centralizedRosters, selectedQuarter, clubId]);
 
   const calculatePositionLineups = () => {
     // Ensure games is an array before processing
@@ -258,8 +258,8 @@ function TeamPositionAnalysis({
 
           // Track opponent-specific performance
           let opponent = null;
-          const isHomeGame = game.homeClubId === currentClubId;
-          const isAwayGame = game.awayClubId === currentClubId;
+          const isHomeGame = game.homeClubId === clubId;
+          const isAwayGame = game.awayClubId === clubId;
 
           if (isHomeGame && !isAwayGame) {
             opponent = game.awayTeamName;
