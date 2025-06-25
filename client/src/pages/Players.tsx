@@ -32,30 +32,8 @@ export default function Players() {
     isLoading: clubLoading
   } = useURLClub();
 
-  // Redirect to default club if accessing /players without club ID
-  useEffect(() => {
-    if (location === '/players' && userClubs.length > 0) {
-      // Default to Warrandyte (club 54) if available, otherwise first club
-      const defaultClub = userClubs.find(c => c.clubId === 54) || userClubs[0];
-      setLocation(`/club/${defaultClub.clubId}/players`);
-      return;
-    }
-  }, [location, userClubs, setLocation]);
-
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
-  // Don't render anything until club data is loaded
-  if (clubLoading || !club) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
@@ -71,6 +49,20 @@ export default function Players() {
 
   // Use teams from URL club hook
   const allTeams = clubTeams;
+
+  // Team filter state for main players view
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
+
+  // Get players for non-team view
+  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
+    queryKey: ['players', clubId],
+    queryFn: async () => {
+      if (!clubId) return [];
+      const response = await apiClient.get(`/api/clubs/${clubId}/players`);
+      return response;
+    },
+    enabled: !!clubId && !teamId,
+  });
 
   // Get team details if viewing a specific team
   const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
@@ -98,20 +90,6 @@ export default function Players() {
     enabled: !!teamId && !!activeSeason?.id,
   });
 
-  // Team filter state for main players view
-  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
-
-  // Get players for non-team view
-  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
-    queryKey: ['players', clubId],
-    queryFn: async () => {
-      if (!clubId) return [];
-      const response = await apiClient.get(`/api/clubs/${clubId}/players`);
-      return response;
-    },
-    enabled: !!clubId && !teamId,
-  });
-
   // Filter players based on team selection
   const filteredPlayers = useMemo(() => {
     if (!players || selectedTeamFilter === 'all') return players;
@@ -124,6 +102,28 @@ export default function Players() {
       return hasTeamAssignment;
     });
   }, [players, selectedTeamFilter]);
+
+  // Now add useEffects and other hooks after all state/queries are defined
+  useEffect(() => {
+    if (location === '/players' && userClubs.length > 0) {
+      // Default to Warrandyte (club 54) if available, otherwise first club
+      const defaultClub = userClubs.find(c => c.clubId === 54) || userClubs[0];
+      setLocation(`/club/${defaultClub.clubId}/players`);
+      return;
+    }
+  }, [location, userClubs, setLocation]);
+
+  // Don't render anything until club data is loaded
+  if (clubLoading || !club) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
 
   const addPlayerToTeam = useMutation({
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
@@ -235,10 +235,6 @@ export default function Players() {
   // Track which players are being removed/added
   const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
   const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
-
-  // Optimistic updates for immediate UI feedback
-  const [optimisticallyRemovedPlayerIds, setOptimisticallyRemovedPlayerIds] = useState<Set<number>>(new Set());
-  const [optimisticallyAddedPlayerIds, setOptimisticallyAddedPlayerIds] = useState<Set<number>>(new Set());
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   const removePlayerFromTeam = useMutation({
