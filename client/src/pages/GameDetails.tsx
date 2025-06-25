@@ -1263,7 +1263,7 @@ export default function GameDetails() {
     isLoading: isLoadingPlayers,
     error: playersError
   } = useQuery({
-    queryKey: CACHE_KEYS.clubPlayers(currentClub?.id),
+    queryKey: CACHE_KEYS.players(currentClub?.id),
     queryFn: async () => {
       console.log('GameDetails: Fetching players for club', currentClub?.id);
       if (!currentClub?.id) {
@@ -1922,7 +1922,7 @@ export default function GameDetails() {
                             <p className="text-xs text-gray-500 mt-2">Club ID: {currentClub?.id}</p>
                             <p className="text-xs text-gray-500">Error: {playersError?.message}</p>
                             <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id ? 'YES' : 'NO'}</p>
-                            <p className="text-xs text-gray-500">Cache key: {JSON.stringify(CACHE_KEYS?.clubPlayers?.(currentClub?.id) || 'undefined')}</p>
+                            <p className="text-xs text-gray-500">Cache key: {JSON.stringify(CACHE_KEYS?.players?.(currentClub?.id) || 'undefined')}</p>
                             <Button 
                               size="sm" 
                               onClick={() => window.location.reload()}
