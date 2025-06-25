@@ -27,29 +27,49 @@ import { apiClient } from '@/lib/apiClient';
 
 export default function GameDetails() {
   const params = useParams();
-  const gameId = parseInt(params.id!);
+  // Handle both /game/:id and /team/:teamId/games/:gameId routes
+  const gameId = params.gameId ? parseInt(params.gameId) : parseInt(params.id!);
   const teamId = params.teamId ? parseInt(params.teamId) : undefined;
-  const { currentClub, currentTeam } = useClub();
+  const { currentClub, currentTeam, isLoading: clubLoading } = useClub();
 
-  // Fetch game details
+  // Wait for club context to load before making API requests
+  if (clubLoading || !currentClub) {
+    return (
+      <div className="p-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-48 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch game details - use team-based endpoint if we have a team context
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
-    queryKey: ['/api/games', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}`),
-    enabled: !!gameId && !isNaN(gameId)
+    queryKey: teamId ? ['/api/teams', teamId, 'games', gameId] : ['/api/games', gameId],
+    queryFn: () => {
+      if (teamId) {
+        return apiClient.get(`/api/teams/${teamId}/games/${gameId}`);
+      }
+      return apiClient.get(`/api/games/${gameId}`);
+    },
+    enabled: !!gameId && !isNaN(gameId) && !!currentClub,
+    retry: 2
   });
 
   // Fetch game scores
   const { data: quarterScores, isLoading: scoresLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'scores'],
     queryFn: () => apiClient.get(`/api/games/${gameId}/scores`),
-    enabled: !!gameId
+    enabled: !!gameId && !!game
   });
 
   // Fetch game stats
   const { data: gameStats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
-    enabled: !!gameId
+    enabled: !!gameId && !!game
   });
 
   // Fetch roster data - use team-based endpoint if we have a team context
@@ -112,11 +132,19 @@ export default function GameDetails() {
     );
   }
 
-  if (gameError || !game) {
+  if (gameError || (!game && !gameLoading)) {
     return (
       <div className="p-4">
         <div className="text-red-600">
           Error loading game details: {gameError?.message || 'Game not found'}
+        </div>
+        <div className="mt-4">
+          <button 
+            onClick={() => window.history.back()} 
+            className="text-blue-600 hover:underline"
+          >
+            Go back
+          </button>
         </div>
       </div>
     );
