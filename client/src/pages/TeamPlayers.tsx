@@ -216,7 +216,7 @@ export default function TeamPlayers() {
           ) : (
             <SelectablePlayerBox
               players={teamPlayersData}
-              selectedPlayerIds={new Set()}
+              selectedPlayerIds={new Set(teamPlayersData.map(p => p.id))}
               onSelectionChange={() => {}}
               title="Current Team Players"
               showQuickActions={false}
