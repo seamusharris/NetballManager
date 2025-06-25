@@ -133,12 +133,12 @@ function PlayerBox({
         opacity: 1
       };
     } else {
-      // Deselected state: use light background with reduced opacity but keep text readable
+      // Deselected state: use light background with proper border color and readable text
       return {
         backgroundColor: lightBackgroundColor,
-        borderColor: `${playerColorHex}B3`, // 70% opacity for border
+        borderColor: playerColorHex, // Use full color for border visibility
         color: darkerBorderColor, // Keep text color strong for readability
-        opacity: 0.7
+        opacity: 0.8 // Slightly less opacity for better readability
       };
     }
   };
@@ -177,7 +177,7 @@ function PlayerBox({
 
     const checkboxStyle = {
       backgroundColor: isSelected ? playerColorHex : 'transparent',
-      borderColor: isSelected ? 'transparent' : `${playerColorHex}B3`, // 70% opacity for deselected
+      borderColor: isSelected ? 'transparent' : playerColorHex, // Use full color for better visibility
       border: isSelected ? 'none' : '2px solid',
       color: 'white'
     };
