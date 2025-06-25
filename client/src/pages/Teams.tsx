@@ -21,7 +21,16 @@ export default function Teams() {
     clubId, 
     clubTeams, 
     setCurrentTeamId,
-    isLoading: clubLoading 
+  // ClubContext removed - get data from URL parameters
+  const params = useParams<{ clubId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
+
+  // Fetch club details directly
+  const { data: club, isLoading: clubLoading } = useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    enabled: !!clubId,
+  });
 
   // Redirect to club-scoped URL if accessing /teams without club ID
   useEffect(() => {
