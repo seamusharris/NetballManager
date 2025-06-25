@@ -848,6 +848,10 @@ export default function GamePreparation() {
                       <CardContent>
                         {(() => {
                           // Calculate position-based statistics for historical games
+                          console.log('Historical games for position calculation:', historicalGames.length);
+                          console.log('Batch stats keys:', Object.keys(batchStats || {}));
+                          console.log('Current team ID:', currentTeamId);
+                          
                           const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
                           
                           console.log('Historical position averages calculated:', historicalPositionAverages);
@@ -856,6 +860,9 @@ export default function GamePreparation() {
                             return (
                               <div className="text-center py-8">
                                 <div className="text-gray-500">No position statistics available for historical games vs {opponent}</div>
+                                <div className="text-xs text-gray-400 mt-2">
+                                  Games: {historicalGames.length}, Stats keys: {Object.keys(batchStats || {}).length}
+                                </div>
                               </div>
                             );
                           }

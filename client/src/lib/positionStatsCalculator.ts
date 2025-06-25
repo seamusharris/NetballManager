@@ -42,15 +42,31 @@ export function calculatePositionAverages(
   let gamesWithPositionStats = 0;
 
   games.forEach(game => {
+    console.log(`Processing game ${game.id} for team ${currentTeamId}`);
+    
     const gameStats = batchStats[game.id.toString()];
     console.log(`Game ${game.id} stats:`, gameStats?.length || 0, 'records');
+    
+    if (gameStats && gameStats.length > 0) {
+      console.log(`Game ${game.id} first stat sample:`, gameStats[0]);
+    }
 
-    if (!gameStats || gameStats.length === 0) return;
+    if (!gameStats || gameStats.length === 0) {
+      console.log(`Game ${game.id} has no stats, skipping`);
+      return;
+    }
 
     const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
     console.log(`Game ${game.id} team stats for team ${currentTeamId}:`, teamStats.length, 'records');
+    
+    if (teamStats.length > 0) {
+      console.log(`Game ${game.id} team stats sample:`, teamStats[0]);
+    }
 
-    if (teamStats.length === 0) return;
+    if (teamStats.length === 0) {
+      console.log(`Game ${game.id} has no team stats for team ${currentTeamId}, skipping`);
+      return;
+    }
 
     let hasPositionStats = false;
 
