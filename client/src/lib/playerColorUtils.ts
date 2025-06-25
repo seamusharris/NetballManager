@@ -49,3 +49,9 @@ export const getMuchDarkerColorHex = (avatarColor?: string): string => {
   const baseColor = getPlayerColorHex(avatarColor);
   return `color-mix(in srgb, ${baseColor} 50%, black 50%)`;
 };
+
+// Generate border color for text and UI elements (matches PlayerBox implementation)
+export const getBorderColorHex = (avatarColor?: string): string => {
+  const baseColor = getPlayerColorHex(avatarColor);
+  return `color-mix(in srgb, ${baseColor} 85%, black 15%)`;
+};

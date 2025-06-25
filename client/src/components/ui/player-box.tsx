@@ -3,7 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { 
+  getPlayerColorHex, 
+  getLighterColorHex, 
+  getMediumColorHex,
+  getBorderColorHex
+} from '@/lib/playerColorUtils';
 import { PLAYER_BOX_STYLES } from '@/lib/playerBoxStyles';
 
 interface PlayerBoxProps {
@@ -115,22 +120,22 @@ function PlayerBox({
   })();
 
   const playerColorHex = getPlayerColorHex(player.avatarColor);
-  const darkerBorderColor = getDarkerColorHex(player.avatarColor);
   const lightBackgroundColor = getLighterColorHex(player.avatarColor);
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
+  const borderColorHex = getBorderColorHex(player.avatarColor);
 
   // Calculate styling based on selection state
   const getSelectionStyling = () => {
     // If the component is selectable, use the isSelected state
     // If not selectable, always use the "selected" appearance
     const shouldUseSelectedStyling = !isSelectable || isSelected;
-    
+
     if (shouldUseSelectedStyling) {
       // Selected state or non-selectable: use medium background and player color border
       return {
         backgroundColor: mediumBackgroundColor,
         borderColor: playerColorHex,
-        color: darkerBorderColor,
+        color: borderColorHex,
         opacity: 1
       };
     } else {
@@ -138,14 +143,14 @@ function PlayerBox({
       return {
         backgroundColor: lightBackgroundColor,
         borderColor: playerColorHex, // Use full color for border visibility
-        color: darkerBorderColor, // Keep text color strong for readability
+        color: borderColorHex, // Keep text color strong for readability
         opacity: 0.8 // Slightly less opacity for better readability
       };
     }
   };
 
   const selectionStyling = getSelectionStyling();
-  
+
   // Merge with any external style overrides
   const defaultStyle = {
     ...selectionStyling,
@@ -178,7 +183,7 @@ function PlayerBox({
 
     const checkboxStyle = {
       backgroundColor: isSelected ? playerColorHex : 'transparent',
-      borderColor: isSelected ? 'transparent' : darkerBorderColor, // Match the text color
+      borderColor: isSelected ? 'transparent' : borderColorHex, // Match the text color
       border: isSelected ? 'none' : '2px solid',
       color: 'white'
     };
