@@ -339,7 +339,6 @@ export default function AdvancedTeamAnalytics({
     for (let i = results.length - 2; i >= 0; i--) {
       if (results[i] === results[results.length - 1]) {
         currentStreak.count++;
-      } else {
         break;
       }
     }
@@ -359,7 +358,6 @@ export default function AdvancedTeamAnalytics({
         currentLossStreak++;
         currentWinStreak = 0;
         longestLossStreak = Math.max(longestLossStreak, currentLossStreak);
-      } else {
         currentWinStreak = 0;
         currentLossStreak = 0;
       }

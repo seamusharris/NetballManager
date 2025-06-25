@@ -76,7 +76,6 @@ export default function Roster() {
             // Set current step based on what was completed
             if (state.lineup && Object.values(state.lineup).every(p => p !== null)) {
               setCurrentStep('roster');
-            } else {
               setCurrentStep('availability');
             }
 
@@ -86,7 +85,6 @@ export default function Roster() {
         } catch (error) {
           console.error('Error restoring preparation state:', error);
         }
-      } else {
         // No preparation state, go directly to roster management for game from URL
         setCurrentStep('roster');
       }

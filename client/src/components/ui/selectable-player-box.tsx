@@ -69,12 +69,10 @@ export function SelectablePlayerBox({
       } else if (!isSelected && onAddPlayer) {
         onAddPlayer(playerId);
       }
-    } else {
       // For availability mode, toggle selection
       const newSelectedIds = new Set(selectedPlayerIds);
       if (newSelectedIds.has(playerId)) {
         newSelectedIds.delete(playerId);
-      } else {
         newSelectedIds.add(playerId);
       }
       onSelectionChange(newSelectedIds);

@@ -1117,17 +1117,18 @@ export default function GameDetails() {
 
   // Fetch team awards
   const { data: teamAwards } = useQuery({
+    queryKey: ['team-awards', gameId, teamId],
+    queryFn: async () => {
       if (!gameId) return [];
-
+      const response = await fetch(`/api/games/${gameId}/team-awards`, {
+        headers: {
           'x-current-club-id': club?.id?.toString() || '',
           'x-current-team-id': currentTeam?.id?.toString() || '',
         }
       });
-
-
       return response.json();
     },
-    enabled: !!gameId && !!currentTeam?.id
+    enabled: !!gameId
   });
 
   // Set initial award winner from team awards

@@ -70,7 +70,6 @@ export default function PlayerAvailabilityWidget({
     queries: upcomingGames.map(game => ({
         if (currentTeamId) {
           return apiClient.get(`/api/teams/${currentTeamId}/availability/${game.id}`);
-        } else {
           return apiClient.get(`/api/games/${game.id}/availability`);
         }
       },
@@ -103,7 +102,6 @@ export default function PlayerAvailabilityWidget({
           availableCount: availableTeamPlayerIds.length,
           totalPlayers: totalActiveTeamPlayers
         };
-      } else {
         // Default to all players available if no data
         newAvailabilityData[game.id] = {
           gameId: game.id,

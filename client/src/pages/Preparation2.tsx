@@ -754,7 +754,7 @@ export default function Preparation2() {
           title: "Roster Saved",
           description: "Game roster has been saved successfully."
         });
-      } else {
+      } else
         throw new Error('Failed to save roster');
       }
     } catch (error) {

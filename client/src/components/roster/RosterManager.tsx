@@ -342,7 +342,6 @@ export default function RosterManager({
           ),
           { quarter: quarterNum, position, playerId }
         ]);
-      } else {
         // For clearing, just mark that the position is cleared in pending changes
         const quarterNum = parseInt(quarter);
         setPendingChanges(prev => 

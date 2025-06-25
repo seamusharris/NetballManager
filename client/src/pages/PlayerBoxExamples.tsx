@@ -69,7 +69,7 @@ export default function PlayerBoxExamples() {
       const newSelectedPlayers = new Set(prevSelectedPlayers);
       if (newSelectedPlayers.has(playerId)) {
         newSelectedPlayers.delete(playerId);
-      } else {
+      } else
         newSelectedPlayers.add(playerId);
       }
       return newSelectedPlayers;

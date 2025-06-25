@@ -110,7 +110,6 @@ export function PlayerAvailabilitySelector({
           title: "Availability updated",
           description: `Player availability updated successfully.`,
         });
-      } else {
         console.warn("gameId is not provided. Auto-saving is disabled.");
       }
     } catch (error) {

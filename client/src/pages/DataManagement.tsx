@@ -133,7 +133,6 @@ export default function DataManagement() {
       reader.onload = () => {
         if (typeof reader.result === 'string') {
           resolve(reader.result);
-        } else {
           reject(new Error('Failed to read file'));
         }
       };

@@ -25,14 +25,12 @@ export default function LiveStatsButton({ game, className = "" }: LiveStatsButto
     
     if (userTeamId && (userTeamId === game.homeTeamId || userTeamId === game.awayTeamId)) {
       targetTeamId = userTeamId;
-    } else {
       // Fallback to home team (could be away team based on user preference)
       targetTeamId = game.homeTeamId;
     }
     
     if (targetTeamId) {
       navigate(`/game/${game.id}/team/${targetTeamId}/stats/record`);
-    } else {
       // Last resort: legacy stats
       navigate(`/game/${game.id}/livestats`);
     }

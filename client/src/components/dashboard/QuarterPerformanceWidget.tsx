@@ -116,7 +116,6 @@ export default function QuarterPerformanceWidget({
         // Use the provided current team ID to determine our team vs opponent
         ourTeamId = currentTeamId;
         opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
-      } else {
         // Fallback: try to determine from game structure
         console.warn('QuarterPerformanceWidget: No currentTeamId provided, using fallback logic');
         ourTeamId = game.homeTeamId;

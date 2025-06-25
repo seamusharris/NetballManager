@@ -16,7 +16,6 @@ export function BackNavigation({ fallbackPath = '/', label = 'Back' }: BackNavig
     // Check if browser history is available
     if (window.history.length > 1) {
       window.history.back();
-    } else {
       // Fallback to provided path
       setLocation(fallbackPath);
     }

@@ -101,7 +101,6 @@ export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProp
           recentForm.push('W');
         } else if (result === 'Loss') {
           recentForm.push('L');
-        } else {
           recentForm.push('D');
         }
 

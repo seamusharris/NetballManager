@@ -64,10 +64,8 @@ export default function SingleStatTester({
         // Check if value matches what we expected
         if (savedStat[statField] === value) {
           console.log(`✅ Verification passed: saved value matches (${value})`);
-        } else {
           console.log(`❌ Verification failed: saved value (${savedStat[statField]}) doesn't match ${value}`);
         }
-      } else {
         console.error(`Failed to save: ${response.status} ${response.statusText}`);
         setSaveSuccess(false);
       }

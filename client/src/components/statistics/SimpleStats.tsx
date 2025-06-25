@@ -116,7 +116,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
 
         totals[Number(playerId)] = playerTotals;
       }
-    } else {
       // Fallback to using form values if no database stats are available
       for (const quarter of ['1', '2', '3', '4']) {
         const quarterValues = formValues[quarter] || {};
@@ -579,7 +578,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
               })
             });
             ratingPromises.push(createRatingPromise);
-          } else {
             console.error(`No position assignment found for player ${playerId} in quarter 1`);
           }
         }

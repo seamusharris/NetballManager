@@ -105,7 +105,6 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           onSuccess?.();
         }
       });
-    } else {
       createMutation.mutate(data, {
         onSuccess: () => {
           form.reset();

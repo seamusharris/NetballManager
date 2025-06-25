@@ -26,11 +26,9 @@ export default function BackButton({
     if (canGoBack()) {
       const previousPath = getPreviousPath(fallbackPath);
       navigate(previousPath);
-    } else {
       // Fallback to browser back or specific route if no navigation history
       if (window.history.length > 1) {
         window.history.back();
-      } else {
         navigate(fallbackPath);
       }
     }

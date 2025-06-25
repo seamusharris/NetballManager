@@ -43,7 +43,6 @@ export default function PlayerClubsManager({
     if (playerClubs) {
       console.log(`Setting selected clubs for player ${player.id}:`, playerClubs.map(c => c.id));
       setSelectedClubs(playerClubs.map(club => club.id));
-    } else {
       // Reset to empty if no clubs
       setSelectedClubs([]);
     }
@@ -57,7 +56,6 @@ export default function PlayerClubsManager({
         const newClubs = current.filter(id => id !== clubId);
         console.log(`Removing club ${clubId}, new clubs:`, newClubs);
         return newClubs;
-      } else {
         const newClubs = [...current, clubId];
         console.log(`Adding club ${clubId}, new clubs:`, newClubs);
         return newClubs;

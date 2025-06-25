@@ -93,7 +93,6 @@ export default function PreviousGamesDisplay({
                 if (quarterIndex >= 0 && quarterIndex < 4) {
                   if (score.teamId === currentTeamId) {
                     teamScores[quarterIndex] = score.score;
-                  } else {
                     opponentScores[quarterIndex] = score.score;
                   }
                 }
@@ -151,7 +150,6 @@ export default function PreviousGamesDisplay({
                                   // Current team is home
                                   homeScore = teamScore;
                                   awayScore = opponentScore;
-                                } else {
                                   // Current team is away
                                   homeScore = opponentScore;
                                   awayScore = teamScore;
@@ -183,7 +181,6 @@ export default function PreviousGamesDisplay({
                                   // Current team is home
                                   homeCum = teamCum;
                                   awayCum = opponentCum;
-                                } else {
                                   // Current team is away
                                   homeCum = opponentCum;
                                   awayCum = teamCum;
@@ -324,7 +321,6 @@ export default function PreviousGamesDisplay({
                 gameScores.forEach(score => {
                   if (score.teamId === currentTeamId) {
                     gameGoalsFor += score.score;
-                  } else {
                     gameGoalsAgainst += score.score;
                   }
                 });

@@ -97,7 +97,6 @@ function TeamPositionAnalysis({
         firstFewEntries: sampleRoster?.slice(0, 3),
         allPositions: sampleRoster?.map(r => r.position).filter((pos, idx, arr) => arr.indexOf(pos) === idx)
       });
-    } else {
       console.log('TeamPositionAnalysis: No roster data available - this is the root cause');
     }
 

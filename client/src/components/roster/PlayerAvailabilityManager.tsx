@@ -101,7 +101,6 @@ export default function PlayerAvailabilityManager({
       });
       console.log(`Filtered ${filteredPlayers.length} players from ${players.length} total for team ${teamToLoad}`);
       setTeamPlayers(filteredPlayers);
-    } else {
       setTeamPlayers([]);
     }
   }, [gameId, games, players]); // Depend on all necessary data
@@ -155,7 +154,6 @@ export default function PlayerAvailabilityManager({
       if (onAvailabilityChange) {
         onAvailabilityChange(filteredAvailableIds);
       }
-    } else {
       console.log('PlayerAvailabilityManager: No saved availability data, defaulting all active players to available');
       // Default to all active team players available (this is the proper default behavior)
       const activeTeamPlayerIds = teamPlayers.filter(p => p.active !== false).map(p => p.id);

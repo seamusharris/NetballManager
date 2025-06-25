@@ -1412,7 +1412,7 @@ const QuickTapCurrentInterface = () => {
       // For demo, assume they played full quarters in previous quarters if they were on court
       const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
       totalTime = previousQuartersTime + currentQuarterTime;
-    } else {
+    } else
       // Player not currently playing
       currentQuarterTime = 0;
       // For demo, calculate based on if they played in previous quarters
@@ -2106,7 +2106,7 @@ const QuickTapCurrentInterface = () => {
                             if (currentPlayer) {
                               // Substitute existing player
                               recordInterchange(position, currentPlayer.id, player.id, interchangeReason);
-                            } else {
+                            } else
                               // Assign to empty position
                               setCurrentPositions(prev => ({
                                 ...prev,

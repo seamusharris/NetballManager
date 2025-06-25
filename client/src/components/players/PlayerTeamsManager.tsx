@@ -50,7 +50,6 @@ export default function PlayerTeamsManager({
     if (playerTeams && playerTeams.length > 0) {
       console.log(`Setting selected teams for player ${player.id}:`, playerTeams.map(t => t.id));
       setSelectedTeams(playerTeams.map(team => team.id));
-    } else {
       setSelectedTeams([]);
     }
   }, [playerTeams, player.id]);
@@ -60,7 +59,6 @@ export default function PlayerTeamsManager({
     setSelectedTeams(current => {
       if (current.includes(teamId)) {
         return current.filter(id => id !== teamId);
-      } else {
         return [...current, teamId];
       }
     });

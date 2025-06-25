@@ -41,7 +41,6 @@ export default function TeamAwareRosterManager({
       setRosterStatus('empty');
     } else if (rosters.length < 28) { // 7 positions x 4 quarters
       setRosterStatus('partial');
-    } else {
       setRosterStatus('complete');
     }
   }, [rosters]);

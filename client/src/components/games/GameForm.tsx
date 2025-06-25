@@ -161,7 +161,6 @@ export default function GameForm({
 
     if (isEditing && game) {
       console.log("Updating game with ID:", game.id, "and data:", gameData);
-    } else {
       console.log("Creating new game with data:", gameData);
     }
 

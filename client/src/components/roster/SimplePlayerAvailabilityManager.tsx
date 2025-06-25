@@ -47,7 +47,6 @@ export default function SimplePlayerAvailabilityManager({
       const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => playerIds.includes(id));
       setSelectedPlayers(new Set(filteredAvailableIds));
       onAvailabilityChange?.(filteredAvailableIds);
-    } else {
       // Default: all active players are available
       const activePlayerIds = players.filter(p => p.active !== false).map(p => p.id);
       setSelectedPlayers(new Set(activePlayerIds));
@@ -61,7 +60,6 @@ export default function SimplePlayerAvailabilityManager({
     
     if (isSelected) {
       newSelectedPlayers.add(playerId);
-    } else {
       newSelectedPlayers.delete(playerId);
     }
     

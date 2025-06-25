@@ -197,7 +197,6 @@ export function GamesList({
       if (scores) {
         // If we have scores, mark as complete
         statsStatuses[gameId] = 'complete';
-      } else {
         // If no scores for a completed game, mark as none
         statsStatuses[gameId] = 'none';
       }
@@ -254,7 +253,6 @@ export function GamesList({
     if (sortColumn === column) {
       // Toggle direction if clicking the same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
       // Set new column and default to ascending
       setSortColumn(column);
       setSortDirection('asc');
@@ -295,7 +293,6 @@ export function GamesList({
         opponentScore: scores.finalScore.against,
         isWin: scores.finalScore.for > scores.finalScore.against
       };
-    } else {
       // We are the away team, so our score is 'against' and opponent is 'for'
       return {
         teamScore: scores.finalScore.against,

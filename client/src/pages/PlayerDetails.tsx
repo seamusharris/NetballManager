@@ -388,7 +388,6 @@ export default function PlayerDetails() {
           title: "Success",
           description: "Player deleted successfully",
         });
-      } else {
         toast({
           title: "Error", 
           description: error.message || "Failed to delete player",

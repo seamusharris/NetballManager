@@ -117,7 +117,7 @@ export default function AllPlayersDesignExamples() {
       const newSet = new Set([...prev]);
       if (newSet.has(playerId)) {
         newSet.delete(playerId);
-      } else {
+      } else
         newSet.add(playerId);
       }
       return newSet;
@@ -129,7 +129,7 @@ export default function AllPlayersDesignExamples() {
       const newSet = new Set([...prev]);
       if (newSet.has(playerId)) {
         newSet.delete(playerId);
-      } else {
+      } else
         newSet.add(playerId);
       }
       return newSet;
@@ -142,7 +142,7 @@ export default function AllPlayersDesignExamples() {
       const newSet = new Set([...prev]);
       if (newSet.has(playerId)) {
         newSet.delete(playerId);
-      } else {
+      } else
         newSet.add(playerId);
       }
       return newSet;

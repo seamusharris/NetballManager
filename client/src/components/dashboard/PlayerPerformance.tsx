@@ -407,7 +407,6 @@ export default function PlayerPerformance({ players, games, className, seasonFil
       // Update with the most recent rating we found, or calculate a default
       if (mostRecentRating !== null) {
         newPlayerStatsMap[player.id].rating = mostRecentRating;
-      } else {
         // Calculate default rating based on performance stats
         const calculatedRating = 5 + 
           (newPlayerStatsMap[player.id].goals * 0.2) +
@@ -475,7 +474,6 @@ export default function PlayerPerformance({ players, games, className, seasonFil
       if (field === 'name') {
         if (direction === 'asc') {
           return a.displayName.localeCompare(b.displayName);
-        } else {
           return b.displayName.localeCompare(a.displayName);
         }
       }
@@ -486,7 +484,6 @@ export default function PlayerPerformance({ players, games, className, seasonFil
 
       if (direction === 'asc') {
         return aValue - bValue;
-      } else {
         return bValue - aValue;
       }
     });

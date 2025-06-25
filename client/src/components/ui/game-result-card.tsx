@@ -280,7 +280,6 @@ export default function GameResultCard({
           homeScore = scores.finalScore.against;
           awayScore = scores.finalScore.for;
         }
-      } else {
         // Club-wide view - scores should already be in correct format
         homeScore = scores.finalScore.for;
         awayScore = scores.finalScore.against;
@@ -376,7 +375,6 @@ export default function GameResultCard({
                   homeScore = scores.finalScore.against;
                   awayScore = scores.finalScore.for;
                 }
-              } else {
                 // Club-wide view - assume scores are already in home/away format
                 homeScore = scores.finalScore.for;
                 awayScore = scores.finalScore.against;

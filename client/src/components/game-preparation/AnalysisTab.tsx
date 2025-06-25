@@ -169,7 +169,6 @@ export default function AnalysisTab({
       } else if (teamGoals < opponentGoals) {
         losses++;
         recentForm.push('L');
-      } else {
         draws++;
         recentForm.push('D');
       }

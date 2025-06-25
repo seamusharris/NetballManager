@@ -159,7 +159,6 @@ export function GameStatusManager() {
     e.preventDefault();
     if (editingStatus) {
       updateMutation.mutate({ id: editingStatus.id, data: formData });
-    } else {
       createMutation.mutate(formData);
     }
   };

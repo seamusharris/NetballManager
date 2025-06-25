@@ -83,7 +83,6 @@ const SidebarProvider = React.forwardRef<
         const openState = typeof value === "function" ? value(open) : value
         if (setOpenProp) {
           setOpenProp(openState)
-        } else {
           _setOpen(openState)
         }
 

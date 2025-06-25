@@ -33,7 +33,6 @@ export default function FixedPlayerAvailabilityManager({
       console.log('FixedPlayerAvailabilityManager: Fetching availability for game', gameId, 'team', teamId);
       if (teamId) {
         return apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`);
-      } else {
         return apiClient.get(`/api/games/${gameId}/availability`);
       }
     },
@@ -62,7 +61,6 @@ export default function FixedPlayerAvailabilityManager({
       // Use optimistic update if available, otherwise use API data
       if (player.id in optimisticUpdates) {
         availabilityData[player.id] = optimisticUpdates[player.id];
-      } else {
         availabilityData[player.id] = availableIds.includes(player.id);
       }
     });
@@ -88,7 +86,6 @@ export default function FixedPlayerAvailabilityManager({
     if (newState) {
       // Add player to available list
       newAvailablePlayerIds = [...currentAvailableIds.filter(id => id !== playerId), playerId];
-    } else {
       // Remove player from available list
       newAvailablePlayerIds = currentAvailableIds.filter(id => id !== playerId);
     }
@@ -104,7 +101,6 @@ export default function FixedPlayerAvailabilityManager({
         await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
           availablePlayerIds: newAvailablePlayerIds
         });
-      } else {
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds: newAvailablePlayerIds
         });
@@ -158,7 +154,6 @@ export default function FixedPlayerAvailabilityManager({
         await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
           availablePlayerIds: availableIds
         });
-      } else {
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds: availableIds
         });
@@ -200,7 +195,6 @@ export default function FixedPlayerAvailabilityManager({
         await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
           availablePlayerIds: []
         });
-      } else {
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds: []
         });

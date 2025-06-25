@@ -144,14 +144,12 @@ export default function TeamMatchups({
               if (isHomeTeamOurs) {
                 ourScore += homeScore;
                 opposingScore += awayScore;
-              } else {
                 ourScore += awayScore;
                 opposingScore += homeScore;
               }
             }
             
             console.log(`OpponentMatchups - Game ${game.id} using official scores: ${ourScore}-${opposingScore}`);
-          } else {
             // Fallback: Calculate from position stats
             const gameStats = centralizedStats[game.id] || [];
             ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
@@ -234,7 +232,6 @@ export default function TeamMatchups({
     for (let i = 1; i < form.length; i++) {
       if (form[i] === mostRecent) {
         count++;
-      } else {
         break;
       }
     }
@@ -285,12 +282,10 @@ export default function TeamMatchups({
           if (isHomeTeamOurs) {
             teamScore += homeScore;
             opponentScore += awayScore;
-          } else {
             teamScore += awayScore;
             opponentScore += homeScore;
           }
         }
-      } else {
         // Fallback to calculated scores
         const gameStats = centralizedStats[game.id] || [];
         teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);

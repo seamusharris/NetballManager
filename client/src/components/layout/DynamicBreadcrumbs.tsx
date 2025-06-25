@@ -57,7 +57,6 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
           breadcrumbs.push({ label: 'Game Preparation', href: isLastSegment ? undefined : `/team/${teamId}/preparation` });
         } else if (nextSegment === 'roster') {
           breadcrumbs.push({ label: 'Roster Management', href: isLastSegment ? undefined : `/team/${teamId}/roster` });
-        } else {
           breadcrumbs.push({ label: 'Team Dashboard', href: isLastSegment ? undefined : `/team/${teamId}` });
         }
         
@@ -80,7 +79,6 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
         } else if (subRoute === 'live-stats-by-position') {
           breadcrumbs.push({ label: `Game ${gameId}`, href: `/games/${gameId}` });
           breadcrumbs.push({ label: 'Live Stats by Position' });
-        } else {
           breadcrumbs.push({ label: `Game ${gameId}` });
         }
         break;
@@ -126,7 +124,6 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
       
       if (isLastSegment) {
         breadcrumbs.push({ label });
-      } else {
         breadcrumbs.push({ label, href: currentPath });
       }
     }

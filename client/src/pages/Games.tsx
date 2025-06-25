@@ -74,7 +74,7 @@ export default function Games() {
   // Fetch teams - for club-wide view we need club teams, for team view we need all teams
       if (isClubWideGamesView) {
         return apiClient.get(`/api/clubs/${clubId}/teams`);
-      } else {
+      } else
         return apiClient.get('/api/teams');
       }
     },
@@ -97,7 +97,7 @@ export default function Games() {
       } else if (effectiveTeamId) {
         // Use team-specific endpoint for better filtering and automatic perspective calculation
         return apiClient.get(`/api/teams/${effectiveTeamId}/games`);
-      } else {
+      } else
         return apiClient.get(`/api/clubs/${clubId}/games`);
       }
     },

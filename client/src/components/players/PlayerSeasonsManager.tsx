@@ -43,7 +43,6 @@ export default function PlayerSeasonsManager({
     setSelectedSeasons(current => {
       if (current.includes(seasonId)) {
         return current.filter(id => id !== seasonId);
-      } else {
         return [...current, seasonId];
       }
     });

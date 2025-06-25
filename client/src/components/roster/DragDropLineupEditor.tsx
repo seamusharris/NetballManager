@@ -81,7 +81,6 @@ export default function DragDropLineupEditor({
       if (draggedPlayerPosition) {
         newLineup[draggedPlayerPosition] = currentPlayerInPosition;
       }
-    } else {
       // Clear the position the dragged player came from
       const draggedPlayerPosition = Object.entries(currentLineup).find(
         ([_, player]) => player?.id === draggedPlayer.id

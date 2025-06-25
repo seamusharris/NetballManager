@@ -45,7 +45,6 @@ export default function StatsDebug() {
       if (response.ok) {
         const result = await response.json();
         setStatusMessage(`Test stat created with ID: ${result.id}`);
-      } else {
         setStatusMessage(`Failed to create test stat: ${response.status}`);
       }
     } catch (error) {

@@ -314,7 +314,6 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
             onSuccess?.();
           }
         });
-      } else {
         console.log('PlayerForm: Calling createPlayer.mutate for new player');
         console.log('PlayerForm: About to call createPlayer mutation at:', new Date().toISOString());
         console.log('PlayerForm: Mutation state before call:', {

@@ -73,7 +73,6 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
         console.error(`RecentGames: Error transforming scores for game ${game.id}:`, error);
         transformedScores[game.id] = [];
       }
-    } else {
       transformedScores[game.id] = [];
       console.log(`RecentGames: Game ${game.id} has no scores in batch data - setting empty array`);
     }

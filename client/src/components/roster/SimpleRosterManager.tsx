@@ -169,7 +169,6 @@ export default function SimpleRosterManager({
         ),
         { quarter: quarterNum, position, playerId: actualPlayerId }
       ]);
-    } else {
       // For clearing, just mark that the position is cleared in pending changes
       const quarterNum = parseInt(quarter);
       setPendingChanges(prev => 
@@ -473,7 +472,6 @@ export default function SimpleRosterManager({
         setPendingChanges([]);
         setHasUnsavedChanges(false);
       }
-    } else {
       setSelectedGameId(Number(gameId));
     }
   };

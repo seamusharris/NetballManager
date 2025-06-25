@@ -178,7 +178,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         const bName = b.displayName || `${b.firstName || ''} ${b.lastName || ''}`.trim();
         if (direction === 'asc') {
           return aName.localeCompare(bName);
-        } else {
           return bName.localeCompare(aName);
         }
       }
@@ -189,7 +188,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       if (direction === 'asc') {
         return aValue - bValue;
-      } else {
         return bValue - aValue;
       }
     });

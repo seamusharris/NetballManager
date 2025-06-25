@@ -55,7 +55,6 @@ export default function GameStatistics({
     // This happens sometimes due to API path confusion
     if (rosters.length > 0 && 'date' in rosters[0] && 'opponentId' in rosters[0]) {
       console.log("WARNING: Received game object instead of roster entries");
-    } else {
       // Process actual roster entries
       rosters.forEach(roster => {
         // Check if this is a roster entry with all needed fields
@@ -292,7 +291,6 @@ export default function GameStatistics({
       if (existingStat) {
         // Update existing stats using standardized endpoint pattern
         return await apiRequest('PATCH', `/api/games/${game.id}/stats/${existingStat.id}`, stats);
-      } else {
         // Create new stats using standardized endpoint pattern
         return await apiRequest('POST', `/api/games/${game.id}/stats`, {
           gameId: game.id,
@@ -441,7 +439,6 @@ export default function GameStatistics({
                 body: JSON.stringify(quarterChanges)
               })
             );
-          } else {
             // Create new stats with defaults - position-based
             savePromises.push(
               apiRequest(`/api/games/${gameId}/stats`, {
@@ -509,7 +506,6 @@ export default function GameStatistics({
     
     if (hasChanges) {
       batchSaveStatsMutation.mutate();
-    } else {
       toast({
         title: "No Changes",
         description: "No changes to save",
@@ -679,7 +675,6 @@ export default function GameStatistics({
                                 <TableCell>{stat?.infringement || 0}</TableCell>
                               </TableRow>
                             );
-                          } else {
                             // For totals, render based on player ID
                             const playerId = parseInt(posOrId);
                             const player = players.find(p => p.id === playerId);

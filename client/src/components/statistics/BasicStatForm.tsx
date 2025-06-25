@@ -138,7 +138,6 @@ export default function BasicStatForm({
           savePromises.push(
             apiRequest('PATCH', `/api/games/${existingStat.gameId}/stats/${existingStat.id}`, completeStats)
           );
-        } else {
           // Create new stat
           console.log(`Creating new stat for player ${playerId}`);
           savePromises.push(
@@ -211,7 +210,6 @@ export default function BasicStatForm({
         const numValue = value === '' ? 0 : parseInt(value, 10);
         if (!isNaN(numValue)) {
           numericStats[playerId][field] = numValue;
-        } else {
           numericStats[playerId][field] = 0;
         }
       });
@@ -224,7 +222,6 @@ export default function BasicStatForm({
         quarterKey: quarter, 
         stats: numericStats 
       });
-    } else {
       toast({
         title: "No statistics to save",
         description: "There are no player statistics to save for this quarter.",
