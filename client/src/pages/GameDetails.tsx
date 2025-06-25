@@ -314,8 +314,8 @@ export default function GameDetails() {
               </Link>
             </Button>
           )}
-          {game.statusAllowsStatistics && (
-            <LiveStatsButton gameId={gameId} teamId={teamId || game.homeTeamId} />
+          {game?.statusAllowsStatistics && (
+            <LiveStatsButton game={game} />
           )}
         </div>
       </div>
@@ -545,7 +545,7 @@ export default function GameDetails() {
                     </div>
                   </Link>
                 </Button>
-                {game.statusAllowsStatistics && (
+                {game?.statusAllowsStatistics && (
                   <Button variant="outline" className="h-auto p-4" asChild>
                     <Link href={`/game/${gameId}/team/${teamId || game.homeTeamId}/stats/record`}>
                       <div className="text-center">
