@@ -267,4 +267,5 @@ const useClub = () => {
   return context;
 };
 
-export { ClubProvider, useClub };
+export default ClubProvider;
+export { useClub };
