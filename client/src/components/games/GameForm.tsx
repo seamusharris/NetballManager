@@ -49,7 +49,17 @@ export default function GameForm({
   isEditing = false,
 }: GameFormProps) {
   const { toast } = useToast();
-  const { currentClubId } = // 
+  
+  // ClubContext removed - using URL-based club management
+  const params = useParams<{ clubId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
+
+  // Fetch club teams
+  const { data: clubTeams = [] } = useQuery({
+    queryKey: ['clubs', clubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    enabled: !!clubId,
+  });
 
   // Fetch all teams for inter-club games
   const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({

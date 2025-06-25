@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 
 export default function HomePage() {
-  const { currentClubId, isLoading } = useClub();
+  
   const [, setLocation] = useLocation();
 
   // Redirect to club dashboard if club context is set

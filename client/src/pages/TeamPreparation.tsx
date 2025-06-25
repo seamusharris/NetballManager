@@ -51,7 +51,7 @@ interface Game {
 }
 
 export default function TeamPreparation() {
-  const { currentClubId, currentTeamId } = useClub();
+  
   const params = useParams();
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();

@@ -17,7 +17,7 @@ import { Helmet } from 'react-helmet';
 export default function RosterGame() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { currentClub } = useClub();
+  
 
   // Extract parameters from URL - always call these hooks first
   const gameId = React.useMemo(() => {

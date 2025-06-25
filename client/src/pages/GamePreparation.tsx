@@ -181,7 +181,7 @@ export default function GamePreparation() {
 
   // Use gameId from URL params, or fallback to next game ID
   const gameId = params.gameId ? parseInt(params.gameId) : nextGame?.id;
-  const { currentClubId, currentTeamId } = useClub();
+  
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');

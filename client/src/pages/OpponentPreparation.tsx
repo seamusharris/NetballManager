@@ -55,7 +55,7 @@ interface GameAnalysis {
 }
 
 export default function OpponentPreparation() {
-  const { currentClub, currentClubId, currentTeamId, isLoading: clubLoading } = useClub();
+  
   const [selectedOpponent, setSelectedOpponent] = useState<string>('');
   const [opponents, setOpponents] = useState<OpponentTeam[]>([]);
   const [selectedGameAnalysis, setSelectedGameAnalysis] = useState<GameAnalysis | null>(null);

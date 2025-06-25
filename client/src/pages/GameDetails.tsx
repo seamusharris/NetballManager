@@ -1100,7 +1100,7 @@ export default function GameDetails() {
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { currentTeam } = useClub();
+  
   const [, setLocation] = useLocation();
 
   // State for edit game dialog

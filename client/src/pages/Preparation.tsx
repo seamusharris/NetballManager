@@ -22,7 +22,7 @@ import { GamesContainer } from '@/components/ui/games-container';
 
 const Preparation = () => {
   const queryClient = useQueryClient();
-  const { currentTeamId } = useClub();
+  
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [teams, setTeams] = useState<any[]>([]);
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster' | 'analysis'>('game-selection');

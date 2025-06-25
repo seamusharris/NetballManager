@@ -17,7 +17,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 export default function Roster() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { currentClub } = useClub();
+  
 
   // Extract gameId from URL params more reliably
   const gameIdFromUrl = React.useMemo(() => {

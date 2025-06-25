@@ -16,7 +16,7 @@ import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
   const params = useParams();
-  const { currentClub, isInitialized } = useClub();
+  
 
   // Extract parameters from URL - always call these hooks
   const gameId = React.useMemo(() => {

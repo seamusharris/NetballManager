@@ -63,7 +63,7 @@ export default function StatsRecorder() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentClubId } = useClub();
+  
 
   // State variables - must declare all state first
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);

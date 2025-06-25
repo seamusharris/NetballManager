@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
-import { useClub } from '@/contexts/ClubContext';
+// ClubContext removed - using URL-based club management
 
 export function useBatchRosterData(gameIds: number[]) {
   const { currentClubId } = useClub();

@@ -315,21 +315,4 @@ export default function Statistics() {
                 <p className="text-gray-600">Please set up the roster first before entering statistics.</p>
               </Card>
             )}
-          </div>
-        ) : (
-          <Card className="flex flex-col items-center justify-center p-10 text-center">
-            <h3 className="text-xl font-semibold mb-4">Select a Game to View Statistics</h3>
-            <p className="text-gray-500 mb-4">
-              Please select a completed game from the dropdown above to view and edit statistics
-            </p>
-            {completedGames.length === 0 && (
-              <p className="text-warning">
-                There are no completed games in the system yet. Mark a game as completed in the Games section to enter statistics.
-              </p>
-            )}
-          </Card>
-        )}
-      </div>
-    </>
-  );
-}
+          </

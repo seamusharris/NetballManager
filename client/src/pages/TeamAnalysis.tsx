@@ -153,7 +153,7 @@ const calculateScoringTrends = (gameResults: any[], currentClubId: number) => {
 };
 
 export default function TeamAnalysis() {
-  const { currentClub, currentClubId, currentTeamId, isLoading: clubLoading } = useClub();
+  
   const [, navigate] = useLocation();
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({

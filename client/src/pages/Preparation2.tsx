@@ -77,7 +77,7 @@ const GameResultBox = ({ homeScore, awayScore, isHomeTeam, size = 'md' }: {
 
 export default function Preparation2() {
   const [location, navigate] = useLocation();
-  const { currentClubId, currentTeamId } = useClub();
+  
   const { toast } = useToast();
   
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
