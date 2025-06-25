@@ -37,7 +37,7 @@ import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import { unifiedDataFetcher } from '@/lib/unifiedDataFetcher';
 import { calculatePositionStats } from '@/lib/gameScoreService';
 import { calculatePositionAverages } from '@/lib/positionStatsCalculator';
-import AttackDefenseDisplay from '@/components/dashboard/AttackDefenseDisplay';
+import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 
 
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
@@ -830,7 +830,6 @@ export default function GamePreparation() {
                         </div>                      </CardContent>
                     </Card>
                   </div>
-
                   {/* Historical Games using shared component */}
                   <PreviousGamesDisplay
                     historicalGames={historicalGames}

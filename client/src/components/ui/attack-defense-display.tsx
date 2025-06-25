@@ -17,7 +17,7 @@ export interface AttackDefenseDisplayProps {
   }>;
 }
 
-export const AttackDefenseDisplay: React.FC<AttackDefenseDisplayProps> = ({
+const AttackDefenseDisplay: React.FC<AttackDefenseDisplayProps> = ({
   averages,
   label = "Attack vs Defense Performance",
   className,
@@ -151,3 +151,5 @@ export const AttackDefenseDisplay: React.FC<AttackDefenseDisplayProps> = ({
     </div>
   );
 };
+
+export default AttackDefenseDisplay;
