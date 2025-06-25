@@ -21,7 +21,7 @@ import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 
 export default function Players() {
-  const params = useParams();
+  const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location, setLocation] = useLocation();
   const { 
     currentClub, 
@@ -53,25 +53,17 @@ export default function Players() {
       </div>
     );
   }
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
 
-  // Handle club ID from URL parameter (but not team ID)
+  // Handle club ID from URL parameter
   useEffect(() => {
     const clubIdFromUrl = params.clubId;
-    console.log('Players page URL club ID effect:', { 
-      clubIdFromUrl, 
-      teamId: params.teamId, 
-      currentClubId: currentClub?.id,
-      needsSwitch: clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId && currentClub?.id !== Number(clubIdFromUrl)
-    });
-    
-    // Only switch clubs if we have a clubId parameter that's not a team ID
     if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId) {
       const targetClubId = Number(clubIdFromUrl);
       if (currentClub?.id !== targetClubId) {
-        console.log('Players page: switching club from', currentClub?.id, 'to', targetClubId);
         switchClub(targetClubId);
       }
     }
@@ -136,7 +128,7 @@ export default function Players() {
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
 
   // Get players for non-team view
-  const { data: players = [], isLoading: isPlayersLoading } = useQuery({
+  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
     queryKey: ['players', currentClub?.id],
     queryFn: async () => {
       if (!currentClub?.id) return [];
@@ -474,7 +466,7 @@ export default function Players() {
                 value={teamId?.toString() || ""}
                 onValueChange={(value) => {
                   const newTeamId = parseInt(value);
-                  navigate(`/team/${newTeamId}/players`);
+                  setLocation(`/team/${newTeamId}/players`);
                 }}
               >
                 <SelectTrigger>
