@@ -39,10 +39,6 @@ interface PlayerBoxProps {
   onSelectionChange?: (playerId: number, isSelected: boolean) => void;
   selectionMode?: 'checkbox' | 'toggle' | 'none';
   selectionPosition?: 'right' | 'left';
-  // Availability-specific props for migration safety
-  availabilityMode?: 'selection' | 'availability' | 'team-management';
-  isAvailable?: boolean;
-  onAvailabilityChange?: (playerId: number, isAvailable: boolean) => void;
   // Status indicators for loading states
   isLoading?: boolean;
   isDisabled?: boolean;
@@ -68,10 +64,6 @@ function PlayerBox({
   onSelectionChange,
   selectionMode = 'checkbox',
   selectionPosition = 'right',
-  // Availability-specific props for migration safety
-  availabilityMode = 'selection',
-  isAvailable,
-  onAvailabilityChange,
   // Status indicators
   isLoading = false,
   isDisabled = false,
@@ -144,19 +136,9 @@ function PlayerBox({
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
   const borderColorHex = getBorderColorHex(player.avatarColor);
 
-  // Calculate styling based on selection state with availability mode support
+  // Calculate styling based on selection state
   const getSelectionStyling = () => {
-    // Migration-safe: handle both isSelected and isAvailable props
-    let effectiveSelected = false;
-    
-    if (availabilityMode === 'availability' && isAvailable !== undefined) {
-      effectiveSelected = isAvailable;
-    } else if (availabilityMode === 'team-management' && isSelected !== undefined) {
-      effectiveSelected = isSelected;
-    } else {
-      // Default selection mode
-      effectiveSelected = !isSelectable || isSelected;
-    }
+    const effectiveSelected = !isSelectable || isSelected;
 
     // Apply loading/disabled states
     let opacity = 1;
@@ -167,7 +149,7 @@ function PlayerBox({
     }
 
     if (effectiveSelected) {
-      // Selected/Available state: use medium background and player color border
+      // Selected state: use medium background and player color border
       return {
         backgroundColor: mediumBackgroundColor,
         borderColor: playerColorHex,
@@ -175,7 +157,7 @@ function PlayerBox({
         opacity
       };
     } else {
-      // Deselected/Unavailable state: use light background
+      // Deselected state: use light background
       return {
         backgroundColor: lightBackgroundColor,
         borderColor: playerColorHex,
@@ -196,48 +178,36 @@ function PlayerBox({
   // Always include border
   const borderClass = "border-2";
 
-  // Handle selection click with availability mode support
+  // Handle selection click
   const handleSelectionClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the main onClick
     
     if (isLoading || isDisabled) return;
     
-    if (availabilityMode === 'availability' && onAvailabilityChange && isAvailable !== undefined) {
-      onAvailabilityChange(player.id, !isAvailable);
-    } else if (onSelectionChange && isSelectable) {
+    if (onSelectionChange && isSelectable) {
       onSelectionChange(player.id, !isSelected);
     }
   };
 
-  // Handle box click for selection with availability mode support
+  // Handle box click for selection
   const handleBoxClick = () => {
     if (isLoading || isDisabled) return;
     
-    if (availabilityMode === 'availability' && onAvailabilityChange && isAvailable !== undefined) {
-      onAvailabilityChange(player.id, !isAvailable);
-    } else if (isSelectable && onSelectionChange) {
+    if (isSelectable && onSelectionChange) {
       onSelectionChange(player.id, !isSelected);
     } else if (onClick) {
       onClick();
     }
   };
 
-  // Render selection checkbox with availability mode support
+  // Render selection checkbox
   const renderSelectionCheckbox = () => {
-    if (!isSelectable && availabilityMode !== 'availability') return null;
-
-    // Determine effective checked state
-    let effectiveChecked = false;
-    if (availabilityMode === 'availability' && isAvailable !== undefined) {
-      effectiveChecked = isAvailable;
-    } else {
-      effectiveChecked = isSelected;
-    }
+    if (!isSelectable) return null;
 
     const checkboxStyle = {
-      backgroundColor: effectiveChecked ? playerColorHex : 'transparent',
-      borderColor: effectiveChecked ? 'transparent' : borderColorHex,
-      border: effectiveChecked ? 'none' : '2px solid',
+      backgroundColor: isSelected ? playerColorHex : 'transparent',
+      borderColor: isSelected ? 'transparent' : borderColorHex,
+      border: isSelected ? 'none' : '2px solid',
       color: 'white',
       cursor: (isLoading || isDisabled) ? 'not-allowed' : 'pointer',
       opacity: (isLoading || isDisabled) ? 0.5 : 1
@@ -249,7 +219,7 @@ function PlayerBox({
         style={checkboxStyle}
         onClick={handleSelectionClick}
       >
-        {isLoading ? '⟳' : (effectiveChecked && '✓')}
+        {isLoading ? '⟳' : (isSelected && '✓')}
       </div>
     );
   };
