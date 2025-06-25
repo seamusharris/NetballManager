@@ -14,7 +14,6 @@ import {
   TrendingUp, AlertCircle, CheckCircle, BarChart3, 
   Zap, Star, ChevronRight, MapPin, Shield, Swords
 } from 'lucide-react';
-import { useClub } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { useNextGame } from '@/hooks/use-next-game';

@@ -11,7 +11,7 @@ import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityMan
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import { useLocation, useParams } from 'wouter';
 import { Game, Player, Opponent } from '@shared/schema';
-import { useClub } from 'wouter';
+// ClubContext removed - using URL-based club management
 import PageTemplate from '@/components/layout/PageTemplate';
 
 export default function Roster() {

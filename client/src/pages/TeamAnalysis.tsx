@@ -1,6 +1,5 @@
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
-import { useClub } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { Loader2, TrendingUp, Target, Award, BarChart3, TrendingDown, Zap, Users, ArrowLeft } from 'lucide-react';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';

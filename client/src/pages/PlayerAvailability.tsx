@@ -3,7 +3,6 @@ import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
-import { useClub } from 'wouter';
 import PageTemplate from '@/components/layout/PageTemplate';
 import FixedPlayerAvailabilityManager from '@/components/roster/FixedPlayerAvailabilityManager';
 import { Card, CardContent } from '@/components/ui/card';

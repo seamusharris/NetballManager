@@ -10,7 +10,6 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
-import { useClub } from 'wouter';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';

@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams } from 'wouter';
 import { Plus, Activity, Users, Edit, Trash2, MoreVertical, Trophy, Calendar } from 'lucide-react';
-import { useClub } from 'wouter';
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,40 +18,39 @@ export default function Teams() {
   const [location, setLocation] = useLocation();
   const { 
     currentClub, 
-    currentClubId, 
+    clubId, 
     clubTeams, 
     setCurrentTeamId,
     isLoading: clubLoading 
-  } = useClub();
 
   // Redirect to club-scoped URL if accessing /teams without club ID
   useEffect(() => {
-    if (location === '/teams' && currentClubId) {
-      setLocation(`/clubs/${currentClubId}/teams`);
+    if (location === '/teams' && clubId) {
+      setLocation(`/clubs/${clubId}/teams`);
       return;
     }
-  }, [location, currentClubId, setLocation]);
+  }, [location, clubId, setLocation]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams', currentClubId],
+    queryKey: ['teams', clubId],
     queryFn: () => apiClient.get('/api/teams'),
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const { data: seasons = [] } = useQuery<any[]>({
-    queryKey: ['/api/seasons', currentClubId],
+    queryKey: ['/api/seasons', clubId],
     queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const { data: activeSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active', currentClubId],
+    queryKey: ['/api/seasons/active', clubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const deleteTeamMutation = useMutation({
@@ -62,7 +60,7 @@ export default function Teams() {
     },
   });
 
-  if (clubLoading || !currentClubId) {
+  if (clubLoading || !clubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">

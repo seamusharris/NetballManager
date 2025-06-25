@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Users, Calendar, BarChart3 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
-import { useClub } from 'wouter';
 import { useEffect } from 'react';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 

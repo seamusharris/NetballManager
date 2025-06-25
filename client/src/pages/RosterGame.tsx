@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Player, Game } from '@shared/schema';
 import { apiRequest } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
-import { useClub } from 'wouter';
 import PageTemplate from '@/components/layout/PageTemplate';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import { Card, CardContent } from '@/components/ui/card';
