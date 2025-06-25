@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useParams } from 'wouter';
 import { useBatchGameStatistics } from '../statistics/hooks/useBatchGameStatistics';
 import { isForfeitGame, getForfeitGameScore } from '@/lib/utils';
 import { Game, GameStat } from '@shared/schema';
@@ -15,8 +16,9 @@ interface BatchScoreDisplayProps {
  * instead of separate requests for each game
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
-  // Access the current club context
-  const { club } = // 
+  // ClubContext removed - using URL-based management
+  const params = useParams<{ clubId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
 
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {

@@ -13,7 +13,9 @@ interface Game {
 }
 
 export function useNextGame() {
-  const { currentTeamId } = useClub();
+  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const clubId = params.clubId ? Number(params.clubId) : null;
+  const currentTeamId = params.teamId ? Number(params.teamId) : null;
 
   return useQuery({
     queryKey: ['next-game', currentTeamId],
