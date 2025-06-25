@@ -10,8 +10,6 @@ import SingleStatTester from '@/components/statistics/SingleStatTester';
 export default function StatsDebug() {
   const gameId = parseInt(id);
   
-    queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     refetchInterval: 2000 // Auto refresh every 2 seconds
   });
@@ -40,9 +38,7 @@ export default function StatsDebug() {
         rating: null
       };
       
-      const response = await fetch('/api/game-stats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       

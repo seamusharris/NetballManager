@@ -55,20 +55,13 @@ export default function Statistics() {
 
   // NEW: Use club-scoped data instead of global
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
-    queryKey: ['/api/clubs', clubId, 'games'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/games`),
-    enabled: !!clubId
   });
 
   // Keep opponents for now (will remove later)
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<Opponent[]>({
-    queryKey: ['/api/opponents'],
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
-    queryKey: ['/api/clubs', clubId, 'players'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId
   });
 
   // Use state to store roster data
@@ -135,7 +128,6 @@ export default function Statistics() {
     async function fetchGameStats() {
       setLoadingGameStats(true);
       try {
-        const response = await fetch(`/api/games/${selectedGameId}/stats`);
         if (!response.ok) throw new Error('Failed to fetch game stats');
         const data = await response.json();
         console.log(`Loaded ${data.length} game stat entries for game ${selectedGameId}`);

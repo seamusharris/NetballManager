@@ -60,8 +60,6 @@ export default function PlayerAvailabilityManager({
     error: availabilityError,
     refetch: refetchAvailability
   } = useQuery<{availablePlayerIds: number[]}>({
-    queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
-    queryFn: () => apiClient.get(`/api/games/${gameId}/availability`),
     enabled: !!gameId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 30 * 60 * 1000, // 30 minutes
@@ -113,7 +111,6 @@ export default function PlayerAvailabilityManager({
     if (gameId) {
       console.log('PlayerAvailabilityManager: gameId changed, refetching availability for game:', gameId);
       queryClient.invalidateQueries({ 
-        queryKey: CACHE_KEYS.playerAvailability(gameId)
       });
       refetchAvailability();
     }

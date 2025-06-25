@@ -67,8 +67,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const itemsPerPage = 20;
 
   // Fetch games to calculate player statistics
-    queryKey: ['/api/games'],
-    queryFn: () => apiClient.get('/api/games'),
   });
 
   // Get completed games using same filtering as Team Dashboard PlayerAnalyticsWidget
@@ -79,8 +77,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const enableQuery = gameIds.length > 0;
 
   // Use unified data fetcher for consistency with Dashboard
-    queryKey: ['players-batch-data', clubId, gameIds.sort().join(',')],
-    queryFn: async () => {
       if (gameIds.length === 0) return { stats: {}, rosters: {} };
 
       console.log(`PlayersList: Fetching batch data for ${gameIds.length} games`);
@@ -93,7 +89,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         includeScores: false // Players page doesn't need scores
       });
     },
-    enabled: enableQuery && !!clubId && gameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry failed requests
@@ -105,16 +100,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const isLoadingStats = isLoadingBatchData;
 
   // Use batch endpoint for roster data with improved caching
-    queryKey: ['batchRosters', clubId, gameIds.sort().join(',')],
-    queryFn: async () => {
       if (gameIds.length === 0) return {};
 
       console.log(`PlayersList: Using batch endpoint for roster fetch of ${gameIds.length} games`);
       
       // Use batch endpoint instead of individual calls
-      const response = await fetch('/api/games/rosters/batch', {
         method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ gameIds }),
@@ -128,7 +119,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       console.log(`PlayersList: Batch roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: enableQuery && !!clubId,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });

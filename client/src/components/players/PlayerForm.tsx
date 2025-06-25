@@ -100,7 +100,6 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       });
 
       const apiPromise = apiClient.post('/api/players', playerData, {
-        headers: {
           'x-current-club-id': clubId.toString(),
           ...(teamId && { 'x-current-team-id': teamId.toString() })
         }

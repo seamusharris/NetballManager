@@ -191,8 +191,6 @@ export default function GamePreparation() {
 
   // Load game data using team-specific endpoint for better context
   const { data: game, isLoading: loadingGame } = useQuery({
-    queryKey: ['teams', currentTeamId, 'games', gameId],
-    queryFn: () => {
       if (currentTeamId && gameId) {
         return apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}`);
       }
@@ -204,29 +202,21 @@ export default function GamePreparation() {
 
   // Load team data
   const { data: team, isLoading: loadingTeam } = useQuery({
-    queryKey: ['team', currentTeamId],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
     enabled: !!currentTeamId
   });
 
   // Load players using team-specific endpoint
   const { data: players = [], isLoading: loadingPlayers } = useQuery({
-    queryKey: ['teams', currentTeamId, 'players'],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
     enabled: !!currentTeamId
   });
 
   // Load game statistics for analysis
   const { data: gameStats = [], isLoading: loadingStats } = useQuery({
-    queryKey: ['gameStats', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/statistics`),
     enabled: !!gameId
   });
 
   // Load historical games against this opponent using team-specific endpoint
   const { data: historicalGames = [], isLoading: loadingHistory } = useQuery({
-    queryKey: ['teams', currentTeamId, 'historicalGames', game?.opponentTeamId],
-    queryFn: async () => {
       if (!game || !currentTeamId) return [];
 
       // Get all games for the current team using team-specific API
@@ -259,8 +249,6 @@ export default function GamePreparation() {
   // Use existing batch scores data from the unified data fetcher
   const gameIdsArray = historicalGames?.map(g => g.id) || [];
   const { data: batchScores, isLoading: isLoadingBatchScores } = useQuery({
-    queryKey: ['games', 'scores', 'batch', gameIdsArray.join(',')],
-    queryFn: async () => {
       if (gameIdsArray.length === 0) return {};
       return apiClient.post('/api/games/scores/batch', { gameIds: gameIdsArray });
     },
@@ -273,8 +261,6 @@ export default function GamePreparation() {
 
   // Load all season games for the current team using team-specific endpoint
   const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery({
-    queryKey: ['teams', currentTeamId, 'seasonGames', game?.seasonId],
-    queryFn: async () => {
       if (!currentTeamId || !game?.seasonId) return [];
 
       // Get all games for the current team using team-specific API
@@ -301,8 +287,6 @@ export default function GamePreparation() {
   // Get batch scores for season games
   const seasonGameIds = seasonGames?.map(g => g.id) || [];
   const { data: seasonBatchScores, isLoading: isLoadingSeasonScores } = useQuery({
-    queryKey: ['games', 'scores', 'batch', seasonGameIds.join(',')],
-    queryFn: async () => {
       if (seasonGameIds.length === 0) return {};
       return apiClient.post('/api/games/scores/batch', { gameIds: seasonGameIds });
     },
@@ -315,8 +299,6 @@ export default function GamePreparation() {
 
   // Load roster data for this specific game using team-based endpoint
   const { data: gameRosters = [], isLoading: loadingRosters, refetch: refetchRosters } = useQuery({
-    queryKey: ['teams', currentTeamId, 'games', gameId, 'roster'],
-    queryFn: () => {
       if (!currentTeamId || !gameId) {
         throw new Error('Team ID and Game ID are required for roster operations');
       }

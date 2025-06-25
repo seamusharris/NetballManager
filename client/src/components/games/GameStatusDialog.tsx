@@ -148,8 +148,6 @@ export function GameStatusDialog({
     }
   };
 
-    queryKey: ['game-statuses'],
-    queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,
   });
 

@@ -40,19 +40,13 @@ const Preparation = () => {
   const nextGame = useNextGame();
 
   const { data: players, isLoading: isLoadingPlayers, error: errorPlayers } = useQuery({
-    queryKey: ['teamPlayers', currentTeamId],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
     enabled: !!currentTeamId,
   });
 
   const { data: allGames, isLoading: isLoadingGames, error: errorGames } = useQuery({
-    queryKey: ['games'],
-    queryFn: () => apiClient.get('/api/games'),
   });
 
   const { data: team, isLoading: isLoadingTeam, error: errorTeam } = useQuery({
-    queryKey: ['team', currentTeamId],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
     enabled: !!currentTeamId,
   });
 

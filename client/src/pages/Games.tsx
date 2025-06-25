@@ -30,9 +30,6 @@ export default function Games() {
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
 
   // Fetch club details directly from URL parameter
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
   });
 
   // Detect if we're in club-wide games view
@@ -75,15 +72,12 @@ export default function Games() {
   }, []);
 
   // Fetch teams - for club-wide view we need club teams, for team view we need all teams
-    queryKey: isClubWideGamesView ? ['clubs', clubId, 'teams'] : ['teams', clubId],
-    queryFn: () => {
       if (isClubWideGamesView) {
         return apiClient.get(`/api/clubs/${clubId}/teams`);
       } else {
         return apiClient.get('/api/teams');
       }
     },
-    enabled: !!clubId,
   });
 
   // Auto-select team from URL if provided - but not for club-wide view
@@ -98,8 +92,6 @@ export default function Games() {
   }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, 
 
   // Fetch games - use team-specific endpoint when we have a team ID for better perspective handling
-    queryKey: ['games', clubId, effectiveTeamId],
-    queryFn: () => {
       if (isClubWideGamesView) {
         return apiClient.get(`/api/clubs/${clubId}/games`);
       } else if (effectiveTeamId) {
@@ -109,15 +101,12 @@ export default function Games() {
         return apiClient.get(`/api/clubs/${clubId}/games`);
       }
     },
-    enabled: !!clubId,
   });
 
   // Centralized batch data fetching (same as Dashboard)
   const gameIdsArray = games?.map(g => g.id).sort() || [];
   const gameIds = gameIdsArray.join(',');
 
-    queryKey: ['games-batch-data', clubId, effectiveTeamId, gameIds],
-    queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
       console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${effectiveTeamId}:`, gameIdsArray);
@@ -139,7 +128,6 @@ export default function Games() {
         throw error;
       }
     },
-    enabled: !!clubId && (isClubWideGamesView || !!effectiveTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
     staleTime: 2 * 60 * 1000, // 2 minutes - shorter for dynamic game data
     gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
     refetchOnWindowFocus: false,
@@ -153,24 +141,16 @@ export default function Games() {
   const gameScoresMap = batchData?.scores || {};
 
   // Fetch seasons - no club context needed
-    queryKey: ['seasons'], 
-    queryFn: () => apiClient.get('/api/seasons')
   });
 
   // Fetch active season - no club context needed
-    queryKey: ['seasons', 'active'],
-    queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Fetch game statuses
-    queryKey: ['game-statuses'],
-    queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,
   });
 
   // Fetch players
-    queryKey: ['players'],
-    queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
   });
 
   const handleCreate = async (game: Game) => {
@@ -194,7 +174,6 @@ export default function Games() {
       if (clubId) {
         // Invalidate the specific games query for current team (matches the actual query key pattern)
         queryClient.invalidateQueries({
-          queryKey: ['games', clubId, effectiveTeamId]
         });
 
         // Invalidate team-specific games queries if we have a team
@@ -294,8 +273,6 @@ export default function Games() {
   };
 
   // Fetch all teams for inter-club games
-    queryKey: ['teams', 'all'],
-    queryFn: () => apiRequest('GET', '/api/teams/all')
   });
 
   // Debug club context

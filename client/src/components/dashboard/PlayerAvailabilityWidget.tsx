@@ -68,8 +68,6 @@ export default function PlayerAvailabilityWidget({
   // Use cached queries for availability data with team-specific endpoint when possible
   const availabilityQueries = useQueries({
     queries: upcomingGames.map(game => ({
-      queryKey: CACHE_KEYS.playerAvailability(game.id),
-      queryFn: () => {
         if (currentTeamId) {
           return apiClient.get(`/api/teams/${currentTeamId}/availability/${game.id}`);
         } else {

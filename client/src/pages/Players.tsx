@@ -40,15 +40,10 @@ export default function Players() {
 
   // Fetch club details directly from URL parameter
   const { data: club } = useQuery({
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
   });
 
   // Get active season for team assignments
   const { data: activeSeason } = useQuery({
-    queryKey: ['seasons', 'active'],
-    queryFn: async () => {
       const response = await apiClient.get('/api/seasons/active');
       return response;
     },
@@ -56,19 +51,14 @@ export default function Players() {
 
   // Get all teams for the dropdown
   const { data: allTeams = [] } = useQuery({
-    queryKey: ['teams', clubId],
-    queryFn: async () => {
       if (!clubId) return [];
       const response = await apiClient.get(`/api/clubs/${clubId}/teams`);
       return response;
     },
-    enabled: !!clubId,
   });
 
   // Get team details if viewing a specific team
   const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
-    queryKey: ['team', teamId],
-    queryFn: async () => {
       const response = await apiClient.get(`/api/teams/${teamId}`);
       return response;
     },
@@ -78,16 +68,11 @@ export default function Players() {
   });
 
   const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
-    queryKey: ['team-players', teamId, clubId],
-    queryFn: () => {
       return apiClient.get(`/api/teams/${teamId}/players`);
     },
-    enabled: !!teamId && !!clubId,
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
-    queryKey: ['team-available-players', teamId, activeSeason?.id],
-    queryFn: () => {
       return apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
     },
     enabled: !!teamId && !!activeSeason?.id,
@@ -98,14 +83,11 @@ export default function Players() {
 
   // Get players for non-team view using URL-based club ID
   const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
-    queryKey: ['players', clubId],
-    queryFn: async () => {
       console.log('Players query: fetching for club', clubId);
       const response = await apiClient.get(`/api/clubs/${clubId}/players`);
       console.log('Players query: received', response?.length, 'players');
       return response;
     },
-    enabled: !!clubId && !teamId,
   });
 
   // Filter players based on team selection

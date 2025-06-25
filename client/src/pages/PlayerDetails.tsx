@@ -40,19 +40,13 @@ export default function PlayerDetails() {
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
 
   // Fetch player data
-    queryKey: [`/api/players/${playerId}`],
-    queryFn: () => apiClient.get(`/api/players/${playerId}`),
     enabled: !isNaN(playerId),
   });
 
   // Fetch all games with club context
-    queryKey: ['/api/games'],
-    queryFn: () => apiClient.get('/api/games'),
   });
 
   // Fetch all seasons for the seasons manager
-    queryKey: ['/api/seasons'],
-    queryFn: () => apiClient.get('/api/seasons'),
   });
 
   // Get completed games using same filtering as Team Dashboard PlayerAnalyticsWidget
@@ -62,8 +56,6 @@ export default function PlayerDetails() {
   const completedGameIds = completedGames.map(game => game.id);
 
   // Use Team Dashboard's exact cache keys to share data - stats
-    queryKey: ['centralized-stats', clubId, completedGameIds.sort().join(',')],
-    queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       console.log(`PlayerDetails: Using batch endpoint for stats fetch of ${completedGameIds.length} completed games`);
@@ -92,14 +84,11 @@ export default function PlayerDetails() {
         return statsMap;
       }
     },
-    enabled: !!clubId && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
 
   // Use Team Dashboard's exact cache keys to share data - rosters
-    queryKey: ['centralized-rosters', clubId, completedGameIds.sort().join(',')],
-    queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       console.log(`PlayerDetails: Using individual requests for roster fetch of ${completedGameIds.length} games`);
@@ -119,7 +108,6 @@ export default function PlayerDetails() {
       console.log(`PlayerDetails: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: !!clubId && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });

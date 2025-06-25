@@ -167,7 +167,6 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
     mutationFn: (gameStat: Partial<GameStat>) => 
       apiRequest(`/api/games/${gameId}/stats`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameStat)
       })
   });

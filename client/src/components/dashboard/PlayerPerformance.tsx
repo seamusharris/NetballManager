@@ -82,15 +82,12 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   
 
   // Fetch roster data for tracking games played
-    queryKey: ['gameRosters', ...gameIds],
-    queryFn: async () => {
       if (gameIds.length === 0) {
         return {};
       }
 
       // Fetch rosters for each game to count games played
       const rosterPromises = gameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/rosters`);
         const rosters = await response.json();
         return { gameId, rosters };
       });

@@ -66,15 +66,9 @@ export default function DashboardSummary({
   const currentTeamId = params.teamId ? Number(params.teamId) : null;
 
   // Fetch club details directly
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
   });
 
   // Fetch teams for this club
-    queryKey: ['clubs', clubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
-    enabled: !!clubId,
   });
 
   // Derive currentTeam from currentTeamId and teams
@@ -118,7 +112,6 @@ export default function DashboardSummary({
     // This prevents cache thrashing and duplicate API calls
     if (selectedSeasonId !== 'current') {
       queryClient.invalidateQueries({ 
-        queryKey: ['seasons', selectedSeasonId],
         exact: false 
       });
     }

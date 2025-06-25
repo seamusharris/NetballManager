@@ -17,8 +17,6 @@ interface PrintableStatsSheetProps {
 
 export default function PrintableStatsSheet({ game, opponent, roster: propRoster, players: propPlayers }: PrintableStatsSheetProps) {
   // Fetch roster data if not provided via props
-    queryKey: ['/api/games', game?.id, 'rosters'],
-    queryFn: async () => {
       if (!game?.id) return [];
       const res = await fetch(`/api/games/${game.id}/rosters`);
       return res.json();
@@ -27,8 +25,6 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
   });
 
   // Fetch players data if not provided via props
-    queryKey: ['/api/players'],
-    queryFn: async () => {
       const res = await fetch('/api/players');
       return res.json();
     },

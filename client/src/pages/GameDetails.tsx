@@ -1117,12 +1117,8 @@ export default function GameDetails() {
 
   // Fetch team awards
   const { data: teamAwards } = useQuery({
-    queryKey: ['teamAwards', gameId, currentTeam?.id],
-    queryFn: async () => {
       if (!gameId) return [];
 
-      const response = await fetch(`/api/games/${gameId}/team-awards`, {
-        headers: {
           'x-current-club-id': club?.id?.toString() || '',
           'x-current-team-id': currentTeam?.id?.toString() || '',
         }
@@ -1208,8 +1204,6 @@ export default function GameDetails() {
 
     // Fetch current club using apiClient
     const { data: club } = useQuery({
-      queryKey: ['/api/clubs/current'],
-      queryFn: () => apiClient.get('/api/clubs/current'),
     });
 
   // Extract club ID from URL as fallback when club context is not available
@@ -1218,8 +1212,6 @@ export default function GameDetails() {
   // Fetch game data using team-perspective endpoint when possible
   const effectiveTeamId = teamIdFromUrl || currentTeam?.id;
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
-    queryKey: effectiveTeamId ? ['teams', effectiveTeamId, 'games', gameId] : ['/api/games', gameId],
-    queryFn: () => {
       if (effectiveTeamId) {
         return apiClient.get<Game>(`/api/teams/${effectiveTeamId}/games/${gameId}`);
       } else {
@@ -1230,8 +1222,6 @@ export default function GameDetails() {
   });
 
   const { data: teamGameNotes } = useQuery({
-    queryKey: ['/api/games', gameId, 'team-notes'],
-    queryFn: () => apiClient.get<{ notes: string; enteredBy: number; createdAt: string; updatedAt: string }>(`/api/games/${gameId}/team-notes`),
     enabled: !!gameId,
   });
 
@@ -1241,8 +1231,6 @@ export default function GameDetails() {
     isLoading: isLoadingPlayers,
     error: playersError
   } = useQuery({
-    queryKey: CACHE_KEYS.players(clubId),
-    queryFn: async () => {
       if (!clubId) {
         return [];
       }
@@ -1254,7 +1242,6 @@ export default function GameDetails() {
         return [];
       }
     },
-    enabled: !!clubId,
     staleTime: 1 * 60 * 1000, // Reduced cache time
     refetchOnWindowFocus: true, // Enable refetch to force data loading
     retry: 3
@@ -1265,8 +1252,6 @@ export default function GameDetails() {
     data: gameStatuses = [],
     isLoading: isLoadingGameStatuses
   } = useQuery({
-    queryKey: ['/api/game-statuses'],
-    queryFn: () => apiClient.get('/api/game-statuses'),
     select: (data) => Array.isArray(data) ? data : []
   });
 
@@ -1276,10 +1261,7 @@ export default function GameDetails() {
     isLoading: isLoadingTeams,
     error: teamsError
   } = useQuery({
-    queryKey: ['/api/teams'],
-    queryFn: () => apiClient.get('/api/teams'),
     select: (data) => Array.isArray(data) ? data : [],
-    enabled: !!clubId
   });
 
   // Fetch all teams
@@ -1288,8 +1270,6 @@ export default function GameDetails() {
     isLoading: isLoadingAllTeams,
     error: allTeamsError
   } = useQuery({
-    queryKey: ['/api/teams/all'],
-    queryFn: () => apiClient.get('/api/teams/all'),
     select: (data) => Array.isArray(data) ? data : [],
     enabled: true
   });
@@ -1300,8 +1280,6 @@ export default function GameDetails() {
     isLoading: isLoadingRoster,
     refetch: refetchRosters
   } = useQuery({
-    queryKey: effectiveTeamId ? ['teams', effectiveTeamId, 'games', gameId, 'roster'] : ['/api/games', gameId, 'rosters'],
-    queryFn: () => {
       if (effectiveTeamId) {
         return apiClient.get(`/api/teams/${effectiveTeamId}/games/${gameId}/rosters`);
       } else {
@@ -1313,15 +1291,11 @@ export default function GameDetails() {
 
   // Fetch seasons data
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
-    queryKey: ['/api/seasons'],
-    queryFn: () => apiClient.get('/api/seasons'),
     select: (data) => Array.isArray(data) ? data : []
   });
 
   // Fetch active season
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active'],
-    queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Force refetch when component mounts or route changes
@@ -1345,8 +1319,6 @@ export default function GameDetails() {
     isLoading: isLoadingStats,
     refetch: refetchGameStats
   } = useQuery({
-    queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !isNaN(gameId),
     staleTime: 0, // Always consider stale to get fresh data
     refetchOnWindowFocus: true, // Refetch when window gains focus
@@ -1359,8 +1331,6 @@ export default function GameDetails() {
 
   // Fetch official scores
   const { data: officialScores } = useQuery({
-    queryKey: ['/api/games', gameId, 'scores'],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/scores`),
     enabled: !isNaN(gameId)
   });
 
@@ -1713,7 +1683,6 @@ export default function GameDetails() {
 
                         // Invalidate queries
                         queryClient.invalidateQueries({
-                          queryKey: ['/api/games'],
                         });
 
                         toast({
@@ -1760,10 +1729,8 @@ export default function GameDetails() {
 
                           // Invalidate queries to refresh data
                           queryClient.invalidateQueries({
-                            queryKey: ['/api/games', gameId],
                           });
                           queryClient.invalidateQueries({
-                            queryKey: ['/api/games'],
                           });
 
                           toast({

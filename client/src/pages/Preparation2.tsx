@@ -738,9 +738,7 @@ export default function Preparation2() {
       });
 
       // Save roster via API (you'll need to create this endpoint)
-      const response = await fetch('/api/game-rosters', {
         method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
           'x-current-club-id': clubId?.toString() || '',
           'x-current-team-id': currentTeamId?.toString() || ''

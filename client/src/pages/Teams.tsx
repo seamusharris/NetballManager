@@ -19,9 +19,12 @@ export default function Teams() {
   const clubId = params.clubId ? Number(params.clubId) : null;
 
   // Fetch club details directly
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
+  const { data: club, isLoading: clubLoading } = useQuery({
+  });
+
+  // Fetch teams for this club
+  const { data: teams = [], isLoading } = useQuery({
+    staleTime: 5 * 60 * 1000
   });
 
   // Redirect to club-scoped URL if accessing /teams without club ID
@@ -35,20 +38,10 @@ export default function Teams() {
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const queryClient = useQueryClient();
-
-    queryKey: ['teams', clubId],
-    queryFn: () => apiClient.get('/api/teams'),
-    enabled: !!clubId,
   });
 
-    queryKey: ['/api/seasons', clubId],
-    queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!clubId,
   });
 
-    queryKey: ['/api/seasons/active', clubId],
-    queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!clubId,
   });
 
   const deleteTeamMutation = useMutation({

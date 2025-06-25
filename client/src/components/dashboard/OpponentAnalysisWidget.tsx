@@ -19,15 +19,10 @@ export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProp
   const [selectedOpponentTeamId, setSelectedOpponentTeamId] = useState<number | null>(null);
 
   // Fetch games
-    queryKey: ['games', clubId, currentTeamId],
-    queryFn: () => apiClient.get('/api/games'),
-    enabled: !!clubId && !!currentTeamId,
     staleTime: 2 * 60 * 1000,
   });
 
   // Fetch stats for opponent games
-    queryKey: ['opponent-analysis-stats', selectedOpponentTeamId, currentTeamId],
-    queryFn: async () => {
       if (!selectedOpponentTeamId || !currentTeamId) return {};
 
       const opponentGames = games.filter(game => 

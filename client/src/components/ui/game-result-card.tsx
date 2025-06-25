@@ -70,8 +70,6 @@ export default function GameResultCard({
   }
 
   // Fetch club teams based on URL club ID for reliable team perspective
-    queryKey: ['clubs', urlClubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${urlClubId}/teams`),
     enabled: !!urlClubId,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes

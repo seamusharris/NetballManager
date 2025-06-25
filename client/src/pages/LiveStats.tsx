@@ -206,26 +206,18 @@ export default function LiveStats() {
   const [pendingStatChange, setPendingStatChange] = useState<any>(null);
 
   // Fetch game details - use direct game endpoint to bypass team filtering
-    queryKey: ['/api/games', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch opponent details if we have a game
-    queryKey: ['/api/opponents', game?.opponentId],
-    queryFn: () => apiClient.get(`/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
   });
 
   // Fetch player roster for this game
-    queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
     enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch existing stats for this game with forced refresh when needed
-    queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     staleTime: 0, // Consider it always stale to fetch fresh data
     refetchOnMount: 'always', // Always refetch when component mounts
@@ -233,13 +225,9 @@ export default function LiveStats() {
   });
 
   // Fetch current club first
-    queryKey: ['/api/clubs/current'],
-    queryFn: () => apiClient.get('/api/clubs/current'),
   });
 
   // Fetch players for the team - Stage 4 REST endpoint
-    queryKey: ['players', club?.id, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${club?.id}/players`),
     enabled: !!club?.id
   });
 

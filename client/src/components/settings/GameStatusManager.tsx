@@ -59,8 +59,6 @@ export function GameStatusManager() {
   const queryClient = useQueryClient();
 
   // Fetch all game statuses (including inactive ones for management)
-    queryKey: ['/api/game-statuses'],
-    queryFn: () => apiRequest('GET', '/api/game-statuses'),
   });
 
   // Create mutation

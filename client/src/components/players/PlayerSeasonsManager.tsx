@@ -26,7 +26,6 @@ export default function PlayerSeasonsManager({
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
   
   // Fetch player's current seasons
-    queryKey: [`/api/players/${player.id}/seasons`],
     enabled: !!player?.id, // Always fetch when player ID is available
   });
   
@@ -57,9 +56,7 @@ export default function PlayerSeasonsManager({
     try {
       console.log(`Updating seasons for player ${player.id}:`, selectedSeasons);
       
-      const response = await fetch(`/api/players/${player.id}/seasons`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ seasonIds: selectedSeasons })
       });
       

@@ -73,29 +73,20 @@ export default function StatsRecorder() {
 
   // NEW: Game data with team context
   const { data: game, isLoading: isLoadingGame } = useQuery<any>({
-    queryKey: ['/api/game', gameId, 'team', teamId],
-    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 
   // NEW: Club-scoped players instead of global
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
-    queryKey: ['/api/clubs', clubId, 'players'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId
   });
 
   // NEW: Game-centric roster endpoint
   const { data: rosters = [], isLoading: isLoadingRoster } = useQuery<Roster[]>({
-    queryKey: ['/api/game', gameId, 'team', teamId, 'rosters'],
-    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/rosters`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 
   // NEW: Game-centric stats endpoint
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
-    queryKey: ['/api/game', gameId, 'team', teamId, 'stats'],
-    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`),
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 

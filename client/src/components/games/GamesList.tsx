@@ -158,16 +158,12 @@ export function GamesList({
     })
     .map(game => game.id);
 
-    queryKey: ['batchRosters', ...nonByeGameIds],
-    queryFn: async () => {
       if (nonByeGameIds.length === 0) {
         return {};
       }
 
       // Use batch endpoint instead of individual calls
-      const response = await fetch('/api/games/rosters/batch', {
         method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ gameIds: nonByeGameIds }),

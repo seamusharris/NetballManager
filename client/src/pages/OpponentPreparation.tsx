@@ -60,21 +60,15 @@ export default function OpponentPreparation() {
   const [selectedGameAnalysis, setSelectedGameAnalysis] = useState<GameAnalysis | null>(null);
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', clubId, currentTeamId],
-    queryFn: () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
         headers['x-current-team-id'] = currentTeamId.toString();
       }
       return apiClient.get('/api/games', headers);
     },
-    enabled: !!clubId,
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', clubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId,
   });
 
   // Get completed games for stats

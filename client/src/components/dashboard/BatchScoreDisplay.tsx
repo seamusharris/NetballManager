@@ -59,9 +59,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
         console.log('BatchScoreDisplay: Loading stats for games:', gameIds);
 
         // Use POST method to match the server endpoint
-        const response = await fetch('/api/games/stats/batch', {
           method: 'POST',
-          headers: {
             'Content-Type': 'application/json',
             'x-current-club-id': club?.id?.toString() || '',
           },

@@ -156,33 +156,21 @@ export default function TeamAnalysis() {
   const [, navigate] = useLocation();
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', clubId, currentTeamId],
-    queryFn: () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
         headers['x-current-team-id'] = currentTeamId.toString();
       }
       return apiClient.get('/api/games', { headers });
     },
-    enabled: !!clubId,
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams-all', clubId],
-    queryFn: () => apiClient.get('/api/teams/all'),
-    enabled: !!clubId,
   });
 
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
-    queryKey: ['opponents', clubId],
-    queryFn: () => apiClient.get('/api/opponents'),
-    enabled: !!clubId,
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', clubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId,
   });
 
   // Get completed games for stats

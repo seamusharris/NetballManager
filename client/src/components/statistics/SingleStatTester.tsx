@@ -46,9 +46,7 @@ export default function SingleStatTester({
       
       console.log(`Saving ${statField}=${value} for stat ID ${statId}`);
       
-      const response = await fetch(`/api/game-stats/${statId}`, {
         method: 'PATCH',
-        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)

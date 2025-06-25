@@ -15,12 +15,8 @@ import { apiRequest } from '@/lib/apiClient';
 export default function OpponentDetailed() {
   const [, navigate] = useLocation();
 
-    queryKey: ['games'],
-    queryFn: () => apiRequest('GET', '/api/games')
   });
 
-    queryKey: ['opponents'],
-    queryFn: async () => {
       try {
         const result = await apiRequest('GET', '/api/opponents');
         return Array.isArray(result) ? result : [];
@@ -36,8 +32,6 @@ export default function OpponentDetailed() {
     game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
   ).map((game: Game) => game.id);
 
-    queryKey: ['dashboardStats', completedGameIds.join(',')],
-    queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       try {

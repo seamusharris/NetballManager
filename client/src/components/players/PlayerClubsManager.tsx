@@ -31,12 +31,10 @@ export default function PlayerClubsManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all clubs
-    queryKey: ['/api/clubs'],
     enabled: !!player?.id,
   });
 
   // Fetch player's current clubs
-    queryKey: [`/api/players/${player.id}/clubs`],
     enabled: !!player?.id,
   });
 
@@ -75,9 +73,7 @@ export default function PlayerClubsManager({
       console.log(`Updating clubs for player ${player.id}:`, selectedClubs);
       console.log('Current selected clubs state:', selectedClubs);
 
-      const response = await fetch(`/api/players/${player.id}/clubs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clubIds: selectedClubs })
       });
 

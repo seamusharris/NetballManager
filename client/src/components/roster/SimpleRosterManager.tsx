@@ -91,7 +91,6 @@ export default function SimpleRosterManager({
     if (selectedGameId) {
       const fetchRoster = async () => {
         try {
-          const response = await fetch(`/api/games/${selectedGameId}/rosters`);
           if (response.ok) {
             const rosters: RosterType[] = await response.json();
 
@@ -635,10 +634,7 @@ export default function SimpleRosterManager({
   }, [selectedGame, currentTeam]);
 
   // Query to get players specifically assigned to this team
-    queryKey: ['teamPlayers', gameTeamId],
-    queryFn: async () => {
       if (!gameTeamId) return [];
-      const response = await fetch(`/api/teams/${gameTeamId}/players`);
       if (!response.ok) {
         // Fallback to filtering club players if team endpoint fails
         return players.filter(player => player.active);

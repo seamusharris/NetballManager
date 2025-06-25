@@ -45,8 +45,6 @@ export default function QuarterPerformanceWidget({
   const gameIdsKey = validGameIds.join(',');
 
   // Fetch scores for all valid games (we need scores, not stats, for quarter performance)
-    queryKey: ['quarterPerformanceScores', gameIdsKey, seasonId],
-    queryFn: async () => {
       if (validGameIds.length === 0) {
         return {};
       }

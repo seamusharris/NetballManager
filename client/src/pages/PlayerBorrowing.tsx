@@ -54,25 +54,15 @@ export default function PlayerBorrowing() {
   });
 
   // Fetch borrowing requests for current club
-    queryKey: ['borrowing-requests', club?.clubId],
-    queryFn: () => apiRequest('GET', `/api/clubs/${club?.clubId}/player-borrowing`),
-    enabled: !!club?.clubId
   });
 
   // Fetch games for borrowing selection
-    queryKey: ['games'],
-    queryFn: () => apiRequest('GET', '/api/games')
   });
 
   // Fetch teams for the current club
-    queryKey: ['teams'],
-    queryFn: () => apiRequest('GET', '/api/teams')
   });
 
   // Fetch available players for borrowing
-    queryKey: ['available-players', club?.clubId, selectedGame, selectedTeam],
-    queryFn: () => apiRequest('GET', `/api/clubs/${club?.clubId}/players/available-for-borrowing?gameId=${selectedGame}&excludeTeamId=${selectedTeam}`),
-    enabled: !!club?.clubId && !!selectedGame && !!selectedTeam
   });
 
   // Create borrowing request mutation

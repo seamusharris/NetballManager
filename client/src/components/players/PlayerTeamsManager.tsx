@@ -34,9 +34,6 @@ export default function PlayerTeamsManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch player's current teams
-    queryKey: ['players', player.id, 'teams'],
-    queryFn: async () => {
-      const response = await fetch(`/api/players/${player.id}/teams`);
       if (!response.ok) {
         throw new Error('Failed to fetch player teams');
       }
@@ -46,9 +43,6 @@ export default function PlayerTeamsManager({
   });
   
   // Fetch all available teams
-    queryKey: ['teams', 'all'],
-    queryFn: async () => {
-      const response = await fetch('/api/teams/all');
       if (!response.ok) {
         throw new Error('Failed to fetch teams');
       }
@@ -94,9 +88,7 @@ export default function PlayerTeamsManager({
       
       // Add player to new teams
       for (const teamId of teamsToAdd) {
-        const response = await fetch(`/api/teams/${teamId}/players`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             playerId: player.id,
             isRegular: true 
@@ -111,7 +103,6 @@ export default function PlayerTeamsManager({
       
       // Remove player from teams
       for (const teamId of teamsToRemove) {
-        const response = await fetch(`/api/teams/${teamId}/players/${player.id}`, {
           method: 'DELETE',
         });
         

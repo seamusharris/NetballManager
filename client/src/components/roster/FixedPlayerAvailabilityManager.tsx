@@ -30,8 +30,6 @@ export default function FixedPlayerAvailabilityManager({
   const queryClient = useQueryClient();
 
   // Fetch availability data from API using team-based endpoint when possible
-    queryKey: teamId ? ['availability', teamId, gameId] : CACHE_KEYS.playerAvailability(gameId || 0),
-    queryFn: () => {
       console.log('FixedPlayerAvailabilityManager: Fetching availability for game', gameId, 'team', teamId);
       if (teamId) {
         return apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`);

@@ -54,14 +54,9 @@ export default function GameForm({
   const clubId = params.clubId ? Number(params.clubId) : null;
 
   // Fetch club teams
-    queryKey: ['clubs', clubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
-    enabled: !!clubId,
   });
 
   // Fetch all teams for inter-club games
-    queryKey: ['teams', 'all'],
-    queryFn: () => apiClient.get('/api/teams/all'),
     staleTime: 5 * 60 * 1000,
   });
 

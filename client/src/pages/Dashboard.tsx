@@ -35,15 +35,9 @@ export default function Dashboard() {
   const currentTeamId = params.teamId ? Number(params.teamId) : null;
 
   // Fetch club details directly from URL parameter
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
   });
 
   // Fetch teams for this club
-    queryKey: ['clubs', clubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
-    enabled: !!clubId,
   });
 
   const currentTeam = teams.find(team => team.id === currentTeamId) || null;
@@ -85,16 +79,11 @@ export default function Dashboard() {
   }, [currentTeamId, currentTeam?.name, teams.length]);
 
   // Players data using REST endpoint - Stage 4
-    queryKey: ['players', clubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId && !!currentTeamId,
     staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
   // Fetch games with team context - use team-specific endpoint to completely avoid cache pollution
-    queryKey: [`team-games-${currentTeamId}`, clubId, currentTeamId, Date.now()], // Force cache invalidation
-    queryFn: async () => {
       console.log(`Dashboard: Fetching games via team-specific endpoint for team ${currentTeamId}`);
       if (!currentTeamId) {
         throw new Error('No team ID available for games query');
@@ -104,7 +93,6 @@ export default function Dashboard() {
       console.log(`Dashboard: Received ${result?.length || 0} games for team ${currentTeamId}`);
       return result;
     },
-    enabled: !!clubId && !!currentTeamId,
     staleTime: 0, // No cache for debugging
     gcTime: 0, // No cache for debugging
     refetchOnMount: true,
@@ -113,16 +101,10 @@ export default function Dashboard() {
 
   // Opponents system has been completely removed
 
-    queryKey: ['seasons', clubId],
-    queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!clubId,
     staleTime: 60 * 60 * 1000, // 1 hour cache for seasons (rarely change) - increased
     gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
-    queryKey: ['seasons', 'active', clubId],
-    queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!clubId,
     staleTime: 60 * 60 * 1000, // 1 hour cache for active season - increased
     gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
@@ -132,8 +114,6 @@ export default function Dashboard() {
   const gameIds = gameIdsArray.join(',');
 
   // Use unified data fetcher with proper team switching
-    queryKey: ['batch-data', clubId, currentTeamId, gameIds],
-    queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
       console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
@@ -155,7 +135,6 @@ export default function Dashboard() {
         throw error;
       }
     },
-    enabled: !!clubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
     staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates  
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection
     refetchOnWindowFocus: false,

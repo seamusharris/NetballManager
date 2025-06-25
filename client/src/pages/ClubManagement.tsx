@@ -38,7 +38,6 @@ interface ClubWithStats extends Club {
 }
 
 async function fetchApi(url: string) {
-  const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
@@ -54,10 +53,6 @@ export default function ClubManagement() {
 
   // Fetch all clubs (admin only)
   const { data: clubs, isLoading } = useQuery({
-    queryKey: ['clubs'],
-    queryFn: async () => {
-      const response = await fetch('/api/clubs', {
-        headers: {
           'Content-Type': 'application/json',
         }
       });
@@ -71,9 +66,7 @@ export default function ClubManagement() {
   // Create club mutation
   const createMutation = useMutation({
     mutationFn: async (clubData: any) => {
-      const response = await fetch('/api/clubs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clubData)
       });
 
@@ -104,9 +97,7 @@ export default function ClubManagement() {
   // Update club mutation
   const updateMutation = useMutation({
     mutationFn: async (clubData: any) => {
-      const response = await fetch(`/api/clubs/${clubData.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clubData)
       });
 
@@ -137,7 +128,6 @@ export default function ClubManagement() {
   // Delete club mutation
   const deleteMutation = useMutation({
     mutationFn: async (clubId: number) => {
-      const response = await fetch(`/api/clubs/${clubId}`, {
         method: 'DELETE'
       });
 

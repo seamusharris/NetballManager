@@ -69,27 +69,19 @@ export default function TeamPreparation() {
 
   // Get all teams from current club
   const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ['teams', clubId],
-    enabled: !!clubId,
   });
 
   // Get selected team details
   const { data: selectedTeam } = useQuery<Team>({
-    queryKey: ['/api/teams', currentTeamId],
     enabled: !!currentTeamId,
   });
 
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ['games', clubId, currentTeamId],
-    queryFn: () => apiClient.get('/api/games'),
-    enabled: !!clubId && !!currentTeamId,
   });
 
   // Get all teams across all clubs to find opponent teams
   const { data: allTeams = [] } = useQuery<Team[]>({
-    queryKey: ['/api/teams/all'],
-    enabled: !!clubId,
   });
 
   // Debug logging
@@ -174,15 +166,11 @@ export default function TeamPreparation() {
   // Get scores for games
   const gameIds = allGames.map(game => game.id);
   const { data: scoresMap = {} } = useQuery<Record<string, any[]>>({
-    queryKey: ['scores', gameIds],
-    queryFn: () => apiClient.post('/api/games/scores/batch', { gameIds }),
     enabled: gameIds.length > 0,
   });
 
   // Get stats for games
   const { data: statsMap = {} } = useQuery<Record<string, any[]>>({
-    queryKey: ['stats', gameIds],
-    queryFn: () => apiClient.post('/api/games/stats/batch', { gameIds }),
     enabled: gameIds.length > 0,
   });
 

@@ -22,64 +22,41 @@ export default function ClubDashboard() {
   
   // Fetch club details directly from URL parameter
   const { data: club, isLoading: clubLoading } = useQuery({
-    queryKey: ['club', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId,
   });
 
   // Players data using REST endpoint
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
-    enabled: !!clubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   // Get games data using REST endpoint
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: [CACHE_KEYS.games, clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/games`),
-    enabled: !!clubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['clubs', clubId, 'teams'],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
-    enabled: !!clubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
-    queryKey: ['/api/seasons', clubId],
-    queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!clubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (seasons change infrequently)
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active', clubId],
-    queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!clubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   // Fetch user's club access
   const { data: userClubs = [], isLoading: isLoadingClubs } = useQuery<any[]>({
-    queryKey: ['user-clubs'],
-    queryFn: () => apiClient.get('/api/user/clubs'),
   });
 
   // Fetch current club details - only if we have a valid club ID that the user has access to
   const { data: clubDetails = null, isLoading: isLoadingClubDetails } = useQuery<any>({
-    queryKey: ['club-details', clubId],
-    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
-    enabled: !!clubId && userClubs.some(club => club.clubId === clubId),
   });
 
   // Fetch official scores for completed games only
@@ -95,8 +72,6 @@ export default function ClubDashboard() {
     }, [games]);
 
   const { data: officialScores = {}, isLoading: isLoadingScores } = useQuery({
-    queryKey: ['club-official-scores', allGameIds],
-    queryFn: async () => {
       if (allGameIds.length === 0) return {};
 
       console.log('ClubDashboard: Fetching official scores for games:', allGameIds);
@@ -112,8 +87,6 @@ export default function ClubDashboard() {
 
   // Use unified data fetcher for consistency with other pages
   const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
-    queryKey: ['club-dashboard-batch-data', clubId, allGameIds.sort().join(',')],
-    queryFn: async () => {
       if (allGameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
       console.log(`ClubDashboard fetching batch data for ${allGameIds.length} games`);
@@ -136,7 +109,6 @@ export default function ClubDashboard() {
         throw error;
       }
     },
-    enabled: !!clubId && !clubLoading && allGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });

@@ -41,8 +41,6 @@ export default function RosterGame() {
 
   // Fetch ONLY the specific game we need (same approach as PlayerAvailability)
   const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
-    queryKey: ['game', gameId],
-    queryFn: async () => {
       console.log(`RosterGame: Fetching specific game ${gameId}`);
       const result = await apiRequest('GET', `/api/games/${gameId}`) as Promise<Game>;
       console.log(`RosterGame: Game ${gameId} response:`, result);
@@ -58,15 +56,11 @@ export default function RosterGame() {
 
   // Fetch team-specific players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
-    queryKey: ['teamPlayers', teamId],
-    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`),
     enabled: !!teamId
   });
 
   // Load availability for this game using team-based endpoint - Stage 5
   const { data: availabilityData, isLoading: availabilityLoading } = useQuery({
-    queryKey: ['availability', teamId, gameId],
-    queryFn: async () => {
       if (!teamId) {
         // Fallback to legacy endpoint if no team ID
         const response = await apiRequest('GET', `/api/games/${gameId}/availability`);

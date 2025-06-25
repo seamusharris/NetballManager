@@ -35,21 +35,15 @@ export default function Roster() {
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
 
   // Fetch games
-    queryKey: ['games', club?.id],
-    queryFn: () => apiRequest('GET', '/api/games'),
     retry: 1,
     enabled: !!club?.id
   });
 
   // Fetch players
-    queryKey: ['players', club?.id],
-    queryFn: () => apiRequest('GET', '/api/players'),
     enabled: !!club?.id
   });
 
   // Fetch opponents for legacy support
-    queryKey: ['opponents'],
-    queryFn: async () => {
       try {
         const result = await apiRequest('GET', '/api/opponents');
         return Array.isArray(result) ? result : [];
