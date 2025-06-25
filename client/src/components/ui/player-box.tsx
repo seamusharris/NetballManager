@@ -282,7 +282,7 @@ function PlayerBox({
         <div className="flex items-center mr-3">
           {renderSelectionCheckbox()}
         </div>
-      )}</div>
+      )}
     </div>
   );
 
