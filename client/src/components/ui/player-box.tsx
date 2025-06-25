@@ -119,13 +119,14 @@ function PlayerBox({
   const lightBackgroundColor = getLighterColorHex(player.avatarColor);
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
 
-  // Determine if this is effectively "selected" (either explicitly selected or not selectable)
-  const effectivelySelected = isSelectable ? isSelected : true;
-  
   // Calculate styling based on selection state
   const getSelectionStyling = () => {
-    if (effectivelySelected) {
-      // Selected state: use medium background and player color border
+    // If the component is selectable, use the isSelected state
+    // If not selectable, always use the "selected" appearance
+    const shouldUseSelectedStyling = !isSelectable || isSelected;
+    
+    if (shouldUseSelectedStyling) {
+      // Selected state or non-selectable: use medium background and player color border
       return {
         backgroundColor: mediumBackgroundColor,
         borderColor: playerColorHex,
