@@ -313,7 +313,7 @@ export default function GamePreparation() {
   });
 
   // Fetch batch statistics for season games
-  const { statsMap: seasonBatchStats, isLoading: isLoadingSeasonStats } = useBatchGameStatistics(seasonGameIds);
+  const { statsMap: seasonBatchStats, isLoading: loadingSeasonStats } = useBatchGameStatistics(seasonGameIds);
 
   // Load roster data for this specific game using team-based endpoint
   const { data: gameRosters = [], isLoading: loadingRosters, refetch: refetchRosters } = useQuery({
