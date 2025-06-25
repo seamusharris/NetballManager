@@ -171,7 +171,7 @@ export function SelectablePlayerBox({
                     <div>
                       <div 
                         className={cn(
-                          "font-medium",
+                          "font-bold",
                           variant === 'compact' ? "text-sm" : ""
                         )}
                         style={{ color: getPlayerColorHex(playerColor) }}
@@ -179,7 +179,10 @@ export function SelectablePlayerBox({
                         {player.displayName}
                       </div>
                       {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
-                        <div className="text-xs text-gray-500">
+                        <div 
+                          className="text-xs font-medium"
+                          style={{ color: getPlayerColorHex(playerColor) }}
+                        >
                           {player.positionPreferences.join(', ')}
                         </div>
                       )}
