@@ -1522,3 +1522,97 @@ export default function GameDetails() {
       const awayTeamStats = gameStats?.filter(stat => stat.teamId === game.awayTeamId) || [];
 
       const homeTeamTotals = {
+        goals: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
+
+      const awayTeamTotals = {
+        goals: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
+
+      // Return scores from current team's perspective
+      if (currentTeam.id === game.homeTeamId) {
+        return { teamScore: homeTeamTotals.goals, opponentScore: awayTeamTotals.goals };
+      } else {
+        return { teamScore: awayTeamTotals.goals, opponentScore: homeTeamTotals.goals };
+      }
+    }
+
+    return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
+  };
+
+  const { teamScore, opponentScore } = getCorrectScoreContext();
+
+  if (isLoading) {
+    return (
+      <div className="p-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-48 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !game) {
+    return (
+      <div className="p-4">
+        <div className="text-red-600">
+          Error loading game details: {error?.message || 'Game not found'}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4 max-w-6xl">
+      <Helmet>
+        <title>{`${game.homeTeamName} vs ${game.awayTeamName} - ${TEAM_NAME}`}</title>
+        <meta name="description" content={`Game details for ${game.homeTeamName} vs ${game.awayTeamName} on ${formatDate(game.date)}`} />
+      </Helmet>
+
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/games">Games</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{game.homeTeamName} vs {game.awayTeamName}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      <div className="mb-4">
+        <BackButton />
+      </div>
+
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold mb-2">
+          {game.homeTeamName} vs {game.awayTeamName}
+        </h1>
+        <p className="text-gray-600">
+          {formatDate(game.date)} at {game.time} • Round {game.round}
+        </p>
+      </div>
+
+      <div className="text-center mb-6">
+        <div className="text-4xl font-bold">
+          {teamScore} - {opponentScore}
+        </div>
+      </div>
+
+      <div className="text-center mb-6">
+        <p>Game completed successfully</p>
+      </div>
+    </div>
+  );
+};
