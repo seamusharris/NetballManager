@@ -56,7 +56,7 @@ export default function Players() {
     },
   });
 
-  // Get club players
+  // Get club players (only when not viewing a specific team)
   const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
     queryKey: ['players', clubId],
     queryFn: async () => {
@@ -64,7 +64,46 @@ export default function Players() {
       const response = await apiClient.get(`/api/clubs/${clubId}/players`);
       return response;
     },
-    enabled: !!clubId,
+    enabled: !!clubId && !teamId,
+  });
+
+  // Get team details if viewing a specific team
+  const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
+    queryKey: ['team', teamId],
+    queryFn: async () => {
+      console.log(`Fetching team data for team ${teamId}`);
+      const response = await apiClient.get(`/api/teams/${teamId}`);
+      console.log(`Team ${teamId} data:`, response);
+      return response;
+    },
+    enabled: !!teamId,
+    retry: 3,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Get team players
+  const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
+    queryKey: ['team-players', teamId],
+    queryFn: async () => {
+      console.log(`Fetching team players for team ${teamId}`);
+      const response = await apiClient.get(`/api/teams/${teamId}/players`);
+      console.log(`Team ${teamId} players response:`, response);
+      return response;
+    },
+    enabled: !!teamId,
+    retry: 3,
+  });
+
+  // Get available players for team assignment
+  const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
+    queryKey: ['team-available-players', teamId, activeSeason?.id],
+    queryFn: async () => {
+      console.log(`Fetching available players for team ${teamId}, season ${activeSeason?.id}`);
+      const response = await apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
+      console.log(`Available players for team ${teamId}:`, response);
+      return response;
+    },
+    enabled: !!teamId && !!activeSeason?.id,
   });
 
   // ALL MUTATION HOOKS
