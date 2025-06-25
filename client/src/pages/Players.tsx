@@ -42,6 +42,9 @@ export default function Players() {
     }
   }, [location, userClubs, setLocation]);
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
   // Don't render anything until club data is loaded
   if (clubLoading || !club) {
     return (
@@ -53,9 +56,6 @@ export default function Players() {
       </div>
     );
   }
-  
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
@@ -316,8 +316,7 @@ export default function Players() {
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post('/api/players', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
       toast({
         title: "Success",
         description: "Player created successfully",
@@ -335,8 +334,7 @@ export default function Players() {
   const updateMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
       toast({
         title: "Success",
         description: "Player updated successfully",
@@ -354,8 +352,7 @@ export default function Players() {
   const deleteMutation = useMutation({
     mutationFn: (playerId: number) => apiClient.delete(`/api/players/${playerId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
       toast({
         title: "Success",
         description: "Player deleted successfully",
@@ -608,8 +605,7 @@ export default function Players() {
                   clubId={clubId}
                   teamId={undefined}
                   onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ['players'] });
-                    queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                    queryClient.invalidateQueries({ queryKey: ['players', clubId] });
                     toast({ title: 'Success', description: 'Player created successfully' });
                     setIsAddPlayerDialogOpen(false);
                   }}
