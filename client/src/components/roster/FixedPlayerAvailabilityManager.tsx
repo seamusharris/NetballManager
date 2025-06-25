@@ -61,7 +61,7 @@ export default function FixedPlayerAvailabilityManager({
       availableIds: availableIds,
       optimisticUpdates
     });
-
+    
     players.forEach(player => {
       // Use optimistic update if available, otherwise use API data
       if (player.id in optimisticUpdates) {
@@ -336,8 +336,6 @@ export default function FixedPlayerAvailabilityManager({
                 const darkerTextColor = getDarkerColorHex(player.avatarColor);
                 const lighterBgColor = getLighterColorHex(player.avatarColor);
                 const mediumBgColor = getMediumColorHex(player.avatarColor);
-                const lightBackgroundColor = getLighterColorHex(player.avatarColor);
-                const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
 
                 return (
                   <div key={player.id} className="relative">
@@ -345,7 +343,7 @@ export default function FixedPlayerAvailabilityManager({
                       className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                       style={{ 
                         backgroundColor: isSelected ? darkerTextColor : 'transparent', 
-                        border: isSelected ? 'none' : `1px solid ${playerColorHex}40`
+                        border: isSelected ? 'none' : `2px solid ${darkerTextColor}`
                       }}
                       onClick={() => handlePlayerToggle(player.id)}
                     >
@@ -356,11 +354,12 @@ export default function FixedPlayerAvailabilityManager({
                       size="md"
                       showPositions={true}
                       hasSelect={true}
-                      className="shadow-md transition-background duration-200 hover:shadow-lg cursor-pointer"
-                      onClick={() => handlePlayerToggle(player.id)}
+                      className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                       style={{
-                        backgroundColor: isSelected ? mediumBackgroundColor : lightBackgroundColor
+                        backgroundColor: isSelected ? mediumBgColor : lighterBgColor,
+                        opacity: isSelected ? 1 : 0.7
                       }}
+                      onClick={() => handlePlayerToggle(player.id)}
                     />
                   </div>
                 );
