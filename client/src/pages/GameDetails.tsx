@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useLocation } from 'wouter';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
@@ -445,15 +445,26 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
   const [quarter, setQuarter] = useState(initialQuarter);
 
-  console.log('CourtPositionRoster received roster:', roster?.length, 'entries', roster?.slice(0, 3));
-  console.log('CourtPositionRoster received players:', players?.length, 'players', players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName})));
-  console.log('CourtPositionRoster target player check:', {
-    player78: players?.find(p => p.id === 78),
-    player61: players?.find(p => p.id === 61),
-    player64: players?.find(p => p.id === 64),
+  console.log('CourtPositionRoster RENDER START');
+  console.log('CourtPositionRoster received roster:', roster?.length, 'entries');
+  console.log('CourtPositionRoster received players:', players?.length, 'players');
+  console.log('CourtPositionRoster players type check:', {
     playersType: typeof players,
-    isArray: Array.isArray(players)
+    isArray: Array.isArray(players),
+    isEmpty: players?.length === 0,
+    hasTargetPlayers: players?.filter(p => [78, 61, 64].includes(p.id))?.length || 0
   });
+
+  // Don't render with actual player data if players haven't loaded yet
+  if (!Array.isArray(players) || players.length === 0) {
+    console.log('CourtPositionRoster: Early return - no players loaded yet');
+    return (
+      <div className="p-4 text-center text-gray-500">
+        <p>Loading players... ({players?.length || 0} loaded)</p>
+        <p className="text-xs mt-2">Roster has {roster?.length || 0} entries waiting for player data</p>
+      </div>
+    );
+  }
 
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
@@ -488,33 +499,30 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     return positionMap[position] || '';
   };
 
-  // Helper to get player display name
-  const getPlayerName = (playerId) => {
+  // Helper to get player display name - moved outside component to receive fresh players data
+  const getPlayerName = useCallback((playerId) => {
     console.log('getPlayerName called with:', {
       playerId,
-      playersType: typeof players,
-      playersIsArray: Array.isArray(players),
       playersLength: players?.length,
-      playersFirstFew: players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName}))
+      playersType: typeof players,
+      targetPlayerExists: players?.some(p => p.id === playerId)
     });
     
-    if (!Array.isArray(players) || !playerId) {
-      console.log('getPlayerName: early return - players array check failed');
-      return null;
+    if (!Array.isArray(players) || players.length === 0 || !playerId) {
+      console.log('getPlayerName: early return - no valid players array or playerId');
+      return `Player ${playerId}`;
     }
     
     const player = players.find(p => p.id === playerId);
-    console.log('getPlayerName: search result for ID', playerId, ':', player);
     
     if (!player) {
-      console.log('PLAYER NOT FOUND: ID', playerId, 'not in club players');
-      console.log('Available player IDs:', players.map(p => p.id).sort((a, b) => a - b));
-      return `Player ${playerId}`; // Show the ID when player not found
+      console.log('PLAYER NOT FOUND: ID', playerId, 'not found in', players.length, 'players');
+      return `Player ${playerId}`;
     } else {
-      console.log('getPlayerName: SUCCESS - Found player', player.displayName || player.firstName, 'for ID', playerId);
+      console.log('getPlayerName: SUCCESS - Found player', player.displayName || player.firstName);
       return player.displayName || `${player.firstName} ${player.lastName}`;
     }
-  };
+  }, [players]);
 
   // Function to get player color, converting from Tailwind class names to hex
   const getPlayerColor = (playerId) => {
@@ -1889,19 +1897,32 @@ export default function GameDetails() {
                     </div>
                   ) : roster && roster.length > 0 ? (
                     <div>
-                      {console.log('About to render CourtPositionRoster with:', {
-                        rosterEntries: roster.length,
-                        playerCount: players.length,
-                        sampleRoster: roster.slice(0, 2),
-                        samplePlayers: players.slice(0, 2),
-                        playersDataType: typeof players,
-                        playersIsArray: Array.isArray(players)
-                      })}
-                      <CourtPositionRoster 
-                        roster={roster || []} 
-                        players={players || []}
-                        gameStats={gameStats || []}
-                      />
+                      {isLoadingPlayers ? (
+                        <div className="flex items-center justify-center p-8">
+                          <p className="text-gray-500">Loading player names...</p>
+                        </div>
+                      ) : players.length === 0 ? (
+                        <div className="flex items-center justify-center p-8">
+                          <p className="text-red-500">No players found for this club</p>
+                        </div>
+                      ) : (
+                        <>
+                          {console.log('About to render CourtPositionRoster with:', {
+                            rosterEntries: roster.length,
+                            playerCount: players.length,
+                            sampleRoster: roster.slice(0, 2),
+                            samplePlayers: players.slice(0, 2),
+                            playersDataType: typeof players,
+                            playersIsArray: Array.isArray(players),
+                            hasTargetPlayers: players.filter(p => [78, 61, 64].includes(p.id)).length
+                          })}
+                          <CourtPositionRoster 
+                            roster={roster || []} 
+                            players={players || []}
+                            gameStats={gameStats || []}
+                          />
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-10 border rounded-lg bg-gray-50">
