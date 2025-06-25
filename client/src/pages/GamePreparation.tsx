@@ -39,7 +39,6 @@ import { calculatePositionStats } from '@/lib/gameScoreService';
 import { calculatePositionAverages } from '@/lib/positionStatsCalculator';
 import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 
-
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
 
 interface GamePreparationProps {

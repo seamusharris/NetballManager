@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PositionAverages } from '@/lib/positionStatsCalculator';
-import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
+import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 
 interface PositionPerformanceDisplayProps {
   averages: PositionAverages;

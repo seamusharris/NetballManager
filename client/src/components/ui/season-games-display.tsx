@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Calendar } from 'lucide-react';
 import GameResultCard from '@/components/ui/game-result-card';
-import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
+import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 
 interface SeasonGamesDisplayProps {
   seasonGames: any[];

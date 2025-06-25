@@ -5,7 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { calculateTeamWinRate } from '@/lib/winRateCalculator';
 import GameResultCard from '@/components/ui/game-result-card';
-import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
+import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
