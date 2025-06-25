@@ -69,16 +69,8 @@ export default function Players() {
     },
   });
 
-  // Get all teams for the dropdown
-  const { data: allTeams = [] } = useQuery({
-    queryKey: ['teams', currentClub?.id],
-    queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await apiClient.get(`/api/clubs/${currentClub.id}/teams`);
-      return response;
-    },
-    enabled: !!currentClub?.id,
-  });
+  // Use teams from URL club hook
+  const allTeams = clubTeams;
 
   // Get team details if viewing a specific team
   const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
@@ -93,15 +85,9 @@ export default function Players() {
   });
 
   const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
-    queryKey: ['team-players', teamId, currentClubId],
-    queryFn: () => {
-      const headers: Record<string, string> = {};
-      if (currentClubId) {
-        headers['x-current-club-id'] = currentClubId.toString();
-      }
-      return apiClient.get(`/api/teams/${teamId}/players`, { headers });
-    },
-    enabled: !!teamId && !!currentClubId,
+    queryKey: ['team-players', teamId, clubId],
+    queryFn: () => apiClient.get(`/api/teams/${teamId}/players`),
+    enabled: !!teamId && !!clubId,
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
@@ -143,11 +129,11 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
-      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, currentClubId]);
+      const previousTeamPlayers = queryClient.getQueryData(['team-players', teamId, clubId]);
       const previousAvailablePlayers = queryClient.getQueryData(['team-available-players', teamId, activeSeason?.id]);
 
       // Find the player being added
@@ -155,7 +141,7 @@ export default function Players() {
 
       if (playerToAdd && previousTeamPlayers && previousAvailablePlayers) {
         // Optimistically update team players
-        queryClient.setQueryData(['team-players', teamId, currentClubId], (old: any[]) => [...old, playerToAdd]);
+        queryClient.setQueryData(['team-players', teamId, clubId], (old: any[]) => [...old, playerToAdd]);
 
         // Optimistically update available players
         queryClient.setQueryData(['team-available-players', teamId, activeSeason?.id], (old: any[]) => 
@@ -211,30 +197,18 @@ export default function Players() {
   // Standardized player creation mutation that handles both club and team contexts
   const createPlayer = useMutation({
     mutationFn: async (playerData: any) => {
-      if (!currentClub?.id) {
+      if (!clubId) {
         throw new Error('No club selected');
       }
 
-      // Prepare headers with club context and optional team context
-      const headers: Record<string, string> = {
-        'x-current-club-id': currentClub.id.toString()
-      };
-
-      // Add team context if we're in team-specific view
-      if (teamId) {
-        headers['x-current-team-id'] = teamId.toString();
-      }
-
-      // Create the player with both club and optional team context
-      const response = await apiClient.post('/api/players', playerData, { headers });
-
+      // Create the player with club context
+      const response = await apiClient.post('/api/players', playerData);
       return response;
     },
     onSuccess: () => {
       // Invalidate all relevant queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
       queryClient.invalidateQueries({ queryKey: ['team-players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
