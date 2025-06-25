@@ -69,11 +69,13 @@ export class UnifiedDataFetcher {
 
     const results: any = {};
 
-    // Batch fetch stats
+    // Batch fetch stats - using club-scoped endpoint
     if (includeStats) {
       try {
-        const statsResponse = await apiClient.post('/api/games/stats/batch', { gameIds });
+        console.log(`UnifiedDataFetcher: Batch fetching stats for ${gameIds.length} games via club ${clubId}`);
+        const statsResponse = await apiClient.post(`/api/clubs/${clubId}/games/stats/batch`, { gameIds });
         results.stats = statsResponse;
+        console.log(`UnifiedDataFetcher: Batch stats received for ${Object.keys(statsResponse).length} games`);
 
         // Cache individual game stats
         Object.entries(statsResponse).forEach(([gameId, stats]) => {

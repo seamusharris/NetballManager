@@ -2200,17 +2200,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const gameIdInts = gameIds.map(id => parseInt(id));
 
-      const rosters = await db.select()
-        .from(schema.gameRosters)
-        .where(inArray(schema.gameRosters.gameId, gameIdInts));
+      const rostersData = await db.select()
+        .from(rosters)
+        .where(inArray(rosters.gameId, gameIdInts));
 
-      // Group rosters by game ID
+      // Group rosters by game ID - ensure consistent format
       const rostersMap: Record<string, any[]> = {};
-      gameIds.forEach((gameId: string) => {
-        rostersMap[gameId] = [];
+      gameIds.forEach((gameId: number | string) => {
+        const gameIdStr = gameId.toString();
+        rostersMap[gameIdStr] = [];
       });
 
-      rosters.forEach((roster) => {
+      rostersData.forEach((roster) => {
         const gameId = roster.gameId.toString();
         if (rostersMap[gameId]) {
           rostersMap[gameId].push(roster);
@@ -2223,7 +2224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(rostersMap);
     } catch (error) {
       console.error('Club-scoped batch rosters fetch error:', error);
-      res.status(500).json({ error: 'Failed to fetch batch rosters' });
+      res.status(500).json({ error: 'Failed to fetch batch rosters', details: error.message });
     }
   });
 
@@ -2294,20 +2295,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'gameIds array is required' });
       }
 
-      console.log(`Club-scoped POST Batch endpoint received body:`, { gameIds });
-      console.log(`Club-scoped Extracted gameIds from POST body:`, gameIds);
-      console.log(`Club-scoped POST Batch fetching stats for ${gameIds.length} games: ${gameIds.join(',')}`);
+      console.log(`Club-scoped POST Batch stats endpoint for club ${clubId}, gameIds:`, gameIds);
 
       const gameIdInts = gameIds.map(id => parseInt(id));
 
       const stats = await db.select()
-        .from(schema.gameStats)
-        .where(inArray(schema.gameStats.gameId, gameIdInts));
+        .from(gameStats)
+        .where(inArray(gameStats.gameId, gameIdInts));
 
-      // Group stats by game ID
+      // Group stats by game ID - ensure consistent format
       const statsMap: Record<string, any[]> = {};
-      gameIds.forEach((gameId: string) => {
-        statsMap[gameId] = [];
+      gameIds.forEach((gameId: number | string) => {
+        const gameIdStr = gameId.toString();
+        statsMap[gameIdStr] = [];
       });
 
       stats.forEach((stat) => {
@@ -2319,11 +2319,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      console.log(`Club-scoped POST Batch endpoint successfully returned stats for ${gameIds.length} games`);
+      console.log(`Club-scoped batch stats response: found stats for ${Object.keys(statsMap).filter(id => statsMap[id].length > 0).length} games`);
       res.json(statsMap);
     } catch (error) {
       console.error('Club-scoped batch stats fetch error:', error);
-      res.status(500).json({ error: 'Failed to fetch batch stats' });
+      res.status(500).json({ error: 'Failed to fetch batch stats', details: error.message });
     }
   });
 
