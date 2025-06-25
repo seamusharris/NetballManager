@@ -184,7 +184,7 @@ export default function Teams() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setLocation(`/teams/${team.id}/players`)}
+                      onClick={() => setLocation(`/team/${team.id}/players`)}
                       className="group-hover:border-blue-500 group-hover:text-blue-600 transition-all duration-300"
                     >
                       <Users className="h-4 w-4 mr-1" />
