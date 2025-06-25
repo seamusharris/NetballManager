@@ -1,6 +1,8 @@
-// App.js - Hypothetical React App with Routing
 import React from 'react';
+import { createRoot } from "react-dom/client";
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import App from "./App";
+import "./index.css";
 import Teams from './pages/Teams';
 import TeamPlayers from './pages/TeamPlayers';
 import Players from './pages/Players';
@@ -20,9 +22,6 @@ function App() {
 
 export default App;
 
-// TeamPlayers.js - Placeholder component
-import React from 'react';
-
 function TeamPlayers() {
   return (
     <div>
@@ -33,9 +32,6 @@ function TeamPlayers() {
 }
 
 export default TeamPlayers;
-
-// Teams.js - Placeholder component
-import React from 'react';
 
 function Teams() {
   return (
@@ -48,9 +44,6 @@ function Teams() {
 
 export default Teams;
 
-// Players.js - Placeholder component
-import React from 'react';
-
 function Players() {
   return (
     <div>
@@ -61,10 +54,5 @@ function Players() {
 }
 
 export default Players;
-
-// index.js - Entry point of the application (Original code)
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
