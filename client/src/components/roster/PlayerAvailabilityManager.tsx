@@ -198,7 +198,7 @@ export default function PlayerAvailabilityManager({
 
         // Invalidate availability caches and refetch
         invalidateAvailability(queryClient, gameId);
-        
+
         // Force refetch of availability data
         await refetch();
 
@@ -357,7 +357,7 @@ export default function PlayerAvailabilityManager({
                       className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                       style={{ 
                         backgroundColor: isSelected ? darkerTextColor : 'transparent', 
-                        border: isSelected ? 'none' : `2px solid ${isSelected ? darkerTextColor : lightBackgroundColor}`
+                        border: isSelected ? 'none' : `2px solid ${lightBackgroundColor}`
                       }}
                       onClick={handlePlayerClick}
                     >
