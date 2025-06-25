@@ -35,7 +35,7 @@ export default function GameDetails() {
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: () => apiClient.get(`/api/games/${gameId}`),
-    enabled: !!gameId
+    enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch game scores
