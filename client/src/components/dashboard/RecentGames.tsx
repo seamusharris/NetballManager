@@ -23,7 +23,9 @@ interface RecentGamesProps {
 }
 
 function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
-  const { currentTeam } = // 
+  // ClubContext removed - using URL-based management
+  const params = useParams<{ clubId?: string; teamId?: string }>();
+  const currentTeamId = params.teamId ? Number(params.teamId) : null;
 
   // Filter for recent completed games using the new status system
   const recentGames = (games || [])
