@@ -93,7 +93,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
       name: team?.name || '',
       division: team?.division || '',
       clubId: clubId || 0,
-      seasonId: team?.seasonId || seasons?.find(s => s.isActive)?.id || seasons?.[0]?.id || 0,
+      seasonId: team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0]?.id || 0,
       isActive: team?.isActive ?? true,
     },
   });
@@ -163,11 +163,11 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {seasons?.map((season) => (
+                  {seasons.map((season) => (
                     <SelectItem key={season.id} value={season.id.toString()}>
                       {season.name} ({season.year})
                     </SelectItem>
-                  )) || []}
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

@@ -119,7 +119,14 @@ export function SelectablePlayerBox({
             </div>
           )}
         </div>
-
+        <div className="flex items-center gap-2 mt-2">
+          <Badge variant="outline" className="mr-1">
+            {selectedCount}
+          </Badge>
+          <span className="text-sm text-gray-600">
+            {mode === 'team-management' ? 'Selected Players' : 'Available Players'}
+          </span>
+        </div>
       </CardHeader>
 
       <CardContent>
@@ -162,24 +169,14 @@ export function SelectablePlayerBox({
                       size={variant === 'compact' ? 'sm' : 'md'}
                     />
                     <div>
-                      <div 
-                        className={cn(
-                          "font-medium",
-                          variant === 'compact' ? "text-sm" : ""
-                        )}
-                        style={{ 
-                          color: getPlayerColorHex(playerColor)
-                        }}
-                      >
+                      <div className={cn(
+                        "font-medium",
+                        variant === 'compact' ? "text-sm" : ""
+                      )}>
                         {player.displayName}
                       </div>
                       {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
-                        <div 
-                          className="text-xs"
-                          style={{ 
-                            color: `color-mix(in srgb, ${getPlayerColorHex(playerColor)} 70%, #6b7280 30%)`
-                          }}
-                        >
+                        <div className="text-xs text-gray-500">
                           {player.positionPreferences.join(', ')}
                         </div>
                       )}

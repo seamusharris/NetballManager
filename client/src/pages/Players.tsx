@@ -35,7 +35,8 @@ export default function Players() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // This component only handles club-wide players
+  // Determine if this is team-specific or club-wide players
+  const teamId = params.teamId ? parseInt(params.teamId) : null;
 
   // ALL STATE HOOKS
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
@@ -65,8 +66,6 @@ export default function Players() {
     },
     enabled: !!clubId,
   });
-
-
 
   // ALL MUTATION HOOKS
   const createPlayer = useMutation({
@@ -126,8 +125,6 @@ export default function Players() {
       </div>
     );
   }
-
-
 
   // CLUB VIEW RENDERING
   const pageTitle = club?.name ? `${club.name} Players` : 'Players';

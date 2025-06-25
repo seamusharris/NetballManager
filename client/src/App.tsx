@@ -18,7 +18,6 @@ import ClubDashboard from '@/pages/ClubDashboard';
 import HomePage from '@/pages/HomePage';
 import PlayerDetails from '@/pages/PlayerDetails';
 import Teams from "@/pages/Teams";
-import TeamPlayers from "@/pages/TeamPlayers";
 import ClubManagement from "./pages/ClubManagement";
 import LiveStats from "@/pages/LiveStats";
 import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
@@ -126,7 +125,7 @@ function Router() {
         <Route path="/teams/:clubId" component={withErrorBoundary(Teams, 'Teams')} />
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/club/:clubId/games" component={withErrorBoundary(Games, 'Games')} />
-        <Route path="/team/:teamId/players" component={withErrorBoundary(TeamPlayers, 'TeamPlayers')} />
+        <Route path="/team/:teamId/players" component={withErrorBoundary(TeamPlayersManager, 'TeamPlayersManager')} />
         <Route path="/team/:teamId/availability/:gameId" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
         <Route path="/team/:teamId/roster/game/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />
         <Route path="/team/:teamId/roster/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />
