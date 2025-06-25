@@ -119,14 +119,7 @@ export function SelectablePlayerBox({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-2">
-          <Badge variant="outline" className="mr-1">
-            {selectedCount}
-          </Badge>
-          <span className="text-sm text-gray-600">
-            {mode === 'team-management' ? 'Selected Players' : 'Available Players'}
-          </span>
-        </div>
+
       </CardHeader>
 
       <CardContent>
