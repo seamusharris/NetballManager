@@ -11,19 +11,19 @@ import { eq, and } from 'drizzle-orm';
  */
 export function registerGameStatsRoutes(app: Express) {
   console.log('Registering game-centric stats routes...');
-  
+
   // Get game data with team context
   app.get('/api/game/:gameId/team/:teamId', async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
-      
+
       if (isNaN(gameId) || isNaN(teamId)) {
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
 
       console.log(`Game-centric API: Fetching game ${gameId} for team ${teamId}`);
-      
+
       const result = await db.execute(sql`
         SELECT g.*, 
                ht.name as home_team_name, ht.club_id as home_club_id,
@@ -39,7 +39,7 @@ export function registerGameStatsRoutes(app: Express) {
         WHERE g.id = ${gameId} 
         AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
       `);
-      
+
       console.log(`Game-centric API: Found ${result.rows.length} results for game ${gameId}, team ${teamId}`);
 
       if (result.rows.length === 0) {
@@ -59,7 +59,7 @@ export function registerGameStatsRoutes(app: Express) {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
-      
+
       if (isNaN(gameId) || isNaN(teamId)) {
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
@@ -95,7 +95,7 @@ export function registerGameStatsRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
       const { stats } = req.body;
-      
+
       if (isNaN(gameId) || isNaN(teamId)) {
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
@@ -152,7 +152,7 @@ export function registerGameStatsRoutes(app: Express) {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
-      
+
       if (isNaN(gameId) || isNaN(teamId)) {
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
@@ -189,7 +189,7 @@ export function registerGameStatsRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
       const { rosters } = req.body;
-      
+
       if (isNaN(gameId) || isNaN(teamId)) {
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
@@ -222,7 +222,7 @@ export function registerGameStatsRoutes(app: Express) {
           gameId,
           teamId
         }));
-        
+
         const result = await db.execute(sql`
           INSERT INTO rosters (game_id, team_id, player_id, position, quarter)
           VALUES ${sql.join(
@@ -231,7 +231,7 @@ export function registerGameStatsRoutes(app: Express) {
           )}
           RETURNING *
         `);
-        
+
         res.json(result.rows);
       } else {
         res.json([]);
@@ -239,6 +239,63 @@ export function registerGameStatsRoutes(app: Express) {
     } catch (error) {
       console.error('Error saving game rosters:', error);
       res.status(500).json({ error: 'Failed to save game rosters' });
+    }
+  });
+
+  // Club-scoped batch endpoint for stats
+  app.post('/api/clubs/:clubId/games/stats/batch', async (req, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const { gameIds, teamId } = req.body;
+
+      if (!Array.isArray(gameIds) || gameIds.length === 0) {
+        return res.status(400).json({ error: 'gameIds array is required' });
+      }
+
+      console.log(`Club-scoped POST Batch stats endpoint for club ${clubId}, gameIds:`, gameIds, 'teamId:', teamId);
+
+      let query = `
+        SELECT gs.*
+        FROM game_stats gs
+        JOIN games g ON gs.gameId = g.id
+        WHERE g.clubId = ? AND gs.gameId IN (${gameIds.map(() => '?').join(',')})
+      `;
+
+      let queryParams = [clubId, ...gameIds];
+
+      // If teamId is provided, filter stats to only that team
+      if (teamId) {
+        query += ` AND gs.teamId = ?`;
+        queryParams.push(teamId);
+      }
+
+      query += ` ORDER BY gs.gameId, gs.quarter, gs.position`;
+
+      const allStats = await db.query(query, queryParams);
+
+      // Group by game ID
+      const statsByGame: Record<string, any[]> = {};
+
+      // Initialize empty arrays for all requested games
+      gameIds.forEach(gameId => {
+        statsByGame[gameId.toString()] = [];
+      });
+
+      // Populate with actual stats
+      allStats.forEach(stat => {
+        const gameId = stat.gameId.toString();
+        if (!statsByGame[gameId]) {
+          statsByGame[gameId] = [];
+        }
+        statsByGame[gameId].push(stat);
+      });
+
+      console.log(`Club-scoped batch stats response: found stats for ${Object.keys(statsByGame).filter(k => statsByGame[k].length > 0).length} games${teamId ? ` (filtered by team ${teamId})` : ''}`);
+
+      res.json(statsByGame);
+    } catch (error) {
+      console.error('Club-scoped batch stats error:', error);
+      res.status(500).json({ error: 'Failed to fetch batch stats' });
     }
   });
 }

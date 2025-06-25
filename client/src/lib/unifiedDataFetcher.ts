@@ -67,35 +67,19 @@ export class UnifiedDataFetcher {
       ? options.gameIds 
       : options.gameIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
 
-    const results: any = {};
+    const result: any = {};
 
-    // Batch fetch stats - using club-scoped endpoint
     if (includeStats) {
-      try {
-        console.log(`UnifiedDataFetcher: Batch fetching stats for ${gameIds.length} games via club ${clubId}`);
-        const statsResponse = await apiClient.post(`/api/clubs/${clubId}/games/stats/batch`, { gameIds });
-        results.stats = statsResponse;
-        console.log(`UnifiedDataFetcher: Batch stats received for ${Object.keys(statsResponse).length} games`);
-
-        // Cache individual game stats
-        Object.entries(statsResponse).forEach(([gameId, stats]) => {
-          queryClient.setQueryData(
-            CACHE_KEYS.gameStats(parseInt(gameId)), 
-            stats
-          );
-        });
-      } catch (error) {
-        console.error('Batch stats fetch failed:', error);
-        results.stats = {};
+        const stats = await this.batchFetchStats(options.gameIds, options.clubId, options.teamId);
+        result.stats = stats;
       }
-    }
 
     // Batch fetch rosters - using club-scoped endpoint
     if (includeRosters) {
       try {
         console.log(`UnifiedDataFetcher: Batch fetching rosters for ${gameIds.length} games via club ${clubId}`);
         const rostersResponse = await apiClient.post(`/api/clubs/${clubId}/games/rosters/batch`, { gameIds });
-        results.rosters = rostersResponse;
+        result.rosters = rostersResponse;
         console.log(`UnifiedDataFetcher: Batch rosters received for ${Object.keys(rostersResponse).length} games`);
 
         // Cache individual game rosters
@@ -107,7 +91,7 @@ export class UnifiedDataFetcher {
         });
       } catch (error) {
         console.error('Batch roster fetch failed:', error);
-        results.rosters = {};
+        result.rosters = {};
       }
     }
 
@@ -121,8 +105,8 @@ export class UnifiedDataFetcher {
           gameIds: gameIds
         });
 
-        results.scores = scoresMap || {};
-        console.log(`UnifiedDataFetcher: Batch scores received for ${Object.keys(results.scores).length} games`);
+        result.scores = scoresMap || {};
+        console.log(`UnifiedDataFetcher: Batch scores received for ${Object.keys(result.scores).length} games`);
       } catch (error) {
         console.error('UnifiedDataFetcher: Batch scores fetch failed, falling back to individual requests:', error);
 
@@ -140,11 +124,11 @@ export class UnifiedDataFetcher {
           }
         }
 
-        results.scores = scoresMap;
+        result.scores = scoresMap;
       }
     }
 
-    return results;
+    return result;
   }
 
   /**
@@ -162,6 +146,25 @@ export class UnifiedDataFetcher {
     }).catch(error => {
       console.warn('Background prefetch failed:', error);
     });
+  }
+
+  async batchFetchStats(gameIds: number[], clubId: number, teamId?: number): Promise<Record<string, GameStat[]>> {
+    if (gameIds.length === 0) return {};
+
+    console.log(`UnifiedDataFetcher: Batch fetching stats for ${gameIds.length} games, teamId: ${teamId}`);
+
+    try {
+      const response = await apiClient.post(`/api/clubs/${clubId}/games/stats/batch`, {
+        gameIds,
+        teamId // Include team ID for filtering
+      });
+
+      console.log(`UnifiedDataFetcher: Batch stats received for ${gameIds.length} games`);
+      return response || {};
+    } catch (error) {
+      console.error('UnifiedDataFetcher: Batch stats fetch failed:', error);
+      return {};
+    }
   }
 
   // Cache invalidation removed - should be handled at mutation points

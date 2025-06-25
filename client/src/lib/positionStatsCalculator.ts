@@ -29,12 +29,7 @@ export function calculatePositionAverages(
   batchStats: Record<string, any[]>,
   currentTeamId: number
 ): PositionAverages {
-  console.log('calculatePositionAverages called with:', { 
-    gamesCount: games.length, 
-    batchStatsKeys: Object.keys(batchStats), 
-    currentTeamId 
-  });
-
+  // Simplified calculation - assume stats are already filtered by the API for the correct team
   let gsGoalsFor = 0;
   let gaGoalsFor = 0;
   let gdGoalsAgainst = 0;
@@ -42,46 +37,15 @@ export function calculatePositionAverages(
   let gamesWithPositionStats = 0;
 
   games.forEach(game => {
-    console.log(`Processing game ${game.id} for team ${currentTeamId}`);
-    
-    // Try both string and number keys for the game ID
     const gameStats = batchStats[game.id.toString()] || batchStats[game.id];
-    console.log(`Game ${game.id} stats:`, gameStats?.length || 0, 'records');
-    
-    if (gameStats && gameStats.length > 0) {
-      console.log(`Game ${game.id} first stat sample:`, gameStats[0]);
-    }
 
     if (!gameStats || gameStats.length === 0) {
-      console.log(`Game ${game.id} has no stats, skipping`);
-      return;
-    }
-
-    // Convert currentTeamId to number for comparison
-    const currentTeamIdNum = Number(currentTeamId);
-    const teamStats = gameStats.filter(stat => Number(stat.teamId) === currentTeamIdNum);
-    console.log(`Game ${game.id} team stats for team ${currentTeamId} (converted to ${currentTeamIdNum}):`, teamStats.length, 'records');
-    
-    if (teamStats.length > 0) {
-      console.log(`Game ${game.id} team stats sample:`, teamStats[0]);
-      console.log(`Game ${game.id} all team stats:`, teamStats.map(s => ({ 
-        position: s.position, 
-        quarter: s.quarter,
-        goalsFor: s.goalsFor, 
-        goalsAgainst: s.goalsAgainst 
-      })));
-    }
-
-    if (teamStats.length === 0) {
-      console.log(`Game ${game.id} has no team stats for team ${currentTeamId}, skipping`);
       return;
     }
 
     let hasPositionStats = false;
 
-    teamStats.forEach(stat => {
-      console.log(`Game ${game.id} stat:`, { position: stat.position, goalsFor: stat.goalsFor, goalsAgainst: stat.goalsAgainst });
-
+    gameStats.forEach(stat => {
       if (stat.position === 'GS' && typeof stat.goalsFor === 'number') {
         gsGoalsFor += stat.goalsFor;
         hasPositionStats = true;
@@ -102,16 +66,7 @@ export function calculatePositionAverages(
 
     if (hasPositionStats) {
       gamesWithPositionStats++;
-      console.log(`Game ${game.id} counted as having position stats`);
     }
-  });
-
-  console.log('Position averages calculation result:', {
-    gsGoalsFor,
-    gaGoalsFor,
-    gdGoalsAgainst,
-    gkGoalsAgainst,
-    gamesWithPositionStats
   });
 
   const gsAvgGoalsFor = gamesWithPositionStats > 0 ? gsGoalsFor / gamesWithPositionStats : 0;
