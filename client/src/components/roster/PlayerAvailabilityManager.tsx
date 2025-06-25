@@ -341,10 +341,12 @@ export default function PlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
+                
+                // Use standard color utilities
                 const playerColorHex = getPlayerColorHex(player.avatarColor);
-                const darkerTextColor = getDarkerColorHex(player.avatarColor);
                 const lightBackgroundColor = getLighterColorHex(player.avatarColor);
                 const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
+                const darkerTextColor = getDarkerColorHex(player.avatarColor);
 
                 const handlePlayerClick = () => {
                   const newData = { ...availabilityData, [player.id]: !isSelected };
