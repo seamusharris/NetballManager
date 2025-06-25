@@ -21,64 +21,31 @@ import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 
 export default function Players() {
-  const params = useParams();
+  const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location, setLocation] = useLocation();
-  const { 
-    currentClub, 
-    currentClubId, 
-    currentTeamId, 
-    currentTeam,
-    clubTeams, 
-    setCurrentTeamId,
-    switchClub,
-    isLoading: clubLoading 
-  } = useClub();
+  
+  // Extract IDs directly from URL parameters
+  const clubId = params.clubId ? Number(params.clubId) : null;
+  const teamId = params.teamId ? Number(params.teamId) : null;
 
   // Redirect to club-scoped URL if accessing /players without club ID
   useEffect(() => {
-    if (location === '/players' && currentClubId) {
-      setLocation(`/club/${currentClubId}/players`);
+    if (location === '/players') {
+      // Default to club 54 (Warrandyte) for backward compatibility
+      setLocation('/club/54/players');
       return;
     }
-  }, [location, currentClubId, setLocation]);
-
-  // Don't render anything until club context is fully loaded
-  if (clubLoading || !currentClub) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [location, setLocation]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
 
-  // Handle club ID from URL parameter (but not team ID)
-  useEffect(() => {
-    const clubIdFromUrl = params.clubId;
-    console.log('Players page URL club ID effect:', { 
-      clubIdFromUrl, 
-      teamId: params.teamId, 
-      currentClubId: currentClub?.id,
-      needsSwitch: clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId && currentClub?.id !== Number(clubIdFromUrl)
-    });
-    
-    // Only switch clubs if we have a clubId parameter that's not a team ID
-    if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId) {
-      const targetClubId = Number(clubIdFromUrl);
-      if (currentClub?.id !== targetClubId) {
-        console.log('Players page: switching club from', currentClub?.id, 'to', targetClubId);
-        switchClub(targetClubId);
-      }
-    }
-  }, [params.clubId, currentClub?.id, switchClub, params.teamId]);
-
-  // Determine if this is team-specific or club-wide players
-  const teamId = params.teamId ? parseInt(params.teamId) : null;
+  // Fetch club details directly from URL parameter
+  const { data: club } = useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    enabled: !!clubId,
+  });
 
   // Get active season for team assignments
   const { data: activeSeason } = useQuery({
@@ -113,15 +80,11 @@ export default function Players() {
   });
 
   const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
-    queryKey: ['team-players', teamId, currentClubId],
+    queryKey: ['team-players', teamId, clubId],
     queryFn: () => {
-      const headers: Record<string, string> = {};
-      if (currentClubId) {
-        headers['x-current-club-id'] = currentClubId.toString();
-      }
-      return apiClient.get(`/api/teams/${teamId}/players`, { headers });
+      return apiClient.get(`/api/teams/${teamId}/players`);
     },
-    enabled: !!teamId && !!currentClubId,
+    enabled: !!teamId && !!clubId,
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
@@ -135,15 +98,16 @@ export default function Players() {
   // Team filter state for main players view
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
 
-  // Get players for non-team view
-  const { data: players = [], isLoading: isPlayersLoading } = useQuery({
-    queryKey: ['players', currentClub?.id],
+  // Get players for non-team view using URL-based club ID
+  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
+    queryKey: ['players', clubId],
     queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await apiClient.get(`/api/clubs/${currentClub.id}/players`);
+      console.log('Players query: fetching for club', clubId);
+      const response = await apiClient.get(`/api/clubs/${clubId}/players`);
+      console.log('Players query: received', response?.length, 'players');
       return response;
     },
-    enabled: !!currentClub?.id && !teamId,
+    enabled: !!clubId && !teamId,
   });
 
   // Filter players based on team selection
@@ -163,7 +127,7 @@ export default function Players() {
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
     onMutate: async (playerId: number) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, currentClubId] });
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId, clubId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       // Snapshot previous values
@@ -601,7 +565,7 @@ export default function Players() {
 
   // Regular club players view
   const pageTitle = 'Players';
-  const pageSubtitle = currentClub?.name ? `Manage your club's players - ${currentClub.name}` : 'Manage your club\'s players';
+  const pageSubtitle = club?.name ? `Manage your club's players - ${club.name}` : 'Manage your club\'s players';
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Players' }
@@ -678,9 +642,9 @@ export default function Players() {
           ) : filteredPlayers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">No players found for this club</p>
-              <p className="text-xs text-gray-500">Club: {currentClub?.name} (ID: {currentClub?.id})</p>
+              <p className="text-xs text-gray-500">Club: {club?.name} (ID: {clubId})</p>
               <p className="text-xs text-gray-500">Players array length: {players.length}</p>
-              <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id && !teamId ? 'YES' : 'NO'}</p>
+              <p className="text-xs text-gray-500">Query enabled: {!!clubId && !teamId ? 'YES' : 'NO'}</p>
             </div>
           ) : (
             <PlayersList
