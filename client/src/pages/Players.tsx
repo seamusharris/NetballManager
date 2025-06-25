@@ -342,8 +342,8 @@ export default function Players() {
   }
 
   // CLUB VIEW RENDERING
-  const pageTitle = `${club.name} Players`;
-  const pageSubtitle = `Manage players for ${club.name}`;
+  const pageTitle = club?.name ? `${club.name} Players` : 'Players';
+  const pageSubtitle = club?.name ? `Manage players for ${club.name}` : 'Manage club players';
   const breadcrumbs = [
     { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
     { label: 'Players' }
@@ -423,8 +423,8 @@ export default function Players() {
             </div>
           ) : filteredPlayers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No players found for {club.name}</p>
-              <p className="text-xs text-gray-500">Club: {club.name} (ID: {clubId})</p>
+              <p className="text-muted-foreground mb-4">No players found for {club?.name || 'this club'}</p>
+              <p className="text-xs text-gray-500">Club: {club?.name || 'Loading...'} (ID: {clubId})</p>
               <p className="text-xs text-gray-500">Players array length: {players.length}</p>
               <p className="text-xs text-gray-500">Query enabled: {!!clubId && !teamId ? 'YES' : 'NO'}</p>
             </div>
