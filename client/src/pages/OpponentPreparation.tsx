@@ -60,7 +60,7 @@ export default function OpponentPreparation() {
   const [selectedGameAnalysis, setSelectedGameAnalysis] = useState<GameAnalysis | null>(null);
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, currentTeamId],
+    queryKey: ['games', clubId, currentTeamId],
     queryFn: () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
@@ -68,13 +68,13 @@ export default function OpponentPreparation() {
       }
       return apiClient.get('/api/games', headers);
     },
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', currentClubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId,
+    queryKey: ['players', clubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    enabled: !!clubId,
   });
 
   // Get completed games for stats
@@ -102,8 +102,8 @@ export default function OpponentPreparation() {
       let opponentClubName = '';
       let opponentDivision = '';
 
-      const isHomeGame = game.homeClubId === currentClubId;
-      const isAwayGame = game.awayClubId === currentClubId;
+      const isHomeGame = game.homeClubId === clubId;
+      const isAwayGame = game.awayClubId === clubId;
 
       // Check if we're involved in this game at all
       const weAreHome = currentTeamId && game.homeTeamId === currentTeamId;
@@ -183,7 +183,7 @@ export default function OpponentPreparation() {
     opponentsList.sort((a, b) => new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime());
 
     setOpponents(opponentsList);
-  }, [centralizedStats, games, currentClubId, currentTeamId]);
+  }, [centralizedStats, games, clubId, currentTeamId]);
 
   const analyzeGame = (game: any): GameAnalysis => {
     const gameStats = centralizedStats[game.id] || [];
@@ -245,7 +245,7 @@ export default function OpponentPreparation() {
     };
   };
 
-  if (clubLoading || !currentClubId) {
+  if (clubLoading || !clubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -275,7 +275,7 @@ export default function OpponentPreparation() {
   return (
     <>
       <Helmet>
-        <title>Opponent Preparation | {currentClub?.name} Stats Tracker</title>
+        <title>Opponent Preparation | {club?.name} Stats Tracker</title>
         <meta name="description" content={`Prepare for upcoming games by analyzing previous performance against opposing teams`} />
       </Helmet>
 

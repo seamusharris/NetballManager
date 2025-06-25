@@ -54,7 +54,6 @@ export function LineupTab({ game, players, rosters, onRosterUpdate, teamId }: Li
     4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const { toast } = useToast();
 
   // Initialize player availability
   useEffect(() => {

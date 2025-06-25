@@ -91,7 +91,6 @@ export default function StrategyTab({
   const [isTacticDialogOpen, setIsTacticDialogOpen] = useState(false);
   const [isMatchupDialogOpen, setIsMatchupDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
   // Load existing strategy data
   useEffect(() => {

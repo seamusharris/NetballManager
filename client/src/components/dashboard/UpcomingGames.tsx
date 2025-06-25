@@ -19,7 +19,6 @@ interface UpcomingGamesProps {
 }
 
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
-  const { currentTeam } = // 
 
   console.log('UpcomingGames render:', {
     totalGames: games?.length || 0,

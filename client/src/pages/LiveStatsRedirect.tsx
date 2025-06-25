@@ -6,7 +6,6 @@ import { useParams, useLocation } from 'wouter';
  * users get sent to the proper live stats page
  */
 export default function LiveStatsRedirect() {
-  const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
 
   useEffect(() => {

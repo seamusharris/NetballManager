@@ -6,7 +6,6 @@ interface StatItemBoxProps {
   compact?: boolean;
 }
 
-export const StatItemBox: React.FC<StatItemBoxProps> = ({ label, value, compact = false }) => {
   if (compact) {
     return (
       <div className="flex justify-between items-center py-0.5">

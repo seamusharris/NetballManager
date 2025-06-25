@@ -18,17 +18,14 @@ import { useLocation } from 'wouter';
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 
   // Fetch seasons using standard query (like Teams)
-  const { data: seasons = [], isLoading } = useStandardQuery<Season[]>({
     endpoint: '/api/seasons'
   });
 
   // Fetch active season
-  const { data: activeSeason } = useStandardQuery<Season>({
     endpoint: '/api/seasons/active'
   });
 

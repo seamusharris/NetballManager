@@ -39,14 +39,12 @@ export function OfficialScoreEntry({
   });
 
   // Fetch game data to get proper team mapping
-  const { data: gameData } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: () => apiClient.get(`/api/games/${gameId}`),
     enabled: !isNaN(gameId)
   });
 
   // Fetch existing official scores
-  const { data: officialScores, isLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'scores'],
     queryFn: () => apiClient.get(`/api/games/${gameId}/scores`),
     enabled: !isNaN(gameId)

@@ -17,7 +17,6 @@ interface PrintableStatsSheetProps {
 
 export default function PrintableStatsSheet({ game, opponent, roster: propRoster, players: propPlayers }: PrintableStatsSheetProps) {
   // Fetch roster data if not provided via props
-  const { data: rosterData } = useQuery({
     queryKey: ['/api/games', game?.id, 'rosters'],
     queryFn: async () => {
       if (!game?.id) return [];
@@ -28,7 +27,6 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
   });
 
   // Fetch players data if not provided via props
-  const { data: playersData } = useQuery({
     queryKey: ['/api/players'],
     queryFn: async () => {
       const res = await fetch('/api/players');
@@ -251,7 +249,6 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
 
       // Style the player names row
       for (let i = 0; i < playerNames.length; i++) {
-        const cellRef = XLSX.utils.encode_cell({c: i, r: 1}); // second row (r=1)
         if (!ws[cellRef]) continue;
 
         // Create cell style for player names (blue background)

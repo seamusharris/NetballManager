@@ -135,9 +135,9 @@ const calculateQuarterAnalysis = (gameResults: any[]) => {
   return { byQuarter, strongestQuarter, weakestQuarter };
 };
 
-const calculateScoringTrends = (gameResults: any[], currentClubId: number) => {
-  const homeGames = gameResults.filter(r => r.game.homeClubId === currentClubId);
-  const awayGames = gameResults.filter(r => r.game.awayClubId === currentClubId);
+const calculateScoringTrends = (gameResults: any[], clubId: number) => {
+  const homeGames = gameResults.filter(r => r.game.homeClubId === clubId);
+  const awayGames = gameResults.filter(r => r.game.awayClubId === clubId);
 
   const homeWins = homeGames.filter(g => g.result === 'Win').length;
   const awayWins = awayGames.filter(g => g.result === 'Win').length;
@@ -156,7 +156,7 @@ export default function TeamAnalysis() {
   const [, navigate] = useLocation();
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, currentTeamId],
+    queryKey: ['games', clubId, currentTeamId],
     queryFn: () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
@@ -164,25 +164,25 @@ export default function TeamAnalysis() {
       }
       return apiClient.get('/api/games', { headers });
     },
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams-all', currentClubId],
+    queryKey: ['teams-all', clubId],
     queryFn: () => apiClient.get('/api/teams/all'),
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
-    queryKey: ['opponents', currentClubId],
+    queryKey: ['opponents', clubId],
     queryFn: () => apiClient.get('/api/opponents'),
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', currentClubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId,
+    queryKey: ['players', clubId, 'rest'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    enabled: !!clubId,
   });
 
   // Get completed games for stats
@@ -359,8 +359,8 @@ export default function TeamAnalysis() {
 
       // Determine opponent name using the same logic as other components
       let opponentName = null;
-      const isHomeGame = game.homeClubId === currentClubId;
-      const isAwayGame = game.awayClubId === currentClubId;
+      const isHomeGame = game.homeClubId === clubId;
+      const isAwayGame = game.awayClubId === clubId;
 
       if (isHomeGame && !isAwayGame) {
         opponentName = game.awayTeamName;
@@ -405,9 +405,9 @@ export default function TeamAnalysis() {
       teamPerformanceMatrix: finalTeamMatrix
     });
 
-  }, [centralizedStats, gameIds.join(','), currentClubId]); // Use gameIds string to avoid array reference changes
+  }, [centralizedStats, gameIds.join(','), clubId]); // Use gameIds string to avoid array reference changes
 
-  if (clubLoading || !currentClubId) {
+  if (clubLoading || !clubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -439,7 +439,7 @@ export default function TeamAnalysis() {
 
   completedGames.forEach(game => {
     // Determine which team is the opponent (not from our club)
-    const isHomeGame = game.homeClubId === currentClubId;
+    const isHomeGame = game.homeClubId === clubId;
     const opponentTeamId = isHomeGame ? game.awayTeamId : game.homeTeamId;
     const opponentTeamName = isHomeGame ? game.awayTeamName : game.homeTeamName;
     const opponentClubName = isHomeGame ? game.awayClubName : game.homeClubName;
@@ -450,7 +450,7 @@ export default function TeamAnalysis() {
 
       // Get all games against this opponent
       const gamesVsOpponent = completedGames.filter(g => {
-        const isHome = g.homeClubId === currentClubId;
+        const isHome = g.homeClubId === clubId;
         const oppId = isHome ? g.awayTeamId : g.homeTeamId;
         return oppId === opponentTeamId;
       });
@@ -465,7 +465,7 @@ export default function TeamAnalysis() {
         const recentForm: string[] = [];
 
         const gameResults = gamesVsOpponent.map(g => {
-          const isHome = g.homeClubId === currentClubId;
+          const isHome = g.homeClubId === clubId;
           const gameStats = centralizedStats[g.id] || [];
 
           // Calculate scores from game statistics
@@ -540,7 +540,7 @@ export default function TeamAnalysis() {
   const totalWins = opponentTeamsData.reduce((sum, team) => sum + team.wins, 0);
   const totalLosses = opponentTeamsData.reduce((sum, team) => sum + team.losses, 0);
   const totalDraws = opponentTeamsData.reduce((sum, team) => sum + team.draws, 0);
-  const overallWinRateData = calculateClubWinRate(completedGames, currentClubId, currentTeamId);
+  const overallWinRateData = calculateClubWinRate(completedGames, clubId, currentTeamId);
   const overallWinRate = overallWinRateData.winRate;
 
   // Calculate detailed analytics for the first opponent (most played against)
@@ -549,13 +549,13 @@ export default function TeamAnalysis() {
 
   if (selectedOpponentData) {
     const opponentGames = completedGames.filter(g => {
-      const isHome = g.homeClubId === currentClubId;
+      const isHome = g.homeClubId === clubId;
       const oppId = isHome ? g.awayTeamId : g.homeTeamId;
       return oppId === selectedOpponentData.teamId;
     });
 
     const gameResults = opponentGames.map(g => {
-      const isHome = g.homeClubId === currentClubId;
+      const isHome = g.homeClubId === clubId;
       const gameStats = centralizedStats[g.id] || [];
 
       let ourScore = 0;
@@ -582,7 +582,7 @@ export default function TeamAnalysis() {
     });
 
     const quarterAnalysis = calculateQuarterAnalysis(gameResults);
-    const scoringTrends = calculateScoringTrends(gameResults, currentClubId);
+    const scoringTrends = calculateScoringTrends(gameResults, clubId);
 
     detailedStats = {
       quarterAnalysis,
@@ -602,8 +602,8 @@ export default function TeamAnalysis() {
   return (
     <>
       <Helmet>
-        <title>Team Analysis | {currentClub?.name} Stats Tracker</title>
-        <meta name="description" content={`Detailed analysis of ${currentClub?.name} performance against opposing teams`} />
+        <title>Team Analysis | {club?.name} Stats Tracker</title>
+        <meta name="description" content={`Detailed analysis of ${club?.name} performance against opposing teams`} />
       </Helmet>
 
       <div className="container py-6 mx-auto space-y-6">
@@ -1062,7 +1062,7 @@ export default function TeamAnalysis() {
           players={players}
           centralizedStats={centralizedStats}
           centralizedRosters={centralizedRosters}
-          currentClubId={currentClubId}
+          clubId={clubId}
         />
 
         {/* Team Position Analysis */}
@@ -1071,7 +1071,7 @@ export default function TeamAnalysis() {
           players={players}
           centralizedStats={centralizedStats}
           centralizedRosters={centralizedRosters}
-          currentClubId={currentClubId}
+          clubId={clubId}
         />
 
         {/* All Opponents Table */}

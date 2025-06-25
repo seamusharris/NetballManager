@@ -35,7 +35,6 @@ import { queryClient } from '@/lib/queryClient';
 import { GameStatusManager } from "@/components/settings/GameStatusManager";
 
 export default function Settings() {
-  const { toast } = useToast();
   const [timezone, setTimezone] = useState(TIMEZONE);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -102,7 +101,6 @@ export default function Settings() {
       setError(null);
 
       // Export all data
-      const { fileContents, filename } = await exportAllData();
 
       // Create and download file
       const blob = new Blob([fileContents], { type: 'application/json' });

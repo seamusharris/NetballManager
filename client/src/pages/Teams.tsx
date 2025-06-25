@@ -14,19 +14,11 @@ import { ContentSection, ActionButton } from '@/components/ui/ui-standards';
 import PageTemplate from '@/components/layout/PageTemplate';
 
 export default function Teams() {
-  const params = useParams();
-  const [location, setLocation] = useLocation();
-  const { 
-    currentClub, 
-    clubId, 
-    clubTeams, 
-    setCurrentTeamId,
-  // ClubContext removed - get data from URL parameters
   const params = useParams<{ clubId?: string }>();
+  const [location, setLocation] = useLocation();
   const clubId = params.clubId ? Number(params.clubId) : null;
 
   // Fetch club details directly
-  const { data: club, isLoading: clubLoading } = useQuery({
     queryKey: ['club', clubId],
     queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
     enabled: !!clubId,
@@ -44,19 +36,16 @@ export default function Teams() {
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const queryClient = useQueryClient();
 
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
     queryKey: ['teams', clubId],
     queryFn: () => apiClient.get('/api/teams'),
     enabled: !!clubId,
   });
 
-  const { data: seasons = [] } = useQuery<any[]>({
     queryKey: ['/api/seasons', clubId],
     queryFn: () => apiClient.get('/api/seasons'),
     enabled: !!clubId,
   });
 
-  const { data: activeSeason } = useQuery<any>({
     queryKey: ['/api/seasons/active', clubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
     enabled: !!clubId,
@@ -95,7 +84,7 @@ export default function Teams() {
   return (
     <PageTemplate
       title="Teams"
-      description={`Manage teams for ${currentClub?.name}`}
+      description={`Manage teams for ${club?.name}`}
       breadcrumbs={[
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'Teams' }

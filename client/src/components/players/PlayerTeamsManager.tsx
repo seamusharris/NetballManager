@@ -34,7 +34,6 @@ export default function PlayerTeamsManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch player's current teams
-  const { data: playerTeams = [], isLoading: isTeamsLoading } = useQuery<Team[]>({
     queryKey: ['players', player.id, 'teams'],
     queryFn: async () => {
       const response = await fetch(`/api/players/${player.id}/teams`);
@@ -47,7 +46,6 @@ export default function PlayerTeamsManager({
   });
   
   // Fetch all available teams
-  const { data: allTeams = [], isLoading: isLoadingAllTeams } = useQuery<Team[]>({
     queryKey: ['teams', 'all'],
     queryFn: async () => {
       const response = await fetch('/api/teams/all');

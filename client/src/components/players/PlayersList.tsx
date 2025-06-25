@@ -67,7 +67,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const itemsPerPage = 20;
 
   // Fetch games to calculate player statistics
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
     queryFn: () => apiClient.get('/api/games'),
   });
@@ -80,7 +79,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const enableQuery = gameIds.length > 0;
 
   // Use unified data fetcher for consistency with Dashboard
-  const { data: batchData, isLoading: isLoadingBatchData, error: batchError } = useQuery({
     queryKey: ['players-batch-data', clubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return { stats: {}, rosters: {} };
@@ -107,7 +105,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const isLoadingStats = isLoadingBatchData;
 
   // Use batch endpoint for roster data with improved caching
-  const { data: gameRostersMapOld, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
     queryKey: ['batchRosters', clubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
@@ -187,7 +184,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
     }))
     .sort((a, b) => {
       // Sort by the selected field and direction
-      const { field, direction } = sortConfig;
 
       // Handle name sorting separately
       if (field === 'name') {

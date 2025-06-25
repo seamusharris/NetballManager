@@ -31,13 +31,11 @@ export default function PlayerClubsManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all clubs
-  const { data: allClubs = [], isLoading: isClubsLoading } = useQuery<Club[]>({
     queryKey: ['/api/clubs'],
     enabled: !!player?.id,
   });
 
   // Fetch player's current clubs
-  const { data: playerClubs = [], isLoading: isPlayerClubsLoading } = useQuery<Club[]>({
     queryKey: [`/api/players/${player.id}/clubs`],
     enabled: !!player?.id,
   });

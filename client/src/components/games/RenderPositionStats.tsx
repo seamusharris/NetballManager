@@ -7,7 +7,6 @@ interface RenderPositionStatsProps {
   playerStats: any;
 }
 
-const RenderPositionStats: React.FC<RenderPositionStatsProps> = ({ position, playerStats }) => {
   // Attackers (GS, GA)
   if (position === 'GS' || position === 'GA') {
     return (

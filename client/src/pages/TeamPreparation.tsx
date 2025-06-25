@@ -68,9 +68,9 @@ export default function TeamPreparation() {
   }, [params.opponentId]);
 
   // Get all teams from current club
-  const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ['teams', currentClubId],
-    enabled: !!currentClubId,
+  const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
+    queryKey: ['teams', clubId],
+    enabled: !!clubId,
   });
 
   // Get selected team details
@@ -81,24 +81,24 @@ export default function TeamPreparation() {
 
   // Get games for analysis
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ['games', currentClubId, currentTeamId],
+    queryKey: ['games', clubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId && !!currentTeamId,
+    enabled: !!clubId && !!currentTeamId,
   });
 
   // Get all teams across all clubs to find opponent teams
   const { data: allTeams = [] } = useQuery<Team[]>({
     queryKey: ['/api/teams/all'],
-    enabled: !!currentClubId,
+    enabled: !!clubId,
   });
 
   // Debug logging
   console.log('Team loading debug:', {
-    currentClubId,
-    clubTeams,
+    clubId,
+    teams,
     teamsLoading,
     teamsError,
-    dataLength: clubTeams?.length,
+    dataLength: teams?.length,
     currentTeamId,
     gamesCount: allGames?.length,
     gamesLoading,
@@ -347,7 +347,7 @@ export default function TeamPreparation() {
                   <PreviousGamesDisplay
                     historicalGames={historicalGames}
                     currentTeamId={currentTeamId || 0}
-                    currentClubId={currentClubId || 0}
+                    clubId={clubId || 0}
                     batchScores={scoresMap}
                     batchStats={statsMap}
                     opponentName={selectedOpponent?.name || 'Unknown'}

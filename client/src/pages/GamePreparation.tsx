@@ -504,7 +504,7 @@ export default function GamePreparation() {
               const winRateResult = calculateTeamWinRate(
                 historicalGames,
                 currentTeamId,
-                currentClubId,
+                clubId,
                 batchScores || {}
               );
 
@@ -834,7 +834,7 @@ export default function GamePreparation() {
                   <PreviousGamesDisplay
                     historicalGames={historicalGames}
                     currentTeamId={currentTeamId!}
-                    currentClubId={currentClubId!}
+                    clubId={clubId!}
                     batchScores={batchScores || {}}
                     batchStats={batchStats || {}}
                     opponentName={opponent}

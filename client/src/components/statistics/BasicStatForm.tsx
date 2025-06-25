@@ -100,7 +100,6 @@ export default function BasicStatForm({
       quarterKey: string, 
       stats: Record<number, Record<string, number>>
     }) => {
-      const { quarterKey, stats } = data;
       const quarter = parseInt(quarterKey);
       const savePromises = [];
       
@@ -340,7 +339,6 @@ export default function BasicStatForm({
   
   // Calculate quarter-by-quarter totals and game summary
   const calculateQuarterTotals = () => {
-    const quarterTotals: Record<string, { goalsFor: number, goalsAgainst: number }> = {
       '1': { goalsFor: 0, goalsAgainst: 0 },
       '2': { goalsFor: 0, goalsAgainst: 0 },
       '3': { goalsFor: 0, goalsAgainst: 0 },

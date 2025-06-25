@@ -83,7 +83,6 @@ export default function PlayerInterchangeTracker({
     });
 
     // Track position assignments for each quarter
-    const quarterAssignments: Record<number, Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>> = {
       1: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
       2: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
       3: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,

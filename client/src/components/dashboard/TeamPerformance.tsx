@@ -20,7 +20,6 @@ interface TeamPerformanceProps {
 }
 
 // Team Performance Component
-const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats, centralizedScores }: TeamPerformanceProps) => {
   // ClubContext removed - get data from URL parameters
   const params = useParams<{ clubId?: string; teamId?: string }>();
   const currentTeamId = params.teamId ? Number(params.teamId) : null;
@@ -91,7 +90,6 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
           console.log('TeamPerformance: Calculating performance for team', currentTeamId, 'with', completedGameIds.length, 'completed games');
 
           // Initialize counters
-          const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
             1: { team: 0, opponent: 0, count: 0 },
             2: { team: 0, opponent: 0, count: 0 },
             3: { team: 0, opponent: 0, count: 0 },

@@ -295,7 +295,6 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     console.log('PlayerForm: Final position preferences array:', positionPreferences);
 
     // Remove position fields from the data object
-    const { position1, position2, position3, position4, ...rest } = values;
 
     // Create the player data
     const playerData = {

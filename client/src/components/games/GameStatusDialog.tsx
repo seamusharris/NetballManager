@@ -148,7 +148,6 @@ export function GameStatusDialog({
     }
   };
 
-  const { data: GAME_STATUSES = [] } = useQuery({
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,

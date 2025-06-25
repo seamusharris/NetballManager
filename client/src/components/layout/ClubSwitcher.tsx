@@ -19,7 +19,6 @@ export function ClubSwitcher() {
     const [, setLocation] = useLocation();
     
     // Fetch user's clubs directly
-    const { data: userClubs = [], isLoading } = useQuery<any[]>({
       queryKey: ['user-clubs'],
       queryFn: () => apiClient.get('/api/user/clubs'),
     });

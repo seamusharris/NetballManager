@@ -80,9 +80,9 @@ export default function StatsRecorder() {
 
   // NEW: Club-scoped players instead of global
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
-    queryKey: ['/api/clubs', currentClubId, 'players'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId
+    queryKey: ['/api/clubs', clubId, 'players'],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    enabled: !!clubId
   });
 
   // NEW: Game-centric roster endpoint

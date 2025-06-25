@@ -149,8 +149,8 @@ export default function Preparation2() {
   }, [selectedGameId, allPlayers, upcomingGames]);
 
   const getOpponentName = (game: any): string => {
-    const isHomeGame = game.homeClubId === currentClubId;
-    const isAwayGame = game.awayClubId === currentClubId;
+    const isHomeGame = game.homeClubId === clubId;
+    const isAwayGame = game.awayClubId === clubId;
 
     if (isHomeGame && !isAwayGame) {
       return game.awayTeamName;
@@ -742,7 +742,7 @@ export default function Preparation2() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-current-club-id': currentClubId?.toString() || '',
+          'x-current-club-id': clubId?.toString() || '',
           'x-current-team-id': currentTeamId?.toString() || ''
         },
         body: JSON.stringify({
@@ -785,7 +785,7 @@ export default function Preparation2() {
   // Debug logging to understand team context
   console.log('Preparation2 Debug:', {
     currentTeamId,
-    currentClubId,
+    clubId,
     upcomingGamesCount: upcomingGames.length,
     nextGame,
     selectedGame
@@ -914,7 +914,7 @@ export default function Preparation2() {
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Venue:</span>
                         <span className="font-medium">
-                          {selectedGame.homeClubId === currentClubId ? 'Home' : 'Away'}
+                          {selectedGame.homeClubId === clubId ? 'Home' : 'Away'}
                         </span>
                       </div>
                     </>

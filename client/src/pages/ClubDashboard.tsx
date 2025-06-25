@@ -356,7 +356,7 @@ export default function ClubDashboard() {
                   onClick={async () => {
                     // First set the team in context, then navigate
                     console.log(`ClubDashboard: Setting team context to ${team.id} (${team.name})`);
-                    setCurrentTeamId(team.id);
+                    
                     
                     // Small delay to ensure context is set before navigation
                     await new Promise(resolve => setTimeout(resolve, 50));

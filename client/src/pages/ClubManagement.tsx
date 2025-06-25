@@ -46,7 +46,6 @@ async function fetchApi(url: string) {
 }
 
 export default function ClubManagement() {
-  const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<any>(null);
   const [deletingClub, setDeletingClub] = useState<any>(null);

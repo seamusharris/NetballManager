@@ -32,7 +32,6 @@ export default function SimplePlayerAvailabilityManager({
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch existing availability data
-  const { data: availabilityResponse, refetch } = useQuery({
     queryKey: ['/api/games', gameId, 'availability'],
     enabled: !!gameId,
   });

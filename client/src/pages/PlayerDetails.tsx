@@ -29,11 +29,9 @@ import PlayerTeamsManager from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 export default function PlayerDetails() {
-  const { id } = useParams<{ id: string }>();
   const playerId = parseInt(id);
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -42,20 +40,17 @@ export default function PlayerDetails() {
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
 
   // Fetch player data
-  const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
     queryKey: [`/api/players/${playerId}`],
     queryFn: () => apiClient.get(`/api/players/${playerId}`),
     enabled: !isNaN(playerId),
   });
 
   // Fetch all games with club context
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
     queryFn: () => apiClient.get('/api/games'),
   });
 
   // Fetch all seasons for the seasons manager
-  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<Season[]>({
     queryKey: ['/api/seasons'],
     queryFn: () => apiClient.get('/api/seasons'),
   });
@@ -67,7 +62,6 @@ export default function PlayerDetails() {
   const completedGameIds = completedGames.map(game => game.id);
 
   // Use Team Dashboard's exact cache keys to share data - stats
-  const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
     queryKey: ['centralized-stats', clubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
@@ -104,7 +98,6 @@ export default function PlayerDetails() {
   });
 
   // Use Team Dashboard's exact cache keys to share data - rosters
-  const { data: allGameRosters = {}, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
     queryKey: ['centralized-rosters', clubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};

@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 export default function ToastExamples() {
-  const { toast } = useToast();
 
   const showSuccess = () => {
     toast({

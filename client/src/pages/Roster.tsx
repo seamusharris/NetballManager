@@ -35,22 +35,19 @@ export default function Roster() {
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
 
   // Fetch games
-  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
-    queryKey: ['games', currentClub?.id],
+    queryKey: ['games', club?.id],
     queryFn: () => apiRequest('GET', '/api/games'),
     retry: 1,
-    enabled: !!currentClub?.id
+    enabled: !!club?.id
   });
 
   // Fetch players
-  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
-    queryKey: ['players', currentClub?.id],
+    queryKey: ['players', club?.id],
     queryFn: () => apiRequest('GET', '/api/players'),
-    enabled: !!currentClub?.id
+    enabled: !!club?.id
   });
 
   // Fetch opponents for legacy support
-  const { data: opponents = [], isLoading: opponentsLoading, error: opponentsError } = useQuery({
     queryKey: ['opponents'],
     queryFn: async () => {
       try {
@@ -227,7 +224,7 @@ export default function Roster() {
   return (
     <PageTemplate
       title="Roster Management"
-      subtitle={`Manage game rosters for ${currentClub?.name || 'your club'}`}
+      subtitle={`Manage game rosters for ${club?.name || 'your club'}`}
       breadcrumbs={breadcrumbs}
       actions={pageActions}
     >

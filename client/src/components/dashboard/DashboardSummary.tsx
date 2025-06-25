@@ -66,21 +66,19 @@ export default function DashboardSummary({
   const currentTeamId = params.teamId ? Number(params.teamId) : null;
 
   // Fetch club details directly
-  const { data: club, isLoading: clubLoading } = useQuery({
     queryKey: ['club', clubId],
     queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
     enabled: !!clubId,
   });
 
   // Fetch teams for this club
-  const { data: clubTeams = [] } = useQuery({
     queryKey: ['clubs', clubId, 'teams'],
     queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
     enabled: !!clubId,
   });
 
-  // Derive currentTeam from currentTeamId and clubTeams
-  const currentTeam = currentTeamId ? clubTeams?.find(team => team.id === currentTeamId) : null;
+  // Derive currentTeam from currentTeamId and teams
+  const currentTeam = currentTeamId ? teams?.find(team => team.id === currentTeamId) : null;
 
   // Early return if club context isn't ready
   if (clubLoading || !club) {

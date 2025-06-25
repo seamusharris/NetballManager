@@ -109,7 +109,7 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
                 showScore={true}
                 className="mb-4"
                 currentTeamId={clubWide ? null : currentTeam?.id}
-                clubTeams={teams || []}
+                teams={teams || []}
                 showLink={true}
               />
             ))

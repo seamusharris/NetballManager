@@ -42,7 +42,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   // State for reset confirmation dialogs
   const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
   const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
-  const { toast } = useToast();
 
   // Function to calculate game totals across all quarters
   const calculateGameTotals = () => {
@@ -148,7 +147,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     };
 
     // Keep track of player ratings and their stat IDs 
-    const firstQuarterRatings: Record<number, { rating: number, statId: number }> = {};
 
     // Initialize with zeros for all players in each quarter
     rosters.forEach(roster => {
@@ -718,7 +716,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       // First, manually fetch the latest stats to update our local view without refreshing
       try {
         // Manually fetch latest game stats
-        const freshStats = await fetch(`/api/games/${gameId}/stats`).then(res => res.json());
         console.log(`Manually fetched ${freshStats.length} fresh stats after saving in SimpleStats`);
 
         // Silently update cache with fresh data in the background

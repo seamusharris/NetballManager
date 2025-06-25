@@ -82,7 +82,6 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   
 
   // Fetch roster data for tracking games played
-  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
     queryKey: ['gameRosters', ...gameIds],
     queryFn: async () => {
       if (gameIds.length === 0) {

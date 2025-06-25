@@ -29,7 +29,7 @@ interface GameResultCardProps {
   showQuarterScores?: boolean;
   compact?: boolean;
   currentTeamId?: number;
-  clubTeams?: any[];
+  teams?: any[];
   clubId?: number;
 }
 
@@ -47,7 +47,7 @@ export default function GameResultCard({
   showQuarterScores = false,
   compact = false,
   currentTeamId: propCurrentTeamId,
-  clubTeams = [],
+  teams = [],
   clubId: propCurrentClubId
 }: GameResultCardProps) {
   const [location] = useLocation();
@@ -70,7 +70,6 @@ export default function GameResultCard({
   }
 
   // Fetch club teams based on URL club ID for reliable team perspective
-  const { data: urlClubTeams = [] } = useQuery<any[]>({
     queryKey: ['clubs', urlClubId, 'teams'],
     queryFn: () => apiClient.get(`/api/clubs/${urlClubId}/teams`),
     enabled: !!urlClubId,

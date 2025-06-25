@@ -431,7 +431,6 @@ export default function AdvancedTeamAnalytics({
   };
 
   const calculatePeakPerformanceWindows = (games: Game[], statsMap: Record<number, GameStat[]>) => {
-    const quarterTrends: Record<number, { totalFor: number; totalAgainst: number; games: number }> = {
       1: { totalFor: 0, totalAgainst: 0, games: 0 },
       2: { totalFor: 0, totalAgainst: 0, games: 0 },
       3: { totalFor: 0, totalAgainst: 0, games: 0 },

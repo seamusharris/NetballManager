@@ -158,7 +158,6 @@ export function GamesList({
     })
     .map(game => game.id);
 
-  const { data: allRosterData, isLoading: isLoadingRosters } = useQuery({
     queryKey: ['batchRosters', ...nonByeGameIds],
     queryFn: async () => {
       if (nonByeGameIds.length === 0) {
@@ -468,7 +467,7 @@ export function GamesList({
                     showScore={true}
                     showLink={true}
                     currentTeamId={urlTeamId || currentTeamId}
-                    clubTeams={teams || []}
+                    teams={teams || []}
                     clubId={club?.id}
                   />
 

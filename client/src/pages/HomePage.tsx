@@ -11,10 +11,10 @@ export default function HomePage() {
 
   // Redirect to club dashboard if club context is set
   useEffect(() => {
-    if (!isLoading && currentClubId) {
-      setLocation(`/club/${currentClubId}`);
+    if (!isLoading && clubId) {
+      setLocation(`/club/${clubId}`);
     }
-  }, [currentClubId, isLoading, setLocation]);
+  }, [clubId, isLoading, setLocation]);
 
   // Show loading while checking club context
   if (isLoading) {
@@ -29,7 +29,7 @@ export default function HomePage() {
   }
 
   // Show club selector if no club context
-  if (!currentClubId) {
+  if (!clubId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="container mx-auto px-4 py-16">

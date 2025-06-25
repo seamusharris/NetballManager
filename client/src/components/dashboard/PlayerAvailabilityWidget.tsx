@@ -143,7 +143,6 @@ export default function PlayerAvailabilityWidget({
       <div className="space-y-3">
         {upcomingGames.map(game => {
           const availability = availabilityData[game.id];
-          const { color, status } = availability ? 
             getAvailabilityStatus(availability.availableCount, availability.totalPlayers) :
             { color: 'bg-gray-400', status: 'Unknown' };
 

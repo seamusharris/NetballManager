@@ -26,7 +26,6 @@ export default function PlayerSeasonsManager({
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
   
   // Fetch player's current seasons
-  const { data: playerSeasons = [], isLoading: isSeasonsLoading } = useQuery<Season[]>({
     queryKey: [`/api/players/${player.id}/seasons`],
     enabled: !!player?.id, // Always fetch when player ID is available
   });

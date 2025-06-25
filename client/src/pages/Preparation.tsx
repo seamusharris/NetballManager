@@ -316,7 +316,7 @@ const Preparation = () => {
                 players={playersData}
                 centralizedStats={gamePerformances}
                 centralizedRosters={{}}
-                currentClubId={team?.club_id}
+                clubId={team?.club_id}
               />
             </div>
           )}

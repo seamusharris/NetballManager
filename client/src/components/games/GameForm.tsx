@@ -54,14 +54,12 @@ export default function GameForm({
   const clubId = params.clubId ? Number(params.clubId) : null;
 
   // Fetch club teams
-  const { data: clubTeams = [] } = useQuery({
     queryKey: ['clubs', clubId, 'teams'],
     queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
     enabled: !!clubId,
   });
 
   // Fetch all teams for inter-club games
-  const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({
     queryKey: ['teams', 'all'],
     queryFn: () => apiClient.get('/api/teams/all'),
     staleTime: 5 * 60 * 1000,
@@ -80,7 +78,6 @@ export default function GameForm({
     },
   });
 
-  const { watch } = form;
 
   console.log("GameForm useEffect triggered:", {
     game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,

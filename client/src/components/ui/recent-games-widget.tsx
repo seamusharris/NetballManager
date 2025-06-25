@@ -12,7 +12,7 @@ interface RecentGamesWidgetProps {
   className?: string;
   centralizedScores?: any[];
   gameStats?: any[];
-  clubTeams?: any[];
+  teams?: any[];
   showQuarterScores?: boolean;
 }
 
@@ -25,7 +25,7 @@ export default function RecentGamesWidget({
   className = "",
   centralizedScores = [],
   gameStats = [],
-  clubTeams = [],
+  teams = [],
   showQuarterScores = false
 }: RecentGamesWidgetProps) {
   // Filter and sort recent completed games
@@ -77,7 +77,7 @@ export default function RecentGamesWidget({
             currentTeamId={teamId}
             centralizedScores={centralizedScores}
             gameStats={gameStats}
-            clubTeams={clubTeams}
+            teams={teams}
             showQuarterScores={showQuarterScores}
             showDate={true}
             showRound={true}

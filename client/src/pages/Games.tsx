@@ -30,7 +30,6 @@ export default function Games() {
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
 
   // Fetch club details directly from URL parameter
-  const { data: club, isLoading: clubLoading } = useQuery({
     queryKey: ['club', clubId],
     queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
     enabled: !!clubId,
@@ -45,9 +44,9 @@ export default function Games() {
   // Clear team context when in club-wide view
   useEffect(() => {
     if (isClubWideGamesView && currentTeamId) {
-      setCurrentTeamId(null);
+      
     }
-  }, [isClubWideGamesView, currentTeamId, setCurrentTeamId]);
+  }, [isClubWideGamesView, currentTeamId, 
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !club) {
@@ -61,7 +60,6 @@ export default function Games() {
     );
   }
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
@@ -77,7 +75,6 @@ export default function Games() {
   }, []);
 
   // Fetch teams - for club-wide view we need club teams, for team view we need all teams
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
     queryKey: isClubWideGamesView ? ['clubs', clubId, 'teams'] : ['teams', clubId],
     queryFn: () => {
       if (isClubWideGamesView) {
@@ -95,13 +92,12 @@ export default function Games() {
       const targetTeam = teams.find(t => t.id === teamIdFromUrl);
       if (targetTeam && currentTeamId !== teamIdFromUrl) {
         console.log(`Games: Setting team ${teamIdFromUrl} from URL`);
-        setCurrentTeamId(teamIdFromUrl);
+        
       }
     }
-  }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
+  }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, 
 
   // Fetch games - use team-specific endpoint when we have a team ID for better perspective handling
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', clubId, effectiveTeamId],
     queryFn: () => {
       if (isClubWideGamesView) {
@@ -120,7 +116,6 @@ export default function Games() {
   const gameIdsArray = games?.map(g => g.id).sort() || [];
   const gameIds = gameIdsArray.join(',');
 
-  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
     queryKey: ['games-batch-data', clubId, effectiveTeamId, gameIds],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
@@ -128,7 +123,6 @@ export default function Games() {
       console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${effectiveTeamId}:`, gameIdsArray);
 
       try {
-        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
           gameIds: gameIdsArray,
           clubId: clubId!,
@@ -159,26 +153,22 @@ export default function Games() {
   const gameScoresMap = batchData?.scores || {};
 
   // Fetch seasons - no club context needed
-  const { data: seasons = [] } = useQuery({
     queryKey: ['seasons'], 
     queryFn: () => apiClient.get('/api/seasons')
   });
 
   // Fetch active season - no club context needed
-  const { data: activeSeason } = useQuery({
     queryKey: ['seasons', 'active'],
     queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Fetch game statuses
-  const { data: gameStatuses = [], isLoading: isLoadingGameStatuses } = useQuery({
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,
   });
 
   // Fetch players
-  const { data: players = [] } = useQuery<Player[]>({
     queryKey: ['players'],
     queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
   });
@@ -304,7 +294,6 @@ export default function Games() {
   };
 
   // Fetch all teams for inter-club games
-  const { data: allTeams = [] } = useQuery({
     queryKey: ['teams', 'all'],
     queryFn: () => apiRequest('GET', '/api/teams/all')
   });

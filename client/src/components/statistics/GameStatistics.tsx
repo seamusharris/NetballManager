@@ -37,7 +37,6 @@ export default function GameStatistics({
   isLoading
 }: GameStatisticsProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
-  const { toast } = useToast();
   const pendingChangesRef = React.useRef<Record<number, Record<number, Record<string, any>>>>({});
   
   // Transform rosters to more usable format

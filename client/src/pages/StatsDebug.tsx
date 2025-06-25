@@ -8,10 +8,8 @@ import { GameStat, Position, allPositions } from '@shared/schema';
 import SingleStatTester from '@/components/statistics/SingleStatTester';
 
 export default function StatsDebug() {
-  const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id);
   
-  const { data: stats = [], isLoading } = useQuery<GameStat[]>({
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),

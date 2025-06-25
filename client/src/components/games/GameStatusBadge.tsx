@@ -113,7 +113,6 @@ export function GameStatusButton({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.gameStatus?.name as GameStatus || 'upcoming');
   const queryClient = useQueryClient();
-  const { data: gameStatuses = [] } = useQuery({
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,

@@ -635,7 +635,6 @@ export default function SimpleRosterManager({
   }, [selectedGame, currentTeam]);
 
   // Query to get players specifically assigned to this team
-  const { data: teamPlayers = [] } = useQuery({
     queryKey: ['teamPlayers', gameTeamId],
     queryFn: async () => {
       if (!gameTeamId) return [];

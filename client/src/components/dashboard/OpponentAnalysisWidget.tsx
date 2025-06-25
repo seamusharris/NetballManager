@@ -16,11 +16,9 @@ interface OpponentAnalysisWidgetProps {
 }
 
 export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProps) {
-  const { clubId, currentTeamId } = // 
   const [selectedOpponentTeamId, setSelectedOpponentTeamId] = useState<number | null>(null);
 
   // Fetch games
-  const { data: games = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games', clubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!clubId && !!currentTeamId,
@@ -28,7 +26,6 @@ export function OpponentAnalysisWidget({ className }: OpponentAnalysisWidgetProp
   });
 
   // Fetch stats for opponent games
-  const { data: gameStats, isLoading: statsLoading } = useQuery({
     queryKey: ['opponent-analysis-stats', selectedOpponentTeamId, currentTeamId],
     queryFn: async () => {
       if (!selectedOpponentTeamId || !currentTeamId) return {};

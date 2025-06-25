@@ -48,7 +48,6 @@ export default function TimelineExamples() {
     { id: 4, date: "2025-05-17", opponent: "East Doncaster", result: "Win", score: "44-40" }
   ];
 
-  const TimelineItem = ({ event, index }) => {
     const Icon = event.icon;
     return (
       <div className="flex items-start space-x-3">
@@ -70,6 +69,7 @@ export default function TimelineExamples() {
     );
   };
 
+export default function TimelineExamples() {
   return (
     <PageTemplate
       title="Timeline Examples"

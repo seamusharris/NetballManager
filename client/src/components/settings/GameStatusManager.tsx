@@ -57,10 +57,8 @@ export function GameStatusManager() {
   });
 
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   // Fetch all game statuses (including inactive ones for management)
-  const { data: gameStatuses = [], isLoading } = useQuery({
     queryKey: ['/api/game-statuses'],
     queryFn: () => apiRequest('GET', '/api/game-statuses'),
   });

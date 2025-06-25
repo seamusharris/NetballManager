@@ -90,8 +90,6 @@ export default function AnalysisTab({
   const gameIds = opponentGames.map(game => game.id);
   
   // Fetch statistics for opponent games
-  const { statsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
-  const { rostersMap, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
   // Debug roster data
   useEffect(() => {

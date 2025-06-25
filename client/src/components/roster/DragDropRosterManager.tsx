@@ -284,7 +284,6 @@ export default function DragDropRosterManager({
   const queryClient = useQueryClient();
 
   // Fetch existing roster data using team-specific endpoint
-  const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
     queryKey: ['teams', teamId, 'games', gameId, 'roster'],
     queryFn: () => {
       if (!teamId) {
@@ -790,7 +789,6 @@ interface PlayerAvatarProps {
   className?: string;
 }
 
-const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, size = 'md', className }) => {
   const avatarSizes = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',

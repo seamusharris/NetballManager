@@ -48,14 +48,14 @@ export default function RosterManager({
   localRosterState
 }: RosterManagerProps) {
   // Get team context from URL or headers if available
-  const [currentTeamId, setCurrentTeamId] = useState<number | null>(null);
+  const [currentTeamId, 
   
   useEffect(() => {
     // Try to get team ID from URL params or other context
     const urlParams = new URLSearchParams(window.location.search);
     const teamParam = urlParams.get('teamId');
     if (teamParam) {
-      setCurrentTeamId(parseInt(teamParam, 10));
+      
     }
   }, []);
   const [activeQuarter, setActiveQuarter] = useState('1');
