@@ -159,7 +159,7 @@ export default function OpponentPreparation() {
         } else if (result === 'Loss') {
           opponent.losses++;
           recentForm.push('L');
-        } else
+        } else {
           opponent.draws++;
           recentForm.push('D');
         }

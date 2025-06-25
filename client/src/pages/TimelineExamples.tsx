@@ -69,6 +69,7 @@ export default function TimelineExamples() {
     );
   };
 
+export default function TimelineExamples() {
   return (
     <PageTemplate
       title="Timeline Examples"

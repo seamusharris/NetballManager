@@ -37,7 +37,7 @@ export default function TableExamples() {
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else
+    } else {
       setSortField(field);
       setSortDirection('asc');
     }
