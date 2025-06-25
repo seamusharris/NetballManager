@@ -21,7 +21,7 @@ import { apiClient } from '@/lib/apiClient';
 export default function Players() {
   const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location, setLocation] = useLocation();
-  
+
   // ALL HOOKS MUST BE DECLARED AT THE TOP LEVEL
   const {
     clubId,
@@ -34,7 +34,7 @@ export default function Players() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
 
@@ -56,6 +56,7 @@ export default function Players() {
     },
   });
 
+  // Get club players
   const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
     queryKey: ['players', clubId],
     queryFn: async () => {
@@ -63,65 +64,10 @@ export default function Players() {
       const response = await apiClient.get(`/api/clubs/${clubId}/players`);
       return response;
     },
-    enabled: !!clubId && !teamId,
-  });
-
-  const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
-    queryKey: ['team', teamId],
-    queryFn: async () => {
-      const response = await apiClient.get(`/api/teams/${teamId}`);
-      return response;
-    },
-    enabled: !!teamId,
-    retry: 3,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
-    queryKey: ['team-players', teamId, clubId],
-    queryFn: () => apiClient.get(`/api/teams/${teamId}/players`),
-    enabled: !!teamId && !!clubId,
-  });
-
-  const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
-    queryKey: ['team-available-players', teamId, activeSeason?.id],
-    queryFn: () => {
-      return apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
-    },
-    enabled: !!teamId && !!activeSeason?.id,
+    enabled: !!clubId,
   });
 
   // ALL MUTATION HOOKS
-  const addPlayerToTeam = useMutation({
-    mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'Player added to team' });
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add player to team',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const removePlayerFromTeam = useMutation({
-    mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'Player removed from team' });
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, clubId] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to remove player from team',
-        variant: 'destructive',
-      });
-    },
-  });
-
   const createPlayer = useMutation({
     mutationFn: async (playerData: any) => {
       if (!clubId) {
@@ -148,7 +94,7 @@ export default function Players() {
 
   // ALL MEMO/COMPUTED VALUES
   const allTeams = clubTeams;
-  
+
   const filteredPlayers = useMemo(() => {
     if (!players || selectedTeamFilter === 'all') return players;
     return players.filter(player => {
@@ -177,167 +123,6 @@ export default function Players() {
           <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
         </div>
       </div>
-    );
-  }
-
-  // Helper functions
-  const handleRemovePlayer = (playerId: number) => {
-    setRemovingPlayerIds(prev => new Set([...prev, playerId]));
-    removePlayerFromTeam.mutate(playerId, {
-      onSettled: () => {
-        setRemovingPlayerIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    });
-  };
-
-  const handleAddPlayer = (playerId: number) => {
-    setAddingPlayerIds(prev => new Set([...prev, playerId]));
-    addPlayerToTeam.mutate(playerId, {
-      onSettled: () => {
-        setAddingPlayerIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    });
-  };
-
-  // TEAM VIEW RENDERING
-  if (teamId && teamData) {
-    const teamPlayers = teamPlayersData || [];
-    const availablePlayers = availablePlayersForTeam || [];
-
-    const pageTitle = teamData?.name 
-      ? `${teamData.name} Players`
-      : 'Team Players';
-    
-    const pageSubtitle = teamData?.name 
-      ? `Manage players for ${teamData.name} (${teamData.division})`
-      : 'Manage team players';
-
-    const breadcrumbs = [
-      { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
-      { label: 'Teams', href: `/club/${clubId}/teams` },
-      { label: teamData?.name || 'Team' }
-    ];
-
-    return (
-      <>
-        <Helmet>
-          <title>Team Players | Team Manager</title>
-        </Helmet>
-
-        <PageTemplate
-          title={pageTitle}
-          subtitle={pageSubtitle}
-          breadcrumbs={breadcrumbs}
-          actions={
-            <div className="w-64">
-              <Select
-                value={teamId?.toString() || ""}
-                onValueChange={(value) => {
-                  const newTeamId = parseInt(value);
-                  setLocation(`/team/${newTeamId}/players`);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Switch Team" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allTeams
-                    .filter(team => team.name !== 'BYE')
-                    .map(team => (
-                      <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name} {team.division && `(${team.division})`}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-          }
-        >
-          <ContentSection 
-            title="Current Team Players"
-            variant="elevated"
-          >
-            {!teamPlayers || teamPlayers.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
-            ) : (
-              <SelectablePlayerBox
-                players={teamPlayers}
-                selectedPlayerIds={new Set()}
-                onSelectionChange={() => {}}
-                title="Current Team Players"
-                showQuickActions={false}
-                mode="team-management"
-                onRemovePlayer={handleRemovePlayer}
-                removingPlayerIds={removingPlayerIds}
-                variant="detailed"
-              />
-            )}
-          </ContentSection>
-
-          <ContentSection 
-            title="Available Players"
-            actions={
-              <PageActions spacing="tight">
-                <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
-                  <DialogTrigger asChild>
-                    <ActionButton action="create" size="sm" icon={UserPlus}>
-                      Add New Player
-                    </ActionButton>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Player</DialogTitle>
-                    </DialogHeader>
-                    <PlayerForm
-                      clubId={clubId}
-                      teamId={teamId}
-                      onSuccess={() => {
-                        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-                        queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-                        toast({ title: 'Success', description: 'Player created successfully' });
-                        setIsAddPlayerDialogOpen(false);
-                      }}
-                      onCancel={() => setIsAddPlayerDialogOpen(false)}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </PageActions>
-            }
-            variant="elevated"
-          >
-            {availablePlayers.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
-                No unassigned players available. All active players are already assigned to teams this season.
-                <br />
-                <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
-              </p>
-            ) : (
-              <SelectablePlayerBox
-                players={availablePlayers}
-                selectedPlayerIds={new Set()}
-                onSelectionChange={(selectedIds) => {
-                  selectedIds.forEach(playerId => {
-                    handleAddPlayer(playerId);
-                  });
-                }}
-                title="Available Players"
-                showQuickActions={false}
-                mode="selection"
-                addingPlayerIds={addingPlayerIds}
-                variant="detailed"
-              />
-            )}
-          </ContentSection>
-        </PageTemplate>
-      </>
     );
   }
 

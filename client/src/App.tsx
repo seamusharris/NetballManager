@@ -16,7 +16,7 @@ import Games from "@/pages/Games";
 import Statistics from "@/pages/Statistics";
 import ClubDashboard from '@/pages/ClubDashboard';
 import HomePage from '@/pages/HomePage';
-import PlayerDetails from "@/pages/PlayerDetails";
+import PlayerDetails from '@/pages/PlayerDetails';
 import Teams from "@/pages/Teams";
 import ClubManagement from "./pages/ClubManagement";
 import LiveStats from "@/pages/LiveStats";
@@ -72,6 +72,18 @@ const SubstitutionFlowExamples = lazy(() => import('./pages/SubstitutionFlowExam
 const RosterManagementExamples = lazy(() => import('./pages/RosterManagementExamples'));
 const LiveStatsInterfaceExamples = lazy(() => import('./pages/LiveStatsInterfaceExamples'));
 import RecommendationExamples from './pages/RecommendationExamples';
+import PlayerBorrowing from '@/pages/PlayerBorrowing';
+import TeamAnalysis from './pages/TeamAnalysis';
+import Preparation from '@/pages/Preparation';
+import GamePreparation from '@/pages/GamePreparation';
+import TeamPreparation from './pages/TeamPreparation';
+import Preparation2 from './pages/Preparation2';
+// Import actual components for PlayerAvailability and RosterGame
+import PlayerAvailability from '@/pages/PlayerAvailability';
+import RosterGame from '@/pages/RosterGame';
+import TeamPlayersManager from './components/teams/TeamPlayersManager';
+const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
+
 /**
  * Loading spinner component for suspense fallbacks
  */
@@ -95,16 +107,6 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
   );
 }
 
-import PlayerBorrowing from '@/pages/PlayerBorrowing';
-import TeamAnalysis from './pages/TeamAnalysis';
-import Preparation from '@/pages/Preparation';
-import GamePreparation from '@/pages/GamePreparation';
-import TeamPreparation from './pages/TeamPreparation';
-import Preparation2 from './pages/Preparation2';
-// Import actual components for PlayerAvailability and RosterGame
-import PlayerAvailability from '@/pages/PlayerAvailability';
-import RosterGame from '@/pages/RosterGame';
-const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 
 function Router() {
   return (
@@ -123,7 +125,7 @@ function Router() {
         <Route path="/teams/:clubId" component={withErrorBoundary(Teams, 'Teams')} />
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/club/:clubId/games" component={withErrorBoundary(Games, 'Games')} />
-        <Route path="/team/:teamId/players" component={withErrorBoundary(Players, 'TeamPlayers')} />
+        <Route path="/team/:teamId/players" component={withErrorBoundary(TeamPlayersManager, 'TeamPlayersManager')} />
         <Route path="/team/:teamId/availability/:gameId" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
         <Route path="/team/:teamId/roster/game/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />
         <Route path="/team/:teamId/roster/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />
