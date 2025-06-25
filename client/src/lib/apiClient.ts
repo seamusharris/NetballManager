@@ -209,3 +209,30 @@ export const apiRequest = async (method: string, url: string, data?: any) => {
       throw new Error(`Unsupported HTTP method: ${method}`);
   }
 };
+// Get club context - try multiple sources
+  let clubContext: ClubContext = { currentClubId: null };
+
+  // Try to get from URL first (most reliable)
+  const urlMatch = window.location.pathname.match(/\/club\/(\d+)|\/team\/(\d+)/);
+  if (urlMatch) {
+    const clubIdFromUrl = urlMatch[1];
+    const teamIdFromUrl = urlMatch[2];
+
+    if (clubIdFromUrl) {
+      clubContext.currentClubId = parseInt(clubIdFromUrl);
+    } else if (teamIdFromUrl) {
+      // For team URLs, we need to map team to club - for now use a default
+      // This should be improved to look up the team's club
+      clubContext.currentClubId = 54; // Default to current club for now
+    }
+  }
+
+  // Try React context as backup
+  try {
+    const currentClubIdFromContext = getCurrentClubId?.();
+    if (currentClubIdFromContext && !clubContext.currentClubId) {
+      clubContext.currentClubId = currentClubIdFromContext;
+    }
+  } catch (error) {
+    // Ignore context errors
+  }
