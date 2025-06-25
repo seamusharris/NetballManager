@@ -88,11 +88,11 @@ export class UnifiedDataFetcher {
       }
     }
 
-    // Batch fetch rosters
+    // Batch fetch rosters - using club-scoped endpoint
     if (includeRosters) {
       try {
-        console.log(`UnifiedDataFetcher: Batch fetching rosters for ${gameIds.length} games`);
-        const rostersResponse = await apiClient.post('/api/games/rosters/batch', { gameIds });
+        console.log(`UnifiedDataFetcher: Batch fetching rosters for ${gameIds.length} games via club ${clubId}`);
+        const rostersResponse = await apiClient.post(`/api/clubs/${clubId}/games/rosters/batch`, { gameIds });
         results.rosters = rostersResponse;
         console.log(`UnifiedDataFetcher: Batch rosters received for ${Object.keys(rostersResponse).length} games`);
 
@@ -114,8 +114,8 @@ export class UnifiedDataFetcher {
       console.log(`UnifiedDataFetcher: Batch fetching scores for ${gameIds.length} games`);
 
       try {
-        // Use batch endpoint for better performance
-        const scoresMap = await apiClient.post('/api/games/scores/batch', {
+        // Use club-scoped batch endpoint for better performance
+        const scoresMap = await apiClient.post(`/api/clubs/${clubId}/games/scores/batch`, {
           gameIds: gameIds
         });
 

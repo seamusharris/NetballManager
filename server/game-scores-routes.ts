@@ -5,7 +5,60 @@ import { eq, and, or, inArray, sql } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 
 export function registerGameScoresRoutes(app: Express) {
-  // Batch endpoint for multiple games' official scores
+  // Club-scoped batch endpoint for multiple games' official scores
+  app.post('/api/clubs/:clubId/games/scores/batch', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameIds } = req.body;
+      const clubId = parseInt(req.params.clubId);
+
+      if (!Array.isArray(gameIds) || gameIds.length === 0) {
+        return res.status(400).json({ error: 'gameIds array is required' });
+      }
+
+      // Limit batch size to prevent server overwhelm
+      const limitedGameIds = gameIds.slice(0, 50);
+
+      console.log(`Club-scoped batch scores request for club ${clubId}, games:`, limitedGameIds);
+
+      // Convert to integers and get scores directly
+      const gameIdList = limitedGameIds.map(id => parseInt(id));
+
+      // Get all scores for the requested games using proper Drizzle ORM
+      const scores = await db.select()
+        .from(gameScores)
+        .where(inArray(gameScores.gameId, gameIdList));
+
+      // Group scores by game ID
+      const scoresMap: Record<number, any[]> = {};
+      limitedGameIds.forEach(gameId => {
+        scoresMap[gameId] = [];
+      });
+
+      scores.forEach((score) => {
+        const gameId = score.gameId;
+        if (scoresMap[gameId]) {
+          scoresMap[gameId].push(score);
+        } else {
+          scoresMap[gameId] = [score];
+        }
+      });
+
+      const gamesWithScores = Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0);
+      const gamesWithoutScores = gameIds.filter(id => !gamesWithScores.includes(id.toString()));
+      
+      console.log(`Club-scoped batch scores response: found scores for ${gamesWithScores.length} games: [${gamesWithScores.join(', ')}]`);
+      if (gamesWithoutScores.length > 0) {
+        console.log(`Club-scoped batch scores response: NO scores found for ${gamesWithoutScores.length} games: [${gamesWithoutScores.join(', ')}]`);
+      }
+
+      res.json(scoresMap);
+    } catch (error) {
+      console.error('Batch scores fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch batch scores' });
+    }
+  });
+
+  // Legacy batch endpoint for backward compatibility
   app.post('/api/games/scores/batch', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameIds } = req.body;

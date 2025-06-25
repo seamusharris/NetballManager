@@ -112,6 +112,12 @@ This is a comprehensive netball team management application built with modern we
 - **Build Process**: Automated via Replit workflows
 
 ## Changelog
+- June 25, 2025: COMPLETED - Final 5% of API migration to full REST architecture
+  - Created club-scoped batch endpoints: `/api/clubs/{clubId}/games/stats/batch`, `/api/clubs/{clubId}/games/scores/batch`, `/api/clubs/{clubId}/games/rosters/batch`
+  - Updated UnifiedDataFetcher to use new club-scoped batch endpoints instead of header-based ones
+  - Fixed Players.tsx to use `/api/clubs/{clubId}/teams` instead of legacy `/api/teams` endpoint
+  - Maintained legacy endpoints for backward compatibility during transition period
+  - Migration now 100% complete - all endpoints follow consistent REST URL patterns with club context
 - June 25, 2025: RESOLVED - Player names displaying as "Player ID" in roster positions
   - Fixed React Query configuration for players data loading with proper CACHE_KEYS import
   - Added currentClubId fallback to handle club context loading timing issues  

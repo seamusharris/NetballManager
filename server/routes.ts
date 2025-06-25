@@ -2186,6 +2186,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- GAME STATS API -----
   // Batch endpoint to get rosters for multiple games at once
+  // Club-scoped batch rosters endpoint
+  app.post("/api/clubs/:clubId/games/rosters/batch", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameIds } = req.body;
+      const clubId = parseInt(req.params.clubId);
+
+      if (!Array.isArray(gameIds) || gameIds.length === 0) {
+        return res.status(400).json({ error: 'gameIds array is required' });
+      }
+
+      console.log(`Club-scoped batch rosters request for club ${clubId}, games:`, gameIds);
+
+      const gameIdInts = gameIds.map(id => parseInt(id));
+
+      const rosters = await db.select()
+        .from(schema.gameRosters)
+        .where(inArray(schema.gameRosters.gameId, gameIdInts));
+
+      // Group rosters by game ID
+      const rostersMap: Record<string, any[]> = {};
+      gameIds.forEach((gameId: string) => {
+        rostersMap[gameId] = [];
+      });
+
+      rosters.forEach((roster) => {
+        const gameId = roster.gameId.toString();
+        if (rostersMap[gameId]) {
+          rostersMap[gameId].push(roster);
+        } else {
+          rostersMap[gameId] = [roster];
+        }
+      });
+
+      console.log(`Club-scoped batch rosters response: found rosters for ${Object.keys(rostersMap).filter(id => rostersMap[id].length > 0).length} games`);
+      res.json(rostersMap);
+    } catch (error) {
+      console.error('Club-scoped batch rosters fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch batch rosters' });
+    }
+  });
+
+  // Legacy batch rosters endpoint for backward compatibility
   app.post("/api/games/rosters/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       console.log("POST Batch rosters endpoint received body:", req.body);
@@ -2242,6 +2284,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Batch endpoint to get stats for multiple games at once
+  // Club-scoped batch stats endpoint
+  app.post("/api/clubs/:clubId/games/stats/batch", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameIds } = req.body;
+      const clubId = parseInt(req.params.clubId);
+
+      if (!Array.isArray(gameIds) || gameIds.length === 0) {
+        return res.status(400).json({ error: 'gameIds array is required' });
+      }
+
+      console.log(`Club-scoped POST Batch endpoint received body:`, { gameIds });
+      console.log(`Club-scoped Extracted gameIds from POST body:`, gameIds);
+      console.log(`Club-scoped POST Batch fetching stats for ${gameIds.length} games: ${gameIds.join(',')}`);
+
+      const gameIdInts = gameIds.map(id => parseInt(id));
+
+      const stats = await db.select()
+        .from(schema.gameStats)
+        .where(inArray(schema.gameStats.gameId, gameIdInts));
+
+      // Group stats by game ID
+      const statsMap: Record<string, any[]> = {};
+      gameIds.forEach((gameId: string) => {
+        statsMap[gameId] = [];
+      });
+
+      stats.forEach((stat) => {
+        const gameId = stat.gameId.toString();
+        if (statsMap[gameId]) {
+          statsMap[gameId].push(stat);
+        } else {
+          statsMap[gameId] = [stat];
+        }
+      });
+
+      console.log(`Club-scoped POST Batch endpoint successfully returned stats for ${gameIds.length} games`);
+      res.json(statsMap);
+    } catch (error) {
+      console.error('Club-scoped batch stats fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch batch stats' });
+    }
+  });
+
+  // Legacy batch stats endpoint for backward compatibility
   app.post("/api/games/stats/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       console.log("POST Batch endpoint received body:", req.body);

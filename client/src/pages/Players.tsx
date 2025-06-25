@@ -86,7 +86,7 @@ export default function Players() {
     queryKey: ['teams', currentClub?.id],
     queryFn: async () => {
       if (!currentClub?.id) return [];
-      const response = await apiClient.get(`/api/teams`);
+      const response = await apiClient.get(`/api/clubs/${currentClub.id}/teams`);
       return response;
     },
     enabled: !!currentClub?.id,
