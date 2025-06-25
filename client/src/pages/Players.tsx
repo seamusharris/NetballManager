@@ -127,15 +127,18 @@ export default function Players() {
   // Team filter state for main players view
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
 
+  // Get club ID from URL directly - more reliable than club context
+  const clubIdFromUrl = params.clubId ? parseInt(params.clubId) : null;
+  
   // Get players for non-team view
   const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
-    queryKey: ['players', currentClub?.id],
+    queryKey: ['players', clubIdFromUrl],
     queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await apiClient.get(`/api/clubs/${currentClub.id}/players`);
+      if (!clubIdFromUrl) return [];
+      const response = await apiClient.get(`/api/clubs/${clubIdFromUrl}/players`);
       return response;
     },
-    enabled: !!currentClub?.id && !teamId,
+    enabled: !!clubIdFromUrl && !teamId,
   });
 
   // Filter players based on team selection
@@ -593,7 +596,7 @@ export default function Players() {
 
   // Regular club players view
   const pageTitle = 'Players';
-  const pageSubtitle = currentClub?.name ? `Manage your club's players - ${currentClub.name}` : 'Manage your club\'s players';
+  const pageSubtitle = currentClub?.name ? `Manage your club's players - ${currentClub.name}` : `Manage your club's players (Club ${clubIdFromUrl})`;
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Players' }
@@ -670,9 +673,10 @@ export default function Players() {
           ) : filteredPlayers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">No players found for this club</p>
-              <p className="text-xs text-gray-500">Club: {currentClub?.name} (ID: {currentClub?.id})</p>
+              <p className="text-xs text-gray-500">Club: {currentClub?.name || 'Loading...'} (URL ID: {clubIdFromUrl})</p>
               <p className="text-xs text-gray-500">Players array length: {players.length}</p>
-              <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id && !teamId ? 'YES' : 'NO'}</p>
+              <p className="text-xs text-gray-500">Query enabled: {!!clubIdFromUrl && !teamId ? 'YES' : 'NO'}</p>
+              <p className="text-xs text-gray-500">Is loading: {isPlayersLoading ? 'YES' : 'NO'}</p>
             </div>
           ) : (
             <PlayersList
