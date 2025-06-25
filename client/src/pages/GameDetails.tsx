@@ -1237,6 +1237,9 @@ export default function GameDetails() {
       queryFn: () => apiClient.get('/api/clubs/current'),
     });
 
+  // Extract club ID from URL as fallback when club context is not available
+  const currentClubId = currentClub?.id || 54;
+
   // Fetch game data using team-perspective endpoint when possible
   const effectiveTeamId = teamIdFromUrl || currentTeam?.id;
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
@@ -1263,15 +1266,15 @@ export default function GameDetails() {
     isLoading: isLoadingPlayers,
     error: playersError
   } = useQuery({
-    queryKey: CACHE_KEYS.players(currentClub?.id),
+    queryKey: CACHE_KEYS.players(currentClubId),
     queryFn: async () => {
-      console.log('GameDetails: Fetching players for club', currentClub?.id);
-      if (!currentClub?.id) {
+      console.log('GameDetails: Fetching players for club', currentClubId);
+      if (!currentClubId) {
         console.log('GameDetails: No club ID available');
         return [];
       }
       try {
-        const result = await apiClient.get(`/api/clubs/${currentClub?.id}/players`);
+        const result = await apiClient.get(`/api/clubs/${currentClubId}/players`);
         console.log('GameDetails: PLAYERS QUERY SUCCESS - Raw result:', result);
         console.log('GameDetails: PLAYERS QUERY SUCCESS - Count:', result?.length);
         console.log('GameDetails: PLAYERS QUERY SUCCESS - Target players:', result?.filter(p => [78, 61, 64].includes(p.id)));
@@ -1281,7 +1284,7 @@ export default function GameDetails() {
         return [];
       }
     },
-    enabled: !!currentClub?.id,
+    enabled: !!currentClubId,
     staleTime: 1 * 60 * 1000, // Reduced cache time
     refetchOnWindowFocus: true, // Enable refetch to force data loading
     retry: 3
@@ -1306,7 +1309,7 @@ export default function GameDetails() {
     queryKey: ['/api/teams'],
     queryFn: () => apiClient.get('/api/teams'),
     select: (data) => Array.isArray(data) ? data : [],
-    enabled: !!currentClub?.id
+    enabled: !!currentClubId
   });
 
   // Fetch all teams
@@ -1919,10 +1922,10 @@ export default function GameDetails() {
                         <div className="flex items-center justify-center p-8">
                           <div className="text-center">
                             <p className="text-red-500">No players found for this club</p>
-                            <p className="text-xs text-gray-500 mt-2">Club ID: {currentClub?.id}</p>
+                            <p className="text-xs text-gray-500 mt-2">Club ID: {currentClubId} (context: {currentClub?.id})</p>
                             <p className="text-xs text-gray-500">Error: {playersError?.message}</p>
-                            <p className="text-xs text-gray-500">Query enabled: {!!currentClub?.id ? 'YES' : 'NO'}</p>
-                            <p className="text-xs text-gray-500">Cache key: {JSON.stringify(CACHE_KEYS?.players?.(currentClub?.id) || 'undefined')}</p>
+                            <p className="text-xs text-gray-500">Query enabled: {!!currentClubId ? 'YES' : 'NO'}</p>
+                            <p className="text-xs text-gray-500">Cache key: {JSON.stringify(CACHE_KEYS?.players?.(currentClubId) || 'undefined')}</p>
                             <Button 
                               size="sm" 
                               onClick={() => window.location.reload()}
