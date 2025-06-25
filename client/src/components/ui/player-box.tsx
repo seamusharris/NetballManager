@@ -133,11 +133,11 @@ function PlayerBox({
         opacity: 1
       };
     } else {
-      // Deselected state: use light background with reduced opacity
+      // Deselected state: use light background with reduced opacity but keep text readable
       return {
         backgroundColor: lightBackgroundColor,
-        borderColor: `${playerColorHex}80`, // 50% opacity
-        color: `${darkerBorderColor}B3`, // 70% opacity
+        borderColor: `${playerColorHex}B3`, // 70% opacity for border
+        color: darkerBorderColor, // Keep text color strong for readability
         opacity: 0.7
       };
     }
