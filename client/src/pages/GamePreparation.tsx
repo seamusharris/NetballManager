@@ -829,7 +829,7 @@ export default function GamePreparation() {
                         </div>                      </CardContent>
                     </Card>
                   </div>
-                  {/* Historical Games using shared component */}
+                                    {/* Historical Games using shared component */}
                   <PreviousGamesDisplay
                     historicalGames={historicalGames}
                     currentTeamId={currentTeamId!}
@@ -840,7 +840,7 @@ export default function GamePreparation() {
                   />
 
                   {/* Historical Attack vs Defense Performance */}
-                  {historicalGames.length > 0 && batchStats && Object.keys(batchStats).some(gameId => batchStats[gameId]?.length > 0) && (
+                  {historicalGames.length > 0 && batchStats && (
                     <Card>
                       <CardHeader>
                         <CardTitle>Historical vs {opponent} - Position Performance</CardTitle>
@@ -851,26 +851,26 @@ export default function GamePreparation() {
                           console.log('Historical games for position calculation:', historicalGames.length);
                           console.log('Batch stats keys:', Object.keys(batchStats || {}));
                           console.log('Current team ID:', currentTeamId);
-                          
+
                           const historicalPositionAverages = calculatePositionAverages(historicalGames, batchStats, currentTeamId);
-                          
+
                           console.log('Historical position averages calculated:', historicalPositionAverages);
-                          
+
                           if (historicalPositionAverages.gamesWithPositionStats === 0) {
                             return (
                               <div className="text-center py-8">
                                 <div className="text-gray-500">No position statistics available for historical games vs {opponent}</div>
                                 <div className="text-xs text-gray-400 mt-2">
-                                  Games: {historicalGames.length}, Stats keys: {Object.keys(batchStats || {}).length}
+                                  Historical games: {historicalGames.length}, Games with stats: {historicalPositionAverages.gamesWithPositionStats}
                                 </div>
                               </div>
                             );
                           }
-                          
+
                           return (
                             <AttackDefenseDisplay
                               averages={historicalPositionAverages}
-                              label={`Historical Attack vs Defense vs ${opponent}`}
+                              label={`Historical Attack vs Defense vs ${opponent} (${historicalPositionAverages.gamesWithPositionStats} games)`}
                             />
                           );
                         })()}
