@@ -150,7 +150,7 @@ import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { apiClient } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
+import { useParams } from 'wouter';
 import { gameScoreService } from '@/lib/gameScoreService';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 
@@ -1123,7 +1123,7 @@ export default function GameDetails() {
 
       const response = await fetch(`/api/games/${gameId}/team-awards`, {
         headers: {
-          'x-current-club-id': currentClub?.id?.toString() || '',
+          'x-current-club-id': club?.id?.toString() || '',
           'x-current-team-id': currentTeam?.id?.toString() || '',
         }
       });
@@ -1207,13 +1207,13 @@ export default function GameDetails() {
   const [activeTab, setActiveTab] = useState('overview');
 
     // Fetch current club using apiClient
-    const { data: currentClub } = useQuery({
+    const { data: club } = useQuery({
       queryKey: ['/api/clubs/current'],
       queryFn: () => apiClient.get('/api/clubs/current'),
     });
 
   // Extract club ID from URL as fallback when club context is not available
-  const currentClubId = currentClub?.id || 54;
+  const clubId = club?.id || 54;
 
   // Fetch game data using team-perspective endpoint when possible
   const effectiveTeamId = teamIdFromUrl || currentTeam?.id;
@@ -1241,20 +1241,20 @@ export default function GameDetails() {
     isLoading: isLoadingPlayers,
     error: playersError
   } = useQuery({
-    queryKey: CACHE_KEYS.players(currentClubId),
+    queryKey: CACHE_KEYS.players(clubId),
     queryFn: async () => {
-      if (!currentClubId) {
+      if (!clubId) {
         return [];
       }
       try {
-        const result = await apiClient.get(`/api/clubs/${currentClubId}/players`);
+        const result = await apiClient.get(`/api/clubs/${clubId}/players`);
         return Array.isArray(result) ? result : [];
       } catch (error) {
         console.error('Error fetching players:', error);
         return [];
       }
     },
-    enabled: !!currentClubId,
+    enabled: !!clubId,
     staleTime: 1 * 60 * 1000, // Reduced cache time
     refetchOnWindowFocus: true, // Enable refetch to force data loading
     retry: 3
@@ -1279,7 +1279,7 @@ export default function GameDetails() {
     queryKey: ['/api/teams'],
     queryFn: () => apiClient.get('/api/teams'),
     select: (data) => Array.isArray(data) ? data : [],
-    enabled: !!currentClubId
+    enabled: !!clubId
   });
 
   // Fetch all teams
@@ -1331,13 +1331,13 @@ export default function GameDetails() {
       console.log("Roster first entry:", roster?.[0]);
       console.log("Players data:", { players, isLoadingPlayers, playersLength: players?.length });
       console.log("Teams data:", { teams, isLoadingTeams, teamsLength: teams?.length });
-      console.log("Current club:", currentClub);
+      console.log("Current club:", club);
       console.log("Current team:", currentTeam);
       console.log("Effective team ID:", effectiveTeamId);
       // Always refetch roster data when navigating to this page
       refetchRosters();
     }
-  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub, roster, currentTeam, players, isLoadingPlayers, effectiveTeamId]);
+  }, [gameId, refetchRosters, teams, isLoadingTeams, club, roster, currentTeam, players, isLoadingPlayers, effectiveTeamId]);
 
   // Fetch game stats
   const { 
@@ -1369,7 +1369,7 @@ export default function GameDetails() {
     if (!game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
 
     // Ensure we always pass the current team ID for consistent perspective
-    const effectiveCurrentTeamId = currentTeam?.id || currentClub?.id;
+    const effectiveCurrentTeamId = currentTeam?.id || club?.id;
 
     // Game details should prioritize official scores
     return gameScoreService.calculateGameScoresSync(
@@ -1382,7 +1382,7 @@ export default function GameDetails() {
       effectiveCurrentTeamId,
       officialScores || undefined
     );
-  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id, currentClub?.id, officialScores]);
+  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id, club?.id, officialScores]);
 
   const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
 

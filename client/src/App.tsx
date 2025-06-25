@@ -280,37 +280,16 @@ export { queryClient };
 initializeCacheManager(queryClient);
 
 function AppContent() {
-  try {
-    const { isInitialized } = useClub();
-
-    if (!isInitialized) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <LoadingSpinner message="Initializing application..." />
-        </div>
-      );
-    }
-
-    return <Router />;
-  } catch (error) {
-    console.error('AppContent error:', error);
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner message="Loading club context..." />
-      </div>
-    );
-  }
+  return <Router />;
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ClubProvider>
-        <TooltipProvider>
-          <AppContent />
-          <Toaster />
-        </TooltipProvider>
-      </ClubProvider>
+      <TooltipProvider>
+        <AppContent />
+        <Toaster />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

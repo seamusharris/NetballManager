@@ -24,7 +24,7 @@ export function ClubSwitcher() {
       queryFn: () => apiClient.get('/api/user/clubs'),
     });
 
-    if (isLoading || !isInitialized) {
+    if (isLoading) {
       return (
         <Button variant="outline" size="sm" disabled>
           <Building2 className="w-4 h-4 mr-2" />
@@ -42,21 +42,13 @@ export function ClubSwitcher() {
       );
     }
 
-    // Find the current club from userClubs data or fall back to first club
-    // Use the currentClubId from context to find the right club
-
-    const currentUserClub = userClubs.find(club => 
-      club.clubId === (currentClub?.id || currentClubId)
-    );
+    // Default to first club for now - could be enhanced with URL parsing
+    const currentUserClub = userClubs[0];
 
     const displayClub = currentUserClub ? {
       id: currentUserClub.clubId,
       name: currentUserClub.clubName,
       code: currentUserClub.clubCode
-    } : userClubs.length > 0 ? {
-      id: userClubs[0].clubId,
-      name: userClubs[0].clubName,
-      code: userClubs[0].clubCode
     } : null;
 
     if (!displayClub) {
