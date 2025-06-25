@@ -156,12 +156,15 @@ export default function TeamAnalysis() {
   const [, navigate] = useLocation();
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+    queryKey: ['games', currentTeamId],
+    queryFn: async () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
         headers['x-current-team-id'] = currentTeamId.toString();
       }
       return apiClient.get('/api/games', { headers });
     },
+    enabled: !!currentTeamId
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({

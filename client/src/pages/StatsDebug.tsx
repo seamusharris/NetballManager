@@ -8,8 +8,12 @@ import { GameStat, Position, allPositions } from '@shared/schema';
 import SingleStatTester from '@/components/statistics/SingleStatTester';
 
 export default function StatsDebug() {
-  const gameId = parseInt(id);
+  const params = useParams<{ id?: string }>();
+  const gameId = params.id ? parseInt(params.id) : null;
   
+  const { data: stats = [] } = useQuery({
+    queryKey: ['stats-debug', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     refetchInterval: 2000 // Auto refresh every 2 seconds
   });
