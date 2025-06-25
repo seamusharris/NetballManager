@@ -720,7 +720,6 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                     alignItems: 'center',
                     padding: '0.25rem'
                   }}
-                ```typescript
                 >
                   <div 
                     className="font-bold text-center text-lg" 
