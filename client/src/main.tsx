@@ -1,58 +1,22 @@
-import React from 'react';
 import { createRoot } from "react-dom/client";
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ClubProvider } from "@/contexts/ClubContext";
 import App from "./App";
 import "./index.css";
-import Teams from './pages/Teams';
-import TeamPlayers from './pages/TeamPlayers';
-import Players from './pages/Players';
 
-function App() {
-  return (
-    <Router>
-      <Switch>
-        <Route path="/teams/:teamId/players" component={TeamPlayers} />
-        <Route path="/teams/:teamId" component={Teams} />
-        <Route path="/teams" component={Teams} />
-        <Route path="/players" component={Players} />
-      </Switch>
-    </Router>
-  );
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
+    },
+  },
+});
 
-export default App;
-
-function TeamPlayers() {
-  return (
-    <div>
-      <h1>Team Players</h1>
-      <p>List of players for the selected team.</p>
-    </div>
-  );
-}
-
-export default TeamPlayers;
-
-function Teams() {
-  return (
-    <div>
-      <h1>Teams</h1>
-      <p>List of teams.</p>
-    </div>
-  );
-}
-
-export default Teams;
-
-function Players() {
-  return (
-    <div>
-      <h1>Players</h1>
-      <p>List of all players.</p>
-    </div>
-  );
-}
-
-export default Players;
-
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <QueryClientProvider client={queryClient}>
+    <ClubProvider>
+      <App />
+    </ClubProvider>
+  </QueryClientProvider>
+);
