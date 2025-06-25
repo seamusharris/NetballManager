@@ -202,6 +202,15 @@ export default function GameDetails() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // State for edit mode
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showScoreMismatchDialog, setShowScoreMismatchDialog] = useState(false);
+  const [showRosterPrint, setShowRosterPrint] = useState(false);
+  const [showStatsPrint, setShowStatsPrint] = useState(false);
+
+  // State for score mismatches
+  const [scoreMismatchData, setScoreMismatchData] = useState<any>(null);
+
   // Fetch game details
   const { data: game, isLoading: gameLoading, error: gameError } = useQuery({
     queryKey: ['/api/games', gameId],
@@ -255,6 +264,176 @@ export default function GameDetails() {
     queryFn: () => apiClient.get('/api/game-statuses')
   });
 
+  // Fetch opponent teams if needed
+  const { data: opponents = [] } = useQuery({
+    queryKey: ['/api/teams/all'],
+    queryFn: () => apiClient.get('/api/teams/all'),
+    enabled: !!game
+  });
+
+  // Fetch game notes
+  const { data: gameNotes = [] } = useQuery({
+    queryKey: ['/api/games', gameId, 'notes'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/notes`),
+    enabled: !!gameId
+  });
+
+  // Fetch team awards
+  const { data: teamAwards = [] } = useQuery({
+    queryKey: ['/api/games', gameId, 'awards'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/awards`),
+    enabled: !!gameId
+  });
+
+  // Fetch game permissions
+  const { data: gamePermissions = [] } = useQuery({
+    queryKey: ['/api/games', gameId, 'permissions'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/permissions`),
+    enabled: !!gameId
+  });
+
+  // Mutation for game updates
+  const updateGameMutation = useMutation({
+    mutationFn: (gameData: any) => apiClient.put(`/api/games/${gameId}`, gameData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      setIsEditMode(false);
+      toast({ title: 'Game updated successfully' });
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to update game', variant: 'destructive' });
+    }
+  });
+
+  // Mutation for updating game status
+  const updateGameStatusMutation = useMutation({
+    mutationFn: (statusId: number) => 
+      apiClient.patch(`/api/games/${gameId}/status`, { statusId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      toast({ title: 'Game status updated successfully' });
+    }
+  });
+
+  // Mutation for deleting game
+  const deleteGameMutation = useMutation({
+    mutationFn: () => apiClient.delete(`/api/games/${gameId}`),
+    onSuccess: () => {
+      toast({ title: 'Game deleted successfully' });
+      // Navigate back to games list
+      window.history.back();
+    }
+  });
+
+  // Calculate scores using the new unified service
+  const { totalScores, quarterBreakdown } = useMemo(() => {
+    if (!quarterScores || quarterScores.length === 0 || !game || !teams) {
+      return { totalScores: null, quarterBreakdown: [] };
+    }
+
+    try {
+      const homeTeam = teams.find(t => t.id === game.homeTeamId);
+      const awayTeam = teams.find(t => t.id === game.awayTeamId);
+      
+      // Create clubTeamIds array from current club context
+      const clubTeamIds = teams.map(t => t.id);
+      
+      // Use the unified game score service
+      const scores = gameScoreService.calculateFromOfficialScores(
+        game, 
+        quarterScores, 
+        clubTeamIds
+      );
+      
+      return {
+        totalScores: {
+          homeScore: scores.ourScore,
+          awayScore: scores.theirScore
+        },
+        quarterBreakdown: scores.quarterBreakdown || []
+      };
+    } catch (error) {
+      console.error('Error calculating scores:', error);
+      return { totalScores: null, quarterBreakdown: [] };
+    }
+  }, [quarterScores, game, teams]);
+
+  // Calculate inter-club score validation
+  const scoreValidation = useMemo(() => {
+    if (!quarterScores || quarterScores.length === 0 || !game) {
+      return null;
+    }
+
+    return validateInterClubScores(quarterScores, game);
+  }, [quarterScores, game]);
+
+  // Check for score mismatches and show dialog
+  useEffect(() => {
+    if (scoreValidation && !scoreValidation.isValid) {
+      setScoreMismatchData(scoreValidation);
+      setShowScoreMismatchDialog(true);
+    }
+  }, [scoreValidation]);
+
+  // Calculate position-based statistics
+  const positionStats = useMemo(() => {
+    if (!gameStats || gameStats.length === 0) return {};
+    
+    const stats: Record<string, any> = {};
+    
+    // Group stats by position
+    gameStats.forEach(stat => {
+      if (!stats[stat.position]) {
+        stats[stat.position] = {
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0,
+          quarters: []
+        };
+      }
+      
+      stats[stat.position].goalsFor += stat.goalsFor || 0;
+      stats[stat.position].goalsAgainst += stat.goalsAgainst || 0;
+      stats[stat.position].missedGoals += stat.missedGoals || 0;
+      stats[stat.position].rebounds += stat.rebounds || 0;
+      stats[stat.position].intercepts += stat.intercepts || 0;
+      stats[stat.position].badPass += stat.badPass || 0;
+      stats[stat.position].handlingError += stat.handlingError || 0;
+      stats[stat.position].pickUp += stat.pickUp || 0;
+      stats[stat.position].infringement += stat.infringement || 0;
+      stats[stat.position].quarters.push(stat.quarter);
+    });
+    
+    return stats;
+  }, [gameStats]);
+
+  // Get position assignments from roster
+  const positionAssignments = useMemo(() => {
+    if (!roster || roster.length === 0) return {};
+    
+    const assignments: Record<string, any> = {};
+    roster.forEach(assignment => {
+      if (!assignments[assignment.position]) {
+        assignments[assignment.position] = [];
+      }
+      const player = players.find(p => p.id === assignment.playerId);
+      if (player) {
+        assignments[assignment.position].push({
+          ...player,
+          quarter: assignment.quarter || 'All'
+        });
+      }
+    });
+    
+    return assignments;
+  }, [roster, players]);
+
   const isLoading = gameLoading || isLoadingTeams || isLoadingPlayers || isLoadingRoster || scoresLoading || statsLoading;
 
   if (isLoading) {
@@ -281,19 +460,83 @@ export default function GameDetails() {
   const homeTeam = teams.find(t => t.id === game.homeTeamId);
   const awayTeam = teams.find(t => t.id === game.awayTeamId);
   const gameStatus = gameStatuses.find(s => s.id === game.statusId);
+  const opponentName = getOpponentName(opponents, game.awayTeamId);
 
   return (
     <div className="p-4 space-y-6">
       <Helmet>
-        <title>{game.homeTeamName} vs {game.awayTeamName || 'BYE'} - {TEAM_NAME}</title>
+        <title>{game.homeTeamName} vs {opponentName} - {TEAM_NAME}</title>
       </Helmet>
 
+      {/* Score Mismatch Dialog */}
+      <Dialog open={showScoreMismatchDialog} onOpenChange={setShowScoreMismatchDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Score Validation Warning</DialogTitle>
+            <DialogDescription>
+              Score mismatches detected between teams. Please review and reconcile.
+            </DialogDescription>
+          </DialogHeader>
+          {scoreMismatchData && (
+            <ScoreMismatchWarning
+              validation={scoreMismatchData}
+              onResolve={() => setShowScoreMismatchDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Printable Roster Dialog */}
+      <Dialog open={showRosterPrint} onOpenChange={setShowRosterPrint}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Printable Roster Summary</DialogTitle>
+          </DialogHeader>
+          <PrintableRosterSummary
+            game={game}
+            roster={roster}
+            players={players}
+            teams={teams}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Printable Stats Dialog */}
+      <Dialog open={showStatsPrint} onOpenChange={setShowStatsPrint}>
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Printable Statistics Sheet</DialogTitle>
+          </DialogHeader>
+          <PrintableStatsSheet
+            game={game}
+            gameStats={gameStats}
+            players={players}
+            teams={teams}
+            quarterScores={quarterScores}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <BackButton />
           <div>
-            <h1 className="text-2xl font-bold">
-              {game.homeTeamName} vs {game.awayTeamName || 'BYE'}
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/games">Games</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbPage>Game Details</BreadcrumbPage>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <h1 className="text-2xl font-bold mt-2">
+              {game.homeTeamName} vs {opponentName}
             </h1>
             <p className="text-muted-foreground">
               {formatDate(game.date)} at {game.time}
@@ -302,279 +545,519 @@ export default function GameDetails() {
         </div>
 
         <div className="flex items-center gap-2">
-          {teamId && (
-            <Button 
-              variant="outline" 
-              asChild
-              className="bg-primary/10 border-primary/20 hover:bg-primary/20"
-            >
-              <Link href={`/team/${teamId}/roster/game/${gameId}`}>
-                <ClipboardList className="w-4 h-4 mr-2" />
-                Manage Roster
-              </Link>
-            </Button>
-          )}
-          {game?.statusAllowsStatistics && (
-            <LiveStatsButton game={game} />
+          <TeamSwitcher />
+          {!isEditMode && (
+            <>
+              <Button variant="outline" onClick={() => setIsEditMode(true)}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Game
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowRosterPrint(true)}
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Print Roster
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowStatsPrint(true)}
+                disabled={!gameStats || gameStats.length === 0}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Print Stats
+              </Button>
+              {game?.statusAllowsStatistics && (
+                <LiveStatsButton game={game} />
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Game</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this game? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => deleteGameMutation.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Game
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           )}
         </div>
       </div>
 
       <Separator />
 
-      {/* Game Overview Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Game Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3">
-              <CalendarRange className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">{formatDate(game.date)}</p>
-                <p className="text-sm text-muted-foreground">Date</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <ActivitySquare className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">{game.time}</p>
-                <p className="text-sm text-muted-foreground">Time</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Edit className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium">{game.venue || 'TBA'}</p>
-                <p className="text-sm text-muted-foreground">Venue</p>
-              </div>
-            </div>
+      {/* Edit Mode */}
+      {isEditMode && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Game Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <GameForm 
+              game={game}
+              teams={teams}
+              gameStatuses={gameStatuses}
+              onSubmit={(data) => updateGameMutation.mutate(data)}
+              onCancel={() => setIsEditMode(false)}
+              isLoading={updateGameMutation.isPending}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Game Status and Quick Actions */}
+      {!isEditMode && (
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Status:</span>
+            <GameStatusButton
+              currentStatus={gameStatus}
+              gameStatuses={gameStatuses}
+              onStatusChange={(statusId) => updateGameStatusMutation.mutate(statusId)}
+              isLoading={updateGameStatusMutation.isPending}
+            />
+          </div>
+          <Separator orientation="vertical" className="h-6" />
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Round:</span>
+            <Badge variant="outline">{game.round || 'TBA'}</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Venue:</span>
+            <span className="text-sm">{game.venue || 'TBA'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Game Score Display */}
+      {totalScores && quarterBreakdown.length > 0 && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Game Scores
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <GameScoreDisplay 
+              scores={quarterScores}
+              homeTeamName={game.homeTeamName}
+              awayTeamName={opponentName}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Score Validation Warning */}
+      {scoreValidation && !scoreValidation.isValid && (
+        <Card className="border-l-4 border-l-orange-500">
+          <CardHeader>
+            <CardTitle className="text-orange-700">Score Validation Issues</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScoreMismatchWarning 
+              validation={scoreValidation}
+              onResolve={() => {/* Handle resolution */}}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="court" className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="court">Court View</TabsTrigger>
+          <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          <TabsTrigger value="roster">Roster</TabsTrigger>
+          <TabsTrigger value="scores">Scores</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="awards">Awards</TabsTrigger>
+        </TabsList>
+
+        {/* Court View Tab */}
+        <TabsContent value="court" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Netball Court Display */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ActivitySquare className="w-5 h-5" />
+                  Court Positions
+                </CardTitle>
+                <CardDescription>
+                  Current player positions for {game.homeTeamName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative bg-green-50 border-2 border-green-200 rounded-lg p-4" 
+                     style={{ aspectRatio: '3/4', minHeight: '400px' }}>
+                  
+                  {/* Court lines */}
+                  <div className="absolute inset-4 border-2 border-green-400 rounded">
+                    {/* Third lines */}
+                    <div className="absolute top-1/3 left-0 right-0 h-0.5 bg-green-400"></div>
+                    <div className="absolute top-2/3 left-0 right-0 h-0.5 bg-green-400"></div>
+                    
+                    {/* Goal circles */}
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-16 border-2 border-green-400 rounded-full -mt-8"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-16 border-2 border-green-400 rounded-full -mb-8"></div>
+                  </div>
+
+                  {/* Position boxes */}
+                  {POSITIONS.map((position, index) => {
+                    const positionPlayers = positionAssignments[position] || [];
+                    const positionStyle = getPositionStyle(position, index);
+                    const stats = positionStats[position];
+                    
+                    return (
+                      <div
+                        key={position}
+                        className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                        style={positionStyle}
+                      >
+                        <PositionBox
+                          position={position}
+                          players={positionPlayers}
+                          stats={stats}
+                          onClick={() => {/* Handle position click */}}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Position Statistics */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Position Statistics
+                </CardTitle>
+                <CardDescription>
+                  Performance by court position
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {POSITIONS.map(position => {
+                    const stats = positionStats[position];
+                    const players = positionAssignments[position] || [];
+                    
+                    if (!stats && players.length === 0) return null;
+
+                    return (
+                      <GamePositionStatsBox
+                        key={position}
+                        position={position}
+                        stats={stats}
+                        players={players}
+                      />
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Statistics Tab */}
+        <TabsContent value="statistics" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <StatItemBox
+              title="Total Goals"
+              value={Object.values(positionStats).reduce((sum: number, stats: any) => sum + (stats?.goalsFor || 0), 0)}
+              icon={<Activity className="w-5 h-5" />}
+              color="green"
+            />
+            <StatItemBox
+              title="Intercepts"
+              value={Object.values(positionStats).reduce((sum: number, stats: any) => sum + (stats?.intercepts || 0), 0)}
+              icon={<Activity className="w-5 h-5" />}
+              color="blue"
+            />
+            <StatItemBox
+              title="Rebounds"
+              value={Object.values(positionStats).reduce((sum: number, stats: any) => sum + (stats?.rebounds || 0), 0)}
+              icon={<Activity className="w-5 h-5" />}
+              color="orange"
+            />
+            <StatItemBox
+              title="Errors"
+              value={Object.values(positionStats).reduce((sum: number, stats: any) => sum + (stats?.badPass || 0) + (stats?.handlingError || 0) + (stats?.infringement || 0), 0)}
+              icon={<Activity className="w-5 h-5" />}
+              color="red"
+            />
           </div>
 
-          <Separator className="my-4" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {POSITIONS.map(position => {
+              const stats = positionStats[position];
+              if (!stats) return null;
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-lg">{game.homeTeamName}</h3>
-              <p className="text-sm text-muted-foreground">Home Team</p>
-              <p className="text-xs text-muted-foreground mt-1">{homeTeam?.division}</p>
-            </div>
-            {game.awayTeamName && game.awayTeamName !== 'BYE' ? (
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <h3 className="font-semibold text-lg">{game.awayTeamName}</h3>
-                <p className="text-sm text-muted-foreground">Away Team</p>
-                <p className="text-xs text-muted-foreground mt-1">{awayTeam?.division}</p>
-              </div>
-            ) : (
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-lg">BYE</h3>
-                <p className="text-sm text-muted-foreground">No opponent</p>
-              </div>
+              return (
+                <PositionStatsBox
+                  key={position}
+                  position={position}
+                  stats={stats}
+                  primaryStats={primaryPositionStats[position]}
+                  secondaryStats={secondaryPositionStats[position]}
+                />
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        {/* Roster Tab */}
+        <TabsContent value="roster" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{game.homeTeamName} Roster</CardTitle>
+                <CardDescription>
+                  {roster.filter(r => r.teamId === game.homeTeamId).length} players assigned
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {POSITIONS.map(position => {
+                    const assignments = roster.filter(r => 
+                      r.teamId === game.homeTeamId && r.position === position
+                    );
+                    
+                    return (
+                      <div key={position} className="flex justify-between items-center p-2 border rounded">
+                        <span className="font-medium">{position}</span>
+                        <div className="flex gap-1">
+                          {assignments.map((assignment, idx) => {
+                            const player = players.find(p => p.id === assignment.playerId);
+                            return (
+                              <Badge key={idx} variant="secondary">
+                                {player?.displayName || 'Unknown'}
+                                {assignment.quarter && assignment.quarter !== 'All' && ` (Q${assignment.quarter})`}
+                              </Badge>
+                            );
+                          })}
+                          {assignments.length === 0 && (
+                            <span className="text-muted-foreground text-sm">Not assigned</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {game.awayTeamId && awayTeam && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{opponentName} Roster</CardTitle>
+                  <CardDescription>
+                    {roster.filter(r => r.teamId === game.awayTeamId).length} players assigned
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {POSITIONS.map(position => {
+                      const assignments = roster.filter(r => 
+                        r.teamId === game.awayTeamId && r.position === position
+                      );
+                      
+                      return (
+                        <div key={position} className="flex justify-between items-center p-2 border rounded">
+                          <span className="font-medium">{position}</span>
+                          <div className="flex gap-1">
+                            {assignments.map((assignment, idx) => {
+                              const player = players.find(p => p.id === assignment.playerId);
+                              return (
+                                <Badge key={idx} variant="secondary">
+                                  {player?.displayName || 'Unknown'}
+                                  {assignment.quarter && assignment.quarter !== 'All' && ` (Q${assignment.quarter})`}
+                                </Badge>
+                              );
+                            })}
+                            {assignments.length === 0 && (
+                              <span className="text-muted-foreground text-sm">Not assigned</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
 
-          <div className="mt-4 flex items-center justify-center">
-            <Badge variant="secondary" className="px-3 py-1">
-              {gameStatus?.displayName || 'Unknown Status'}
-            </Badge>
+          <div className="mt-6 flex gap-2">
+            <Button asChild>
+              <Link href={`/team/${game.homeTeamId}/roster/game/${gameId}`}>
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Manage {game.homeTeamName} Roster
+              </Link>
+            </Button>
+            {game.awayTeamId && awayTeam && (
+              <Button variant="outline" asChild>
+                <Link href={`/team/${game.awayTeamId}/roster/game/${gameId}`}>
+                  <ClipboardList className="w-4 h-4 mr-2" />
+                  Manage {opponentName} Roster
+                </Link>
+              </Button>
+            )}
           </div>
-
-          {quarterScores.length > 0 && (
-            <>
-              <Separator className="my-4" />
-              <GameScoreDisplay 
-                scores={quarterScores}
-                homeTeamName={game.homeTeamName}
-                awayTeamName={game.awayTeamName}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Tabs for detailed information */}
-      <Tabs defaultValue="roster" className="w-full">
-        <TabsList>
-          <TabsTrigger value="roster">Roster</TabsTrigger>
-          <TabsTrigger value="statistics">Statistics</TabsTrigger>
-          <TabsTrigger value="scores">Scores</TabsTrigger>
-          <TabsTrigger value="actions">Actions</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="roster" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardList className="w-5 h-5" />
-                Team Rosters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {roster && roster.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">{game.homeTeamName}</h4>
-                      <div className="space-y-2">
-                        {roster
-                          .filter(r => r.teamId === game.homeTeamId)
-                          .map((assignment, index) => {
-                            const player = players.find(p => p.id === assignment.playerId);
-                            return (
-                              <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <span className="font-medium">{assignment.position}</span>
-                                <span>{player?.displayName || 'Not assigned'}</span>
-                              </div>
-                            );
-                          })
-                        }
-                      </div>
-                    </div>
-                    {game.awayTeamName && game.awayTeamName !== 'BYE' && (
-                      <div>
-                        <h4 className="font-semibold mb-2">{game.awayTeamName}</h4>
-                        <div className="space-y-2">
-                          {roster
-                            .filter(r => r.teamId === game.awayTeamId)
-                            .map((assignment, index) => {
-                              const player = players.find(p => p.id === assignment.playerId);
-                              return (
-                                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                  <span className="font-medium">{assignment.position}</span>
-                                  <span>{player?.displayName || 'Not assigned'}</span>
-                                </div>
-                              );
-                            })
-                          }
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No roster data available</p>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
-        <TabsContent value="statistics" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                Game Statistics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {gameStats && gameStats.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {gameStats.filter(s => s.statType === 'goal').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Goals</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {gameStats.filter(s => s.statType === 'intercept').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Intercepts</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">
-                        {gameStats.filter(s => s.statType === 'rebound').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Rebounds</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">
-                        {gameStats.filter(s => s.statType === 'error').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Errors</div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No statistics recorded yet</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+        {/* Scores Tab */}
         <TabsContent value="scores" className="mt-6">
+          <div className="space-y-6">
+            {quarterScores.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quarter by Quarter</CardTitle>
+                  <CardDescription>
+                    Official scores entered during the game
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <GameScoreDisplay 
+                    scores={quarterScores}
+                    homeTeamName={game.homeTeamName}
+                    awayTeamName={opponentName}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>No Scores Recorded</CardTitle>
+                  <CardDescription>
+                    Scores will appear here once they are entered during the game
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <OfficialScoreEntry 
+                    gameId={gameId}
+                    homeTeamId={game.homeTeamId}
+                    awayTeamId={game.awayTeamId}
+                    homeTeamName={game.homeTeamName}
+                    awayTeamName={opponentName}
+                    onScoreUpdated={() => {
+                      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Notes Tab */}
+        <TabsContent value="notes" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Quarter Scores</CardTitle>
+              <CardTitle>Game Notes</CardTitle>
+              <CardDescription>
+                Important observations and comments about this game
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {quarterScores.length > 0 ? (
-                <GameScoreDisplay 
-                  scores={quarterScores}
-                  homeTeamName={game.homeTeamName}
-                  awayTeamName={game.awayTeamName}
-                />
+              {gameNotes.length > 0 ? (
+                <div className="space-y-4">
+                  {gameNotes.map((note: any) => (
+                    <div key={note.id} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">{note.title}</h4>
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(note.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm">{note.content}</p>
+                      {note.isImportant && (
+                        <Badge variant="destructive" className="mt-2">Important</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <p className="text-muted-foreground">No scores recorded yet</p>
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No notes recorded for this game</p>
+                  <Button className="mt-4">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Add Note
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="actions" className="mt-6">
+        {/* Awards Tab */}
+        <TabsContent value="awards" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="w-5 h-5" />
-                Game Actions
-              </CardTitle>
+              <CardTitle>Player Awards</CardTitle>
+              <CardDescription>
+                Recognition for outstanding performance in this game
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="outline" className="h-auto p-4" asChild>
-                  <Link href={`/team/${teamId}/roster/game/${gameId}`}>
-                    <div className="text-center">
-                      <ClipboardList className="w-6 h-6 mx-auto mb-2" />
-                      <div className="font-medium">Manage Roster</div>
-                      <div className="text-sm text-muted-foreground">Set player positions</div>
-                    </div>
-                  </Link>
-                </Button>
-                {game?.statusAllowsStatistics && (
-                  <Button variant="outline" className="h-auto p-4" asChild>
-                    <Link href={`/game/${gameId}/team/${teamId || game.homeTeamId}/stats/record`}>
-                      <div className="text-center">
-                        <BarChart3 className="w-6 h-6 mx-auto mb-2" />
-                        <div className="font-medium">Record Stats</div>
-                        <div className="text-sm text-muted-foreground">Live statistics entry</div>
-                      </div>
-                    </Link>
+              {teamAwards.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {teamAwards.map((award: any) => (
+                    <AwardWinnerDisplay
+                      key={award.id}
+                      award={award}
+                      player={players.find(p => p.id === award.playerId)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No awards assigned for this game</p>
+                  <Button className="mt-4">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Assign Awards
                   </Button>
-                )}
-                <Button variant="outline" className="h-auto p-4">
-                  <div className="text-center">
-                    <Printer className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Print Reports</div>
-                    <div className="text-sm text-muted-foreground">Game summaries</div>
-                  </div>
-                </Button>
-                <Button variant="outline" className="h-auto p-4">
-                  <div className="text-center">
-                    <FileText className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Export Data</div>
-                    <div className="text-sm text-muted-foreground">Game statistics</div>
-                  </div>
-                </Button>
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
+}
+
+// Helper function to get position coordinates on the court
+function getPositionStyle(position: Position, index: number) {
+  const positions: Record<Position, { top: string; left: string }> = {
+    'GS': { top: '85%', left: '50%' },
+    'GA': { top: '75%', left: '30%' },
+    'WA': { top: '65%', left: '20%' },
+    'C': { top: '50%', left: '50%' },
+    'WD': { top: '35%', left: '80%' },
+    'GD': { top: '25%', left: '70%' },
+    'GK': { top: '15%', left: '50%' }
+  };
+
+  return positions[position] || { top: '50%', left: '50%' };
 }
