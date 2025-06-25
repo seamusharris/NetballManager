@@ -178,7 +178,7 @@ function PlayerBox({
 
     const checkboxStyle = {
       backgroundColor: isSelected ? playerColorHex : 'transparent',
-      borderColor: isSelected ? 'transparent' : playerColorHex, // Use full color for better visibility
+      borderColor: isSelected ? 'transparent' : darkerBorderColor, // Match the text color
       border: isSelected ? 'none' : '2px solid',
       color: 'white'
     };
