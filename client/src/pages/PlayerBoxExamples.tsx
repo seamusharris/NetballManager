@@ -108,56 +108,56 @@ export default function PlayerBoxExamples() {
             .no-print {
               display: none !important;
             }
-            
+
             body {
               font-size: 12px;
               line-height: 1.3;
             }
-            
+
             .prose {
               max-width: none !important;
             }
-            
+
             /* Ensure grids stack properly in print */
             .grid {
               break-inside: avoid;
               page-break-inside: avoid;
             }
-            
+
             /* Reduce spacing for print */
             .space-y-8 > * + * {
               margin-top: 1rem !important;
             }
-            
+
             .space-y-6 > * + * {
               margin-top: 0.75rem !important;
             }
-            
+
             .space-y-4 > * + * {
               margin-top: 0.5rem !important;
             }
-            
+
             /* Ensure sections don't break across pages */
             section {
               break-inside: avoid;
               page-break-inside: avoid;
             }
-            
+
             /* Optimize card shadows for print */
             .shadow-md, .shadow-lg {
               box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
             }
-            
+
             /* Ensure colors print well */
             .bg-white {
               background-color: white !important;
             }
-            
+
             /* Make text more readable in print */
             .text-gray-700 {
               color: #374151 !important;
             }
-            
+
             .text-gray-600 {
               color: #4b5563 !important;
             }
@@ -735,7 +735,7 @@ export default function PlayerBoxExamples() {
                 />
               </div>
             </div>
-            
+
           </div>
         </div>
 
@@ -1131,7 +1131,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                    style={{ borderColor: '#a855f7' }}
+                    style={{ borderColor: getBorderColorHex('bg-purple-500') }}
                   >
                   </div>
                   <PlayerBox
@@ -1148,7 +1148,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                    style={{ borderColor: '#f97316' }}
+                    style={{ borderColor: getBorderColorHex('bg-orange-500') }}
                   >
                   </div>
                   <PlayerBox
@@ -1194,7 +1194,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                    style={{ borderColor: '#14b8a6' }}
+                    style={{ borderColor: getBorderColorHex('bg-teal-500') }}
                   >
                   </div>
                   <PlayerBox
@@ -1332,7 +1332,7 @@ export default function PlayerBoxExamples() {
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                     style={{ backgroundColor: selectedPlayers.has(51) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(51) ? 'none' : '2px solid #3b82f6' }}
-                    onClick={() => togglePlayerSelection(51)}
+                    onClick={(){() => togglePlayerSelection(51)}
                   >
                     {selectedPlayers.has(51) && '✓'}
                   </div>
@@ -1550,7 +1550,7 @@ export default function PlayerBoxExamples() {
               <h4 className="text-sm font-medium mb-2 text-gray-700">Badge Color Variations - Adapting to Avatar Colors</h4>
               <p className="text-sm text-gray-600 mb-3">Badges that adapt to work well with different avatar color schemes</p>
               <div className="space-y-4">
-                
+
                 {/* Standard Badge Approach */}
                 <div>
                   <h5 className="text-xs font-medium mb-2 text-gray-600">Standard Badge (Fixed Colors)</h5>
@@ -1748,16 +1748,16 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
-            
+
           </div>
         </div>
       </section>
 
-      
 
-      
 
-      
+
+
+
     </PageTemplate>
   );
 }

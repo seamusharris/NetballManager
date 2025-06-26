@@ -1,5 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { CACHE_CONFIG } from '@/lib/queryClient';
@@ -41,50 +42,43 @@ export function useSetPlayerAvailability(teamId?: number) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Track requests to handle overlapping updates intelligently
-  const activeRequestRef = useRef<{
-    gameId: number;
-    timestamp: number;
-    promise: Promise<any>;
-  } | null>(null);
+  // Request queue to prevent race conditions
+  const requestQueueRef = useRef<Map<number, Promise<any>>>(new Map());
 
   return useMutation({
     mutationFn: async ({ gameId, data }: { gameId: number; data: SetAvailabilityData }) => {
-      const requestTimestamp = Date.now();
-      
-      // If there's an active request for the same game, wait for it to complete
-      if (activeRequestRef.current?.gameId === gameId) {
-        console.log(`⏳ Waiting for previous request to complete for game ${gameId}`);
+      // Check if there's already a request in progress for this game
+      const existingRequest = requestQueueRef.current.get(gameId);
+      if (existingRequest) {
+        console.log(`⏳ Waiting for existing request to complete for game ${gameId}`);
         try {
-          await activeRequestRef.current.promise;
+          await existingRequest;
         } catch (error) {
-          // Previous request failed, but we'll continue with this one
           console.log(`Previous request failed, continuing with new request`);
         }
       }
       
-      // Send the request
-      console.log(`🚀 Sending availability update for game ${gameId}: ${data.availablePlayerIds.length} players`);
-      const requestPromise = teamId 
-        ? apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
-        : apiClient.post(`/api/games/${gameId}/availability`, data);
+      // Create and track the new request
+      console.log(`🚀 Starting availability update for game ${gameId}: ${data.availablePlayerIds.length} players`);
+      
+      const requestPromise = (async () => {
+        try {
+          const result = teamId 
+            ? await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
+            : await apiClient.post(`/api/games/${gameId}/availability`, data);
+          
+          console.log(`✅ Availability update completed for game ${gameId}`);
+          return result;
+        } finally {
+          // Always remove from queue when done
+          requestQueueRef.current.delete(gameId);
+        }
+      })();
       
       // Track this request
-      activeRequestRef.current = {
-        gameId,
-        timestamp: requestTimestamp,
-        promise: requestPromise
-      };
+      requestQueueRef.current.set(gameId, requestPromise);
       
-      const result = await requestPromise;
-      
-      // Clear the active request if this was the one being tracked
-      if (activeRequestRef.current?.timestamp === requestTimestamp) {
-        activeRequestRef.current = null;
-      }
-      
-      console.log(`✅ Availability update completed for game ${gameId}`);
-      return result;
+      return requestPromise;
     },
     onMutate: async ({ gameId, data }) => {
       console.log(`🎯 Optimistic update for game ${gameId}: ${data.availablePlayerIds.length} players`);

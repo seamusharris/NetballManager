@@ -157,25 +157,27 @@ export class PlayerAvailabilityStorage {
       // Filter to only valid player IDs
       const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-      // Use transaction for atomicity and maximum speed
+      // Use transaction with proper UPSERT to prevent race conditions
       await db.transaction(async (tx) => {
-        // Step 1: Delete existing records (fast with index on game_id)
+        // Step 1: Delete existing records for this game only
         console.log(`🗑️ Deleting existing availability records for game ${gameId}`);
         await tx.execute(sql`DELETE FROM player_availability WHERE game_id = ${gameId}`);
 
-        // Step 2: Insert only available players (much faster than full UPSERT)
+        // Step 2: Insert new records using proper UPSERT to handle concurrent access
         if (validAvailablePlayerIds.length > 0) {
-          console.log(`💾 Inserting ${validAvailablePlayerIds.length} availability records`);
+          console.log(`💾 Upserting ${validAvailablePlayerIds.length} availability records`);
           
-          // Use batch insert for maximum efficiency
-          const values = validAvailablePlayerIds.map(playerId => 
-            `(${gameId}, ${playerId}, true, NOW(), NOW())`
-          ).join(', ');
-
-          await tx.execute(sql.raw(`
-            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-            VALUES ${values}
-          `));
+          // Insert each player individually to avoid constraint violations
+          for (const playerId of validAvailablePlayerIds) {
+            await tx.execute(sql`
+              INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+              VALUES (${gameId}, ${playerId}, true, NOW(), NOW())
+              ON CONFLICT (game_id, player_id) 
+              DO UPDATE SET 
+                is_available = true,
+                updated_at = NOW()
+            `);
+          }
         }
       });
 
