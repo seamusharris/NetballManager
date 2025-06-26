@@ -202,12 +202,19 @@ export default function TeamPlayersManager() {
           ) : (
             <SelectablePlayerBox
               players={teamPlayers}
-              selectedPlayerIds={new Set()}
-              onSelectionChange={() => {}}
+              selectedPlayerIds={new Set(teamPlayers.map(p => p.id))}
+              onSelectionChange={(selectedIds) => {
+                // When players are deselected from current team, remove them
+                const currentPlayerIds = new Set(teamPlayers.map(p => p.id));
+                const removedPlayerIds = [...currentPlayerIds].filter(id => !selectedIds.has(id));
+                
+                removedPlayerIds.forEach(playerId => {
+                  handleRemovePlayer(playerId);
+                });
+              }}
               title="Current Team Players"
-              showQuickActions={false}
+              showQuickActions={true}
               mode="team-management"
-              onRemovePlayer={handleRemovePlayer}
               removingPlayerIds={removingPlayerIds}
               variant="detailed"
             />
@@ -256,13 +263,14 @@ export default function TeamPlayersManager() {
               players={availablePlayers}
               selectedPlayerIds={new Set()}
               onSelectionChange={(selectedIds) => {
+                // When players are selected from available, add them to team
                 selectedIds.forEach(playerId => {
                   handleAddPlayer(playerId);
                 });
               }}
               title="Available Players"
-              showQuickActions={false}
-              mode="selection"
+              showQuickActions={true}
+              mode="team-management"
               addingPlayerIds={addingPlayerIds}
               variant="detailed"
             />
