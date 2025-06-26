@@ -198,12 +198,7 @@ export default function PlayerAvailabilityManager({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Player Availability</CardTitle>
-            <CardDescription>
-              {availableCount} of {totalCount} players available for {game.opponent || 'this game'}
-            </CardDescription>
-          </div>
+          <CardTitle>Player Availability</CardTitle>
           {/* Quick Actions moved to header right */}
           <div className="flex gap-2">
             <Button 
@@ -223,6 +218,9 @@ export default function PlayerAvailabilityManager({
               Select None
             </Button>
           </div>
+        </div>
+        <div className="text-sm text-muted-foreground mt-2">
+          {availableCount} of {totalCount} available
         </div>
       </CardHeader>
 
