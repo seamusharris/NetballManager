@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
@@ -7,7 +7,8 @@ import {
   getPlayerColorHex, 
   getLighterColorHex, 
   getMediumColorHex,
-  getBorderColorHex
+  getBorderColorHex,
+  getDarkerColorHex
 } from '@/lib/playerColorUtils';
 import { PLAYER_BOX_STYLES } from '@/lib/playerBoxStyles';
 
@@ -30,7 +31,7 @@ interface PlayerBoxProps {
   className?: string;
   size?: 'sm' | 'ms' | 'md' | 'lg';
   style?: React.CSSProperties;
-  onClick?: () => void;
+  onClick?: (playerId: number) => void;
   customBadge?: React.ReactNode;
   hasSelect?: boolean;
   // Selection props
@@ -135,6 +136,21 @@ function PlayerBox({
   const lightBackgroundColor = getLighterColorHex(player.avatarColor);
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
   const borderColorHex = getBorderColorHex(player.avatarColor);
+  const darkerColor = getDarkerColorHex(player.avatarColor);
+
+  // Handle selection state - use prop value directly for controlled component behavior
+  const selectedState = isSelected || false;
+
+  const handleClick = useCallback(() => {
+    if (!isSelectable) {
+      onClick?.(player.id);
+      return;
+    }
+
+    const newSelectedState = !selectedState;
+    onSelectionChange?.(player.id, newSelectedState);
+    onClick?.(player.id);
+  }, [isSelectable, selectedState, onSelectionChange, onClick, player.id]);
 
   // Calculate styling based on selection state
   const getSelectionStyling = () => {
@@ -181,9 +197,9 @@ function PlayerBox({
   // Handle selection click
   const handleSelectionClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the main onClick
-    
+
     if (isLoading || isDisabled) return;
-    
+
     if (onSelectionChange && isSelectable) {
       onSelectionChange(player.id, !isSelected);
     }
@@ -192,7 +208,7 @@ function PlayerBox({
   // Handle box click for selection
   const handleBoxClick = () => {
     if (isLoading || isDisabled) return;
-    
+
     if (isSelectable && onSelectionChange) {
       onSelectionChange(player.id, !isSelected);
     } else if (onClick) {
