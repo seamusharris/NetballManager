@@ -1,6 +1,5 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRef } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { CACHE_CONFIG } from '@/lib/queryClient';
@@ -41,43 +40,26 @@ export function useTeamAvailability(teamId: number, gameId: number) {
 export function useSetPlayerAvailability(teamId?: number) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
-  // Track current request to prevent overlapping saves
-  const currentRequestRef = useRef<Promise<any> | null>(null);
 
   return useMutation({
     mutationFn: async ({ gameId, data }: { gameId: number; data: SetAvailabilityData }) => {
-      // Cancel any pending request
-      if (currentRequestRef.current) {
-        // Let the previous request complete but don't wait for it
-        currentRequestRef.current.catch(() => {});
-      }
-
-      // Create new request
-      const request = teamId 
+      // Simple full-state replacement - no need to track or cancel requests
+      // Since we're sending complete state, latest request wins naturally
+      return teamId 
         ? apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
         : apiClient.post(`/api/games/${gameId}/availability`, data);
-      
-      currentRequestRef.current = request;
-      
-      try {
-        const result = await request;
-        currentRequestRef.current = null;
-        return result;
-      } catch (error) {
-        currentRequestRef.current = null;
-        throw error;
-      }
     },
     onMutate: async ({ gameId, data }) => {
-      // Cancel any outgoing refetches
+      // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ['availability', teamId, gameId] });
       
       // Snapshot the previous value
       const previousData = queryClient.getQueryData(['availability', teamId, gameId]);
       
       // Optimistically update to the new value immediately
-      queryClient.setQueryData(['availability', teamId, gameId], data);
+      queryClient.setQueryData(['availability', teamId, gameId], {
+        availablePlayerIds: data.availablePlayerIds
+      });
       
       return { previousData };
     },
