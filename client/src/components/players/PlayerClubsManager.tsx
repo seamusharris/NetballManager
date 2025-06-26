@@ -51,21 +51,34 @@ export default function PlayerClubsManager({
   });
 
   // Fetch player's current clubs
-  const { data: playerClubs = [], isLoading: isPlayerClubsLoading } = useQuery<Club[]>({
-    queryKey: [`/api/players/${player.id}/clubs`],
+  const { data: playerClubs = [], isLoading: isPlayerClubsLoading, refetch: refetchPlayerClubs } = useQuery<Club[]>({
+    queryKey: [`/api/players/${player?.id}/clubs`],
+    queryFn: async () => {
+      if (!player?.id) return [];
+      const response = await fetch(`/api/players/${player.id}/clubs`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // Player has no club associations
+        }
+        throw new Error('Failed to fetch player clubs');
+      }
+      return response.json();
+    },
     enabled: !!player?.id,
   });
 
-  // Update selected clubs when player clubs are loaded
+  // Update selected clubs when player clubs are loaded or player changes
   useEffect(() => {
-    if (playerClubs) {
-      console.log(`Setting selected clubs for player ${player.id}:`, playerClubs.map(c => c.id));
-      setSelectedClubs(playerClubs.map(club => club.id));
-    } else {
-      // Reset to empty if no clubs
-      setSelectedClubs([]);
+    if (player?.id) {
+      if (Array.isArray(playerClubs) && playerClubs.length > 0) {
+        console.log(`Setting selected clubs for player ${player.id}:`, playerClubs.map(c => c.id));
+        setSelectedClubs(playerClubs.map(club => club.id));
+      } else {
+        console.log(`No clubs found for player ${player.id}, setting empty array`);
+        setSelectedClubs([]);
+      }
     }
-  }, [playerClubs, player.id]);
+  }, [playerClubs, player?.id]);
 
   // Handler for club selection changes
   const handleClubToggle = (clubId: number) => {
@@ -85,6 +98,15 @@ export default function PlayerClubsManager({
 
   // Save the selected clubs
   const handleSaveClubs = async () => {
+    if (!player?.id) {
+      toast({
+        title: "Error",
+        description: "No player selected",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -108,8 +130,11 @@ export default function PlayerClubsManager({
       // Success! Show a toast and refresh the data
       toast({
         title: "Success",
-        description: "Player clubs updated successfully"
+        description: `Player clubs updated successfully. ${result.clubsAdded || 0} clubs added.`
       });
+
+      // Refresh player clubs data
+      await refetchPlayerClubs();
 
       // Invalidate relevant queries to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
@@ -126,7 +151,7 @@ export default function PlayerClubsManager({
           const queryKey = query.queryKey[0];
           return typeof queryKey === 'string' && 
                  (queryKey.includes('/api/players') || 
-                  queryKey.includes('/api/clubs/') && queryKey.includes('/players') ||
+                  (queryKey.includes('/api/clubs/') && queryKey.includes('/players')) ||
                   queryKey.includes(`/api/players/${player.id}/clubs`));
         }
       });
@@ -159,6 +184,16 @@ export default function PlayerClubsManager({
           </DialogHeader>
 
           <div className="py-4 space-y-4">
+            {/* Debug Information */}
+            <div className="text-xs text-gray-400 border rounded p-2">
+              <div>Player ID: {player?.id}</div>
+              <div>Selected Clubs: [{selectedClubs.join(', ')}]</div>
+              <div>Player Clubs Loading: {isPlayerClubsLoading ? 'Yes' : 'No'}</div>
+              <div>All Clubs Loading: {isClubsLoading ? 'Yes' : 'No'}</div>
+              <div>Available Clubs Count: {allClubs.length}</div>
+              <div>Player Clubs Count: {playerClubs.length}</div>
+            </div>
+
             <div className="flex flex-wrap gap-2 mb-4">
               <h3 className="text-sm font-medium mb-2 w-full">Currently associated with:</h3>
               {selectedClubs.length > 0 ? (
@@ -166,7 +201,7 @@ export default function PlayerClubsManager({
                   .filter(club => selectedClubs.includes(club.id))
                   .map(club => (
                     <Badge key={club.id} variant="secondary">
-                      {club.name}
+                      {club.name} ({club.code})
                     </Badge>
                   ))
               ) : (

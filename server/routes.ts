@@ -896,14 +896,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = parseInt(req.params.id, 10);
       const { clubIds = [] } = req.body;
 
-      console.log(`Updating clubs for player ${playerId}:`, clubIds);
+      console.log(`\n=== UPDATING PLAYER CLUBS ===`);
+      console.log(`Player ID: ${playerId}`);
+      console.log(`Club IDs received:`, clubIds);
+      console.log(`Club IDs type:`, typeof clubIds);
+      console.log(`Is array:`, Array.isArray(clubIds));
 
       if (isNaN(playerId)) {
+        console.log(`ERROR: Invalid player ID: ${req.params.id}`);
         return res.status(400).json({ message: "Invalid player ID" });
       }
 
       // Validate that clubIds is an array
       if (!Array.isArray(clubIds)) {
+        console.log(`ERROR: clubIds is not an array:`, clubIds);
         return res.status(400).json({ message: "clubIds must be an array" });
       }
 
@@ -912,16 +918,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         await client.query('BEGIN');
 
-        // Check if playerexists
+        // Check if player exists
         const playerCheck = await client.query(
-          'SELECT id FROM players WHERE id = $1',
+          'SELECT id, display_name FROM players WHERE id = $1',
           [playerId]
         );
 
         if (playerCheck.rowCount === 0) {
           await client.query('ROLLBACK');
+          console.log(`ERROR: Player ${playerId} not found`);
           return res.status(404).json({ message: "Player not found" });
         }
+
+        const playerName = playerCheck.rows[0].display_name;
+        console.log(`Player found: ${playerName} (ID: ${playerId})`);
+
+        // Check current associations
+        const currentAssociations = await client.query(
+          'SELECT club_id FROM club_players WHERE player_id = $1',
+          [playerId]
+        );
+        console.log(`Current club associations:`, currentAssociations.rows.map(r => r.club_id));
 
         // Remove existing club associations for this player
         const deleteResult = await client.query(
@@ -932,27 +949,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Add new club associations
         let insertedCount = 0;
+        let validClubIds = [];
+        
         for (const clubId of clubIds) {
           const numericClubId = typeof clubId === 'string' ? parseInt(clubId, 10) : clubId;
-          if (typeof numericClubId === 'number' && numericClubId > 0) {
-            console.log(`Inserting club association: player ${playerId} -> club ${numericClubId}`);
-            await client.query(`
-              INSERT INTO club_players (club_id, player_id, is_active, joined_date)
-              VALUES ($1, $2, true, CURRENT_DATE)
-            `, [numericClubId, playerId]);
-            insertedCount++;
+          
+          if (typeof numericClubId === 'number' && numericClubId > 0 && !isNaN(numericClubId)) {
+            // Verify club exists
+            const clubCheck = await client.query(
+              'SELECT name FROM clubs WHERE id = $1',
+              [numericClubId]
+            );
+            
+            if (clubCheck.rowCount > 0) {
+              const clubName = clubCheck.rows[0].name;
+              console.log(`Inserting club association: ${playerName} (${playerId}) -> ${clubName} (${numericClubId})`);
+              
+              await client.query(`
+                INSERT INTO club_players (club_id, player_id, is_active, joined_date)
+                VALUES ($1, $2, true, CURRENT_DATE)
+              `, [numericClubId, playerId]);
+              
+              insertedCount++;
+              validClubIds.push(numericClubId);
+            } else {
+              console.warn(`Club ${numericClubId} does not exist, skipping`);
+            }
           } else {
-            console.warn(`Skipping invalid club ID: ${clubId}`);
+            console.warn(`Skipping invalid club ID: ${clubId} (converted to: ${numericClubId})`);
           }
         }
 
         await client.query('COMMIT');
         console.log(`Successfully updated player ${playerId} clubs: inserted ${insertedCount} associations`);
+        console.log(`Valid club IDs processed:`, validClubIds);
+        console.log(`=== PLAYER CLUBS UPDATE COMPLETE ===\n`);
+        
         res.json({ 
           success: true, 
           message: "Player clubs updated successfully",
           clubsAdded: insertedCount,
-          clubIds: clubIds
+          clubIds: validClubIds,
+          playerName: playerName
         });
       } catch (error) {
         await client.query('ROLLBACK');
