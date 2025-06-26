@@ -5,268 +5,426 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Users, RotateCcw, Plus, Minus, ArrowUpDown, Grid3X3, Target, 
-  Clock, ChevronRight, ChevronLeft, Eye, Edit, Trash2, Save,
-  Shuffle, Move3D, Copy, MoreHorizontal
+  Users, RotateCcw, Plus, Shuffle, Copy, Target, Grid3X3, Clock,
+  ArrowUpDown, Save, Trash2, MoreHorizontal, Move3D
 } from 'lucide-react';
+import { PlayerBox } from '@/components/ui/player-box';
 
-// Sample data
+// Sample player data matching your app's structure
 const samplePlayers = [
-  { id: 1, name: "Sarah J", displayName: "Sarah J", positions: ["GS", "GA"], color: "bg-red-500" },
-  { id: 2, name: "Emma K", displayName: "Emma K", positions: ["WA", "C"], color: "bg-blue-500" },
-  { id: 3, name: "Lucy M", displayName: "Lucy M", positions: ["C", "WD"], color: "bg-green-500" },
-  { id: 4, name: "Kate R", displayName: "Kate R", positions: ["WD", "GD"], color: "bg-purple-500" },
-  { id: 5, name: "Amy T", displayName: "Amy T", positions: ["GD", "GK"], color: "bg-orange-500" },
-  { id: 6, name: "Zoe L", displayName: "Zoe L", positions: ["GK", "GD"], color: "bg-pink-500" },
-  { id: 7, name: "Mia B", displayName: "Mia B", positions: ["GA", "WA"], color: "bg-teal-500" },
-  { id: 8, name: "Ella C", displayName: "Ella C", positions: ["WA", "C", "WD"], color: "bg-yellow-500" },
+  {
+    id: 1,
+    displayName: "Abbey N",
+    firstName: "Abbey",
+    lastName: "N",
+    positionPreferences: ["GS", "GA"],
+    avatarColor: "bg-red-500",
+    active: true
+  },
+  {
+    id: 2,
+    displayName: "Abby D",
+    firstName: "Abby",
+    lastName: "D",
+    positionPreferences: ["GA", "WA"],
+    avatarColor: "bg-blue-500",
+    active: true
+  },
+  {
+    id: 3,
+    displayName: "Ava",
+    firstName: "Ava",
+    lastName: "",
+    positionPreferences: ["WA", "C"],
+    avatarColor: "bg-green-500",
+    active: true
+  },
+  {
+    id: 4,
+    displayName: "Emily",
+    firstName: "Emily",
+    lastName: "",
+    positionPreferences: ["C", "WD"],
+    avatarColor: "bg-purple-500",
+    active: true
+  },
+  {
+    id: 5,
+    displayName: "Erin",
+    firstName: "Erin",
+    lastName: "",
+    positionPreferences: ["WD", "GD"],
+    avatarColor: "bg-orange-500",
+    active: true
+  },
+  {
+    id: 6,
+    displayName: "Evie",
+    firstName: "Evie",
+    lastName: "",
+    positionPreferences: ["GD", "GK"],
+    avatarColor: "bg-pink-500",
+    active: true
+  },
+  {
+    id: 7,
+    displayName: "Jess",
+    firstName: "Jess",
+    lastName: "",
+    positionPreferences: ["GK"],
+    avatarColor: "bg-teal-500",
+    active: true
+  },
+  {
+    id: 8,
+    displayName: "Lily",
+    firstName: "Lily",
+    lastName: "",
+    positionPreferences: ["GA", "GS"],
+    avatarColor: "bg-indigo-500",
+    active: true
+  },
+  {
+    id: 9,
+    displayName: "Mia",
+    firstName: "Mia",
+    lastName: "",
+    positionPreferences: ["WA", "C", "GA"],
+    avatarColor: "bg-yellow-500",
+    active: true
+  }
 ];
 
-const positions = ["GS", "GA", "WA", "C", "WD", "GD", "GK"];
+const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-// Enhanced Player Card Component
-const EnhancedPlayerCard = ({ 
+// Enhanced Position Slot Component using your styling patterns
+const PositionSlot = ({ 
+  position, 
   player, 
-  size = "md", 
-  className = "",
-  isDragging = false,
-  showGrabHandle = false,
+  isDropTarget = false, 
+  isCompatible = true,
+  onDrop,
+  courtSection,
+  onDragStart,
   variant = "default"
 }: {
-  player: any,
-  size?: "sm" | "md" | "lg",
-  className?: string,
-  isDragging?: boolean,
-  showGrabHandle?: boolean,
-  variant?: "default" | "minimal" | "detailed" | "compact"
+  position: string,
+  player?: any,
+  isDropTarget?: boolean,
+  isCompatible?: boolean,
+  onDrop: () => void,
+  courtSection: 'attacking' | 'center' | 'defending',
+  onDragStart: (playerId: number) => void,
+  variant?: 'default' | 'compact' | 'minimal'
 }) => {
-  const sizeClasses = {
-    sm: "p-2",
-    md: "p-3", 
-    lg: "p-4"
+  const sectionColors = {
+    attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
+    center: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
+    defending: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
   };
 
-  const avatarSizes = {
-    sm: "h-6 w-6",
-    md: "h-8 w-8",
-    lg: "h-10 w-10"
+  const slotSizes = {
+    default: 'min-h-[140px] p-4',
+    compact: 'min-h-[100px] p-3',
+    minimal: 'min-h-[80px] p-2'
   };
 
-  if (variant === "minimal") {
-    return (
-      <div className={`
-        ${sizeClasses[size]} rounded-lg border-2 transition-all duration-200 bg-white
-        ${isDragging ? 'opacity-50 scale-95 border-blue-400 shadow-lg' : 'border-gray-200 hover:border-gray-300 hover:shadow-md'}
-        ${className}
-      `}>
-        <div className="flex items-center gap-2">
-          {showGrabHandle && (
-            <div className="cursor-grab active:cursor-grabbing text-gray-400">
-              <Move3D className="h-3 w-3" />
-            </div>
-          )}
-          <Avatar className={avatarSizes[size]}>
-            <AvatarFallback className={`${player.color} text-white text-xs font-semibold`}>
-              {player.name.split(' ').map(n => n[0]).join('')}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium flex-1">{player.displayName}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === "compact") {
-    return (
-      <div className={`
-        ${sizeClasses[size]} rounded-xl border-2 transition-all duration-200 bg-gradient-to-br from-white to-gray-50
-        ${isDragging ? 'opacity-50 scale-95 border-blue-400 shadow-lg' : 'border-gray-200 hover:border-blue-300 hover:shadow-md'}
-        ${className}
-      `}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {showGrabHandle && (
-              <div className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-blue-500">
-                <Grid3X3 className="h-3 w-3" />
-              </div>
-            )}
-            <Avatar className={avatarSizes[size]}>
-              <AvatarFallback className={`${player.color} text-white text-xs font-semibold`}>
-                {player.name.split(' ').map(n => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="text-sm font-medium">{player.displayName}</div>
-              <div className="flex gap-1">
-                {player.positions.slice(0, 2).map(pos => (
-                  <Badge key={pos} variant="secondary" className="text-xs px-1 py-0">
-                    {pos}
-                  </Badge>
-                ))}
-                {player.positions.length > 2 && (
-                  <Badge variant="outline" className="text-xs px-1 py-0">
-                    +{player.positions.length - 2}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === "detailed") {
-    return (
-      <div className={`
-        ${sizeClasses[size]} rounded-xl border-2 transition-all duration-200 bg-white shadow-sm
-        ${isDragging ? 'opacity-50 scale-95 border-blue-400 shadow-lg' : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'}
-        ${className}
-      `}>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {showGrabHandle && (
-                <div className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-blue-500">
-                  <Move3D className="h-4 w-4" />
-                </div>
-              )}
-              <Avatar className={avatarSizes[size]}>
-                <AvatarFallback className={`${player.color} text-white text-sm font-semibold`}>
-                  {player.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="font-medium">{player.displayName}</div>
-            </div>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <MoreHorizontal className="h-3 w-3" />
-            </Button>
-          </div>
-          
-          <div className="flex flex-wrap gap-1">
-            {player.positions.map(pos => (
-              <Badge key={pos} variant="secondary" className="text-xs px-2 py-1">
-                {pos}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default variant
   return (
-    <div className={`
-      ${sizeClasses[size]} rounded-lg border-2 transition-all duration-200 bg-white
-      ${isDragging ? 'opacity-50 scale-95 border-blue-400 shadow-lg' : 'border-gray-200 hover:border-gray-300 hover:shadow-md'}
-      ${className}
-    `}>
-      <div className="flex flex-col items-center space-y-2">
-        {showGrabHandle && (
-          <div className="self-end cursor-grab active:cursor-grabbing text-gray-400">
-            <Move3D className="h-3 w-3" />
-          </div>
-        )}
-        <Avatar className={avatarSizes[size]}>
-          <AvatarFallback className={`${player.color} text-white text-xs font-semibold`}>
-            {player.name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        <div className="text-sm font-medium text-center">{player.displayName}</div>
-        <div className="flex flex-wrap gap-1 justify-center">
-          {player.positions.map(pos => (
-            <Badge key={pos} variant="secondary" className="text-xs px-1 py-0">
-              {pos}
-            </Badge>
-          ))}
-        </div>
+    <div
+      className={`
+        relative border-2 border-dashed rounded-xl text-center transition-all duration-300 flex flex-col justify-center
+        ${slotSizes[variant]}
+        ${isDropTarget && isCompatible ? 'border-green-400 bg-green-50 scale-105 shadow-lg' : ''}
+        ${isDropTarget && !isCompatible ? 'border-red-400 bg-red-50' : ''}
+        ${!isDropTarget ? sectionColors[courtSection] : ''}
+        hover:shadow-md
+      `}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={onDrop}
+    >
+      {/* Position Label */}
+      <div className="absolute top-2 left-2">
+        <Badge variant="outline" className="font-bold text-sm">
+          {position}
+        </Badge>
       </div>
+
+      {/* Player or Drop Zone */}
+      {player ? (
+        <div 
+          className="cursor-move w-full" 
+          draggable
+          onDragStart={() => onDragStart(player.id)}
+        >
+          <PlayerBox 
+            player={player}
+            showPositions={variant !== 'minimal'}
+            size={variant === 'compact' ? 'sm' : 'md'}
+            className="transition-all duration-200 hover:scale-105"
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-2">
+            <Plus className="h-6 w-6" />
+          </div>
+          <div className="text-xs font-medium">
+            {isDropTarget ? (isCompatible ? 'Drop here' : 'Not compatible') : 'Drag player here'}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Modern Card Grid Interface
-const ModernCardGrid = () => {
-  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-  const [assignments, setAssignments] = useState<Record<string, number | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+// Full Roster Manager with Quarter Support
+const QuarterBasedRosterManager = () => {
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
+    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
   };
 
+  const handleDragOver = (e: React.DragEvent, position: string) => {
+    e.preventDefault();
+    setDragOverPosition(position);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverPosition(null);
+  };
+
   const handleDrop = (position: string) => {
     if (draggedPlayer) {
-      // Clear player from any previous position
-      const newAssignments = { ...assignments };
-      Object.keys(newAssignments).forEach(pos => {
-        if (newAssignments[pos] === draggedPlayer) {
-          newAssignments[pos] = null;
+      const newAssignments = {
+        ...assignments,
+        [currentQuarter]: { ...assignments[currentQuarter] }
+      };
+
+      // Clear player from any previous position in this quarter
+      Object.keys(newAssignments[currentQuarter]).forEach(pos => {
+        if (newAssignments[currentQuarter][pos] === draggedPlayer) {
+          newAssignments[currentQuarter][pos] = null;
         }
       });
-      newAssignments[position] = draggedPlayer;
+
+      // Assign player to new position
+      newAssignments[currentQuarter][position] = draggedPlayer;
       setAssignments(newAssignments);
     }
     setDraggedPlayer(null);
+    setDragOverPosition(null);
   };
 
-  const assignedPlayerIds = Object.values(assignments).filter(id => id !== null);
-  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+  const isPlayerCompatible = (playerId: number, position: string) => {
+    const player = samplePlayers.find(p => p.id === playerId);
+    return player ? player.positionPreferences.includes(position) : false;
+  };
+
+  const handleResetQuarter = () => {
+    const newAssignments = {
+      ...assignments,
+      [currentQuarter]: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+    };
+    setAssignments(newAssignments);
+  };
+
+  const handleCopyQuarter = (sourceQuarter: number, targetQuarter: number) => {
+    if (sourceQuarter === targetQuarter) return;
+    const newAssignments = {
+      ...assignments,
+      [targetQuarter]: { ...assignments[sourceQuarter] }
+    };
+    setAssignments(newAssignments);
+  };
+
+  const currentQuarterAssignments = assignments[currentQuarter];
+  const assignedPlayerIds = Object.values(currentQuarterAssignments).filter(id => id !== null);
+  const availablePlayersForDrag = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  // Player summary
+  const playerSummary = samplePlayers.reduce((acc, player) => {
+    const quartersPlayed = Object.entries(assignments).reduce((qtrs, [quarter, quarterAssignments]) => {
+      if (Object.values(quarterAssignments).includes(player.id)) {
+        qtrs.push(parseInt(quarter));
+      }
+      return qtrs;
+    }, [] as number[]);
+
+    acc[player.id] = {
+      totalQuarters: quartersPlayed.length,
+      quarters: quartersPlayed
+    };
+    return acc;
+  }, {} as Record<number, any>);
 
   return (
     <div className="space-y-6">
-      {/* Modern Court Layout */}
-      <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 p-6 rounded-2xl border border-gray-200 shadow-inner">
-        <div className="grid grid-cols-7 gap-4">
-          {positions.map(position => {
-            const player = assignments[position] ? samplePlayers.find(p => p.id === assignments[position]) : null;
-            
-            return (
+      {/* Game Info Header */}
+      <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-lg">vs Sample Opponents</h3>
+            <p className="text-sm text-gray-600">Saturday, 28 June 2025 at 10:00 AM</p>
+          </div>
+          <Badge variant="outline" className="bg-white">
+            {samplePlayers.length} players available
+          </Badge>
+        </div>
+      </div>
+
+      {/* Quarter Selection and Controls */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col space-y-4">
+            {/* Quarter Tabs */}
+            <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+              <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto">
+                <TabsTrigger value="1">Q1</TabsTrigger>
+                <TabsTrigger value="2">Q2</TabsTrigger>
+                <TabsTrigger value="3">Q3</TabsTrigger>
+                <TabsTrigger value="4">Q4</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Controls */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetQuarter}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset Q{currentQuarter}
+              </Button>
+              
+              {/* Copy Quarter Controls */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Copy:</span>
+                {[1, 2, 3, 4].map(sourceQuarter => (
+                  <div key={sourceQuarter} className="flex items-center gap-1">
+                    <span className="text-xs font-medium text-gray-600">Q{sourceQuarter}</span>
+                    <Select
+                      onValueChange={(value) => {
+                        if (value) handleCopyQuarter(sourceQuarter, parseInt(value));
+                      }}
+                    >
+                      <SelectTrigger className="w-12 h-7 text-xs">
+                        <SelectValue placeholder="→" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4]
+                          .filter(q => q !== sourceQuarter)
+                          .map(targetQuarter => (
+                            <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                              Q{targetQuarter}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Court Layout */}
+      <div className="bg-gradient-to-b from-green-100 to-green-50 p-6 rounded-xl border border-green-200 shadow-inner">
+        <div className="grid grid-cols-3 gap-6">
+          {/* Attacking Third */}
+          <div className="space-y-3">
+            <div className="text-center">
+              <h4 className="text-sm font-semibold text-red-700 mb-1">Attacking Third</h4>
+              <div className="h-0.5 bg-red-200 rounded"></div>
+            </div>
+            {['GS', 'GA'].map(position => (
               <div
                 key={position}
-                className="relative"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => handleDrop(position)}
+                onDragOver={(e) => handleDragOver(e, position)}
+                onDragLeave={handleDragLeave}
               >
-                <div className="text-center mb-2">
-                  <Badge variant="outline" className="font-bold text-sm">
-                    {position}
-                  </Badge>
-                </div>
-                
-                <div className={`
-                  min-h-[120px] border-2 border-dashed rounded-xl p-3 transition-all duration-300
-                  flex flex-col justify-center items-center
-                  ${draggedPlayer && !player ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50/50'}
-                `}>
-                  {player ? (
-                    <div
-                      draggable
-                      onDragStart={() => handleDragStart(player.id)}
-                      className="cursor-move w-full"
-                    >
-                      <EnhancedPlayerCard 
-                        player={player}
-                        size="sm"
-                        variant="compact"
-                        isDragging={draggedPlayer === player.id}
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center text-gray-400">
-                      <Plus className="h-6 w-6 mx-auto mb-1" />
-                      <div className="text-xs">Drop here</div>
-                    </div>
-                  )}
-                </div>
+                <PositionSlot
+                  position={position}
+                  player={assignments[currentQuarter][position] ? 
+                    samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
+                  }
+                  isDropTarget={dragOverPosition === position}
+                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                  onDrop={() => handleDrop(position)}
+                  courtSection="attacking"
+                  onDragStart={handleDragStart}
+                />
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Center Third */}
+          <div className="space-y-3">
+            <div className="text-center">
+              <h4 className="text-sm font-semibold text-blue-700 mb-1">Center Third</h4>
+              <div className="h-0.5 bg-blue-200 rounded"></div>
+            </div>
+            {['WA', 'C', 'WD'].map(position => (
+              <div
+                key={position}
+                onDragOver={(e) => handleDragOver(e, position)}
+                onDragLeave={handleDragLeave}
+              >
+                <PositionSlot
+                  position={position}
+                  player={assignments[currentQuarter][position] ? 
+                    samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
+                  }
+                  isDropTarget={dragOverPosition === position}
+                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                  onDrop={() => handleDrop(position)}
+                  courtSection="center"
+                  onDragStart={handleDragStart}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Defending Third */}
+          <div className="space-y-3">
+            <div className="text-center">
+              <h4 className="text-sm font-semibold text-green-700 mb-1">Defending Third</h4>
+              <div className="h-0.5 bg-green-200 rounded"></div>
+            </div>
+            {['GD', 'GK'].map(position => (
+              <div
+                key={position}
+                onDragOver={(e) => handleDragOver(e, position)}
+                onDragLeave={handleDragLeave}
+              >
+                <PositionSlot
+                  position={position}
+                  player={assignments[currentQuarter][position] ? 
+                    samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
+                  }
+                  isDropTarget={dragOverPosition === position}
+                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                  onDrop={() => handleDrop(position)}
+                  courtSection="defending"
+                  onDragStart={handleDragStart}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -274,319 +432,217 @@ const ModernCardGrid = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Available Players
-            <Badge variant="secondary">{availablePlayers.length}</Badge>
+            <Users className="h-5 w-5 text-blue-600" />
+            Available Players - Quarter {currentQuarter}
+            <Badge variant="secondary">{availablePlayersForDrag.length}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {availablePlayersForDrag.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {availablePlayersForDrag.map(player => (
+                <div
+                  key={player.id}
+                  draggable
+                  onDragStart={() => handleDragStart(player.id)}
+                  className="cursor-move transform hover:scale-105 transition-transform"
+                >
+                  <PlayerBox
+                    player={player}
+                    size="sm"
+                    showPositions={true}
+                    className="transition-all duration-200"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p className="font-medium">All players assigned for this quarter</p>
+              <p className="text-sm">Switch to another quarter or reset assignments</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Player Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-green-600" />
+            Player Game Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {samplePlayers.map(player => {
+              const stats = playerSummary[player.id];
+              const quarterDisplay = stats.quarters.length > 0 
+                ? `Q${stats.quarters.sort().join(', Q')}` 
+                : 'None';
+              const playingTimePercent = (stats.totalQuarters / 4) * 100;
+
+              return (
+                <div key={player.id} className="p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-sm">{player.displayName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{stats.totalQuarters}/4</span>
+                      <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 transition-all"
+                          style={{ width: `${playingTimePercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-600">{quarterDisplay}</div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Compact List-Based Interface
+const CompactListInterface = () => {
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
+    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+  });
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+
+  const handleDragStart = (playerId: number) => setDraggedPlayer(playerId);
+  
+  const handleDrop = (position: string) => {
+    if (draggedPlayer) {
+      const newAssignments = {
+        ...assignments,
+        [currentQuarter]: { ...assignments[currentQuarter] }
+      };
+
+      // Clear player from any previous position
+      Object.keys(newAssignments[currentQuarter]).forEach(pos => {
+        if (newAssignments[currentQuarter][pos] === draggedPlayer) {
+          newAssignments[currentQuarter][pos] = null;
+        }
+      });
+
+      newAssignments[currentQuarter][position] = draggedPlayer;
+      setAssignments(newAssignments);
+    }
+    setDraggedPlayer(null);
+  };
+
+  const assignedPlayerIds = Object.values(assignments[currentQuarter]).filter(id => id !== null);
+  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  return (
+    <div className="space-y-6">
+      {/* Quarter Selection */}
+      <div className="flex justify-center">
+        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+          <TabsList className="grid grid-cols-4">
+            <TabsTrigger value="1">Quarter 1</TabsTrigger>
+            <TabsTrigger value="2">Quarter 2</TabsTrigger>
+            <TabsTrigger value="3">Quarter 3</TabsTrigger>
+            <TabsTrigger value="4">Quarter 4</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Position List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Starting Lineup - Quarter {currentQuarter}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {NETBALL_POSITIONS.map(position => {
+              const player = assignments[currentQuarter][position] ? 
+                samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
+              
+              return (
+                <div
+                  key={position}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => handleDrop(position)}
+                  className={`
+                    p-3 rounded-lg border-2 border-dashed transition-all duration-200
+                    ${draggedPlayer && !player ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="font-bold">
+                      {position}
+                    </Badge>
+                    
+                    {player ? (
+                      <div
+                        draggable
+                        onDragStart={() => handleDragStart(player.id)}
+                        className="cursor-move flex-1 ml-4"
+                      >
+                        <PlayerBox 
+                          player={player}
+                          size="sm"
+                          showPositions={true}
+                          className="transition-all duration-200"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex-1 ml-4 text-center text-gray-400 py-3 text-sm">
+                        Drag player here
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        {/* Available Players */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Available Players
+              <Badge variant="secondary">{availablePlayers.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {availablePlayers.map(player => (
               <div
                 key={player.id}
                 draggable
                 onDragStart={() => handleDragStart(player.id)}
-                className="cursor-move transform hover:scale-105 transition-transform"
+                className="cursor-move hover:scale-[1.02] transition-transform"
               >
-                <EnhancedPlayerCard 
+                <PlayerBox 
                   player={player}
-                  variant="detailed"
-                  isDragging={draggedPlayer === player.id}
-                  showGrabHandle={true}
+                  showPositions={true}
+                  className="transition-all duration-200"
                 />
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Minimalist Card Interface
-const MinimalistInterface = () => {
-  const [assignments, setAssignments] = useState<Record<string, number | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
-  });
-  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-
-  const handleDragStart = (playerId: number) => setDraggedPlayer(playerId);
-  
-  const handleDrop = (position: string) => {
-    if (draggedPlayer) {
-      const newAssignments = { ...assignments };
-      Object.keys(newAssignments).forEach(pos => {
-        if (newAssignments[pos] === draggedPlayer) newAssignments[pos] = null;
-      });
-      newAssignments[position] = draggedPlayer;
-      setAssignments(newAssignments);
-    }
-    setDraggedPlayer(null);
-  };
-
-  const assignedPlayerIds = Object.values(assignments).filter(id => id !== null);
-  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
-
-  return (
-    <div className="space-y-6">
-      {/* Minimalist Court */}
-      <div className="bg-white border rounded-xl p-6 shadow-sm">
-        <div className="flex justify-between items-start">
-          {/* Positions Layout */}
-          <div className="grid grid-cols-3 gap-8 flex-1">
-            {/* Attack */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium text-red-600 text-center">Attack</h4>
-              {['GS', 'GA'].map(position => {
-                const player = assignments[position] ? samplePlayers.find(p => p.id === assignments[position]) : null;
-                return (
-                  <div
-                    key={position}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handleDrop(position)}
-                    className={`
-                      min-h-[60px] rounded-lg border-2 border-dashed p-2 transition-all
-                      ${draggedPlayer && !player ? 'border-red-300 bg-red-50' : 'border-gray-200'}
-                    `}
-                  >
-                    <div className="text-xs font-medium text-gray-500 mb-1">{position}</div>
-                    {player ? (
-                      <div
-                        draggable
-                        onDragStart={() => handleDragStart(player.id)}
-                        className="cursor-move"
-                      >
-                        <EnhancedPlayerCard 
-                          player={player}
-                          size="sm"
-                          variant="minimal"
-                          isDragging={draggedPlayer === player.id}
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-300 text-xs py-2">Drop player</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Center */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium text-blue-600 text-center">Center</h4>
-              {['WA', 'C', 'WD'].map(position => {
-                const player = assignments[position] ? samplePlayers.find(p => p.id === assignments[position]) : null;
-                return (
-                  <div
-                    key={position}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handleDrop(position)}
-                    className={`
-                      min-h-[60px] rounded-lg border-2 border-dashed p-2 transition-all
-                      ${draggedPlayer && !player ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}
-                    `}
-                  >
-                    <div className="text-xs font-medium text-gray-500 mb-1">{position}</div>
-                    {player ? (
-                      <div
-                        draggable
-                        onDragStart={() => handleDragStart(player.id)}
-                        className="cursor-move"
-                      >
-                        <EnhancedPlayerCard 
-                          player={player}
-                          size="sm"
-                          variant="minimal"
-                          isDragging={draggedPlayer === player.id}
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-300 text-xs py-2">Drop player</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Defense */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium text-green-600 text-center">Defense</h4>
-              {['GD', 'GK'].map(position => {
-                const player = assignments[position] ? samplePlayers.find(p => p.id === assignments[position]) : null;
-                return (
-                  <div
-                    key={position}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handleDrop(position)}
-                    className={`
-                      min-h-[60px] rounded-lg border-2 border-dashed p-2 transition-all
-                      ${draggedPlayer && !player ? 'border-green-300 bg-green-50' : 'border-gray-200'}
-                    `}
-                  >
-                    <div className="text-xs font-medium text-gray-500 mb-1">{position}</div>
-                    {player ? (
-                      <div
-                        draggable
-                        onDragStart={() => handleDragStart(player.id)}
-                        className="cursor-move"
-                      >
-                        <EnhancedPlayerCard 
-                          player={player}
-                          size="sm"
-                          variant="minimal"
-                          isDragging={draggedPlayer === player.id}
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-300 text-xs py-2">Drop player</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Available Players */}
-      <div className="bg-gray-50 rounded-xl p-4 border">
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">Available Players</span>
-          <Badge variant="secondary" className="text-xs">{availablePlayers.length}</Badge>
-        </div>
-        <div className="space-y-2">
-          {availablePlayers.map(player => (
-            <div
-              key={player.id}
-              draggable
-              onDragStart={() => handleDragStart(player.id)}
-              className="cursor-move"
-            >
-              <EnhancedPlayerCard 
-                player={player}
-                size="sm"
-                variant="minimal"
-                isDragging={draggedPlayer === player.id}
-                showGrabHandle={true}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Compact List Interface
-const CompactListInterface = () => {
-  const [assignments, setAssignments] = useState<Record<string, number | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
-  });
-  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-
-  const handleDragStart = (playerId: number) => setDraggedPlayer(playerId);
-  
-  const handleDrop = (position: string) => {
-    if (draggedPlayer) {
-      const newAssignments = { ...assignments };
-      Object.keys(newAssignments).forEach(pos => {
-        if (newAssignments[pos] === draggedPlayer) newAssignments[pos] = null;
-      });
-      newAssignments[position] = draggedPlayer;
-      setAssignments(newAssignments);
-    }
-    setDraggedPlayer(null);
-  };
-
-  const assignedPlayerIds = Object.values(assignments).filter(id => id !== null);
-  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Compact Position List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Starting Lineup</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {positions.map(position => {
-            const player = assignments[position] ? samplePlayers.find(p => p.id === assignments[position]) : null;
             
-            return (
-              <div
-                key={position}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => handleDrop(position)}
-                className={`
-                  p-3 rounded-lg border-2 border-dashed transition-all duration-200
-                  ${draggedPlayer && !player ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}
-                `}
-              >
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="font-bold">
-                    {position}
-                  </Badge>
-                  
-                  {player ? (
-                    <div
-                      draggable
-                      onDragStart={() => handleDragStart(player.id)}
-                      className="cursor-move flex-1 ml-4"
-                    >
-                      <EnhancedPlayerCard 
-                        player={player}
-                        size="sm"
-                        variant="compact"
-                        isDragging={draggedPlayer === player.id}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex-1 ml-4 text-center text-gray-400 py-2 text-sm">
-                      Drag player here
-                    </div>
-                  )}
-                </div>
+            {availablePlayers.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">All players assigned for this quarter</p>
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      {/* Available Players */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Bench
-            <Badge variant="secondary">{availablePlayers.length}</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {availablePlayers.map(player => (
-            <div
-              key={player.id}
-              draggable
-              onDragStart={() => handleDragStart(player.id)}
-              className="cursor-move hover:scale-[1.02] transition-transform"
-            >
-              <EnhancedPlayerCard 
-                player={player}
-                variant="compact"
-                isDragging={draggedPlayer === player.id}
-                showGrabHandle={true}
-              />
-            </div>
-          ))}
-          
-          {availablePlayers.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">All players assigned</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
@@ -599,97 +655,97 @@ export default function DragDropExamples() {
 
   return (
     <PageTemplate
-      title="Drag & Drop Examples"
-      subtitle="Various drag and drop interface styles for roster management"
+      title="Enhanced Drag & Drop Examples"
+      subtitle="Professional drag and drop interfaces using your PlayerBox components with quarter management"
       breadcrumbs={breadcrumbs}
     >
       <Helmet>
-        <title>Drag & Drop Examples | Team Manager</title>
+        <title>Enhanced Drag & Drop Examples | Team Manager</title>
       </Helmet>
 
       <div className="space-y-8">
-        <Tabs defaultValue="modern" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="modern">Modern Grid</TabsTrigger>
-            <TabsTrigger value="minimal">Minimalist</TabsTrigger>
-            <TabsTrigger value="compact">Compact List</TabsTrigger>
+        <Tabs defaultValue="full-roster" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="full-roster">Full Roster Manager</TabsTrigger>
+            <TabsTrigger value="compact-list">Compact List Interface</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="modern" className="space-y-6">
+          <TabsContent value="full-roster" className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-2">Modern Card Grid Interface</h3>
+              <h3 className="text-xl font-semibold mb-2">Complete Quarter-Based Roster Manager</h3>
               <p className="text-gray-600 mb-4">
-                A visually appealing grid layout with enhanced player cards and modern styling.
+                Full-featured interface with court visualization, quarter switching, player summaries, and compatibility checking.
+                Uses your actual PlayerBox components and matches your app's styling patterns.
               </p>
-              <ModernCardGrid />
+              <QuarterBasedRosterManager />
             </div>
           </TabsContent>
 
-          <TabsContent value="minimal" className="space-y-6">
+          <TabsContent value="compact-list" className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-2">Minimalist Interface</h3>
+              <h3 className="text-xl font-semibold mb-2">Compact List-Based Interface</h3>
               <p className="text-gray-600 mb-4">
-                Clean, minimal design focused on functionality with subtle visual feedback.
-              </p>
-              <MinimalistInterface />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="compact" className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Compact List Interface</h3>
-              <p className="text-gray-600 mb-4">
-                Space-efficient list-based layout ideal for smaller screens or dense information.
+                Space-efficient vertical layout with quarter management. Perfect for smaller screens or when you need 
+                to maximize information density while maintaining drag and drop functionality.
               </p>
               <CompactListInterface />
             </div>
           </TabsContent>
         </Tabs>
 
-        {/* Design Guidelines */}
+        {/* Feature Comparison */}
         <Card>
           <CardHeader>
-            <CardTitle>Design Guidelines & Best Practices</CardTitle>
+            <CardTitle>Interface Comparison & Features</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold mb-3">Visual Feedback</h4>
+                <h4 className="font-semibold mb-3 text-green-600">Full Roster Manager Features</h4>
                 <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Clear drag states with opacity and scaling</li>
-                  <li>• Hover effects on interactive elements</li>
-                  <li>• Distinct drop zones with color coding</li>
-                  <li>• Smooth transitions for all interactions</li>
+                  <li>• Full court visualization with third sections</li>
+                  <li>• Real-time compatibility checking</li>
+                  <li>• Visual drop feedback with animations</li>
+                  <li>• Comprehensive player game summaries</li>
+                  <li>• Quarter copying functionality</li>
+                  <li>• Playing time progress bars</li>
+                  <li>• Position preference validation</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">User Experience</h4>
+                <h4 className="font-semibold mb-3 text-blue-600">Compact List Interface Features</h4>
                 <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Consistent grab handles where appropriate</li>
-                  <li>• Touch-friendly sizing for mobile devices</li>
-                  <li>• Clear position labels and organization</li>
-                  <li>• Fallback interactions for accessibility</li>
+                  <li>• Space-efficient vertical layout</li>
+                  <li>• Side-by-side position and player panels</li>
+                  <li>• Quick quarter switching</li>
+                  <li>• Simplified drag and drop zones</li>
+                  <li>• Mobile-friendly responsive design</li>
+                  <li>• Clear visual separation of assigned/available</li>
+                  <li>• Minimal visual complexity</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">Card Variants</h4>
+                <h4 className="font-semibold mb-3 text-purple-600">Technical Integration</h4>
                 <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• <strong>Minimal:</strong> Clean, text-focused layout</li>
-                  <li>• <strong>Compact:</strong> Information-dense horizontal layout</li>
-                  <li>• <strong>Detailed:</strong> Full feature set with actions</li>
-                  <li>• <strong>Default:</strong> Balanced vertical card design</li>
+                  <li>• Uses your actual PlayerBox component</li>
+                  <li>• Matches your app's player data structure</li>
+                  <li>• Integrates with your color and styling system</li>
+                  <li>• Compatible with your position preferences</li>
+                  <li>• Follows your UI/UX patterns</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">Performance</h4>
+                <h4 className="font-semibold mb-3 text-orange-600">Enhancements for Production</h4>
                 <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Optimized drag events and state updates</li>
-                  <li>• Efficient re-rendering with React keys</li>
-                  <li>• Minimal DOM manipulation during drags</li>
-                  <li>• Debounced interactions where needed</li>
+                  <li>• Add save/load roster functionality</li>
+                  <li>• Implement roster validation rules</li>
+                  <li>• Add undo/redo capabilities</li>
+                  <li>• Include rotation suggestions</li>
+                  <li>• Add keyboard navigation support</li>
+                  <li>• Implement touch/mobile gestures</li>
                 </ul>
               </div>
             </div>
