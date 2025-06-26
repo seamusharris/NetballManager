@@ -71,9 +71,55 @@ export default function PlayerAvailabilityManager({
     }
   }, [availabilityResponse, players, gameId, onAvailabilityChange]);
 
-  // Handle player toggle with immediate save
-  const handlePlayerToggle = async (playerId: number, isSelected: boolean) => {
-    if (isSaving) return;
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced save function
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingStateRef = useRef<Set<number> | null>(null);
+
+  const debouncedSave = useCallback(async (availablePlayerIds: number[]) => {
+    setIsSaving(true);
+    try {
+      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
+        availablePlayerIds
+      });
+
+      // Invalidate cache
+      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+      pendingStateRef.current = null;
+
+    } catch (error) {
+      console.error('Failed to save availability:', error);
+
+      // Revert to last saved state if we have one
+      if (pendingStateRef.current) {
+        setSelectedPlayers(pendingStateRef.current);
+        onAvailabilityChange?.(Array.from(pendingStateRef.current));
+      }
+
+      toast({
+        title: "Error",
+        description: "Failed to save player availability. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [teamId, gameId, queryClient, toast, onAvailabilityChange]);
+
+  // Handle player toggle with instant UI update and debounced save
+  const handlePlayerToggle = useCallback((playerId: number, isSelected: boolean) => {
+    // Store current state for potential rollback
+    if (!pendingStateRef.current) {
+      pendingStateRef.current = new Set(selectedPlayers);
+    }
 
     // Update UI immediately
     const newSelectedPlayers = new Set(selectedPlayers);
@@ -87,82 +133,49 @@ export default function PlayerAvailabilityManager({
     const availablePlayerIds = Array.from(newSelectedPlayers);
     onAvailabilityChange?.(availablePlayerIds);
 
-    // Save to backend
-    setIsSaving(true);
-    try {
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-        availablePlayerIds
-      });
-
-      // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
-
-    } catch (error) {
-      console.error('Failed to save availability:', error);
-
-      // Revert on error
-      setSelectedPlayers(selectedPlayers);
-      onAvailabilityChange?.(Array.from(selectedPlayers));
-
-      toast({
-        title: "Error",
-        description: "Failed to save player availability. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  };
+
+    // Set new timeout for debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      debouncedSave(availablePlayerIds);
+    }, 500); // 500ms debounce
+  }, [selectedPlayers, onAvailabilityChange, debouncedSave]);
 
   // Bulk actions
-  const handleSelectAll = async () => {
-    if (isSaving) return;
-
+  const handleSelectAll = useCallback(() => {
     const allPlayerIds = players.map(p => p.id);
+    
+    // Store current state for potential rollback
+    pendingStateRef.current = new Set(selectedPlayers);
+    
     setSelectedPlayers(new Set(allPlayerIds));
     onAvailabilityChange?.(allPlayerIds);
 
-    setIsSaving(true);
-    try {
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-        availablePlayerIds: allPlayerIds
-      });
-      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
-    } catch (error) {
-      console.error('Failed to save availability:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save player availability.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
+    // Clear existing timeout and save immediately for bulk actions
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  };
+    
+    debouncedSave(allPlayerIds);
+  }, [players, selectedPlayers, onAvailabilityChange, debouncedSave]);
 
-  const handleSelectNone = async () => {
-    if (isSaving) return;
-
+  const handleSelectNone = useCallback(() => {
+    // Store current state for potential rollback
+    pendingStateRef.current = new Set(selectedPlayers);
+    
     setSelectedPlayers(new Set());
     onAvailabilityChange?.([]);
 
-    setIsSaving(true);
-    try {
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-        availablePlayerIds: []
-      });
-      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
-    } catch (error) {
-      console.error('Failed to save availability:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save player availability.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
+    // Clear existing timeout and save immediately for bulk actions
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  };
+    
+    debouncedSave([]);
+  }, [selectedPlayers, onAvailabilityChange, debouncedSave]);
 
   if (isLoading) {
     return (
@@ -210,7 +223,7 @@ export default function PlayerAvailabilityManager({
               variant="outline" 
               size="sm" 
               onClick={handleSelectAll}
-              disabled={isSaving}
+              disabled={false}
             >
               Select All
             </Button>
@@ -218,14 +231,14 @@ export default function PlayerAvailabilityManager({
               variant="outline" 
               size="sm" 
               onClick={handleSelectNone}
-              disabled={isSaving}
+              disabled={false}
             >
               Select None
             </Button>
           </div>
 
           {/* Player List */}
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {players.map(player => (
               <PlayerBox
                 key={player.id}
@@ -237,7 +250,7 @@ export default function PlayerAvailabilityManager({
                 }}
                 size="md"
                 showPositions={true}
-                isLoading={isSaving}
+                isLoading={false}
                 className="transition-all duration-200"
               />
             ))}
