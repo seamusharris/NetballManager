@@ -35,16 +35,16 @@ export default function PlayerClubsManager({
   const { data: allClubs = [], isLoading: isClubsLoading } = useQuery<Club[]>({
     queryKey: ['clubs', 'all'],
     queryFn: async () => {
-      const response = await fetch('/api/user/clubs');
+      const response = await fetch('/api/clubs');
       if (!response.ok) {
         throw new Error('Failed to fetch clubs');
       }
-      // Transform user clubs response to match expected format
-      const userClubs = await response.json();
-      return userClubs.map((uc: any) => ({
-        id: uc.clubId,
-        name: uc.clubName,
-        code: uc.clubCode
+      const clubs = await response.json();
+      return clubs.map((club: any) => ({
+        id: club.id,
+        name: club.name,
+        code: club.code,
+        description: club.description
       }));
     },
     enabled: !!player?.id,

@@ -3092,6 +3092,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix player-club associations for players assigned to teams
+  app.post('/api/admin/fix-player-club-associations', async (req, res) => {
+    try {
+      console.log('Fixing player-club associations...');
+      
+      // Find all players who are assigned to teams but not properly associated with clubs
+      const playersNeedingFix = await db.execute(sql`
+        SELECT DISTINCT tp.player_id, t.club_id, p.display_name, c.name as club_name
+        FROM team_players tp
+        JOIN teams t ON tp.team_id = t.id
+        JOIN players p ON tp.player_id = p.id
+        JOIN clubs c ON t.club_id = c.id
+        WHERE NOT EXISTS (
+          SELECT 1 FROM club_players cp 
+          WHERE cp.player_id = tp.player_id 
+            AND cp.club_id = t.club_id 
+            AND cp.is_active = true
+        )
+        ORDER BY c.name, p.display_name
+      `);
+
+      console.log(`Found ${playersNeedingFix.rows.length} players needing club association fixes`);
+      
+      let fixedCount = 0;
+      
+      for (const row of playersNeedingFix.rows) {
+        try {
+          await db.execute(sql`
+            INSERT INTO club_players (club_id, player_id, joined_date, is_active)
+            VALUES (${row.club_id}, ${row.player_id}, CURRENT_DATE, true)
+            ON CONFLICT (club_id, player_id) DO UPDATE SET
+              is_active = true,
+              left_date = null,
+              updated_at = NOW()
+          `);
+          
+          console.log(`Fixed: ${row.display_name} -> ${row.club_name} (club_id: ${row.club_id})`);
+          fixedCount++;
+        } catch (error) {
+          console.error(`Failed to fix ${row.display_name} -> ${row.club_name}:`, error);
+        }
+      }
+
+      res.json({ 
+        message: `Successfully fixed ${fixedCount} player-club associations`,
+        playersFixed: fixedCount,
+        playersNeedingFix: playersNeedingFix.rows.length
+      });
+    } catch (error) {
+      console.error('Error fixing player-club associations:', error);
+      res.status(500).json({ error: 'Failed to fix player-club associations' });
+    }
+  });
+
   // ----- CLUB-PLAYER RELATIONSHIPS API -----
 
   // Get all clubs for a specific player
