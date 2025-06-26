@@ -739,7 +739,341 @@ export default function PlayerBoxExamples() {
           </div>
         </div>
 
-        
+        {/* Team Management Selection Examples */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Team Management Selection Examples</h3>
+          <p className="text-gray-700 mb-6">Interactive player selection patterns for team management, roster building, and player transfers. Click to interact with these examples.</p>
+
+          <div className="space-y-8">
+            {/* Add/Remove from Team */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Add/Remove Players from Team</h4>
+              <p className="text-sm text-gray-600 mb-4">Select players to add them to your team roster. Similar to player availability but for permanent team assignments.</p>
+              <div className="space-y-3">
+                <div className="relative group">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(100) ? getBorderColorHex('bg-green-600') : 'transparent', border: selectedPlayers.has(100) ? 'none' : `2px solid ${getBorderColorHex('bg-green-600')}` }}
+                    onClick={() => togglePlayerSelection(100)}
+                    title={selectedPlayers.has(100) ? "Remove from team" : "Add to team"}
+                  >
+                    {selectedPlayers.has(100) && '✓'}
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute top-2 right-12 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    {selectedPlayers.has(100) ? "Click to remove from team" : "Click to add to team"}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 100, displayName: "Team Selection Example 1", positionPreferences: ["GA", "GS"], avatarColor: "bg-green-600"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(100) ? '#16a34a25' : '#ffffff',
+                      borderColor: '#16a34a',
+                      color: '#15803d'
+                    }}
+                    onClick={() => togglePlayerSelection(100)}
+                  />
+                </div>
+                <div className="relative group">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(101) ? getBorderColorHex('bg-blue-500') : 'transparent', border: selectedPlayers.has(101) ? 'none' : `2px solid ${getBorderColorHex('bg-blue-500')}` }}
+                    onClick={() => togglePlayerSelection(101)}
+                    title={selectedPlayers.has(101) ? "Remove from team" : "Add to team"}
+                  >
+                    {selectedPlayers.has(101) && '✓'}
+                  </div>
+                  <div className="absolute top-2 right-12 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    {selectedPlayers.has(101) ? "Click to remove from team" : "Click to add to team"}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 101, displayName: "Team Selection Example 2", positionPreferences: ["C", "WA"], avatarColor: "bg-blue-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(101) ? '#3b82f625' : '#ffffff',
+                      borderColor: '#3b82f6',
+                      color: '#1d4ed8'
+                    }}
+                    onClick={() => togglePlayerSelection(101)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Multi-Team Selection */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Multi-Team Player Assignment</h4>
+              <p className="text-sm text-gray-600 mb-4">Players can be assigned to multiple teams. Different colors indicate different team memberships.</p>
+              <div className="space-y-3">
+                <div className="relative group">
+                  <div className="absolute top-1/2 right-3 flex gap-1 z-10 transform -translate-y-1/2 mr-3">
+                    <div 
+                      className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-white text-xs transition-all duration-200"
+                      style={{ backgroundColor: selectedPlayers.has(200) ? '#16a34a' : 'transparent', border: selectedPlayers.has(200) ? 'none' : '2px solid #16a34a' }}
+                      onClick={() => togglePlayerSelection(200)}
+                      title="Team A (Green)"
+                    >
+                      {selectedPlayers.has(200) && 'A'}
+                    </div>
+                    <div 
+                      className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-white text-xs transition-all duration-200"
+                      style={{ backgroundColor: selectedPlayers.has(201) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(201) ? 'none' : '2px solid #3b82f6' }}
+                      onClick={() => togglePlayerSelection(201)}
+                      title="Team B (Blue)"
+                    >
+                      {selectedPlayers.has(201) && 'B'}
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-16 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    Assign to Team A (Green) or Team B (Blue)
+                  </div>
+                  <PlayerBox 
+                    player={{id: 200, displayName: "Multi-Team Player", positionPreferences: ["GA", "GS"], avatarColor: "bg-purple-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      backgroundColor: '#ffffff',
+                      borderColor: '#a855f7',
+                      color: '#7e22ce'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Player Transfer/Loan */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Player Transfer & Loan Management</h4>
+              <p className="text-sm text-gray-600 mb-4">Different selection states for player transfers, loans, and temporary assignments.</p>
+              <div className="space-y-3">
+                <div className="relative group">
+                  <div className="absolute top-1/2 right-3 flex gap-1 z-10 transform -translate-y-1/2 mr-3">
+                    <div 
+                      className="w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-all duration-200"
+                      style={{ 
+                        backgroundColor: selectedPlayers.has(300) ? '#f59e0b' : 'transparent', 
+                        border: selectedPlayers.has(300) ? 'none' : '2px solid #f59e0b80',
+                        color: selectedPlayers.has(300) ? 'white' : '#f59e0b'
+                      }}
+                      onClick={() => togglePlayerSelection(300)}
+                      title="Transfer Player"
+                    >
+                      ↔
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-12 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    Click to initiate transfer
+                  </div>
+                  <PlayerBox 
+                    player={{id: 300, displayName: "Transfer Candidate", positionPreferences: ["C", "WA"], avatarColor: "bg-orange-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(300) ? '#f59e0b25' : '#ffffff',
+                      borderColor: '#f97316',
+                      color: '#ea580c'
+                    }}
+                    onClick={() => togglePlayerSelection(300)}
+                  />
+                </div>
+                <div className="relative group">
+                  <div className="absolute top-1/2 right-3 flex gap-1 z-10 transform -translate-y-1/2 mr-3">
+                    <div 
+                      className="w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-all duration-200"
+                      style={{ 
+                        backgroundColor: selectedPlayers.has(301) ? '#8b5cf6' : 'transparent', 
+                        border: selectedPlayers.has(301) ? 'none' : '2px solid #8b5cf680',
+                        color: selectedPlayers.has(301) ? 'white' : '#8b5cf6'
+                      }}
+                      onClick={() => togglePlayerSelection(301)}
+                      title="Loan Player"
+                    >
+                      ⤴
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-12 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    Click to loan player
+                  </div>
+                  <PlayerBox 
+                    player={{id: 301, displayName: "Loan Candidate", positionPreferences: ["GK", "GD"], avatarColor: "bg-violet-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(301) ? '#8b5cf625' : '#ffffff',
+                      borderColor: '#8b5cf6',
+                      color: '#7c3aed'
+                    }}
+                    onClick={() => togglePlayerSelection(301)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bulk Selection for Team Operations */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Bulk Team Operations</h4>
+              <p className="text-sm text-gray-600 mb-4">Select multiple players for bulk operations like roster changes, training groups, or tournament teams.</p>
+              <div className="flex gap-2 mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    [400, 401, 402, 403].forEach(id => {
+                      setSelectedPlayers(prev => {
+                        const newSet = new Set(prev);
+                        newSet.add(id);
+                        return newSet;
+                      });
+                    });
+                  }}
+                >
+                  Select All
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    [400, 401, 402, 403].forEach(id => {
+                      setSelectedPlayers(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(id);
+                        return newSet;
+                      });
+                    });
+                  }}
+                >
+                  Clear All
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  disabled={![400, 401, 402, 403].some(id => selectedPlayers.has(id))}
+                >
+                  Add Selected to Tournament Team
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  {id: 400, name: "Bulk Select 1", positions: ["GA", "GS"], color: "bg-emerald-500", colorHex: "#10b981"},
+                  {id: 401, name: "Bulk Select 2", positions: ["C", "WA"], color: "bg-rose-500", colorHex: "#f43f5e"},
+                  {id: 402, name: "Bulk Select 3", positions: ["GK", "GD"], color: "bg-cyan-500", colorHex: "#06b6d4"},
+                  {id: 403, name: "Bulk Select 4", positions: ["WD", "GD"], color: "bg-amber-500", colorHex: "#f59e0b"}
+                ].map((player) => (
+                  <div key={player.id} className="relative group">
+                    <div 
+                      className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                      style={{ backgroundColor: selectedPlayers.has(player.id) ? player.colorHex : 'transparent', border: selectedPlayers.has(player.id) ? 'none' : `2px solid ${player.colorHex}80` }}
+                      onClick={() => togglePlayerSelection(player.id)}
+                      title={selectedPlayers.has(player.id) ? "Remove from selection" : "Add to selection"}
+                    >
+                      {selectedPlayers.has(player.id) && '✓'}
+                    </div>
+                    <div className="absolute top-2 right-12 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                      {selectedPlayers.has(player.id) ? "Remove from bulk selection" : "Add to bulk selection"}
+                    </div>
+                    <PlayerBox 
+                      player={{id: player.id, displayName: player.name, positionPreferences: player.positions, avatarColor: player.color}}
+                      size="md"
+                      showPositions={true}
+                      hasSelect={true}
+                      className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                      style={{ 
+                        backgroundColor: selectedPlayers.has(player.id) ? `${player.colorHex}25` : '#ffffff',
+                        borderColor: player.colorHex,
+                        color: player.colorHex.replace('#', '#').slice(0, 7) + 'dd'
+                      }}
+                      onClick={() => togglePlayerSelection(player.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Status-Based Selection */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Status-Based Player Management</h4>
+              <p className="text-sm text-gray-600 mb-4">Different selection types for various player statuses and roles within the team.</p>
+              <div className="space-y-3">
+                <div className="relative group">
+                  <div className="absolute top-1/2 right-3 flex gap-1 z-10 transform -translate-y-1/2 mr-3">
+                    <div 
+                      className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 border-2"
+                      style={{ 
+                        backgroundColor: selectedPlayers.has(500) ? '#dc2626' : 'transparent', 
+                        borderColor: '#dc2626',
+                        color: selectedPlayers.has(500) ? 'white' : '#dc2626'
+                      }}
+                      onClick={() => togglePlayerSelection(500)}
+                      title="Team Captain"
+                    >
+                      C
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-12 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    {selectedPlayers.has(500) ? "Remove captain role" : "Assign as captain"}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 500, displayName: "Captain Candidate", positionPreferences: ["C", "WA"], avatarColor: "bg-red-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(500) ? '#dc262625' : '#ffffff',
+                      borderColor: '#ef4444',
+                      color: '#dc2626'
+                    }}
+                    onClick={() => togglePlayerSelection(500)}
+                  />
+                </div>
+                <div className="relative group">
+                  <div className="absolute top-1/2 right-3 flex gap-1 z-10 transform -translate-y-1/2 mr-3">
+                    <div 
+                      className="w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-all duration-200 border-2"
+                      style={{ 
+                        backgroundColor: selectedPlayers.has(501) ? '#059669' : 'transparent', 
+                        borderColor: '#059669',
+                        color: selectedPlayers.has(501) ? 'white' : '#059669'
+                      }}
+                      onClick={() => togglePlayerSelection(501)}
+                      title="Starting Seven"
+                    >
+                      ★
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-12 bg-emerald-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap">
+                    {selectedPlayers.has(501) ? "Remove from starting seven" : "Add to starting seven"}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 501, displayName: "Starting Player", positionPreferences: ["GA", "GS"], avatarColor: "bg-emerald-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(501) ? '#05966925' : '#ffffff',
+                      borderColor: '#10b981',
+                      color: '#059669'
+                    }}
+                    onClick={() => togglePlayerSelection(501)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Enhanced Selection State Examples */}
         <div className="mb-6">
