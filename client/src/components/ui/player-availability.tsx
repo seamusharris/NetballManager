@@ -141,16 +141,17 @@ export function PlayerAvailability({
                 player={player}
                 isSelectable={true}
                 isSelected={isSelected}
-                onSelectionChange={(selected) => {
+                onSelectionChange={(playerId, selected) => {
                   if (!isSaving) {
                     handlePlayerAvailabilityChange(
-                      player.id, 
+                      playerId, 
                       selected ? 'available' : 'unavailable'
                     );
                   }
                 }}
                 size={variant === 'compact' ? 'sm' : 'md'}
-                showPosition={variant === 'detailed'}
+                showPositions={variant === 'detailed'}
+                isLoading={isSaving}
               />
             );
           })}
