@@ -58,6 +58,8 @@ export default function PlayerAvailabilityManager({
   // Smart batching state
   const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingBatchRef = useRef<Record<number, boolean> | null>(null);
+  const isSavingRef = useRef(false);
+  const lastSavedStateRef = useRef<string>('');
 
   // Use cached query for availability
   const { 
@@ -76,18 +78,32 @@ export default function PlayerAvailabilityManager({
     }
   });
 
-  // Smart batching save function
+  // Smart batching save function with deduplication
   const saveBatch = useCallback(async (batchData: Record<number, boolean>) => {
-    if (!gameId) return;
+    if (!gameId || isSavingRef.current) return;
 
+    // Check if this state is different from the last saved state
+    const currentStateString = JSON.stringify(batchData);
+    if (currentStateString === lastSavedStateRef.current) {
+      console.log('Skipping save - state unchanged');
+      return;
+    }
+
+    isSavingRef.current = true;
+    
     try {
       const availablePlayerIds = Object.entries(batchData)
         .filter(([_, isAvailable]) => isAvailable)
         .map(([playerId, _]) => parseInt(playerId));
 
-      await apiClient.post(`/api/games/${gameId}/availability`, {
+      console.log(`Saving batch: ${availablePlayerIds.length} players available`);
+
+      await apiClient.post(`/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`, {
         availablePlayerIds
       });
+
+      // Update last saved state
+      lastSavedStateRef.current = currentStateString;
 
       // Invalidate availability caches and refetch
       invalidateAvailability(queryClient, gameId);
@@ -100,8 +116,10 @@ export default function PlayerAvailabilityManager({
         title: "Error saving availability",
         description: "Failed to save player availability. Please try again.",
       });
+    } finally {
+      isSavingRef.current = false;
     }
-  }, [gameId, queryClient, refetchAvailability, toast]);
+  }, [gameId, queryClient, refetchAvailability, toast, teamPlayers]);
 
   // Smart batching handler
   const handleAvailabilityChange = useCallback((newAvailabilityData: Record<number, boolean>) => {
@@ -124,23 +142,27 @@ export default function PlayerAvailabilityManager({
       clearTimeout(batchTimeoutRef.current);
     }
 
-    // Batch save after 150ms of no changes
+    // Batch save after 500ms of no changes
     batchTimeoutRef.current = setTimeout(async () => {
-      if (pendingBatchRef.current) {
+      if (pendingBatchRef.current && !isSavingRef.current) {
         await saveBatch(pendingBatchRef.current);
         pendingBatchRef.current = null;
       }
-    }, 150);
+    }, 500);
   }, [onAvailabilityChange, onAvailabilityStateChange, saveBatch]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout on unmount and force save pending changes
   useEffect(() => {
     return () => {
       if (batchTimeoutRef.current) {
         clearTimeout(batchTimeoutRef.current);
       }
+      // Force save any pending changes before unmount
+      if (pendingBatchRef.current && !isSavingRef.current) {
+        saveBatch(pendingBatchRef.current);
+      }
     };
-  }, []);
+  }, [saveBatch]);
 
   // Load team players for the selected game - use provided players instead of API call
   useEffect(() => {
