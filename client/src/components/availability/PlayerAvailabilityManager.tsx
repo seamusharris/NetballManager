@@ -202,6 +202,13 @@ export default function PlayerAvailabilityManager({
           {/* Quick Actions moved to header right */}
           <div className="flex gap-2">
             <Button 
+              variant="secondary" 
+              size="sm"
+              disabled={true}
+            >
+              {availableCount} / {totalCount}
+            </Button>
+            <Button 
               variant="outline" 
               size="sm" 
               onClick={handleSelectAll}
@@ -220,12 +227,6 @@ export default function PlayerAvailabilityManager({
           </div>
         </div>
       </CardHeader>
-
-      <div className="px-6 pb-2">
-        <div className="text-sm text-muted-foreground">
-          {availableCount} of {totalCount} available
-        </div>
-      </div>
 
       <CardContent className="pt-6">
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
