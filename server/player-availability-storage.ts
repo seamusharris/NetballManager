@@ -1,3 +1,4 @@
+
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -11,6 +12,9 @@ export interface PlayerAvailability {
 }
 
 export class PlayerAvailabilityStorage {
+  // Cache team players to avoid repeated queries
+  private teamPlayersCache = new Map<number, { playerIds: number[], timestamp: number }>();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   async getPlayerAvailabilityForGame(gameId: number, teamId?: number): Promise<number[]> {
     try {
@@ -49,8 +53,6 @@ export class PlayerAvailabilityStorage {
           console.log(`Returning ${playersResult.rows.length} active players as available by default for game ${gameId}`);
           return playersResult.rows.map(row => row.id as number);
         }
-      } else {
-        console.log(`Found existing availability records for game ${gameId}`);
       }
 
       // Return existing availability records
@@ -61,7 +63,6 @@ export class PlayerAvailabilityStorage {
       `);
 
       const playerIds = result.rows.map(row => row.player_id as number);
-      // Deduplicate player IDs to prevent frontend issues
       const uniquePlayerIds = [...new Set(playerIds)];
       console.log(`Returning ${uniquePlayerIds.length} available players for game ${gameId}`);
       return uniquePlayerIds;
@@ -96,10 +97,6 @@ export class PlayerAvailabilityStorage {
       }
     }
   }
-
-  // Cache team players to avoid repeated queries
-  private teamPlayersCache = new Map<number, { playerIds: number[], timestamp: number }>();
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   private async getTeamPlayers(gameId: number): Promise<number[]> {
     const cached = this.teamPlayersCache.get(gameId);
@@ -146,11 +143,10 @@ export class PlayerAvailabilityStorage {
 
   async setPlayerAvailabilityForGame(gameId: number, availablePlayerIds: number[]): Promise<boolean> {
     const startTime = Date.now();
-    console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
+    console.log(`🚀 Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
 
     try {
-      // Super fast approach: minimal database work
-      // 1. Get team players (cached and optimized)
+      // Get team players (cached and optimized)
       const teamPlayerIds = await this.getTeamPlayers(gameId);
       
       if (teamPlayerIds.length === 0) {
@@ -158,17 +154,20 @@ export class PlayerAvailabilityStorage {
         return true;
       }
 
-      // 2. Filter to only valid player IDs
+      // Filter to only valid player IDs
       const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-      // 3. Use transaction for atomicity and speed
+      // Use transaction for atomicity and maximum speed
       await db.transaction(async (tx) => {
-        // Delete existing records (fast with index on game_id)
+        // Step 1: Delete existing records (fast with index on game_id)
+        console.log(`🗑️ Deleting existing availability records for game ${gameId}`);
         await tx.execute(sql`DELETE FROM player_availability WHERE game_id = ${gameId}`);
 
-        // Only insert available players (much faster than full UPSERT)
+        // Step 2: Insert only available players (much faster than full UPSERT)
         if (validAvailablePlayerIds.length > 0) {
-          // Use prepared statement for maximum speed
+          console.log(`💾 Inserting ${validAvailablePlayerIds.length} availability records`);
+          
+          // Use batch insert for maximum efficiency
           const values = validAvailablePlayerIds.map(playerId => 
             `(${gameId}, ${playerId}, true, NOW(), NOW())`
           ).join(', ');

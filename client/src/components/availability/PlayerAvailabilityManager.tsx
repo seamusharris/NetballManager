@@ -1,214 +1,297 @@
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { PlayerBox } from '@/components/ui/player-box';
-import { apiClient } from '@/lib/apiClient';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Player, Game } from '@shared/schema';
+import { apiClient } from '@/lib/apiClient';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
-  teamId: number;
   players: Player[];
-  game?: Game;
+  games: Game[];
+  onComplete?: () => void;
+  onAvailabilityChange?: (availablePlayerIds: number[]) => void;
+  onAvailabilityStateChange?: (availabilityState: Record<number, boolean>) => void;
+  onGameChange?: (gameId: number) => void;
+  hideGameSelection?: boolean;
 }
-
-class AvailabilityManager {
-  private state: Map<string, Record<number, boolean>> = new Map();
-  private pendingSaves: Map<string, NodeJS.Timeout> = new Map();
-  private activeRequests: Map<string, Promise<any>> = new Map();
-
-  async updateAvailability(gameId: number, teamId: number, playerId: number, isAvailable: boolean) {
-    const key = `game-${gameId}`;
-    
-    // 1. Update state immediately
-    const current = this.state.get(key) || {};
-    current[playerId] = isAvailable;
-    this.state.set(key, current);
-    
-    // 2. Cancel existing save timeout
-    if (this.pendingSaves.has(key)) {
-      clearTimeout(this.pendingSaves.get(key)!);
-    }
-    
-    // 3. Schedule new save with deduplication
-    this.pendingSaves.set(key, setTimeout(() => {
-      this.executeSave(gameId, teamId, current);
-    }, 500));
-  }
-
-  private async executeSave(gameId: number, teamId: number, state: Record<number, boolean>) {
-    const key = `game-${gameId}`;
-    
-    // Prevent duplicate requests
-    if (this.activeRequests.has(key)) {
-      await this.activeRequests.get(key);
-    }
-    
-    const savePromise = this.performSave(gameId, teamId, state);
-    this.activeRequests.set(key, savePromise);
-    
-    try {
-      await savePromise;
-    } finally {
-      this.activeRequests.delete(key);
-      this.pendingSaves.delete(key);
-    }
-  }
-
-  private async performSave(gameId: number, teamId: number, state: Record<number, boolean>) {
-    const availablePlayerIds = Object.entries(state)
-      .filter(([_, isAvailable]) => isAvailable)
-      .map(([playerId, _]) => parseInt(playerId));
-
-    await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-      availablePlayerIds
-    });
-  }
-
-  getState(gameId: number): Record<number, boolean> {
-    return this.state.get(`game-${gameId}`) || {};
-  }
-
-  setState(gameId: number, state: Record<number, boolean>) {
-    this.state.set(`game-${gameId}`, state);
-  }
-}
-
-const availabilityManager = new AvailabilityManager();
 
 export default function PlayerAvailabilityManager({
   gameId,
-  teamId,
   players,
-  game
+  games,
+  onComplete,
+  onAvailabilityChange,
+  onAvailabilityStateChange,
+  onGameChange,
+  hideGameSelection = false
 }: PlayerAvailabilityManagerProps) {
+  // Simple React state - no complex managers
+  const [availability, setAvailability] = useState<Record<number, boolean>>({});
+  const [pendingChanges, setPendingChanges] = useState<Record<number, boolean>>({});
+  const [hasPendingSave, setHasPendingSave] = useState(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch availability data
-  const { data: availabilityResponse, isLoading } = useQuery({
-    queryKey: ['availability', teamId, gameId],
-    queryFn: () => apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`),
-    enabled: !!gameId && !!teamId,
+  // Get team players for this game
+  const teamPlayers = players.filter(player => {
+    const selectedGame = games.find(g => g.id === gameId);
+    if (!selectedGame) return false;
+    
+    const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
+    let teamToLoad = selectedGame.homeTeamId;
+    
+    if (currentTeamIdFromContext) {
+      const currentTeamIdNum = parseInt(currentTeamIdFromContext);
+      if (currentTeamIdNum === selectedGame.homeTeamId || currentTeamIdNum === selectedGame.awayTeamId) {
+        teamToLoad = currentTeamIdNum;
+      }
+    }
+    
+    return !player.teamId || player.teamId === teamToLoad;
+  });
+
+  // Fetch existing availability data
+  const { data: availabilityResponse, isLoading } = useQuery<{availablePlayerIds: number[]}>({
+    queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
+    queryFn: () => apiClient.get(`/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`),
+    enabled: !!gameId && teamPlayers.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Initialize state from API response
+  // Initialize availability state from API response
   useEffect(() => {
-    if (availabilityResponse && players.length > 0) {
-      const availableIds = availabilityResponse.availablePlayerIds || [];
-      const newState: Record<number, boolean> = {};
-      
-      players.forEach(player => {
-        newState[player.id] = availableIds.includes(player.id);
-      });
-      
-      availabilityManager.setState(gameId, newState);
-    }
-  }, [availabilityResponse, players, gameId]);
+    if (!gameId || teamPlayers.length === 0) return;
 
-  const availabilityState = availabilityManager.getState(gameId);
-  const availableCount = Object.values(availabilityState).filter(Boolean).length;
-
-  const handlePlayerToggle = useCallback(async (playerId: number) => {
-    const currentState = availabilityState[playerId] || false;
-    const newState = !currentState;
+    const newAvailability: Record<number, boolean> = {};
     
-    try {
-      await availabilityManager.updateAvailability(gameId, teamId, playerId, newState);
-      
-      // Invalidate cache after successful save
-      queryClient.invalidateQueries({ 
-        queryKey: ['availability', teamId, gameId] 
+    if (availabilityResponse?.availablePlayerIds) {
+      // Use saved availability data
+      teamPlayers.forEach(player => {
+        newAvailability[player.id] = availabilityResponse.availablePlayerIds.includes(player.id);
       });
-      
+    } else {
+      // Default: all active players available
+      teamPlayers.forEach(player => {
+        newAvailability[player.id] = player.active !== false;
+      });
+    }
+
+    setAvailability(newAvailability);
+    
+    // Notify parent components
+    const availableIds = Object.entries(newAvailability)
+      .filter(([_, isAvailable]) => isAvailable)
+      .map(([playerId, _]) => parseInt(playerId));
+    
+    onAvailabilityChange?.(availableIds);
+    onAvailabilityStateChange?.(newAvailability);
+  }, [availabilityResponse, teamPlayers, gameId]);
+
+  // Batch save function - efficient database operations
+  const saveBatch = useCallback(async (availabilityData: Record<number, boolean>) => {
+    if (!gameId || teamPlayers.length === 0) return;
+
+    try {
+      const availablePlayerIds = Object.entries(availabilityData)
+        .filter(([_, isAvailable]) => isAvailable)
+        .map(([playerId, _]) => parseInt(playerId));
+
+      await apiClient.post(`/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`, {
+        availablePlayerIds
+      });
+
+      // Clear pending state
+      setPendingChanges({});
+      setHasPendingSave(false);
+
+      // Invalidate cache to get fresh data
+      queryClient.invalidateQueries({ 
+        queryKey: CACHE_KEYS.playerAvailability(gameId)
+      });
+
     } catch (error) {
-      console.error('Error updating player availability:', error);
+      console.error("Failed to save player availability:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update player availability. Please try again."
+        title: "Error saving availability",
+        description: "Failed to save player availability. Please try again.",
       });
+      
+      // Revert to last known good state on error
+      setAvailability(prev => {
+        const reverted = { ...prev };
+        Object.keys(pendingChanges).forEach(playerId => {
+          delete reverted[parseInt(playerId)];
+        });
+        return reverted;
+      });
+      setPendingChanges({});
+      setHasPendingSave(false);
     }
-  }, [gameId, teamId, availabilityState, queryClient, toast]);
+  }, [gameId, teamPlayers, queryClient, toast, pendingChanges]);
 
-  const handleSelectAll = useCallback(async () => {
-    const availableIds = players.map(p => p.id);
+  // Handle player selection with optimistic updates
+  const handlePlayerToggle = useCallback((playerId: number, isSelected: boolean) => {
+    // Update UI immediately (optimistic)
+    const newAvailability = { ...availability, [playerId]: isSelected };
+    setAvailability(newAvailability);
     
-    try {
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-        availablePlayerIds: availableIds
-      });
+    // Track as pending change
+    setPendingChanges(prev => ({ ...prev, [playerId]: isSelected }));
+    setHasPendingSave(true);
 
-      // Update local state
-      const newState: Record<number, boolean> = {};
-      players.forEach(player => {
-        newState[player.id] = true;
-      });
-      availabilityManager.setState(gameId, newState);
+    // Notify parent immediately
+    const availableIds = Object.entries(newAvailability)
+      .filter(([_, isAvailable]) => isAvailable)
+      .map(([playerId, _]) => parseInt(playerId));
+    
+    onAvailabilityChange?.(availableIds);
+    onAvailabilityStateChange?.(newAvailability);
 
-      queryClient.invalidateQueries({ 
-        queryKey: ['availability', teamId, gameId] 
-      });
-
-      toast({ title: "All players selected" });
-    } catch (error) {
-      toast({ 
-        variant: "destructive", 
-        title: "Error selecting all players" 
-      });
+    // Clear existing timeout and set new one (debounce)
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  }, [gameId, teamId, players, queryClient, toast]);
+
+    saveTimeoutRef.current = setTimeout(() => {
+      saveBatch(newAvailability);
+    }, 1000); // 1 second debounce
+  }, [availability, onAvailabilityChange, onAvailabilityStateChange, saveBatch]);
+
+  // Handle bulk operations - immediate save
+  const handleSelectAll = useCallback(async () => {
+    const allSelected: Record<number, boolean> = {};
+    teamPlayers.forEach(player => {
+      allSelected[player.id] = true;
+    });
+
+    setAvailability(allSelected);
+    setHasPendingSave(true);
+
+    // Clear debounce timer
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Immediate save for bulk operations
+    await saveBatch(allSelected);
+  }, [teamPlayers, saveBatch]);
 
   const handleClearAll = useCallback(async () => {
-    try {
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-        availablePlayerIds: []
-      });
+    const allCleared: Record<number, boolean> = {};
+    teamPlayers.forEach(player => {
+      allCleared[player.id] = false;
+    });
 
-      // Update local state
-      const newState: Record<number, boolean> = {};
-      players.forEach(player => {
-        newState[player.id] = false;
-      });
-      availabilityManager.setState(gameId, newState);
+    setAvailability(allCleared);
+    setHasPendingSave(true);
 
-      queryClient.invalidateQueries({ 
-        queryKey: ['availability', teamId, gameId] 
-      });
-
-      toast({ title: "All players cleared" });
-    } catch (error) {
-      toast({ 
-        variant: "destructive", 
-        title: "Error clearing all players" 
-      });
+    // Clear debounce timer
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  }, [gameId, teamId, players, queryClient, toast]);
 
-  if (isLoading) {
+    // Immediate save for bulk operations
+    await saveBatch(allCleared);
+  }, [teamPlayers, saveBatch]);
+
+  // Navigation protection - save on navigation away
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasPendingSave) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved player availability changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    const handleUnload = () => {
+      if (hasPendingSave && saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        // Force immediate save - use sendBeacon for reliability
+        const availableIds = Object.entries(availability)
+          .filter(([_, isAvailable]) => isAvailable)
+          .map(([playerId, _]) => parseInt(playerId));
+
+        const data = JSON.stringify({ availablePlayerIds: availableIds });
+        navigator.sendBeacon(
+          `/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`,
+          data
+        );
+      }
+    };
+
+    if (hasPendingSave) {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('unload', handleUnload);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, [hasPendingSave, availability, gameId, teamPlayers]);
+
+  // Cleanup - force save on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      if (hasPendingSave) {
+        // Force final save on unmount
+        saveBatch(availability);
+      }
+    };
+  }, [hasPendingSave, availability, saveBatch]);
+
+  if (!gameId) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center">Loading player availability...</div>
+      <Card className="mb-6">
+        <CardContent className="pt-6 text-center">
+          <p className="text-gray-500">Please select a game to manage player availability.</p>
         </CardContent>
       </Card>
     );
   }
 
+  if (isLoading && teamPlayers.length === 0) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="text-center">Loading team players and availability...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const selectedGame = games.find(game => game.id === gameId);
+  const availableCount = Object.values(availability).filter(isAvailable => isAvailable === true).length;
+
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl">
-            Player Availability
-            {game && (
+            Player Availability 
+            {selectedGame && (
               <span className="font-normal text-gray-600 ml-2">
-                for {game.date}
+                for {selectedGame.date}
               </span>
             )}
           </CardTitle>
@@ -235,31 +318,76 @@ export default function PlayerAvailabilityManager({
             {availableCount}
           </Badge>
           <span className="text-sm text-gray-600">Available Players</span>
+          {hasPendingSave && (
+            <Badge variant="secondary" className="ml-2">
+              Saving...
+            </Badge>
+          )}
         </div>
+
+        {!hideGameSelection && (
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex items-center gap-4">
+              <Select 
+                value={gameId?.toString() || ''} 
+                onValueChange={(value) => {
+                  const newGameId = Number(value);
+                  onGameChange?.(newGameId);
+                }}
+              >
+                <SelectTrigger className="w-[400px]">
+                  <SelectValue placeholder="Switch Game" />
+                </SelectTrigger>
+                <SelectContent>
+                  {games.length === 0 ? (
+                    <SelectItem value="no-games" disabled>No games available</SelectItem>
+                  ) : (
+                    [...games]
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .map(game => (
+                        <SelectItem key={game.id} value={game.id.toString()}>
+                          {game.date} - {game.awayTeamId ? 'vs Away Team' : 'BYE'}
+                        </SelectItem>
+                      ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              onClick={onComplete}
+              disabled={availableCount === 0}
+              className="ml-2"
+            >
+              Continue to Roster ({availableCount} available)
+            </Button>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {players
-            .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
-            .map(player => {
-              const isSelected = availabilityState[player.id] === true;
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {teamPlayers
+              .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+              .map(player => {
+                const isSelected = availability[player.id] === true;
 
-              return (
-                <PlayerBox 
-                  key={player.id}
-                  player={player}
-                  size="md"
-                  showPositions={true}
-                  isSelectable={true}
-                  isSelected={isSelected}
-                  onSelectionChange={(playerId, selected) => {
-                    handlePlayerToggle(playerId);
-                  }}
-                  className="shadow-md transition-all duration-200 hover:shadow-lg"
-                />
-              );
-            })}
+                return (
+                  <PlayerBox 
+                    key={player.id}
+                    player={player}
+                    size="md"
+                    showPositions={true}
+                    isSelectable={true}
+                    isSelected={isSelected}
+                    onSelectionChange={(playerId, selected) => {
+                      handlePlayerToggle(playerId, selected);
+                    }}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                  />
+                );
+              })}
+          </div>
         </div>
       </CardContent>
     </Card>
