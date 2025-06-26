@@ -54,6 +54,28 @@ export class PlayerAvailabilityStorage {
         }
       }
 
+      // Check if we have explicit false records (Select None was used)
+      const explicitFalseRecords = await db.execute(sql`
+        SELECT COUNT(*) as count FROM player_availability 
+        WHERE game_id = ${gameId} AND is_available = false
+      `);
+
+      const hasExplicitFalseRecords = parseInt(explicitFalseRecords.rows[0].count) > 0;
+
+      if (hasExplicitFalseRecords) {
+        console.log(`Found explicit false records for game ${gameId} - Select None was used`);
+        // Return only players explicitly marked as available (should be empty for Select None)
+        const result = await db.execute(sql`
+          SELECT player_id 
+          FROM player_availability 
+          WHERE game_id = ${gameId} AND is_available = true
+        `);
+        
+        const playerIds = result.rows.map(row => row.player_id as number);
+        console.log(`Returning ${playerIds.length} explicitly available players for game ${gameId} (explicit false records exist)`);
+        return playerIds;
+      }
+
       // Return existing availability records - only those marked as available
       const result = await db.execute(sql`
         SELECT player_id 
