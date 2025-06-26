@@ -1,4 +1,3 @@
-
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -130,7 +129,7 @@ export class PlayerAvailabilityStorage {
     `);
 
     const playerIds = playersResult.rows.map(row => row.id as number);
-    
+
     // Cache the result
     this.teamPlayersCache.set(gameId, {
       playerIds,
@@ -148,7 +147,7 @@ export class PlayerAvailabilityStorage {
     try {
       // Get team players (cached and optimized)
       const teamPlayerIds = await this.getTeamPlayers(gameId);
-      
+
       if (teamPlayerIds.length === 0) {
         console.warn(`No team players found for game ${gameId}`);
         return true;
@@ -166,7 +165,7 @@ export class PlayerAvailabilityStorage {
         // Step 2: Insert new records using proper UPSERT to handle concurrent access
         if (validAvailablePlayerIds.length > 0) {
           console.log(`💾 Upserting ${validAvailablePlayerIds.length} availability records`);
-          
+
           // Insert each player individually to avoid constraint violations
           for (const playerId of validAvailablePlayerIds) {
             await tx.execute(sql`
@@ -183,10 +182,10 @@ export class PlayerAvailabilityStorage {
 
       const duration = Date.now() - startTime;
       console.log(`✅ Updated availability for ${validAvailablePlayerIds.length}/${teamPlayerIds.length} players in game ${gameId} in ${duration}ms`);
-      
+
       // Clear cache for this game to ensure consistency
       this.teamPlayersCache.delete(gameId);
-      
+
       return true;
     } catch (error) {
       console.error(`❌ Error setting player availability for game ${gameId}:`, error);
