@@ -145,10 +145,10 @@ export default function PlayerAvailabilityManager({
   // Bulk actions
   const handleSelectAll = useCallback(() => {
     const allPlayerIds = players.map(p => p.id);
-    
+
     // Store current state for potential rollback
     pendingStateRef.current = new Set(selectedPlayers);
-    
+
     setSelectedPlayers(new Set(allPlayerIds));
     onAvailabilityChange?.(allPlayerIds);
 
@@ -156,14 +156,14 @@ export default function PlayerAvailabilityManager({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
+
     debouncedSave(allPlayerIds);
   }, [players, selectedPlayers, onAvailabilityChange, debouncedSave]);
 
   const handleSelectNone = useCallback(() => {
     // Store current state for potential rollback
     pendingStateRef.current = new Set(selectedPlayers);
-    
+
     setSelectedPlayers(new Set());
     onAvailabilityChange?.([]);
 
@@ -171,7 +171,7 @@ export default function PlayerAvailabilityManager({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
+
     debouncedSave([]);
   }, [selectedPlayers, onAvailabilityChange, debouncedSave]);
 
@@ -227,8 +227,7 @@ export default function PlayerAvailabilityManager({
       </CardHeader>
 
       <CardContent>
-        <div className="space-y-4">
-
+        <div className="space-y-6">
           {/* Player List */}
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {players.map(player => (
