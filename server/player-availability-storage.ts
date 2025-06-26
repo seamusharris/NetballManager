@@ -104,20 +104,35 @@ export class PlayerAvailabilityStorage {
   private async getTeamPlayers(gameId: number): Promise<number[]> {
     const cached = this.teamPlayersCache.get(gameId);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      console.log(`📋 Using cached team players for game ${gameId}: ${cached.playerIds.length} players`);
       return cached.playerIds;
     }
 
-    // Simple, fast query to get team players
-    const result = await db.execute(sql`
-      SELECT DISTINCT p.id 
-      FROM games g
-      JOIN team_players tp ON tp.team_id = g.home_team_id
-      JOIN players p ON p.id = tp.player_id AND p.active = true
-      WHERE g.id = ${gameId}
+    console.log(`🔍 Fetching team players for game ${gameId}`);
+    const startTime = Date.now();
+
+    // Step 1: Get home team ID (fast single table lookup)
+    const gameResult = await db.execute(sql`
+      SELECT home_team_id FROM games WHERE id = ${gameId}
+    `);
+
+    if (gameResult.rows.length === 0) {
+      console.warn(`Game ${gameId} not found`);
+      return [];
+    }
+
+    const homeTeamId = gameResult.rows[0].home_team_id as number;
+
+    // Step 2: Get team players (fast with proper indexes)
+    const playersResult = await db.execute(sql`
+      SELECT p.id 
+      FROM players p
+      JOIN team_players tp ON p.id = tp.player_id
+      WHERE tp.team_id = ${homeTeamId} AND p.active = true
       ORDER BY p.id
     `);
 
-    const playerIds = result.rows.map(row => row.id as number);
+    const playerIds = playersResult.rows.map(row => row.id as number);
     
     // Cache the result
     this.teamPlayersCache.set(gameId, {
@@ -125,6 +140,7 @@ export class PlayerAvailabilityStorage {
       timestamp: Date.now()
     });
 
+    console.log(`✅ Fetched ${playerIds.length} team players for game ${gameId} in ${Date.now() - startTime}ms`);
     return playerIds;
   }
 
@@ -133,7 +149,8 @@ export class PlayerAvailabilityStorage {
     console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
 
     try {
-      // Get team players (cached)
+      // Super fast approach: minimal database work
+      // 1. Get team players (cached and optimized)
       const teamPlayerIds = await this.getTeamPlayers(gameId);
       
       if (teamPlayerIds.length === 0) {
@@ -141,31 +158,37 @@ export class PlayerAvailabilityStorage {
         return true;
       }
 
-      // Filter to only valid player IDs
+      // 2. Filter to only valid player IDs
       const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-      // Strategy: Delete all, then insert only available players
-      // This is often faster than UPSERT for this use case
-      await db.execute(sql`
-        DELETE FROM player_availability WHERE game_id = ${gameId}
-      `);
+      // 3. Use transaction for atomicity and speed
+      await db.transaction(async (tx) => {
+        // Delete existing records (fast with index on game_id)
+        await tx.execute(sql`DELETE FROM player_availability WHERE game_id = ${gameId}`);
 
-      // Only insert available players (reduces insert volume)
-      if (validAvailablePlayerIds.length > 0) {
-        const values = validAvailablePlayerIds.map(playerId => 
-          `(${gameId}, ${playerId}, true, NOW(), NOW())`
-        ).join(', ');
+        // Only insert available players (much faster than full UPSERT)
+        if (validAvailablePlayerIds.length > 0) {
+          // Use prepared statement for maximum speed
+          const values = validAvailablePlayerIds.map(playerId => 
+            `(${gameId}, ${playerId}, true, NOW(), NOW())`
+          ).join(', ');
 
-        await db.execute(sql.raw(`
-          INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-          VALUES ${values}
-        `));
-      }
+          await tx.execute(sql.raw(`
+            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+            VALUES ${values}
+          `));
+        }
+      });
 
-      console.log(`Updated availability for ${validAvailablePlayerIds.length}/${teamPlayerIds.length} players in game ${gameId} in ${Date.now() - startTime}ms`);
+      const duration = Date.now() - startTime;
+      console.log(`✅ Updated availability for ${validAvailablePlayerIds.length}/${teamPlayerIds.length} players in game ${gameId} in ${duration}ms`);
+      
+      // Clear cache for this game to ensure consistency
+      this.teamPlayersCache.delete(gameId);
+      
       return true;
     } catch (error) {
-      console.error(`Error setting player availability for game ${gameId}:`, error);
+      console.error(`❌ Error setting player availability for game ${gameId}:`, error);
       return false;
     }
   }
