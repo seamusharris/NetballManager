@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Player, Game, Roster, Position } from '@shared/schema';
 import { formatShortDate, positionLabels } from '@/lib/utils';
 import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
-import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+
 import { apiClient } from '@/lib/apiClient';
 
 interface PlayerAvailabilityManagerProps {
@@ -341,42 +341,21 @@ export default function PlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
-                
-                // Use standard color utilities
-                const playerColorHex = getPlayerColorHex(player.avatarColor);
-                const lightBackgroundColor = getLighterColorHex(player.avatarColor);
-                const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
-                const darkerTextColor = getDarkerColorHex(player.avatarColor);
-
-                const handlePlayerClick = () => {
-                  const newData = { ...availabilityData, [player.id]: !isSelected };
-                  handleAvailabilityChange(newData);
-                };
 
                 return (
-                  <div key={player.id} className="relative">
-                    <div 
-                      className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                      style={{ 
-                        backgroundColor: isSelected ? darkerTextColor : 'transparent', 
-                        border: isSelected ? 'none' : `1px solid ${playerColorHex}40`
-                      }}
-                      onClick={handlePlayerClick}
-                    >
-                      {isSelected && '✓'}
-                    </div>
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      hasSelect={true}
-                      className="shadow-md transition-background duration-200 hover:shadow-lg cursor-pointer"
-                      onClick={handlePlayerClick}
-                      style={{
-                        backgroundColor: isSelected ? mediumBackgroundColor : lightBackgroundColor
-                      }}
-                    />
-                  </div>
+                  <PlayerBox 
+                    key={player.id}
+                    player={player}
+                    size="md"
+                    showPositions={true}
+                    isSelectable={true}
+                    isSelected={isSelected}
+                    onSelectionChange={(playerId, selected) => {
+                      const newData = { ...availabilityData, [playerId]: selected };
+                      handleAvailabilityChange(newData);
+                    }}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                  />
                 );
               })}
           </div>
