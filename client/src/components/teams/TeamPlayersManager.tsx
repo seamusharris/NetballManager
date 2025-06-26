@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
@@ -33,7 +34,8 @@ export default function TeamPlayersManager() {
   // State
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [pendingActions, setPendingActions] = useState<Set<number>>(new Set());
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [optimisticTeamPlayers, setOptimisticTeamPlayers] = useState<Set<number>>(new Set());
+  const [optimisticAvailablePlayers, setOptimisticAvailablePlayers] = useState<Set<number>>(new Set());
 
   // Queries
   const { data: activeSeason } = useQuery({
@@ -69,54 +71,50 @@ export default function TeamPlayersManager() {
     enabled: !!teamId && !!activeSeason?.id,
   });
 
-  // Debounced save function like player availability
-  const debouncedSave = useCallback(async (action: 'add' | 'remove', playerId: number) => {
-    setPendingActions(prev => new Set(prev).add(playerId));
+  // Update optimistic state when data changes
+  useEffect(() => {
+    if (teamPlayers.length > 0) {
+      setOptimisticTeamPlayers(new Set(teamPlayers.map(p => p.id)));
+    }
+  }, [teamPlayers]);
 
-    try {
-      if (action === 'add') {
-        await apiClient.post(`/api/teams/${teamId}/players`, { playerId });
-        toast({ title: 'Success', description: 'Player added to team' });
-      } else {
-        await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
-        toast({ title: 'Success', description: 'Player removed from team' });
-      }
+  useEffect(() => {
+    if (availablePlayers.length > 0) {
+      setOptimisticAvailablePlayers(new Set(availablePlayers.map(p => p.id)));
+    }
+  }, [availablePlayers]);
 
-      // Invalidate cache like availability system
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+  // Mutations with optimistic updates
+  const addPlayerToTeam = useMutation({
+    mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
+    onMutate: async (playerId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || `Failed to ${action} player ${action === 'add' ? 'to' : 'from'} team`,
-        variant: 'destructive',
-      });
-    } finally {
-      setPendingActions(prev => {
+      // Optimistic update
+      setOptimisticTeamPlayers(prev => new Set([...prev, playerId]));
+      setOptimisticAvailablePlayers(prev => {
         const newSet = new Set(prev);
         newSet.delete(playerId);
         return newSet;
       });
-    }
-  }, [teamId, queryClient, toast, activeSeason?.id]);
-
-  // Mutations - simplified to just handle optimistic updates
-  const addPlayerToTeam = useMutation({
-    mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
-    onMutate: async (playerId) => {
-      // Optimistic update - immediately show in UI
-      await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
-      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
-
-      // Show loading state
-      setPendingActions(prev => new Set(prev).add(playerId));
+      setPendingActions(prev => new Set([...prev, playerId]));
     },
     onSuccess: () => {
+      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
-    onError: (error: any) => {
+    onError: (error: any, playerId) => {
+      // Rollback optimistic update
+      setOptimisticTeamPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+      setOptimisticAvailablePlayers(prev => new Set([...prev, playerId]));
+      
       toast({
         title: 'Error',
         description: error.message || 'Failed to add player to team',
@@ -135,18 +133,33 @@ export default function TeamPlayersManager() {
   const removePlayerFromTeam = useMutation({
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
     onMutate: async (playerId) => {
-      // Optimistic update - immediately hide from UI
+      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
       await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
-      // Show loading state
-      setPendingActions(prev => new Set(prev).add(playerId));
+      // Optimistic update
+      setOptimisticTeamPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+      setOptimisticAvailablePlayers(prev => new Set([...prev, playerId]));
+      setPendingActions(prev => new Set([...prev, playerId]));
     },
     onSuccess: () => {
+      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
-    onError: (error: any) => {
+    onError: (error: any, playerId) => {
+      // Rollback optimistic update
+      setOptimisticTeamPlayers(prev => new Set([...prev, playerId]));
+      setOptimisticAvailablePlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+      
       toast({
         title: 'Error',
         description: error.message || 'Failed to remove player from team',
@@ -162,39 +175,35 @@ export default function TeamPlayersManager() {
     }
   });
 
-  // Handlers with debouncing like availability system
+  // Handlers - immediate execution like availability system
   const handleAddPlayer = useCallback((playerId: number) => {
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout for debounced save
-    saveTimeoutRef.current = setTimeout(() => {
-      addPlayerToTeam.mutate(playerId);
-    }, 300); // Same debounce as availability system
+    addPlayerToTeam.mutate(playerId);
   }, [addPlayerToTeam]);
 
   const handleRemovePlayer = useCallback((playerId: number) => {
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout for debounced save
-    saveTimeoutRef.current = setTimeout(() => {
-      removePlayerFromTeam.mutate(playerId);
-    }, 300); // Same debounce as availability system
+    removePlayerFromTeam.mutate(playerId);
   }, [removePlayerFromTeam]);
 
-  // Cleanup timeout on unmount like availability system
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+  // Handle bulk operations for Select All/Clear All
+  const handleTeamPlayersSelectionChange = useCallback((selectedIds: Set<number>) => {
+    const currentTeamPlayerIds = new Set([...optimisticTeamPlayers].filter(id => !pendingActions.has(id)));
+    
+    // Find players to remove (those that were deselected)
+    const playersToRemove = [...currentTeamPlayerIds].filter(id => !selectedIds.has(id));
+    
+    playersToRemove.forEach(playerId => {
+      handleRemovePlayer(playerId);
+    });
+  }, [optimisticTeamPlayers, pendingActions, handleRemovePlayer]);
+
+  const handleAvailablePlayersSelectionChange = useCallback((selectedIds: Set<number>) => {
+    // Add all selected players
+    selectedIds.forEach(playerId => {
+      if (optimisticAvailablePlayers.has(playerId) && !pendingActions.has(playerId)) {
+        handleAddPlayer(playerId);
       }
-    };
-  }, []);
+    });
+  }, [optimisticAvailablePlayers, pendingActions, handleAddPlayer]);
 
   // Loading states
   if (clubLoading || isLoadingTeam) {
@@ -224,6 +233,10 @@ export default function TeamPlayersManager() {
     { label: 'Teams', href: `/club/${clubId}/teams` },
     { label: teamData.name }
   ];
+
+  // Get optimistic player lists
+  const currentTeamPlayers = teamPlayers.filter(p => optimisticTeamPlayers.has(p.id));
+  const currentAvailablePlayers = availablePlayers.filter(p => optimisticAvailablePlayers.has(p.id));
 
   return (
     <>
@@ -264,21 +277,13 @@ export default function TeamPlayersManager() {
           title="Current Team Players"
           variant="elevated"
         >
-          {!teamPlayers || teamPlayers.length === 0 ? (
+          {currentTeamPlayers.length === 0 ? (
             <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
           ) : (
             <SelectablePlayerBox
-              players={teamPlayers}
-              selectedPlayerIds={new Set(teamPlayers.map(p => p.id))}
-              onSelectionChange={(selectedIds) => {
-                // When players are deselected from current team, remove them
-                const currentPlayerIds = new Set(teamPlayers.map(p => p.id));
-                const removedPlayerIds = [...currentPlayerIds].filter(id => !selectedIds.has(id));
-
-                removedPlayerIds.forEach(playerId => {
-                  handleRemovePlayer(playerId);
-                });
-              }}
+              players={currentTeamPlayers}
+              selectedPlayerIds={optimisticTeamPlayers}
+              onSelectionChange={handleTeamPlayersSelectionChange}
               title="Current Team Players"
               showQuickActions={true}
               mode="team-management"
@@ -320,7 +325,7 @@ export default function TeamPlayersManager() {
           }
           variant="elevated"
         >
-          {availablePlayers.length === 0 ? (
+          {currentAvailablePlayers.length === 0 ? (
             <p className="text-gray-500 text-center py-4">
               No unassigned players available. All active players are already assigned to teams this season.
               <br />
@@ -328,14 +333,9 @@ export default function TeamPlayersManager() {
             </p>
           ) : (
             <SelectablePlayerBox
-              players={availablePlayers}
+              players={currentAvailablePlayers}
               selectedPlayerIds={new Set()}
-              onSelectionChange={(selectedIds) => {
-                // When players are selected from available, add them to team
-                selectedIds.forEach(playerId => {
-                  handleAddPlayer(playerId);
-                });
-              }}
+              onSelectionChange={handleAvailablePlayersSelectionChange}
               title="Available Players"
               showQuickActions={true}
               mode="team-management"
