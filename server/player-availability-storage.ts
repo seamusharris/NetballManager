@@ -102,14 +102,13 @@ export class PlayerAvailabilityStorage {
     console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
 
     try {
-      // Use serializable transaction to prevent all race conditions
+      // Use default isolation level with optimized upsert operation
       const result = await db.transaction(async (tx) => {
-        // Lock the game record to prevent concurrent modifications
+        // Get game info without locking (just for validation and team lookup)
         const gameResult = await tx.execute(sql`
           SELECT home_team_id, away_team_id 
           FROM games 
-          WHERE id = ${gameId} 
-          FOR UPDATE
+          WHERE id = ${gameId}
         `);
         
         if (gameResult.rows.length === 0) {
@@ -119,14 +118,13 @@ export class PlayerAvailabilityStorage {
         const game = gameResult.rows[0] as any;
         const homeTeamId = game.home_team_id;
 
-        // Get all team players with consistent ordering
+        // Get all team players (no locking needed for read-only data)
         const teamPlayersResult = await tx.execute(sql`
           SELECT p.id 
           FROM players p
           JOIN team_players tp ON p.id = tp.player_id
           WHERE tp.team_id = ${homeTeamId} AND p.active = true
           ORDER BY p.id
-          FOR UPDATE
         `);
         
         const teamPlayerIds = teamPlayersResult.rows.map(row => row.id as number);
@@ -137,20 +135,13 @@ export class PlayerAvailabilityStorage {
           return true;
         }
 
-        // Single atomic operation: delete all existing and insert new records
-        await tx.execute(sql`
-          DELETE FROM player_availability 
-          WHERE game_id = ${gameId} 
-          AND player_id = ANY(${teamPlayerIds})
-        `);
-
         // Validate that availablePlayerIds only contains team players
         const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
         if (validAvailablePlayerIds.length !== availablePlayerIds.length) {
           console.warn(`Filtered invalid player IDs: ${availablePlayerIds.filter(id => !teamPlayerIds.includes(id))}`);
         }
 
-        // Batch insert all records atomically
+        // Use PostgreSQL UPSERT (INSERT ... ON CONFLICT) for better performance
         if (teamPlayerIds.length > 0) {
           const values = teamPlayerIds.map(playerId => {
             const isAvailable = validAvailablePlayerIds.includes(playerId);
@@ -160,13 +151,15 @@ export class PlayerAvailabilityStorage {
           await tx.execute(sql.raw(`
             INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
             VALUES ${values}
+            ON CONFLICT (game_id, player_id) 
+            DO UPDATE SET 
+              is_available = EXCLUDED.is_available,
+              updated_at = EXCLUDED.updated_at
           `));
         }
 
-        console.log(`Atomically updated ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
+        console.log(`Upserted ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
         return true;
-      }, {
-        isolationLevel: 'serializable'
       });
 
       return result;
