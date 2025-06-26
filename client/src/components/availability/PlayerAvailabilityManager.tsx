@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -42,28 +41,13 @@ export default function PlayerAvailabilityManager({
   const [availability, setAvailability] = useState<Record<number, boolean>>({});
   const [pendingChanges, setPendingChanges] = useState<Record<number, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Get team players for this game
-  const teamPlayers = players.filter(player => {
-    const selectedGame = games.find(g => g.id === gameId);
-    if (!selectedGame) return false;
-    
-    const currentTeamIdFromContext = window.localStorage.getItem('selectedTeamId');
-    let teamToLoad = selectedGame.homeTeamId;
-    
-    if (currentTeamIdFromContext) {
-      const currentTeamIdNum = parseInt(currentTeamIdFromContext);
-      if (currentTeamIdNum === selectedGame.homeTeamId || currentTeamIdNum === selectedGame.awayTeamId) {
-        teamToLoad = currentTeamIdNum;
-      }
-    }
-    
-    return !player.teamId || player.teamId === teamToLoad;
-  });
+  // Players are already filtered for the specific team from the URL
+  const teamPlayers = players;
 
   // Fetch existing availability data
   const { data: availabilityResponse, isLoading } = useQuery<{availablePlayerIds: number[]}>({
@@ -78,7 +62,7 @@ export default function PlayerAvailabilityManager({
     if (!gameId || teamPlayers.length === 0) return;
 
     const newAvailability: Record<number, boolean> = {};
-    
+
     if (availabilityResponse?.availablePlayerIds) {
       // Use saved availability data
       teamPlayers.forEach(player => {
@@ -92,12 +76,12 @@ export default function PlayerAvailabilityManager({
     }
 
     setAvailability(newAvailability);
-    
+
     // Notify parent components
     const availableIds = Object.entries(newAvailability)
       .filter(([_, isAvailable]) => isAvailable)
       .map(([playerId, _]) => parseInt(playerId));
-    
+
     onAvailabilityChange?.(availableIds);
     onAvailabilityStateChange?.(newAvailability);
   }, [availabilityResponse, teamPlayers, gameId]);
@@ -131,7 +115,7 @@ export default function PlayerAvailabilityManager({
         title: "Error saving availability",
         description: "Failed to save player availability. Please try again.",
       });
-      
+
       // Revert to last known good state on error
       if (availabilityResponse?.availablePlayerIds) {
         const revertedAvailability: Record<number, boolean> = {};
@@ -139,7 +123,7 @@ export default function PlayerAvailabilityManager({
           revertedAvailability[player.id] = availabilityResponse.availablePlayerIds.includes(player.id);
         });
         setAvailability(revertedAvailability);
-        
+
         const availableIds = availabilityResponse.availablePlayerIds;
         onAvailabilityChange?.(availableIds);
         onAvailabilityStateChange?.(revertedAvailability);
@@ -155,7 +139,7 @@ export default function PlayerAvailabilityManager({
     // Update UI immediately (optimistic)
     const newAvailability = { ...availability, [playerId]: isSelected };
     setAvailability(newAvailability);
-    
+
     // Track as pending change
     setPendingChanges(prev => ({ ...prev, [playerId]: isSelected }));
 
@@ -163,7 +147,7 @@ export default function PlayerAvailabilityManager({
     const availableIds = Object.entries(newAvailability)
       .filter(([_, isAvailable]) => isAvailable)
       .map(([playerId, _]) => parseInt(playerId));
-    
+
     onAvailabilityChange?.(availableIds);
     onAvailabilityStateChange?.(newAvailability);
 
@@ -185,7 +169,7 @@ export default function PlayerAvailabilityManager({
     });
 
     setAvailability(allSelected);
-    
+
     // Notify parent immediately
     const availableIds = teamPlayers.map(p => p.id);
     onAvailabilityChange?.(availableIds);
@@ -207,7 +191,7 @@ export default function PlayerAvailabilityManager({
     });
 
     setAvailability(allCleared);
-    
+
     // Notify parent immediately
     onAvailabilityChange?.([]);
     onAvailabilityStateChange?.(allCleared);
@@ -271,21 +255,11 @@ export default function PlayerAvailabilityManager({
     };
   }, [pendingChanges, availability, saveBatch]);
 
-  if (!gameId) {
-    return (
-      <Card className="mb-6">
-        <CardContent className="pt-6 text-center">
-          <p className="text-gray-500">Please select a game to manage player availability.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isLoading && teamPlayers.length === 0) {
+  if (isLoading) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="text-center">Loading team players and availability...</div>
+          <div className="text-center">Loading player availability...</div>
         </CardContent>
       </Card>
     );
@@ -338,44 +312,6 @@ export default function PlayerAvailabilityManager({
             </Badge>
           )}
         </div>
-
-        {!hideGameSelection && (
-          <div className="flex justify-between items-center mt-4">
-            <div className="flex items-center gap-4">
-              <Select 
-                value={gameId?.toString() || ''} 
-                onValueChange={(value) => {
-                  const newGameId = Number(value);
-                  onGameChange?.(newGameId);
-                }}
-              >
-                <SelectTrigger className="w-[400px]">
-                  <SelectValue placeholder="Switch Game" />
-                </SelectTrigger>
-                <SelectContent>
-                  {games.length === 0 ? (
-                    <SelectItem value="no-games" disabled>No games available</SelectItem>
-                  ) : (
-                    [...games]
-                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                      .map(game => (
-                        <SelectItem key={game.id} value={game.id.toString()}>
-                          {game.date} - {game.awayTeamId ? 'vs Away Team' : 'BYE'}
-                        </SelectItem>
-                      ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button 
-              onClick={onComplete}
-              disabled={availableCount === 0}
-              className="ml-2"
-            >
-              Continue to Roster ({availableCount} available)
-            </Button>
-          </div>
-        )}
       </CardHeader>
 
       <CardContent>
