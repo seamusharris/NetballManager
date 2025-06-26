@@ -5,6 +5,7 @@ import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, UserPlus, Award, Printer } from 'lucide-react';
+import { getBorderColorHex } from '@/lib/playerColorUtils';
 
 export default function PlayerBoxExamples() {
   const samplePlayers = [
@@ -214,7 +215,7 @@ export default function PlayerBoxExamples() {
               <div className="relative">
                 <div 
                   className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                  style={{ backgroundColor: selectedPlayers.has(2) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(2) ? 'none' : '2px solid #3b82f6' }}
+                  style={{ backgroundColor: selectedPlayers.has(2) ? getBorderColorHex('bg-blue-500') : 'transparent', border: selectedPlayers.has(2) ? 'none' : `2px solid ${getBorderColorHex('bg-blue-500')}` }}
                   onClick={() => togglePlayerSelection(2)}
                 >
                   {selectedPlayers.has(2) && '✓'}
@@ -245,7 +246,7 @@ export default function PlayerBoxExamples() {
               <div className="relative">
                 <div 
                   className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                  style={{ backgroundColor: selectedPlayers.has(3) ? '#a855f7' : 'transparent', border: selectedPlayers.has(3) ? 'none' : '2px solid #a855f7' }}
+                  style={{ backgroundColor: selectedPlayers.has(3) ? getBorderColorHex('bg-purple-500') : 'transparent', border: selectedPlayers.has(3) ? 'none' : `2px solid ${getBorderColorHex('bg-purple-500')}` }}
                   onClick={() => togglePlayerSelection(3)}
                 >
                   {selectedPlayers.has(3) && '✓'}
@@ -565,7 +566,7 @@ export default function PlayerBoxExamples() {
             <div className="relative">
               <div 
                 className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                style={{ borderColor: '#ec4899', backgroundColor: 'transparent' }}
+                style={{ borderColor: getBorderColorHex('bg-pink-500'), backgroundColor: 'transparent' }}
               >
               </div>
               <PlayerBox 
@@ -584,7 +585,7 @@ export default function PlayerBoxExamples() {
             <div className="relative">
               <div 
                 className="absolute top-1/2 right-4 w-5 h-5 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
-                style={{ backgroundColor: '#6366f1' }}
+                style={{ backgroundColor: getBorderColorHex('bg-indigo-500') }}
               >
                 ✓
               </div>
@@ -611,7 +612,7 @@ export default function PlayerBoxExamples() {
             <div className="relative">
               <div 
                 className="absolute top-1/2 right-3 w-7 h-7 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
-                style={{ backgroundColor: '#06b6d4' }}
+                style={{ backgroundColor: getBorderColorHex('bg-cyan-500') }}
               >
                 ✓
               </div>
@@ -631,7 +632,7 @@ export default function PlayerBoxExamples() {
             <div className="relative">
               <div 
                 className="absolute top-1/2 right-3 w-7 h-7 rounded border-2 cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                style={{ borderColor: '#f59e0b', backgroundColor: 'transparent' }}
+                style={{ borderColor: getBorderColorHex('bg-amber-500'), backgroundColor: 'transparent' }}
               >
               </div>
               <PlayerBox 
@@ -752,7 +753,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative group">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(100) ? '#16a34a' : 'transparent', border: selectedPlayers.has(100) ? 'none' : '2px solid #16a34a' }}
+                    style={{ backgroundColor: selectedPlayers.has(100) ? getBorderColorHex('bg-green-600') : 'transparent', border: selectedPlayers.has(100) ? 'none' : `2px solid ${getBorderColorHex('bg-green-600')}` }}
                     onClick={() => togglePlayerSelection(100)}
                     title={selectedPlayers.has(100) ? "Remove from team" : "Add to team"}
                   >
@@ -779,7 +780,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative group">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(101) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(101) ? 'none' : '2px solid #3b82f6' }}
+                    style={{ backgroundColor: selectedPlayers.has(101) ? getBorderColorHex('bg-blue-500') : 'transparent', border: selectedPlayers.has(101) ? 'none' : `2px solid ${getBorderColorHex('bg-blue-500')}` }}
                     onClick={() => togglePlayerSelection(101)}
                     title={selectedPlayers.has(101) ? "Remove from team" : "Add to team"}
                   >
