@@ -1,16 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Zap, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@shared/schema';
-import PlayerAvatar from '@/components/ui/player-avatar';
+import { PlayerBox } from '@/components/ui/player-box';
 import { cn } from '@/lib/utils';
-import { apiClient } from '@/lib/apiClient';
-import { getPlayerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
-import { getPlayerBoxContainerClasses, getPlayerBoxCheckboxStyles, getPlayerBoxBackgroundStyle } from '@/lib/playerBoxStyles';
-import { Badge } from '@/components/ui/badge';
-import { Zap, RotateCcw, UserPlus, UserMinus } from 'lucide-react';
 
 interface SelectablePlayerBoxProps {
   players: Player[];
@@ -44,13 +40,6 @@ export function SelectablePlayerBox({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  const getPlayerColor = (player: Player) => {
-    if (player.avatarColor?.startsWith('bg-')) {
-      return player.avatarColor;
-    }
-    return 'bg-gray-400';
-  };
-
   const handleSelectAll = () => {
     const allPlayerIds = new Set(players.map(p => p.id));
     onSelectionChange(allPlayerIds);
@@ -60,25 +49,16 @@ export function SelectablePlayerBox({
     onSelectionChange(new Set());
   };
 
-  const handlePlayerClick = (playerId: number) => {
-    if (mode === 'team-management') {
-      // For team management mode, use add/remove actions
-      const isSelected = selectedPlayerIds.has(playerId);
-      if (isSelected && onRemovePlayer) {
-        onRemovePlayer(playerId);
-      } else if (!isSelected && onAddPlayer) {
-        onAddPlayer(playerId);
-      }
+  const handlePlayerSelectionChange = (playerId: number, isSelected: boolean) => {
+    const newSelectedIds = new Set(selectedPlayerIds);
+
+    if (isSelected) {
+      newSelectedIds.add(playerId);
     } else {
-      // For availability mode, toggle selection
-      const newSelectedIds = new Set(selectedPlayerIds);
-      if (newSelectedIds.has(playerId)) {
-        newSelectedIds.delete(playerId);
-      } else {
-        newSelectedIds.add(playerId);
-      }
-      onSelectionChange(newSelectedIds);
+      newSelectedIds.delete(playerId);
     }
+
+    onSelectionChange(newSelectedIds);
   };
 
   const sortedPlayers = (players || []).filter(player => player).sort((a, b) => {
@@ -88,8 +68,6 @@ export function SelectablePlayerBox({
   });
 
   const selectedCount = selectedPlayerIds.size;
-  const quickActionLabel = mode === 'team-management' ? 'Add All' : 'All Available';
-  const clearActionLabel = mode === 'team-management' ? 'Remove All' : 'Clear All';
 
   return (
     <Card className={className}>
@@ -105,7 +83,7 @@ export function SelectablePlayerBox({
                 disabled={isSaving}
               >
                 <Zap className="h-4 w-4 mr-1" />
-                {quickActionLabel}
+                Select All
               </Button>
               <Button 
                 variant="outline" 
@@ -114,7 +92,7 @@ export function SelectablePlayerBox({
                 disabled={isSaving}
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                {clearActionLabel}
+                Clear All
               </Button>
             </div>
           )}
@@ -123,82 +101,30 @@ export function SelectablePlayerBox({
           <Badge variant="outline" className="mr-1">
             {selectedCount}
           </Badge>
-          <span className="text-sm text-gray-600">
-            {mode === 'team-management' ? 'Selected Players' : 'Available Players'}
-          </span>
+          <span className="text-sm text-gray-600">Selected Players</span>
         </div>
       </CardHeader>
 
       <CardContent>
         <div className={cn(
           "grid gap-4 mt-2",
-          variant === 'compact' 
-            ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" 
-            : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+          "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
         )}>
           {sortedPlayers.map(player => {
-            const playerColor = getPlayerColor(player);
             const isSelected = selectedPlayerIds.has(player.id);
-            const isAdding = addingPlayerIds.has(player.id);
-            const isRemoving = removingPlayerIds.has(player.id);
-            const isDisabled = isAdding || isRemoving;
+            const isLoading = addingPlayerIds.has(player.id) || removingPlayerIds.has(player.id) || isSaving;
 
             return (
-              <div 
+              <PlayerBox
                 key={player.id}
-                className={cn(
-                  getPlayerBoxContainerClasses(isSelected),
-                  isDisabled && "opacity-50 cursor-not-allowed"
-                )}
-                style={getPlayerBoxBackgroundStyle(
-                  isSelected,
-                  getPlayerColorHex(playerColor),
-                  getLighterColorHex(playerColor),
-                  getMediumColorHex(playerColor)
-                )}
-                onClick={() => {
-                  if (!isDisabled) {
-                    handlePlayerClick(player.id);
-                  }
-                }}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <PlayerAvatar 
-                      player={player}
-                      size={variant === 'compact' ? 'sm' : 'md'}
-                    />
-                    <div>
-                      <div 
-                        className={cn(
-                          "font-bold",
-                          variant === 'compact' ? "text-sm" : ""
-                        )}
-                        style={{ color: getPlayerColorHex(playerColor) }}
-                      >
-                        {player.displayName}
-                      </div>
-                      {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
-                        <div 
-                          className="text-xs font-medium"
-                          style={{ color: getPlayerColorHex(playerColor) }}
-                        >
-                          {player.positionPreferences.join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isAdding && <UserPlus className="h-4 w-4 animate-spin" />}
-                    {isRemoving && <UserMinus className="h-4 w-4 animate-spin" />}
-                    <div 
-                      {...getPlayerBoxCheckboxStyles(isSelected, getPlayerColorHex(playerColor))}
-                    >
-                      {isSelected && '✓'}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                player={player}
+                isSelectable={true}
+                isSelected={isSelected}
+                onSelectionChange={handlePlayerSelectionChange}
+                size={variant === 'compact' ? 'sm' : 'md'}
+                showPositions={variant === 'detailed'}
+                isLoading={isLoading}
+              />
             );
           })}
         </div>

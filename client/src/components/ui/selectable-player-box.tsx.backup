@@ -1,0 +1,48 @@
+
+interface SelectablePlayerBoxProps {
+  players: Player[];
+  selectedPlayerIds: Set<number>;
+  onSelectionChange: (selectedIds: Set<number>) => void;
+  title?: string;
+  showQuickActions?: boolean;
+  className?: string;
+  mode?: 'availability' | 'team-management';
+  onAddPlayer?: (playerId: number) => void;
+  onRemovePlayer?: (playerId: number) => void;
+  addingPlayerIds?: Set<number>;
+  removingPlayerIds?: Set<number>;
+  variant?: 'compact' | 'detailed';
+}
+
+export function SelectablePlayerBox({
+  players,
+  selectedPlayerIds,
+  onSelectionChange,
+  title = "Player Selection",
+  showQuickActions = true,
+  className,
+  mode = 'availability',
+  onAddPlayer,
+  onRemovePlayer,
+  addingPlayerIds = new Set(),
+  removingPlayerIds = new Set(),
+  variant = 'detailed'
+}: SelectablePlayerBoxProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const getPlayerColor = (player: Player) => {
+    if (player.avatarColor?.startsWith('bg-')) {
+      return player.avatarColor;
+    }
+    return 'bg-gray-400';
+  };
+
+  const handleSelectAll = () => {
+    const allPlayerIds = new Set(players.map(p => p.id));
+    onSelectionChange(allPlayerIds);
+  };
+
+  const handleClearAll = () => {
+    onSelectionChange(new Set());
+  };
