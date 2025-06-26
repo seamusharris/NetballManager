@@ -26,45 +26,11 @@ export class PlayerAvailabilityStorage {
 
       const hasExistingRecords = parseInt(existingRecords.rows[0].count) > 0;
 
-      if (!hasExistingRecords) {
-        if (teamId) {
-          console.log(`No availability records found for game ${gameId}, returning team ${teamId} players as available by default`);
-
-          // Get the specific team's players and return them as available (don't create records)
-          const teamPlayersResult = await db.execute(sql`
-            SELECT p.id 
-            FROM players p
-            JOIN team_players tp ON p.id = tp.player_id
-            WHERE tp.team_id = ${teamId} 
-              AND p.active = true
-          `);
-
-          console.log(`Returning ${teamPlayersResult.rows.length} active team players as available by default for game ${gameId}`);
-          return teamPlayersResult.rows.map(row => row.id as number);
-        } else {
-          console.log(`No availability records found for game ${gameId}, returning all active players as available by default`);
-
-          // Fallback to all active players if no team specified
-          const playersResult = await db.execute(sql`
-            SELECT id FROM players WHERE active = true
-          `);
-
-          console.log(`Returning ${playersResult.rows.length} active players as available by default for game ${gameId}`);
-          return playersResult.rows.map(row => row.id as number);
-        }
-      }
-
-      // Check if we have explicit false records (Select None was used)
-      const explicitFalseRecords = await db.execute(sql`
-        SELECT COUNT(*) as count FROM player_availability 
-        WHERE game_id = ${gameId} AND is_available = false
-      `);
-
-      const hasExplicitFalseRecords = parseInt(explicitFalseRecords.rows[0].count) > 0;
-
-      if (hasExplicitFalseRecords) {
-        console.log(`Found explicit false records for game ${gameId} - Select None was used`);
-        // Return only players explicitly marked as available (should be empty for Select None)
+      // If we have records, process them regardless of true/false values
+      if (hasExistingRecords) {
+        console.log(`Found existing availability records for game ${gameId}`);
+        
+        // Return only players explicitly marked as available
         const result = await db.execute(sql`
           SELECT player_id 
           FROM player_availability 
@@ -72,21 +38,36 @@ export class PlayerAvailabilityStorage {
         `);
         
         const playerIds = result.rows.map(row => row.player_id as number);
-        console.log(`Returning ${playerIds.length} explicitly available players for game ${gameId} (explicit false records exist)`);
+        console.log(`Returning ${playerIds.length} explicitly available players for game ${gameId}`);
         return playerIds;
       }
 
-      // Return existing availability records - only those marked as available
-      const result = await db.execute(sql`
-        SELECT player_id 
-        FROM player_availability 
-        WHERE game_id = ${gameId} AND is_available = true
-      `);
+      // No records exist - return default available players
+      if (teamId) {
+        console.log(`No availability records found for game ${gameId}, returning team ${teamId} players as available by default`);
 
-      const playerIds = result.rows.map(row => row.player_id as number);
-      const uniquePlayerIds = [...new Set(playerIds)];
-      console.log(`Returning ${uniquePlayerIds.length} available players for game ${gameId} (from existing records)`);
-      return uniquePlayerIds;
+        // Get the specific team's players and return them as available (don't create records)
+        const teamPlayersResult = await db.execute(sql`
+          SELECT p.id 
+          FROM players p
+          JOIN team_players tp ON p.id = tp.player_id
+          WHERE tp.team_id = ${teamId} 
+            AND p.active = true
+        `);
+
+        console.log(`Returning ${teamPlayersResult.rows.length} active team players as available by default for game ${gameId}`);
+        return teamPlayersResult.rows.map(row => row.id as number);
+      } else {
+        console.log(`No availability records found for game ${gameId}, returning all active players as available by default`);
+
+        // Fallback to all active players if no team specified
+        const playersResult = await db.execute(sql`
+          SELECT id FROM players WHERE active = true
+        `);
+
+        console.log(`Returning ${playersResult.rows.length} active players as available by default for game ${gameId}`);
+        return playersResult.rows.map(row => row.id as number);
+      }
 
     } catch (error) {
       console.error('Error fetching player availability:', error);
