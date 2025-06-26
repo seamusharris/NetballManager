@@ -74,7 +74,7 @@ export function SelectablePlayerBox({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle>{title}</CardTitle>
-          {showQuickActions && (
+          {mode === 'availability' && showQuickActions && (
             <div className="flex space-x-2">
               <Button 
                 variant="outline" 
@@ -96,13 +96,20 @@ export function SelectablePlayerBox({
               </Button>
             </div>
           )}
+          {mode === 'team-management' && (
+            <Button variant="outline" size="sm" disabled>
+              {players.length} players
+            </Button>
+          )}
         </div>
-        <div className="flex items-center gap-2 mt-2">
-          <Badge variant="outline" className="mr-1">
-            {selectedCount}
-          </Badge>
-          <span className="text-sm text-gray-600">Selected Players</span>
-        </div>
+        {mode === 'availability' && (
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline" className="mr-1">
+              {selectedCount}
+            </Badge>
+            <span className="text-sm text-gray-600">Selected Players</span>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
