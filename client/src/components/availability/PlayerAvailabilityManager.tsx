@@ -30,8 +30,8 @@ interface PlayerAvailabilityManagerProps {
 
 export default function PlayerAvailabilityManager({
   gameId,
-  players,
-  games,
+  players = [],
+  games = [],
   onComplete,
   onAvailabilityChange,
   onAvailabilityStateChange,
@@ -41,7 +41,7 @@ export default function PlayerAvailabilityManager({
   // Simple React state - no complex managers
   const [availability, setAvailability] = useState<Record<number, boolean>>({});
   const [pendingChanges, setPendingChanges] = useState<Record<number, boolean>>({});
-  const [hasPendingSave, setHasPendingSave] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -106,6 +106,7 @@ export default function PlayerAvailabilityManager({
   const saveBatch = useCallback(async (availabilityData: Record<number, boolean>) => {
     if (!gameId || teamPlayers.length === 0) return;
 
+    setIsSaving(true);
     try {
       const availablePlayerIds = Object.entries(availabilityData)
         .filter(([_, isAvailable]) => isAvailable)
@@ -117,7 +118,6 @@ export default function PlayerAvailabilityManager({
 
       // Clear pending state
       setPendingChanges({});
-      setHasPendingSave(false);
 
       // Invalidate cache to get fresh data
       queryClient.invalidateQueries({ 
@@ -133,17 +133,22 @@ export default function PlayerAvailabilityManager({
       });
       
       // Revert to last known good state on error
-      setAvailability(prev => {
-        const reverted = { ...prev };
-        Object.keys(pendingChanges).forEach(playerId => {
-          delete reverted[parseInt(playerId)];
+      if (availabilityResponse?.availablePlayerIds) {
+        const revertedAvailability: Record<number, boolean> = {};
+        teamPlayers.forEach(player => {
+          revertedAvailability[player.id] = availabilityResponse.availablePlayerIds.includes(player.id);
         });
-        return reverted;
-      });
+        setAvailability(revertedAvailability);
+        
+        const availableIds = availabilityResponse.availablePlayerIds;
+        onAvailabilityChange?.(availableIds);
+        onAvailabilityStateChange?.(revertedAvailability);
+      }
       setPendingChanges({});
-      setHasPendingSave(false);
+    } finally {
+      setIsSaving(false);
     }
-  }, [gameId, teamPlayers, queryClient, toast, pendingChanges]);
+  }, [gameId, teamPlayers, queryClient, toast, availabilityResponse, onAvailabilityChange, onAvailabilityStateChange]);
 
   // Handle player selection with optimistic updates
   const handlePlayerToggle = useCallback((playerId: number, isSelected: boolean) => {
@@ -153,7 +158,6 @@ export default function PlayerAvailabilityManager({
     
     // Track as pending change
     setPendingChanges(prev => ({ ...prev, [playerId]: isSelected }));
-    setHasPendingSave(true);
 
     // Notify parent immediately
     const availableIds = Object.entries(newAvailability)
@@ -181,7 +185,11 @@ export default function PlayerAvailabilityManager({
     });
 
     setAvailability(allSelected);
-    setHasPendingSave(true);
+    
+    // Notify parent immediately
+    const availableIds = teamPlayers.map(p => p.id);
+    onAvailabilityChange?.(availableIds);
+    onAvailabilityStateChange?.(allSelected);
 
     // Clear debounce timer
     if (saveTimeoutRef.current) {
@@ -190,7 +198,7 @@ export default function PlayerAvailabilityManager({
 
     // Immediate save for bulk operations
     await saveBatch(allSelected);
-  }, [teamPlayers, saveBatch]);
+  }, [teamPlayers, saveBatch, onAvailabilityChange, onAvailabilityStateChange]);
 
   const handleClearAll = useCallback(async () => {
     const allCleared: Record<number, boolean> = {};
@@ -199,7 +207,10 @@ export default function PlayerAvailabilityManager({
     });
 
     setAvailability(allCleared);
-    setHasPendingSave(true);
+    
+    // Notify parent immediately
+    onAvailabilityChange?.([]);
+    onAvailabilityStateChange?.(allCleared);
 
     // Clear debounce timer
     if (saveTimeoutRef.current) {
@@ -208,12 +219,12 @@ export default function PlayerAvailabilityManager({
 
     // Immediate save for bulk operations
     await saveBatch(allCleared);
-  }, [teamPlayers, saveBatch]);
+  }, [teamPlayers, saveBatch, onAvailabilityChange, onAvailabilityStateChange]);
 
   // Navigation protection - save on navigation away
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasPendingSave) {
+      if (Object.keys(pendingChanges).length > 0) {
         e.preventDefault();
         e.returnValue = 'You have unsaved player availability changes. Are you sure you want to leave?';
         return e.returnValue;
@@ -221,7 +232,7 @@ export default function PlayerAvailabilityManager({
     };
 
     const handleUnload = () => {
-      if (hasPendingSave && saveTimeoutRef.current) {
+      if (Object.keys(pendingChanges).length > 0 && saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
         // Force immediate save - use sendBeacon for reliability
         const availableIds = Object.entries(availability)
@@ -236,7 +247,7 @@ export default function PlayerAvailabilityManager({
       }
     };
 
-    if (hasPendingSave) {
+    if (Object.keys(pendingChanges).length > 0) {
       window.addEventListener('beforeunload', handleBeforeUnload);
       window.addEventListener('unload', handleUnload);
     }
@@ -245,7 +256,7 @@ export default function PlayerAvailabilityManager({
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('unload', handleUnload);
     };
-  }, [hasPendingSave, availability, gameId, teamPlayers]);
+  }, [pendingChanges, availability, gameId, teamPlayers]);
 
   // Cleanup - force save on unmount
   useEffect(() => {
@@ -253,12 +264,12 @@ export default function PlayerAvailabilityManager({
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      if (hasPendingSave) {
+      if (Object.keys(pendingChanges).length > 0) {
         // Force final save on unmount
         saveBatch(availability);
       }
     };
-  }, [hasPendingSave, availability, saveBatch]);
+  }, [pendingChanges, availability, saveBatch]);
 
   if (!gameId) {
     return (
@@ -282,6 +293,7 @@ export default function PlayerAvailabilityManager({
 
   const selectedGame = games.find(game => game.id === gameId);
   const availableCount = Object.values(availability).filter(isAvailable => isAvailable === true).length;
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   return (
     <Card className="mb-6">
@@ -300,6 +312,7 @@ export default function PlayerAvailabilityManager({
               variant="outline" 
               size="sm" 
               onClick={handleSelectAll}
+              disabled={isSaving}
             >
               Select All
             </Button>
@@ -307,6 +320,7 @@ export default function PlayerAvailabilityManager({
               variant="outline" 
               size="sm" 
               onClick={handleClearAll}
+              disabled={isSaving}
             >
               Clear All
             </Button>
@@ -318,9 +332,9 @@ export default function PlayerAvailabilityManager({
             {availableCount}
           </Badge>
           <span className="text-sm text-gray-600">Available Players</span>
-          {hasPendingSave && (
+          {(isSaving || hasPendingChanges) && (
             <Badge variant="secondary" className="ml-2">
-              Saving...
+              {isSaving ? 'Saving...' : 'Changes pending...'}
             </Badge>
           )}
         </div>
