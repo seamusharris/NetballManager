@@ -18,8 +18,9 @@ import { apiClient } from '@/lib/apiClient';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
+  teamId: number;
   players: Player[];
-  games: Game[];
+  game: Game;
   onComplete?: () => void;
   onAvailabilityChange?: (availablePlayerIds: number[]) => void;
   onAvailabilityStateChange?: (availabilityState: Record<number, boolean>) => void;
@@ -29,8 +30,9 @@ interface PlayerAvailabilityManagerProps {
 
 export default function PlayerAvailabilityManager({
   gameId,
+  teamId,
   players = [],
-  games = [],
+  game,
   onComplete,
   onAvailabilityChange,
   onAvailabilityStateChange,
@@ -52,7 +54,7 @@ export default function PlayerAvailabilityManager({
   // Fetch existing availability data
   const { data: availabilityResponse, isLoading } = useQuery<{availablePlayerIds: number[]}>({
     queryKey: CACHE_KEYS.playerAvailability(gameId || 0),
-    queryFn: () => apiClient.get(`/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`),
+    queryFn: () => apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`),
     enabled: !!gameId && teamPlayers.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -84,7 +86,7 @@ export default function PlayerAvailabilityManager({
 
     onAvailabilityChange?.(availableIds);
     onAvailabilityStateChange?.(newAvailability);
-  }, [availabilityResponse, teamPlayers, gameId]);
+  }, [availabilityResponse, teamPlayers, gameId, onAvailabilityChange, onAvailabilityStateChange]);
 
   // Batch save function - efficient database operations
   const saveBatch = useCallback(async (availabilityData: Record<number, boolean>) => {
@@ -96,7 +98,7 @@ export default function PlayerAvailabilityManager({
         .filter(([_, isAvailable]) => isAvailable)
         .map(([playerId, _]) => parseInt(playerId));
 
-      await apiClient.post(`/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`, {
+      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
         availablePlayerIds
       });
 
@@ -132,7 +134,7 @@ export default function PlayerAvailabilityManager({
     } finally {
       setIsSaving(false);
     }
-  }, [gameId, teamPlayers, queryClient, toast, availabilityResponse, onAvailabilityChange, onAvailabilityStateChange]);
+  }, [gameId, teamId, teamPlayers, queryClient, toast, availabilityResponse, onAvailabilityChange, onAvailabilityStateChange]);
 
   // Handle player selection with optimistic updates
   const handlePlayerToggle = useCallback((playerId: number, isSelected: boolean) => {
@@ -225,7 +227,7 @@ export default function PlayerAvailabilityManager({
 
         const data = JSON.stringify({ availablePlayerIds: availableIds });
         navigator.sendBeacon(
-          `/api/teams/${teamPlayers[0]?.teamId}/games/${gameId}/availability`,
+          `/api/teams/${teamId}/games/${gameId}/availability`,
           data
         );
       }
@@ -240,7 +242,7 @@ export default function PlayerAvailabilityManager({
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('unload', handleUnload);
     };
-  }, [pendingChanges, availability, gameId, teamPlayers]);
+  }, [pendingChanges, availability, gameId, teamId]);
 
   // Cleanup - force save on unmount
   useEffect(() => {
@@ -265,7 +267,6 @@ export default function PlayerAvailabilityManager({
     );
   }
 
-  const selectedGame = games.find(game => game.id === gameId);
   const availableCount = Object.values(availability).filter(isAvailable => isAvailable === true).length;
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
@@ -275,9 +276,9 @@ export default function PlayerAvailabilityManager({
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl">
             Player Availability 
-            {selectedGame && (
+            {game && (
               <span className="font-normal text-gray-600 ml-2">
-                for {selectedGame.date}
+                for {game.date}
               </span>
             )}
           </CardTitle>
