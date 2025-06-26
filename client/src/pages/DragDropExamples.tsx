@@ -12,6 +12,7 @@ import {
   Zap, Star, Heart, Shield, Flame, Sparkles, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { PlayerBox } from '@/components/ui/player-box';
+import { cn } from "@/lib/utils";
 
 // Sample player data matching your app's structure
 const samplePlayers = [
@@ -118,6 +119,13 @@ const samplePlayers = [
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
+interface PositionProps {
+  position: string;
+  player: any;
+  isDropTarget: boolean;
+  isCompatible: boolean;
+}
+
 // 1. Enhanced Glass Morphism Court with Quarters
 const GlassMorphismCourt = () => {
   const [currentQuarter, setCurrentQuarter] = useState(1);
@@ -158,41 +166,57 @@ const GlassMorphismCourt = () => {
 
   const assignedPlayerIds = getAllAssignedPlayerIds();
   const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.has(p.id));
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  const PositionSlot = ({ position, courtSection }: { position: string, courtSection: 'attack' | 'mid' | 'defense' }) => {
-    const player = assignments[currentQuarter][position] ? samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
-    const sectionColors = {
-      attack: 'from-red-500/20 to-red-600/30 border-red-300/50',
-      mid: 'from-blue-500/20 to-blue-600/30 border-blue-300/50',
-      defense: 'from-green-500/20 to-green-600/30 border-green-300/50'
-    };
+  const onPositionDrop = (position: string, playerId: number) => {
+    const newAssignments = { ...assignments };
+    Object.keys(newAssignments[currentQuarter]).forEach(pos => {
+      if (newAssignments[currentQuarter][pos] === playerId) {
+        newAssignments[currentQuarter][pos] = null;
+      }
+    });
+    newAssignments[currentQuarter][position] = playerId;
+    setAssignments(newAssignments);
+    setDropTarget(null);
+  };
 
+  // Glass Morphism Court Style
+  const GlassMorphismPosition = ({ position, player, isDropTarget, isCompatible }: PositionProps) => {
     return (
-      <div
-        className={`
-          relative min-h-[160px] rounded-2xl backdrop-blur-lg border-2 transition-all duration-300
-          bg-gradient-to-br ${sectionColors[courtSection]}
-          ${dragOverPosition === position ? 'scale-105 shadow-2xl' : 'shadow-lg'}
-          hover:shadow-xl
-        `}
-        onDragOver={(e) => { e.preventDefault(); setDragOverPosition(position); }}
-        onDragLeave={() => setDragOverPosition(null)}
-        onDrop={() => handleDrop(position)}
+      <div 
+        className={cn(
+          "relative group",
+          "backdrop-blur-md bg-white/20 border border-white/30",
+          "rounded-2xl p-4 min-h-[120px]",
+          "shadow-lg hover:shadow-xl transition-all duration-300",
+          "hover:bg-white/30 hover:scale-[1.02]",
+          isDropTarget && isCompatible && "ring-2 ring-white/50",
+          isDropTarget && !isCompatible && "ring-2 ring-red-400/50"
+        )}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggedPlayer) {
+            onPositionDrop(position, draggedPlayer);
+          }
+        }}
+        onDragEnter={() => setDropTarget(position)}
+        onDragLeave={() => setDropTarget(null)}
       >
-        <div className="absolute top-3 left-3">
-          <Badge variant="outline" className="bg-white/80 backdrop-blur-sm font-bold">
-            {position}
-          </Badge>
-        </div>
-
-        <div className="flex items-center justify-center h-full p-4">
+        <div className="text-xs font-semibold text-white/90 mb-3 text-center">{position}</div>
+        <div className="flex items-center justify-center h-full">
           {player ? (
             <div
               draggable
               onDragStart={() => setDraggedPlayer(player.id)}
-              className="cursor-move w-full max-w-[140px]"
+              className="cursor-move w-full"
             >
-              <PlayerBox player={player} size="sm" showPositions={true} />
+              <PlayerBox 
+                player={player} 
+                size="sm" 
+                showPositions={true}
+                className="shadow-md hover:shadow-lg transition-all duration-200"
+              />
             </div>
           ) : (
             <div className="text-center">
@@ -203,7 +227,41 @@ const GlassMorphismCourt = () => {
             </div>
           )}
         </div>
+        {player && (
+          <div className="mt-3 text-center">
+            <div className="text-xs text-white/70 space-y-1">
+              <div>Quarter {currentQuarter}</div>
+              {player.positionPreferences && (
+                <div>Pref: {player.positionPreferences.join(', ')}</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+    );
+  };
+
+  const PositionSlot = ({ position, courtSection }: { position: string, courtSection: 'attack' | 'mid' | 'defense' }) => {
+    const player = assignments[currentQuarter][position] ? samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
+    const sectionColors = {
+      attack: 'from-red-500/20 to-red-600/30 border-red-300/50',
+      mid: 'from-blue-500/20 to-blue-600/30 border-blue-300/50',
+      defense: 'from-green-500/20 to-green-600/30 border-green-300/50'
+    };
+
+    const isCompatible = player
+      ? player.positionPreferences.includes(position)
+      : true; // Always compatible if no player assigned
+
+    const isDropTarget = dropTarget === position;
+
+    return (
+      <GlassMorphismPosition
+        position={position}
+        player={player}
+        isDropTarget={isDropTarget}
+        isCompatible={isCompatible}
+      />
     );
   };
 
@@ -353,6 +411,83 @@ const NeonGlassCourt = () => {
 
   const assignedPlayerIds = getAllAssignedPlayerIds();
   const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.has(p.id));
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+
+  const onPositionDrop = (position: string, playerId: number) => {
+    const newAssignments = { ...assignments };
+    Object.keys(newAssignments[currentQuarter]).forEach(pos => {
+      if (newAssignments[currentQuarter][pos] === playerId) {
+        newAssignments[currentQuarter][pos] = null;
+      }
+    });
+    newAssignments[currentQuarter][position] = playerId;
+    setAssignments(newAssignments);
+    setDropTarget(null);
+  };
+
+  // Glass Morphism Variant 2
+  const GlassMorphismVariant2 = ({ position, player, isDropTarget, isCompatible }: PositionProps) => {
+    return (
+      <div 
+        className={cn(
+          "relative group",
+          "backdrop-blur-lg bg-gradient-to-br from-white/25 to-white/15",
+          "border border-white/40 rounded-3xl p-5 min-h-[140px]",
+          "shadow-2xl hover:shadow-3xl transition-all duration-500",
+          "hover:from-white/35 hover:to-white/25 hover:scale-105",
+          "before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-br before:from-white/10 before:to-transparent before:pointer-events-none",
+          isDropTarget && isCompatible && "ring-2 ring-blue-400/60 shadow-blue-400/20",
+          isDropTarget && !isCompatible && "ring-2 ring-red-400/60 shadow-red-400/20"
+        )}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggedPlayer) {
+            onPositionDrop(position, draggedPlayer);
+          }
+        }}
+        onDragEnter={() => setDropTarget(position)}
+        onDragLeave={() => setDropTarget(null)}
+      >
+        <div className="relative z-10">
+          <div className="text-xs font-bold text-white/90 mb-3 text-center tracking-wide">{position}</div>
+          <div className="flex items-center justify-center">
+            {player ? (
+              <div
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move w-full"
+              >
+                <PlayerBox 
+                  player={player} 
+                  size="sm" 
+                  showPositions={true}
+                  className="shadow-lg hover:shadow-xl transition-all duration-300"
+                />
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full border-2 border-dashed border-white/80 flex items-center justify-center mb-2 mx-auto bg-white/10">
+                  <Plus className="h-6 w-6 text-white/80" />
+                </div>
+                <p className="text-white text-sm font-medium">Drop here</p>
+              </div>
+            )}
+          </div>
+          {player && (
+            <div className="mt-3 text-center">
+              <div className="text-xs text-white/80 space-y-1">
+                <div className="font-medium">Q{currentQuarter}</div>
+                {player.positionPreferences && (
+                  <div className="text-white/70">Pref: {player.positionPreferences.slice(0, 2).join(', ')}</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const PositionSlot = ({ position, courtSection }: { position: string, courtSection: 'attack' | 'mid' | 'defense' }) => {
     const player = assignments[currentQuarter][position] ? samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
@@ -362,43 +497,19 @@ const NeonGlassCourt = () => {
       defense: 'from-green-500/30 to-emerald-500/40 border-green-400/60 shadow-green-500/50'
     };
 
-    return (
-      <div
-        className={`
-          relative min-h-[160px] rounded-2xl backdrop-blur-xl border-2 transition-all duration-300
-          bg-gradient-to-br ${sectionColors[courtSection]}
-          ${dragOverPosition === position ? 'scale-105 shadow-2xl glow-effect' : 'shadow-lg'}
-          hover:shadow-xl hover:glow-effect
-        `}
-        onDragOver={(e) => { e.preventDefault(); setDragOverPosition(position); }}
-        onDragLeave={() => setDragOverPosition(null)}
-        onDrop={() => handleDrop(position)}
-      >
-        <div className="absolute top-3 left-3">
-          <Badge variant="outline" className="bg-black/60 text-white border-white/40 backdrop-blur-sm font-bold">
-            {position}
-          </Badge>
-        </div>
+    const isCompatible = player
+      ? player.positionPreferences.includes(position)
+      : true; // Always compatible if no player assigned
 
-        <div className="flex items-center justify-center h-full p-4">
-          {player ? (
-            <div
-              draggable
-              onDragStart={() => setDraggedPlayer(player.id)}
-              className="cursor-move w-full max-w-[140px]"
-            >
-              <PlayerBox player={player} size="sm" showPositions={true} />
-            </div>
-          ) : (
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full border-2 border-dashed border-white/80 flex items-center justify-center mb-2 mx-auto bg-white/10">
-                <Plus className="h-6 w-6 text-white/80" />
-              </div>
-              <p className="text-white text-sm font-medium">Drop here</p>
-            </div>
-          )}
-        </div>
-      </div>
+    const isDropTarget = dropTarget === position;
+
+    return (
+      <GlassMorphismVariant2
+        position={position}
+        player={player}
+        isDropTarget={isDropTarget}
+        isCompatible={isCompatible}
+      />
     );
   };
 
@@ -560,47 +671,99 @@ const MinimalGlassCourt = () => {
 
   const assignedPlayerIds = getAllAssignedPlayerIds();
   const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.has(p.id));
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  const PositionSlot = ({ position }: { position: string }) => {
-    const player = assignments[currentQuarter][position] ? samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
+  const onPositionDrop = (position: string, playerId: number) => {
+    const newAssignments = { ...assignments };
+    Object.keys(newAssignments[currentQuarter]).forEach(pos => {
+      if (newAssignments[currentQuarter][pos] === playerId) {
+        newAssignments[currentQuarter][pos] = null;
+      }
+    });
+    newAssignments[currentQuarter][position] = playerId;
+    setAssignments(newAssignments);
+    setDropTarget(null);
+  };
 
+  // Glass Morphism Variant 3 - Frosted
+  const GlassMorphismVariant3 = ({ position, player, isDropTarget, isCompatible }: PositionProps) => {
     return (
-      <div
-        className={`
-          relative min-h-[160px] rounded-xl backdrop-blur-sm border transition-all duration-200
-          bg-white/60 border-gray-200/60
-          ${dragOverPosition === position ? 'scale-102 shadow-lg border-blue-300' : 'shadow-sm'}
-          hover:shadow-md hover:bg-white/70
-        `}
-        onDragOver={(e) => { e.preventDefault(); setDragOverPosition(position); }}
-        onDragLeave={() => setDragOverPosition(null)}
-        onDrop={() => handleDrop(position)}
+      <div 
+        className={cn(
+          "relative group",
+          "backdrop-blur-xl bg-white/30 border-2 border-white/50",
+          "rounded-2xl p-4 min-h-[130px]",
+          "shadow-xl hover:shadow-2xl transition-all duration-400",
+          "hover:bg-white/40 hover:border-white/60 hover:scale-[1.03]",
+          "after:absolute after:inset-0 after:rounded-2xl after:bg-gradient-to-t after:from-black/5 after:to-transparent after:pointer-events-none",
+          isDropTarget && isCompatible && "ring-2 ring-emerald-400/70",
+          isDropTarget && !isCompatible && "ring-2 ring-rose-400/70"
+        )}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggedPlayer) {
+            onPositionDrop(position, draggedPlayer);
+          }
+        }}
+        onDragEnter={() => setDropTarget(position)}
+        onDragLeave={() => setDropTarget(null)}
       >
-        <div className="absolute top-3 left-3">
-          <Badge variant="outline" className="bg-white/90 text-gray-700 border-gray-300">
-            {position}
-          </Badge>
-        </div>
-
-        <div className="flex items-center justify-center h-full p-4">
-          {player ? (
-            <div
-              draggable
-              onDragStart={() => setDraggedPlayer(player.id)}
-              className="cursor-move w-full max-w-[140px]"
-            >
-              <PlayerBox player={player} size="sm" showPositions={true} />
-            </div>
-          ) : (
-            <div className="text-center">
-              <div className="w-10 h-10 rounded-full border-2 border-dashed border-gray-400/60 flex items-center justify-center mb-2 mx-auto">
-                <Plus className="h-5 w-5 text-gray-400" />
+        <div className="relative z-10">
+          <div className="text-xs font-bold text-white/95 mb-2 text-center uppercase tracking-wider">{position}</div>
+          <div className="flex items-center justify-center">
+            {player ? (
+              <div
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move w-full"
+              >
+                <PlayerBox 
+                  player={player} 
+                  size="sm" 
+                  showPositions={true}
+                  className="shadow-lg hover:shadow-xl transition-all duration-300"
+                />
               </div>
-              <p className="text-gray-600 text-sm">Drop here</p>
+            ) : (
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full border-2 border-dashed border-white/70 flex items-center justify-center mb-2 mx-auto bg-white/20">
+                  <Plus className="h-6 w-6 text-white/70" />
+                </div>
+                <p className="text-white/90 text-sm font-medium">Drop here</p>
+              </div>
+            )}
+          </div>
+          {player && (
+            <div className="mt-2 text-center">
+              <div className="text-xs text-white/85 space-y-1">
+                <div className="font-semibold bg-white/20 rounded px-2 py-1">Q{currentQuarter}</div>
+                {player.positionPreferences && (
+                  <div className="text-white/75">Prefers: {player.positionPreferences.slice(0, 2).join(', ')}</div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
+    );
+  };
+
+  const PositionSlot = ({ position }: { position: string }) => {
+    const player = assignments[currentQuarter][position] ? samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
+    const isCompatible = player
+      ? player.positionPreferences.includes(position)
+      : true; // Always compatible if no player assigned
+
+    const isDropTarget = dropTarget === position;
+
+    return (
+      <GlassMorphismVariant3
+        position={position}
+        player={player}
+        isDropTarget={isDropTarget}
+        isCompatible={isCompatible}
+      />
     );
   };
 
