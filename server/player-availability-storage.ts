@@ -102,67 +102,52 @@ export class PlayerAvailabilityStorage {
     console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
 
     try {
-      // Use default isolation level with optimized upsert operation
-      const result = await db.transaction(async (tx) => {
-        // Get game info without locking (just for validation and team lookup)
-        const gameResult = await tx.execute(sql`
-          SELECT home_team_id, away_team_id 
-          FROM games 
-          WHERE id = ${gameId}
-        `);
-        
-        if (gameResult.rows.length === 0) {
-          throw new Error(`Game ${gameId} not found`);
-        }
+      // Super simple approach - just update the records directly with a single query
+      // Get team info and team players in one query for speed
+      const teamInfoResult = await db.execute(sql`
+        SELECT 
+          g.home_team_id,
+          array_agg(p.id ORDER BY p.id) as team_player_ids
+        FROM games g
+        JOIN team_players tp ON tp.team_id = g.home_team_id
+        JOIN players p ON p.id = tp.player_id AND p.active = true
+        WHERE g.id = ${gameId}
+        GROUP BY g.home_team_id
+      `);
 
-        const game = gameResult.rows[0] as any;
-        const homeTeamId = game.home_team_id;
-
-        // Get all team players (no locking needed for read-only data)
-        const teamPlayersResult = await tx.execute(sql`
-          SELECT p.id 
-          FROM players p
-          JOIN team_players tp ON p.id = tp.player_id
-          WHERE tp.team_id = ${homeTeamId} AND p.active = true
-          ORDER BY p.id
-        `);
-        
-        const teamPlayerIds = teamPlayersResult.rows.map(row => row.id as number);
-        console.log(`Found ${teamPlayerIds.length} team players for team ${homeTeamId}`);
-
-        if (teamPlayerIds.length === 0) {
-          console.warn(`No team players found for game ${gameId}, team ${homeTeamId}`);
-          return true;
-        }
-
-        // Validate that availablePlayerIds only contains team players
-        const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
-        if (validAvailablePlayerIds.length !== availablePlayerIds.length) {
-          console.warn(`Filtered invalid player IDs: ${availablePlayerIds.filter(id => !teamPlayerIds.includes(id))}`);
-        }
-
-        // Use PostgreSQL UPSERT (INSERT ... ON CONFLICT) for better performance
-        if (teamPlayerIds.length > 0) {
-          const values = teamPlayerIds.map(playerId => {
-            const isAvailable = validAvailablePlayerIds.includes(playerId);
-            return `(${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())`;
-          }).join(', ');
-
-          await tx.execute(sql.raw(`
-            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-            VALUES ${values}
-            ON CONFLICT (game_id, player_id) 
-            DO UPDATE SET 
-              is_available = EXCLUDED.is_available,
-              updated_at = EXCLUDED.updated_at
-          `));
-        }
-
-        console.log(`Upserted ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
+      if (teamInfoResult.rows.length === 0) {
+        console.warn(`No game or team players found for game ${gameId}`);
         return true;
-      });
+      }
 
-      return result;
+      const teamData = teamInfoResult.rows[0] as any;
+      const teamPlayerIds = teamData.team_player_ids as number[];
+      
+      if (!teamPlayerIds || teamPlayerIds.length === 0) {
+        console.warn(`No team players found for game ${gameId}`);
+        return true;
+      }
+
+      // Filter to only valid player IDs
+      const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+
+      // Single UPSERT operation for all players at once
+      const values = teamPlayerIds.map(playerId => {
+        const isAvailable = validAvailablePlayerIds.includes(playerId);
+        return `(${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())`;
+      }).join(', ');
+
+      await db.execute(sql.raw(`
+        INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+        VALUES ${values}
+        ON CONFLICT (game_id, player_id) 
+        DO UPDATE SET 
+          is_available = EXCLUDED.is_available,
+          updated_at = NOW()
+      `));
+
+      console.log(`Upserted ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
+      return true;
     } catch (error) {
       console.error(`Error setting player availability for game ${gameId}:`, error);
       return false;
