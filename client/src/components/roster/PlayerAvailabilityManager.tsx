@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { invalidateAvailability } from '@/lib/cacheInvalidation';
@@ -54,6 +55,10 @@ export default function PlayerAvailabilityManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Smart batching state
+  const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingBatchRef = useRef<Record<number, boolean> | null>(null);
+
   // Use cached query for availability
   const { 
     data: availabilityResponse, 
@@ -70,6 +75,72 @@ export default function PlayerAvailabilityManager({
       console.log('Player availability API error, falling back to all active players:', error);
     }
   });
+
+  // Smart batching save function
+  const saveBatch = useCallback(async (batchData: Record<number, boolean>) => {
+    if (!gameId) return;
+
+    try {
+      const availablePlayerIds = Object.entries(batchData)
+        .filter(([_, isAvailable]) => isAvailable)
+        .map(([playerId, _]) => parseInt(playerId));
+
+      await apiClient.post(`/api/games/${gameId}/availability`, {
+        availablePlayerIds
+      });
+
+      // Invalidate availability caches and refetch
+      invalidateAvailability(queryClient, gameId);
+      await refetchAvailability();
+
+    } catch (error) {
+      console.error("Failed to save player availability:", error);
+      toast({
+        variant: "destructive",
+        title: "Error saving availability",
+        description: "Failed to save player availability. Please try again.",
+      });
+    }
+  }, [gameId, queryClient, refetchAvailability, toast]);
+
+  // Smart batching handler
+  const handleAvailabilityChange = useCallback((newAvailabilityData: Record<number, boolean>) => {
+    // Update UI immediately
+    setAvailabilityData(newAvailabilityData);
+
+    // Store for batching
+    pendingBatchRef.current = newAvailabilityData;
+
+    // Convert back to array format for parent component
+    const availablePlayerIds = Object.entries(newAvailabilityData)
+      .filter(([_, isAvailable]) => isAvailable)
+      .map(([playerId, _]) => parseInt(playerId));
+
+    onAvailabilityChange?.(availablePlayerIds);
+    onAvailabilityStateChange?.(newAvailabilityData);
+
+    // Clear existing timeout and set new one
+    if (batchTimeoutRef.current) {
+      clearTimeout(batchTimeoutRef.current);
+    }
+
+    // Batch save after 150ms of no changes
+    batchTimeoutRef.current = setTimeout(async () => {
+      if (pendingBatchRef.current) {
+        await saveBatch(pendingBatchRef.current);
+        pendingBatchRef.current = null;
+      }
+    }, 150);
+  }, [onAvailabilityChange, onAvailabilityStateChange, saveBatch]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Load team players for the selected game - use provided players instead of API call
   useEffect(() => {
@@ -176,46 +247,6 @@ export default function PlayerAvailabilityManager({
       onAvailabilityStateChange?.(defaultAvailabilityData);
     }
   }, [availabilityResponse, isLoading, availabilityError, teamPlayers, gameId, isLoadingTeamPlayers]);
-
-  // Handle availability change with auto-save
-  const handleAvailabilityChange = async (newAvailabilityData: Record<number, boolean>) => {
-    setAvailabilityData(newAvailabilityData);
-
-    // Convert back to array format for parent component
-    const availablePlayerIds = Object.entries(newAvailabilityData)
-      .filter(([_, isAvailable]) => isAvailable)
-      .map(([playerId, _]) => parseInt(playerId));
-
-    onAvailabilityChange?.(availablePlayerIds);
-    onAvailabilityStateChange?.(newAvailabilityData);
-
-    // Auto-save if gameId is provided
-    if (gameId) {
-      try {
-        await apiClient.post(`/api/games/${gameId}/availability`, {
-          availablePlayerIds
-        });
-
-        // Invalidate availability caches and refetch
-        invalidateAvailability(queryClient, gameId);
-
-        // Force refetch of availability data
-        await refetch();
-
-        toast({
-          title: "Availability updated",
-          description: "Player availability saved successfully.",
-        });
-      } catch (error) {
-        console.error("Failed to save player availability:", error);
-        toast({
-          variant: "destructive",
-          title: "Error saving availability",
-          description: "Failed to save player availability. Please try again.",
-        });
-      }
-    }
-  };
 
   // Early return if no gameId
   if (!gameId) {
