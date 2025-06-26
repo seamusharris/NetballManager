@@ -40,14 +40,29 @@ export function useTeamAvailability(teamId: number, gameId: number) {
 export function useSetPlayerAvailability(teamId?: number) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Track the latest request to avoid race conditions
+  const latestRequestRef = useRef<{ gameId: number; timestamp: number } | null>(null);
 
   return useMutation({
     mutationFn: async ({ gameId, data }: { gameId: number; data: SetAvailabilityData }) => {
-      // Simple full-state replacement - no need to track or cancel requests
-      // Since we're sending complete state, latest request wins naturally
-      return teamId 
-        ? apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
-        : apiClient.post(`/api/games/${gameId}/availability`, data);
+      // Track this request
+      const requestTimestamp = Date.now();
+      latestRequestRef.current = { gameId, timestamp: requestTimestamp };
+      
+      // Send the request
+      const result = teamId 
+        ? await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
+        : await apiClient.post(`/api/games/${gameId}/availability`, data);
+      
+      // Only proceed if this is still the latest request
+      if (latestRequestRef.current?.timestamp === requestTimestamp) {
+        return result;
+      } else {
+        // This request was superseded, but don't throw - just return
+        console.log(`Request superseded for game ${gameId}`);
+        return result;
+      }
     },
     onMutate: async ({ gameId, data }) => {
       // Cancel any outgoing refetches to prevent race conditions
@@ -64,31 +79,33 @@ export function useSetPlayerAvailability(teamId?: number) {
       return { previousData };
     },
     onSuccess: (_, { gameId }) => {
-      // Invalidate and refetch immediately to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
-      
-      // Also invalidate any related availability caches
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey;
-          return Array.isArray(key) && 
-                 key[0] === 'availability' && 
-                 key[2] === gameId;
-        }
-      });
+      // Only invalidate if this was the latest request
+      if (latestRequestRef.current?.gameId === gameId) {
+        queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+        
+        // Also invalidate any related availability caches
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key[0] === 'availability' && 
+                   key[2] === gameId;
+          }
+        });
+      }
     },
     onError: (error, { gameId }, context) => {
-      // Rollback optimistic update on error
-      if (context?.previousData) {
+      // Only rollback if this was the latest request
+      if (latestRequestRef.current?.gameId === gameId && context?.previousData) {
         queryClient.setQueryData(['availability', teamId, gameId], context.previousData);
+        
+        console.error('Failed to update player availability:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update player availability",
+          variant: "destructive",
+        });
       }
-      
-      console.error('Failed to update player availability:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update player availability",
-        variant: "destructive",
-      });
     },
   });
 }

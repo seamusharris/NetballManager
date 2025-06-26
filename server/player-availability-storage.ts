@@ -97,33 +97,46 @@ export class PlayerAvailabilityStorage {
     }
   }
 
+  // Cache team players to avoid repeated queries
+  private teamPlayersCache = new Map<number, { playerIds: number[], timestamp: number }>();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  private async getTeamPlayers(gameId: number): Promise<number[]> {
+    const cached = this.teamPlayersCache.get(gameId);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.playerIds;
+    }
+
+    // Simple, fast query to get team players
+    const result = await db.execute(sql`
+      SELECT DISTINCT p.id 
+      FROM games g
+      JOIN team_players tp ON tp.team_id = g.home_team_id
+      JOIN players p ON p.id = tp.player_id AND p.active = true
+      WHERE g.id = ${gameId}
+      ORDER BY p.id
+    `);
+
+    const playerIds = result.rows.map(row => row.id as number);
+    
+    // Cache the result
+    this.teamPlayersCache.set(gameId, {
+      playerIds,
+      timestamp: Date.now()
+    });
+
+    return playerIds;
+  }
+
   async setPlayerAvailabilityForGame(gameId: number, availablePlayerIds: number[]): Promise<boolean> {
     const startTime = Date.now();
     console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
 
     try {
-      // Super simple approach - just update the records directly with a single query
-      // Get team info and team players in one query for speed
-      const teamInfoResult = await db.execute(sql`
-        SELECT 
-          g.home_team_id,
-          array_agg(p.id ORDER BY p.id) as team_player_ids
-        FROM games g
-        JOIN team_players tp ON tp.team_id = g.home_team_id
-        JOIN players p ON p.id = tp.player_id AND p.active = true
-        WHERE g.id = ${gameId}
-        GROUP BY g.home_team_id
-      `);
-
-      if (teamInfoResult.rows.length === 0) {
-        console.warn(`No game or team players found for game ${gameId}`);
-        return true;
-      }
-
-      const teamData = teamInfoResult.rows[0] as any;
-      const teamPlayerIds = teamData.team_player_ids as number[];
+      // Get team players (cached)
+      const teamPlayerIds = await this.getTeamPlayers(gameId);
       
-      if (!teamPlayerIds || teamPlayerIds.length === 0) {
+      if (teamPlayerIds.length === 0) {
         console.warn(`No team players found for game ${gameId}`);
         return true;
       }
@@ -131,22 +144,25 @@ export class PlayerAvailabilityStorage {
       // Filter to only valid player IDs
       const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-      // Single UPSERT operation for all players at once
-      const values = teamPlayerIds.map(playerId => {
-        const isAvailable = validAvailablePlayerIds.includes(playerId);
-        return `(${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())`;
-      }).join(', ');
+      // Strategy: Delete all, then insert only available players
+      // This is often faster than UPSERT for this use case
+      await db.execute(sql`
+        DELETE FROM player_availability WHERE game_id = ${gameId}
+      `);
 
-      await db.execute(sql.raw(`
-        INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-        VALUES ${values}
-        ON CONFLICT (game_id, player_id) 
-        DO UPDATE SET 
-          is_available = EXCLUDED.is_available,
-          updated_at = NOW()
-      `));
+      // Only insert available players (reduces insert volume)
+      if (validAvailablePlayerIds.length > 0) {
+        const values = validAvailablePlayerIds.map(playerId => 
+          `(${gameId}, ${playerId}, true, NOW(), NOW())`
+        ).join(', ');
 
-      console.log(`Upserted ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
+        await db.execute(sql.raw(`
+          INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+          VALUES ${values}
+        `));
+      }
+
+      console.log(`Updated availability for ${validAvailablePlayerIds.length}/${teamPlayerIds.length} players in game ${gameId} in ${Date.now() - startTime}ms`);
       return true;
     } catch (error) {
       console.error(`Error setting player availability for game ${gameId}:`, error);
