@@ -55,21 +55,24 @@ export default function PlayerAvailabilityManager({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Initialize selected players from API response
+  // Initialize selected players from API response only on initial load
   useEffect(() => {
-    if (availabilityResponse?.availablePlayerIds) {
-      const validPlayerIds = availabilityResponse.availablePlayerIds.filter(id => 
-        players.some(p => p.id === id)
-      );
-      setSelectedPlayers(new Set(validPlayerIds));
-      onAvailabilityChange?.(validPlayerIds);
-    } else if (players.length > 0) {
-      // Default: all active players are available
-      const activePlayerIds = players.filter(p => p.active !== false).map(p => p.id);
-      setSelectedPlayers(new Set(activePlayerIds));
-      onAvailabilityChange?.(activePlayerIds);
+    // Only update if we don't have any selected players yet (initial load)
+    if (selectedPlayers.size === 0) {
+      if (availabilityResponse?.availablePlayerIds) {
+        const validPlayerIds = availabilityResponse.availablePlayerIds.filter(id => 
+          players.some(p => p.id === id)
+        );
+        setSelectedPlayers(new Set(validPlayerIds));
+        onAvailabilityChange?.(validPlayerIds);
+      } else if (players.length > 0) {
+        // Default: all active players are available
+        const activePlayerIds = players.filter(p => p.active !== false).map(p => p.id);
+        setSelectedPlayers(new Set(activePlayerIds));
+        onAvailabilityChange?.(activePlayerIds);
+      }
     }
-  }, [availabilityResponse, players, gameId, onAvailabilityChange]);
+  }, [availabilityResponse, players, gameId, onAvailabilityChange, selectedPlayers.size]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -116,12 +119,7 @@ export default function PlayerAvailabilityManager({
 
   // Handle player toggle with instant UI update and debounced save
   const handlePlayerToggle = useCallback((playerId: number, isSelected: boolean) => {
-    // Store current state for potential rollback
-    if (!pendingStateRef.current) {
-      pendingStateRef.current = new Set(selectedPlayers);
-    }
-
-    // Update UI immediately
+    // Update UI immediately and lock it
     const newSelectedPlayers = new Set(selectedPlayers);
     if (isSelected) {
       newSelectedPlayers.add(playerId);
@@ -141,7 +139,7 @@ export default function PlayerAvailabilityManager({
     // Set new timeout for debounced save
     saveTimeoutRef.current = setTimeout(() => {
       debouncedSave(availablePlayerIds);
-    }, 500); // 500ms debounce
+    }, 300); // Reduced debounce for faster response
   }, [selectedPlayers, onAvailabilityChange, debouncedSave]);
 
   // Bulk actions
@@ -206,18 +204,7 @@ export default function PlayerAvailabilityManager({
               {availableCount} of {totalCount} players available for {game.opponent || 'this game'}
             </CardDescription>
           </div>
-          {isSaving && (
-            <div className="flex items-center gap-2 text-sm text-blue-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              Saving...
-            </div>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-4">
-          {/* Quick Actions */}
+          {/* Quick Actions moved to header right */}
           <div className="flex gap-2">
             <Button 
               variant="outline" 
@@ -236,9 +223,14 @@ export default function PlayerAvailabilityManager({
               Select None
             </Button>
           </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="space-y-4">
 
           {/* Player List */}
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {players.map(player => (
               <PlayerBox
                 key={player.id}
