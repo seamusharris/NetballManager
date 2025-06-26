@@ -219,10 +219,13 @@ export default function PlayerAvailabilityManager({
             </Button>
           </div>
         </div>
-        <div className="text-sm text-muted-foreground mt-2">
+      </CardHeader>
+
+      <div className="px-6 pb-2">
+        <div className="text-sm text-muted-foreground">
           {availableCount} of {totalCount} available
         </div>
-      </CardHeader>
+      </div>
 
       <CardContent className="pt-6">
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
