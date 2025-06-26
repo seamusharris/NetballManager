@@ -1,0 +1,206 @@
+
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
+import { useToast } from '@/hooks/use-toast';
+import { Player } from '@shared/schema';
+import PlayerAvatar from '@/components/ui/player-avatar';
+import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/apiClient';
+import { getPlayerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { getPlayerBoxContainerClasses, getPlayerBoxCheckboxStyles, getPlayerBoxBackgroundStyle } from '@/lib/playerBoxStyles';
+import { Badge } from '@/components/ui/badge';
+import { Zap, RotateCcw } from 'lucide-react';
+
+interface PlayerAvailabilityManagerProps {
+  players: Player[];
+  availabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>;
+  onAvailabilityChange: (data: Record<number, 'available' | 'unavailable' | 'maybe'>) => void;
+  title?: string;
+  showQuickActions?: boolean;
+  className?: string;
+  gameId?: number;
+  variant?: 'compact' | 'detailed';
+}
+
+export function PlayerAvailabilityManager({
+  players,
+  availabilityData,
+  onAvailabilityChange,
+  title = "Player Availability",
+  showQuickActions = true,
+  className,
+  gameId,
+  variant = 'detailed'
+}: PlayerAvailabilityManagerProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const getPlayerColor = (player: Player) => {
+    if (player.avatarColor?.startsWith('bg-')) {
+      return player.avatarColor;
+    }
+    return 'bg-gray-400';
+  };
+
+  const handleSetAllAvailable = () => {
+    const allAvailable = players.reduce((acc, player) => {
+      acc[player.id] = 'available';
+      return acc;
+    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+    onAvailabilityChange(allAvailable);
+  };
+
+  const handleSetAllUnavailable = () => {
+    const allUnavailable = players.reduce((acc, player) => {
+      acc[player.id] = 'unavailable';
+      return acc;
+    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+    onAvailabilityChange(allUnavailable);
+  };
+
+  const handlePlayerAvailabilityChange = async (playerId: number, availability: 'available' | 'unavailable' | 'maybe') => {
+    setIsSaving(true);
+    try {
+      // Optimistically update local state
+      onAvailabilityChange({
+        ...availabilityData,
+        [playerId]: availability
+      });
+
+      // Auto-save if gameId is provided
+      if (gameId) {
+        const isAvailable = availability === 'available';
+        await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
+        toast({
+          title: "Availability updated",
+          description: `Player availability updated successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update player availability:", error);
+      toast({
+        variant: "destructive",
+        title: "Error updating availability",
+        description: "Failed to update player availability. Please try again.",
+      });
+
+      // Revert optimistic update on error
+      onAvailabilityChange(availabilityData);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const sortedPlayers = (players || []).filter(player => player).sort((a, b) => {
+    const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
+    const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
+    return displayNameA.localeCompare(displayNameB);
+  });
+
+  const availableCount = Object.values(availabilityData).filter(status => status === 'available').length;
+
+  return (
+    <Card className={className}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle>{title}</CardTitle>
+          {showQuickActions && (
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSetAllAvailable}
+                disabled={isSaving}
+              >
+                <Zap className="h-4 w-4 mr-1" />
+                All Available
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSetAllUnavailable}
+                disabled={isSaving}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Clear All
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <Badge variant="outline" className="mr-1">
+            {availableCount}
+          </Badge>
+          <span className="text-sm text-gray-600">Available Players</span>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className={cn(
+          "grid gap-4 mt-2",
+          "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+        )}>
+          {sortedPlayers.map(player => {
+            const playerColor = getPlayerColor(player);
+            const isAvailable = availabilityData[player.id] === 'available';
+
+            return (
+              <div 
+                key={player.id}
+                className={getPlayerBoxContainerClasses(isAvailable)}
+                style={getPlayerBoxBackgroundStyle(
+                  isAvailable,
+                  getPlayerColorHex(playerColor),
+                  getLighterColorHex(playerColor),
+                  getMediumColorHex(playerColor)
+                )}
+                onClick={() => {
+                  if (!isSaving) {
+                    handlePlayerAvailabilityChange(
+                      player.id, 
+                      isAvailable ? 'unavailable' : 'available'
+                    );
+                  }
+                }}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <PlayerAvatar 
+                      player={player}
+                      size={variant === 'compact' ? 'sm' : 'md'}
+                    />
+                    <div>
+                      <div className={cn(
+                        "font-medium",
+                        variant === 'compact' ? "text-sm" : ""
+                      )}>
+                        {player.displayName}
+                      </div>
+                      {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
+                        <div className="text-xs text-gray-500">
+                          {player.positionPreferences.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      {...getPlayerBoxCheckboxStyles(isAvailable, getPlayerColorHex(playerColor))}
+                    >
+                      {isAvailable && '✓'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default PlayerAvailabilityManager;
