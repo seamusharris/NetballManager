@@ -165,18 +165,18 @@ function PlayerBox({
     }
 
     if (effectiveSelected) {
-      // Selected state: use medium background and player color border
+      // Selected state: use medium background and border color matching text
       return {
         backgroundColor: mediumBackgroundColor,
-        borderColor: playerColorHex,
+        borderColor: borderColorHex,
         color: borderColorHex,
         opacity
       };
     } else {
-      // Deselected state: use light background
+      // Deselected state: use light background and border color matching text
       return {
         backgroundColor: lightBackgroundColor,
-        borderColor: playerColorHex,
+        borderColor: borderColorHex,
         color: borderColorHex,
         opacity
       };
