@@ -5,7 +5,7 @@ import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, UserPlus, Award, Printer } from 'lucide-react';
-import { getBorderColorHex } from '@/lib/playerColorUtils';
+import { getBorderColorHex, getPlayerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 
 export default function PlayerBoxExamples() {
   const samplePlayers = [
@@ -186,7 +186,7 @@ export default function PlayerBoxExamples() {
               <div className="relative">
                 <div 
                   className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
-                  style={{ backgroundColor: '#16a34a' }}
+                  style={{ backgroundColor: getBorderColorHex('bg-green-600') }}
                 >
                   ✓
                 </div>
@@ -203,8 +203,8 @@ export default function PlayerBoxExamples() {
                   hasSelect={true}
                   className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ 
-                    borderColor: '#16a34a',
-                    color: '#15803d'
+                    borderColor: getBorderColorHex('bg-green-600'),
+                    color: getBorderColorHex('bg-green-600')
                   }}
                 />
               </div>
@@ -233,9 +233,9 @@ export default function PlayerBoxExamples() {
                   hasSelect={true}
                   className="w-full shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                   style={{ 
-                    backgroundColor: selectedPlayers.has(2) ? '#3b82f625' : '#3b82f615',
-                    borderColor: '#3b82f6',
-                    color: '#1d4ed8'
+                    backgroundColor: selectedPlayers.has(2) ? getMediumColorHex('bg-blue-500') : getLighterColorHex('bg-blue-500'),
+                    borderColor: getBorderColorHex('bg-blue-500'),
+                    color: getBorderColorHex('bg-blue-500')
                   }}
                   onClick={() => togglePlayerSelection(2)}
                 /></div>
@@ -264,9 +264,9 @@ export default function PlayerBoxExamples() {
                   hasSelect={true}
                   className="w-full shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                   style={{ 
-                    backgroundColor: selectedPlayers.has(3) ? '#a855f725' : '#a855f715',
-                    borderColor: '#a855f7',
-                    color: '#7e22ce'
+                    backgroundColor: selectedPlayers.has(3) ? getMediumColorHex('bg-purple-500') : getLighterColorHex('bg-purple-500'),
+                    borderColor: getBorderColorHex('bg-purple-500'),
+                    color: getBorderColorHex('bg-purple-500')
                   }}
                   onClick={() => togglePlayerSelection(3)}
                 /></div>
@@ -286,8 +286,8 @@ export default function PlayerBoxExamples() {
               showPositions={true}
               className="shadow-lg"
               style={{ 
-                borderColor: '#f97316',
-                color: '#ea580c'
+                borderColor: getBorderColorHex('bg-orange-500'),
+                color: getBorderColorHex('bg-orange-500')
               }}
               onClick={() => {}}
             />
@@ -299,8 +299,8 @@ export default function PlayerBoxExamples() {
               showPositions={true}
               className="shadow-lg"
               style={{ 
-                borderColor: '#ef4444',
-                color: '#dc2626'
+                borderColor: getBorderColorHex('bg-red-500'),
+                color: getBorderColorHex('bg-red-500')
               }}
               onClick={() => {}}
             />
@@ -312,8 +312,8 @@ export default function PlayerBoxExamples() {
               showPositions={true}
               className="shadow-lg"
               style={{ 
-                borderColor: '#14b8a6',
-                color: '#0d9488'
+                borderColor: getBorderColorHex('bg-teal-500'),
+                color: getBorderColorHex('bg-teal-500')
               }}
               onClick={() => {}}
             />
