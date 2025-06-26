@@ -1,34 +1,23 @@
+
 import React from 'react';
-import { useParams, useLocation } from 'wouter';
+import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
-import FixedPlayerAvailabilityManager from '@/components/roster/FixedPlayerAvailabilityManager';
+import PlayerAvailabilityManager from '@/components/availability/PlayerAvailabilityManager';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
-import { usePlayerAvailability } from '@/hooks/use-player-availability';
 import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
   const params = useParams();
-  const { currentClub, isInitialized } = useClub();
+  const { isInitialized } = useClub();
 
-  // Extract parameters from URL - always call these hooks
-  const gameId = React.useMemo(() => {
-    console.log('PlayerAvailability URL params:', params);
-    if (params && params.gameId) {
-      const id = parseInt(params.gameId);
-      console.log('Extracted gameId from URL:', id);
-      return isNaN(id) ? null : id;
-    }
-    return null;
-  }, [params]);
-
+  // Extract parameters from URL: /team/:teamId/availability/:gameId
   const teamId = React.useMemo(() => {
     if (params && params.teamId) {
       const id = parseInt(params.teamId);
@@ -37,15 +26,19 @@ export default function PlayerAvailability() {
     return null;
   }, [params]);
 
-  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY - no early returns before this point
-  
+  const gameId = React.useMemo(() => {
+    if (params && params.gameId) {
+      const id = parseInt(params.gameId);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+
   // Fetch specific game
   const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
     queryKey: ['game', gameId],
     queryFn: async () => {
-      console.log(`Fetching specific game ${gameId}`);
-      const result = await apiRequest('GET', `/api/games/${gameId}`) as Promise<Game>;
-      console.log(`Game ${gameId} response:`, result);
+      const result = await apiClient.get(`/api/games/${gameId}`) as Game;
       return result;
     },
     retry: 2,
@@ -57,55 +50,18 @@ export default function PlayerAvailability() {
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['teams', teamId, 'players'],
     queryFn: async () => {
-      console.log(`Fetching players for team ${teamId}`);
-      const result = await apiRequest('GET', `/api/teams/${teamId}/players`) as Promise<Player[]>;
-      console.log(`Team ${teamId} players response:`, result?.length, 'players');
+      const result = await apiClient.get(`/api/teams/${teamId}/players`) as Player[];
       return result;
     },
     enabled: !!teamId && isInitialized
   });
 
-  // Load availability data - always call this hook
-  const { data: availabilityData, isLoading: availabilityLoading } = usePlayerAvailability(gameId || 0, teamId || undefined);
-
-  // Debug logging
-  console.log('PlayerAvailability Debug:', {
-    gameId,
-    teamId,
-    selectedGame: selectedGame?.id,
-    playersCount: players.length,
-    isLoading: gameLoading || playersLoading,
-    hasError: gameError || playersError
-  });
-
-  // NOW we can do conditional rendering - all hooks have been called
-  const isLoading = playersLoading || gameLoading;
-  const hasError = playersError || gameError;
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        Loading game and player data...
-      </div>
-    );
-  }
-
-  if (hasError) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load data. Please refresh the page.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (!gameId) {
+  // Early validation
+  if (!teamId || !gameId) {
     return (
       <PageTemplate
         title="Player Availability"
-        subtitle="No game specified"
+        subtitle="Invalid URL"
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Player Availability' }
@@ -114,7 +70,40 @@ export default function PlayerAvailability() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            No game ID provided in the URL.
+            Invalid URL format. Expected /team/[teamId]/availability/[gameId]
+          </AlertDescription>
+        </Alert>
+      </PageTemplate>
+    );
+  }
+
+  if (gameLoading || playersLoading) {
+    return (
+      <PageTemplate
+        title="Player Availability"
+        subtitle="Loading..."
+        breadcrumbs={<DynamicBreadcrumbs />}
+      >
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">Loading game and player data...</div>
+          </CardContent>
+        </Card>
+      </PageTemplate>
+    );
+  }
+
+  if (gameError || playersError) {
+    return (
+      <PageTemplate
+        title="Player Availability"
+        subtitle="Error loading data"
+        breadcrumbs={<DynamicBreadcrumbs />}
+      >
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load game or player data. Please try again.
           </AlertDescription>
         </Alert>
       </PageTemplate>
@@ -126,10 +115,7 @@ export default function PlayerAvailability() {
       <PageTemplate
         title="Player Availability"
         subtitle="Game not found"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Player Availability' }
-        ]}
+        breadcrumbs={<DynamicBreadcrumbs />}
       >
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -152,12 +138,11 @@ export default function PlayerAvailability() {
         <meta name="description" content={`Manage player availability for game ${gameId}`} />
       </Helmet>
       
-      <FixedPlayerAvailabilityManager
+      <PlayerAvailabilityManager
         gameId={gameId}
         teamId={teamId}
         players={players}
-        games={[selectedGame].filter(Boolean)}
-        hideGameSelection={true}
+        game={selectedGame}
       />
     </PageTemplate>
   );

@@ -13,9 +13,11 @@ import { Button } from '@/components/ui/button';
 interface QuickActionsWidgetProps {
   className?: string;
   gameId?: string;
+  currentTeamId?: string;
+  nextGame?: { id: string };
 }
 
-export function QuickActionsWidget({ className, gameId }: QuickActionsWidgetProps) {
+export function QuickActionsWidget({ className, gameId, currentTeamId, nextGame }: QuickActionsWidgetProps) {
   console.log('QuickActionsWidget rendering');
   const actions = [
     {
@@ -34,10 +36,10 @@ export function QuickActionsWidget({ className, gameId }: QuickActionsWidgetProp
     },
     {
       icon: ClipboardList,
-      label: 'Manage Roster',
-      href: `/roster/${gameId}`,
+      label: 'Manage Availability',
+      href: `/team/${currentTeamId}/availability/${nextGame?.id}`,
       color: 'bg-purple-500 hover:bg-purple-600',
-      description: 'Set team lineup'
+      description: 'Set player availability'
     },
     {
       icon: BarChart3,

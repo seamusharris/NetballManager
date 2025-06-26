@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation } from 'wouter';
 import { Home } from 'lucide-react';
@@ -44,7 +43,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
     for (let i = 0; i < pathSegments.length; i++) {
       const segment = pathSegments[i];
       currentPath += `/${segment}`;
-      
+
       // Skip if this is the last segment (current page)
       const isLastSegment = i === pathSegments.length - 1;
 
@@ -52,7 +51,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
         // Handle team routes like /team/123/games
         const teamId = pathSegments[i + 1];
         const nextSegment = pathSegments[i + 2];
-        
+
         if (nextSegment === 'games') {
           breadcrumbs.push({ label: 'Games', href: isLastSegment ? undefined : `/team/${teamId}/games` });
         } else if (nextSegment === 'preparation') {
@@ -62,7 +61,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
         } else {
           breadcrumbs.push({ label: 'Team Dashboard', href: isLastSegment ? undefined : `/team/${teamId}` });
         }
-        
+
         // Skip the team ID segment
         i += 1;
         if (nextSegment) i += 1;
@@ -75,7 +74,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
         breadcrumbs.push({ label: 'Games', href: '/games' });
         const gameId = pathSegments[i + 1];
         const subRoute = pathSegments[i + 2];
-        
+
         if (subRoute === 'live-stats') {
           breadcrumbs.push({ label: `Game ${gameId}`, href: `/games/${gameId}` });
           breadcrumbs.push({ label: 'Live Stats' });
@@ -125,7 +124,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
       };
 
       const label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
-      
+
       if (isLastSegment) {
         breadcrumbs.push({ label });
       } else {
@@ -154,7 +153,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
             {breadcrumbItems.length > 0 && <BreadcrumbSeparator />}
           </>
         )}
-        
+
         {breadcrumbItems.map((item, index) => [
           index > 0 && <BreadcrumbSeparator key={`separator-${index}`} />,
           <BreadcrumbItem key={`item-${index}`}>

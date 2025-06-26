@@ -188,7 +188,7 @@ export default function PlayerAvailabilityWidget({
                       {status}
                     </Badge>
                   )}
-                  <Link href={`/roster/${game.id}`}>
+                  <Link href={`/team/${currentTeamId}/availability/${game.id}`}>
                     <Button variant="outline" size="sm" className="text-xs px-2 py-1">
                       {availability && availability.availableCount > 0 ? 'Manage' : 'Set Availability'}
                     </Button>

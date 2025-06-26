@@ -150,7 +150,7 @@ export function GamesList({
 
   // Use centralized data when available, otherwise fall back to individual fetching (dashboard vs games page)
   const scoresMap = centralizedScores || {};
-  
+
   // For roster status checking (only for non-dashboard and when no centralized data)
   const nonByeGameIds = games
     .filter(game => {
@@ -190,7 +190,7 @@ export function GamesList({
     if (isDashboard || !scoresMap) return;
 
     const statsStatuses: Record<number, StatsStatus> = {};
-    
+
     // Get completed games that allow statistics
     const completedGameIds = games
       .filter(game => {
@@ -471,6 +471,7 @@ export function GamesList({
                     currentTeamId={urlTeamId || currentTeamId}
                     clubTeams={teams || []}
                     currentClubId={currentClub?.id}
+                    availabilityLink={`/team/${game.homeTeamId}/availability/${game.id}`}
                   />
 
                   {/* Action buttons overlay */}
