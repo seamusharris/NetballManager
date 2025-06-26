@@ -3146,6 +3146,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reassign all players to Warrandyte and remove from other teams/clubs
+  app.post('/api/admin/reassign-all-players-to-warrandyte', async (req, res) => {
+    try {
+      const { reassignAllPlayersToWarrandyte } = await import('./reassign-all-players-to-warrandyte');
+      const result = await reassignAllPlayersToWarrandyte();
+      res.json(result);
+    } catch (error) {
+      console.error('Error reassigning players to Warrandyte:', error);
+      res.status(500).json({ error: 'Failed to reassign players to Warrandyte' });
+    }
+  });
+
   // ----- CLUB-PLAYER RELATIONSHIPS API -----
 
   // Get all clubs for a specific player
