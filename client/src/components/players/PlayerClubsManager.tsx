@@ -184,15 +184,6 @@ export default function PlayerClubsManager({
           </DialogHeader>
 
           <div className="py-4 space-y-4">
-            {/* Debug Information */}
-            <div className="text-xs text-gray-400 border rounded p-2">
-              <div>Player ID: {player?.id}</div>
-              <div>Selected Clubs: [{selectedClubs.join(', ')}]</div>
-              <div>Player Clubs Loading: {isPlayerClubsLoading ? 'Yes' : 'No'}</div>
-              <div>All Clubs Loading: {isClubsLoading ? 'Yes' : 'No'}</div>
-              <div>Available Clubs Count: {allClubs.length}</div>
-              <div>Player Clubs Count: {playerClubs.length}</div>
-            </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
               <h3 className="text-sm font-medium mb-2 w-full">Currently associated with:</h3>
