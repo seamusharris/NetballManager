@@ -1332,7 +1332,7 @@ export default function PlayerBoxExamples() {
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                     style={{ backgroundColor: selectedPlayers.has(51) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(51) ? 'none' : '2px solid #3b82f6' }}
-                    onClick={(){() => togglePlayerSelection(51)}
+                    onClick={() => togglePlayerSelection(51)}
                   >
                     {selectedPlayers.has(51) && '✓'}
                   </div>
