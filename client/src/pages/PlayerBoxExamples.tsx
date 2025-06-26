@@ -214,7 +214,7 @@ export default function PlayerBoxExamples() {
               <div className="relative">
                 <div 
                   className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                  style={{ backgroundColor: selectedPlayers.has(2) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(2) ? 'none' : '2px solid #3b82f680' }}
+                  style={{ backgroundColor: selectedPlayers.has(2) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(2) ? 'none' : '2px solid #3b82f6' }}
                   onClick={() => togglePlayerSelection(2)}
                 >
                   {selectedPlayers.has(2) && '✓'}
@@ -245,7 +245,7 @@ export default function PlayerBoxExamples() {
               <div className="relative">
                 <div 
                   className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                  style={{ backgroundColor: selectedPlayers.has(3) ? '#a855f7' : 'transparent', border: selectedPlayers.has(3) ? 'none' : '2px solid #a855f780' }}
+                  style={{ backgroundColor: selectedPlayers.has(3) ? '#a855f7' : 'transparent', border: selectedPlayers.has(3) ? 'none' : '2px solid #a855f7' }}
                   onClick={() => togglePlayerSelection(3)}
                 >
                   {selectedPlayers.has(3) && '✓'}
@@ -564,8 +564,8 @@ export default function PlayerBoxExamples() {
             {/* Compact with Select - Pink */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                style={{ borderColor: '#ec4899' }}
+                className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                style={{ borderColor: '#ec4899', backgroundColor: 'transparent' }}
               >
               </div>
               <PlayerBox 
@@ -630,8 +630,8 @@ export default function PlayerBoxExamples() {
             {/* Large with Select - Amber */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-3 w-7 h-7 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                style={{ borderColor: '#f59e0b' }}
+                className="absolute top-1/2 right-3 w-7 h-7 rounded border-2 cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                style={{ borderColor: '#f59e0b', backgroundColor: 'transparent' }}
               >
               </div>
               <PlayerBox 
@@ -676,8 +676,8 @@ export default function PlayerBoxExamples() {
             {/* Unselected - Rose */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                style={{ borderColor: '#f43f5e' }}
+                className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                style={{ borderColor: '#f43f5e', backgroundColor: 'transparent' }}
               >
               </div>
               <PlayerBox 
@@ -752,7 +752,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative group">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(100) ? '#16a34a' : 'transparent', border: selectedPlayers.has(100) ? 'none' : '2px solid #16a34a80' }}
+                    style={{ backgroundColor: selectedPlayers.has(100) ? '#16a34a' : 'transparent', border: selectedPlayers.has(100) ? 'none' : '2px solid #16a34a' }}
                     onClick={() => togglePlayerSelection(100)}
                     title={selectedPlayers.has(100) ? "Remove from team" : "Add to team"}
                   >
@@ -779,7 +779,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative group">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(101) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(101) ? 'none' : '2px solid #3b82f680' }}
+                    style={{ backgroundColor: selectedPlayers.has(101) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(101) ? 'none' : '2px solid #3b82f6' }}
                     onClick={() => togglePlayerSelection(101)}
                     title={selectedPlayers.has(101) ? "Remove from team" : "Add to team"}
                   >
@@ -814,7 +814,7 @@ export default function PlayerBoxExamples() {
                   <div className="absolute top-1/2 right-3 flex gap-1 z-10 transform -translate-y-1/2 mr-3">
                     <div 
                       className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-white text-xs transition-all duration-200"
-                      style={{ backgroundColor: selectedPlayers.has(200) ? '#16a34a' : 'transparent', border: selectedPlayers.has(200) ? 'none' : '2px solid #16a34a80' }}
+                      style={{ backgroundColor: selectedPlayers.has(200) ? '#16a34a' : 'transparent', border: selectedPlayers.has(200) ? 'none' : '2px solid #16a34a' }}
                       onClick={() => togglePlayerSelection(200)}
                       title="Team A (Green)"
                     >
@@ -822,7 +822,7 @@ export default function PlayerBoxExamples() {
                     </div>
                     <div 
                       className="w-5 h-5 rounded flex items-center justify-center cursor-pointer text-white text-xs transition-all duration-200"
-                      style={{ backgroundColor: selectedPlayers.has(201) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(201) ? 'none' : '2px solid #3b82f680' }}
+                      style={{ backgroundColor: selectedPlayers.has(201) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(201) ? 'none' : '2px solid #3b82f6' }}
                       onClick={() => togglePlayerSelection(201)}
                       title="Team B (Blue)"
                     >
@@ -1308,7 +1308,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(50) ? '#16a34a' : 'transparent', border: selectedPlayers.has(50) ? 'none' : '2px solid #16a34a80' }}
+                    style={{ backgroundColor: selectedPlayers.has(50) ? '#16a34a' : 'transparent', border: selectedPlayers.has(50) ? 'none' : '2px solid #16a34a' }}
                     onClick={() => togglePlayerSelection(50)}
                   >
                     {selectedPlayers.has(50) && '✓'}
@@ -1330,7 +1330,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(51) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(51) ? 'none' : '2px solid #3b82f680' }}
+                    style={{ backgroundColor: selectedPlayers.has(51) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(51) ? 'none' : '2px solid #3b82f6' }}
                     onClick={() => togglePlayerSelection(51)}
                   >
                     {selectedPlayers.has(51) && '✓'}
@@ -1360,7 +1360,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(60) ? '#16a34a' : 'transparent', border: selectedPlayers.has(60) ? 'none' : '2px solid #16a34a80' }}
+                    style={{ backgroundColor: selectedPlayers.has(60) ? '#16a34a' : 'transparent', border: selectedPlayers.has(60) ? 'none' : '2px solid #16a34a' }}
                     onClick={() => togglePlayerSelection(60)}
                   >
                     {selectedPlayers.has(60) && '✓'}
@@ -1382,7 +1382,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(61) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(61) ? 'none' : '2px solid #3b82f680' }}
+                    style={{ backgroundColor: selectedPlayers.has(61) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(61) ? 'none' : '2px solid #3b82f6' }}
                     onClick={() => togglePlayerSelection(61)}
                   >
                     {selectedPlayers.has(61) && '✓'}
@@ -1404,7 +1404,7 @@ export default function PlayerBoxExamples() {
                 <div className="relative">
                   <div 
                     className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(62) ? '#a855f7' : 'transparent', border: selectedPlayers.has(62) ? 'none' : '2px solid #a855f780' }}
+                    style={{ backgroundColor: selectedPlayers.has(62) ? '#a855f7' : 'transparent', border: selectedPlayers.has(62) ? 'none' : '2px solid #a855f7' }}
                     onClick={() => togglePlayerSelection(62)}
                   >
                     {selectedPlayers.has(62) && '✓'}

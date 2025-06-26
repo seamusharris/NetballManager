@@ -222,7 +222,7 @@ function PlayerBox({
 
     const checkboxStyle = {
       backgroundColor: isSelected ? playerColorHex : 'transparent',
-      borderColor: isSelected ? 'transparent' : borderColorHex,
+      borderColor: playerColorHex,
       border: isSelected ? 'none' : '2px solid',
       color: 'white',
       cursor: (isLoading || isDisabled) ? 'not-allowed' : 'pointer',
