@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
@@ -31,9 +31,9 @@ export default function TeamPlayersManager() {
   const { toast } = useToast();
 
   // State
-  const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
-  const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
+  const [pendingActions, setPendingActions] = useState<Set<number>>(new Set());
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Queries
   const { data: activeSeason } = useQuery({
@@ -69,11 +69,50 @@ export default function TeamPlayersManager() {
     enabled: !!teamId && !!activeSeason?.id,
   });
 
-  // Mutations
+  // Debounced save function like player availability
+  const debouncedSave = useCallback(async (action: 'add' | 'remove', playerId: number) => {
+    setPendingActions(prev => new Set(prev).add(playerId));
+
+    try {
+      if (action === 'add') {
+        await apiClient.post(`/api/teams/${teamId}/players`, { playerId });
+        toast({ title: 'Success', description: 'Player added to team' });
+      } else {
+        await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
+        toast({ title: 'Success', description: 'Player removed from team' });
+      }
+
+      // Invalidate cache like availability system
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || `Failed to ${action} player ${action === 'add' ? 'to' : 'from'} team`,
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingActions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+    }
+  }, [teamId, queryClient, toast, activeSeason?.id]);
+
+  // Mutations - simplified to just handle optimistic updates
   const addPlayerToTeam = useMutation({
     mutationFn: (playerId: number) => apiClient.post(`/api/teams/${teamId}/players`, { playerId }),
+    onMutate: async (playerId) => {
+      // Optimistic update - immediately show in UI
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+
+      // Show loading state
+      setPendingActions(prev => new Set(prev).add(playerId));
+    },
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Player added to team' });
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
@@ -84,12 +123,26 @@ export default function TeamPlayersManager() {
         variant: 'destructive',
       });
     },
+    onSettled: (_, __, playerId) => {
+      setPendingActions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+    }
   });
 
   const removePlayerFromTeam = useMutation({
     mutationFn: (playerId: number) => apiClient.delete(`/api/teams/${teamId}/players/${playerId}`),
+    onMutate: async (playerId) => {
+      // Optimistic update - immediately hide from UI
+      await queryClient.cancelQueries({ queryKey: ['team-players', teamId] });
+      await queryClient.cancelQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+
+      // Show loading state
+      setPendingActions(prev => new Set(prev).add(playerId));
+    },
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Player removed from team' });
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
     },
@@ -100,7 +153,48 @@ export default function TeamPlayersManager() {
         variant: 'destructive',
       });
     },
+    onSettled: (_, __, playerId) => {
+      setPendingActions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+    }
   });
+
+  // Handlers with debouncing like availability system
+  const handleAddPlayer = useCallback((playerId: number) => {
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      addPlayerToTeam.mutate(playerId);
+    }, 300); // Same debounce as availability system
+  }, [addPlayerToTeam]);
+
+  const handleRemovePlayer = useCallback((playerId: number) => {
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      removePlayerFromTeam.mutate(playerId);
+    }, 300); // Same debounce as availability system
+  }, [removePlayerFromTeam]);
+
+  // Cleanup timeout on unmount like availability system
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Loading states
   if (clubLoading || isLoadingTeam) {
@@ -121,33 +215,6 @@ export default function TeamPlayersManager() {
       </div>
     );
   }
-
-  // Event handlers
-  const handleRemovePlayer = (playerId: number) => {
-    setRemovingPlayerIds(prev => new Set([...prev, playerId]));
-    removePlayerFromTeam.mutate(playerId, {
-      onSettled: () => {
-        setRemovingPlayerIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    });
-  };
-
-  const handleAddPlayer = (playerId: number) => {
-    setAddingPlayerIds(prev => new Set([...prev, playerId]));
-    addPlayerToTeam.mutate(playerId, {
-      onSettled: () => {
-        setAddingPlayerIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    });
-  };
 
   const pageTitle = `${teamData.name} Players`;
   const pageSubtitle = `Manage players for ${teamData.name} (${teamData.division})`;
@@ -207,7 +274,7 @@ export default function TeamPlayersManager() {
                 // When players are deselected from current team, remove them
                 const currentPlayerIds = new Set(teamPlayers.map(p => p.id));
                 const removedPlayerIds = [...currentPlayerIds].filter(id => !selectedIds.has(id));
-                
+
                 removedPlayerIds.forEach(playerId => {
                   handleRemovePlayer(playerId);
                 });
@@ -215,9 +282,21 @@ export default function TeamPlayersManager() {
               title="Current Team Players"
               showQuickActions={true}
               mode="team-management"
-              removingPlayerIds={removingPlayerIds}
               variant="detailed"
-            />
+            >
+              <SelectablePlayerBox.Actions>
+                <Button
+                  disabled={pendingActions.has(player.id)}
+                  className="h-8 px-3"
+                >
+                  {pendingActions.has(player.id) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    'Remove'
+                  )}
+                </Button>
+              </SelectablePlayerBox.Actions>
+            </SelectablePlayerBox>
           )}
         </ContentSection>
 
@@ -271,9 +350,21 @@ export default function TeamPlayersManager() {
               title="Available Players"
               showQuickActions={true}
               mode="team-management"
-              addingPlayerIds={addingPlayerIds}
               variant="detailed"
-            />
+            >
+              <SelectablePlayerBox.Actions>
+                <Button
+                  disabled={pendingActions.has(player.id)}
+                  className="h-8 px-3"
+                >
+                  {pendingActions.has(player.id) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    'Add'
+                  )}
+                </Button>
+              </SelectablePlayerBox.Actions>
+            </SelectablePlayerBox>
           )}
         </ContentSection>
       </PageTemplate>
