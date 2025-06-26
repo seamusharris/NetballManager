@@ -227,6 +227,49 @@ export class PlayerAvailabilityStorage {
     }
   }
 
+  async setExplicitlyEmptyAvailability(gameId: number): Promise<boolean> {
+    const startTime = Date.now();
+    console.log(`🚫 Setting explicitly empty availability for game ${gameId} (Select None)`);
+
+    try {
+      // Get team players to create explicit unavailable records
+      const teamPlayerIds = await this.getTeamPlayers(gameId);
+
+      if (teamPlayerIds.length === 0) {
+        console.warn(`No team players found for game ${gameId}`);
+        return true;
+      }
+
+      // Use transaction to set all players as explicitly unavailable
+      await db.transaction(async (tx) => {
+        // Step 1: Delete existing records for this game
+        console.log(`🗑️ Deleting existing availability records for game ${gameId}`);
+        await tx.execute(sql`DELETE FROM player_availability WHERE game_id = ${gameId}`);
+
+        // Step 2: Create explicit unavailable records for all team players
+        console.log(`💾 Creating explicit unavailable records for ${teamPlayerIds.length} players`);
+        
+        for (const playerId of teamPlayerIds) {
+          await tx.execute(sql`
+            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+            VALUES (${gameId}, ${playerId}, false, NOW(), NOW())
+          `);
+        }
+      });
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ Set explicitly empty availability for ${teamPlayerIds.length} players in game ${gameId} in ${duration}ms`);
+
+      // Clear cache for this game to ensure consistency
+      this.teamPlayersCache.delete(gameId);
+
+      return true;
+    } catch (error) {
+      console.error(`❌ Error setting explicitly empty availability for game ${gameId}:`, error);
+      return false;
+    }
+  }
+
   async clearAvailabilityForGame(gameId: number): Promise<boolean> {
     try {
       console.log(`Clearing all availability records for game ${gameId}`);

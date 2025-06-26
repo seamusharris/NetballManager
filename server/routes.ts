@@ -2090,19 +2090,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameId = Number(req.params.gameId);
       const teamId = Number(req.params.teamId);
-      const { availablePlayerIds } = req.body;
+      const { availablePlayerIds, explicitlyEmpty } = req.body;
 
       if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
       }
 
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
-      const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
-
-      if (success) {
-        res.json({ message: "Player availability updated successfully" });
+      
+      // Handle explicitly empty case (Select None button)
+      if (explicitlyEmpty && availablePlayerIds.length === 0) {
+        const success = await playerAvailabilityStorage.setExplicitlyEmptyAvailability(gameId);
+        if (success) {
+          res.json({ message: "Player availability cleared successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to clear player availability" });
+        }
       } else {
-        res.status(500).json({ message: "Failed to update player availability" });
+        const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
+        if (success) {
+          res.json({ message: "Player availability updated successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to update player availability" });
+        }
       }
     } catch (error) {
       console.error('Error setting team player availability:', error);
@@ -2114,19 +2124,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/games/:gameId/availability", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
-      const { availablePlayerIds } = req.body;
+      const { availablePlayerIds, explicitlyEmpty } = req.body;
 
       if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
       }
 
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
-      const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
-
-      if (success) {
-        res.json({ message: "Player availability updated successfully" });
+      
+      // Handle explicitly empty case (Select None button)
+      if (explicitlyEmpty && availablePlayerIds.length === 0) {
+        const success = await playerAvailabilityStorage.setExplicitlyEmptyAvailability(gameId);
+        if (success) {
+          res.json({ message: "Player availability cleared successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to clear player availability" });
+        }
       } else {
-        res.status(500).json({ message: "Failed to update player availability" });
+        const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
+        if (success) {
+          res.json({ message: "Player availability updated successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to update player availability" });
+        }
       }
     } catch (error) {
       console.error('Error setting player availability:', error);
