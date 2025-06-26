@@ -102,9 +102,9 @@ export class PlayerAvailabilityStorage {
     console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
 
     try {
-      // Use a more robust transaction with proper isolation
+      // Use serializable transaction to prevent all race conditions
       const result = await db.transaction(async (tx) => {
-        // Get team players for this game with row-level locking to prevent race conditions
+        // Lock the game record to prevent concurrent modifications
         const gameResult = await tx.execute(sql`
           SELECT home_team_id, away_team_id 
           FROM games 
@@ -119,13 +119,14 @@ export class PlayerAvailabilityStorage {
         const game = gameResult.rows[0] as any;
         const homeTeamId = game.home_team_id;
 
-        // Get players for the home team (assuming we're managing home team availability)
+        // Get all team players with consistent ordering
         const teamPlayersResult = await tx.execute(sql`
           SELECT p.id 
           FROM players p
           JOIN team_players tp ON p.id = tp.player_id
           WHERE tp.team_id = ${homeTeamId} AND p.active = true
           ORDER BY p.id
+          FOR UPDATE
         `);
         
         const teamPlayerIds = teamPlayersResult.rows.map(row => row.id as number);
@@ -136,17 +137,23 @@ export class PlayerAvailabilityStorage {
           return true;
         }
 
-        // Delete all existing records for this game first to prevent conflicts
+        // Single atomic operation: delete all existing and insert new records
         await tx.execute(sql`
           DELETE FROM player_availability 
           WHERE game_id = ${gameId} 
           AND player_id = ANY(${teamPlayerIds})
         `);
 
-        // Batch insert all availability records in one operation for better performance
+        // Validate that availablePlayerIds only contains team players
+        const validAvailablePlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+        if (validAvailablePlayerIds.length !== availablePlayerIds.length) {
+          console.warn(`Filtered invalid player IDs: ${availablePlayerIds.filter(id => !teamPlayerIds.includes(id))}`);
+        }
+
+        // Batch insert all records atomically
         if (teamPlayerIds.length > 0) {
           const values = teamPlayerIds.map(playerId => {
-            const isAvailable = availablePlayerIds.includes(playerId);
+            const isAvailable = validAvailablePlayerIds.includes(playerId);
             return `(${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())`;
           }).join(', ');
 
@@ -156,8 +163,10 @@ export class PlayerAvailabilityStorage {
           `));
         }
 
-        console.log(`Batch updated ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
+        console.log(`Atomically updated ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
         return true;
+      }, {
+        isolationLevel: 'serializable'
       });
 
       return result;

@@ -58,7 +58,7 @@ export default function SimplePlayerAvailabilityManager({
     }
   }, [availabilityResponse, players, gameId]);
 
-  // Handle individual player toggle with auto-save
+  // Handle individual player toggle with immediate full-state save
   const handlePlayerToggle = useCallback(async (playerId: number, isSelected: boolean) => {
     const newSelectedPlayers = new Set(selectedPlayers);
     
@@ -72,8 +72,8 @@ export default function SimplePlayerAvailabilityManager({
     const availablePlayerIds = Array.from(newSelectedPlayers);
     onAvailabilityChange?.(availablePlayerIds);
 
-    // Auto-save if gameId is provided
-    if (gameId && !isSaving) {
+    // Immediate save with full state - no debouncing needed
+    if (gameId) {
       setIsSaving(true);
       try {
         await apiClient.post(`/api/games/${gameId}/availability`, {

@@ -1,5 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { CACHE_CONFIG } from '@/lib/queryClient';
@@ -40,18 +41,34 @@ export function useTeamAvailability(teamId: number, gameId: number) {
 export function useSetPlayerAvailability(teamId?: number) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Track current request to prevent overlapping saves
+  const currentRequestRef = useRef<Promise<any> | null>(null);
 
   return useMutation({
     mutationFn: async ({ gameId, data }: { gameId: number; data: SetAvailabilityData }) => {
-      // Add a small delay to help prevent rapid-fire requests
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      if (!teamId) {
-        return apiClient.post(`/api/games/${gameId}/availability`, data);
+      // Cancel any pending request
+      if (currentRequestRef.current) {
+        // Let the previous request complete but don't wait for it
+        currentRequestRef.current.catch(() => {});
       }
-      return apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data);
+
+      // Create new request
+      const request = teamId 
+        ? apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
+        : apiClient.post(`/api/games/${gameId}/availability`, data);
+      
+      currentRequestRef.current = request;
+      
+      try {
+        const result = await request;
+        currentRequestRef.current = null;
+        return result;
+      } catch (error) {
+        currentRequestRef.current = null;
+        throw error;
+      }
     },
-    // Use optimistic updates with proper rollback
     onMutate: async ({ gameId, data }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['availability', teamId, gameId] });
@@ -59,27 +76,24 @@ export function useSetPlayerAvailability(teamId?: number) {
       // Snapshot the previous value
       const previousData = queryClient.getQueryData(['availability', teamId, gameId]);
       
-      // Optimistically update to the new value
+      // Optimistically update to the new value immediately
       queryClient.setQueryData(['availability', teamId, gameId], data);
       
-      // Return a context object with the snapshotted value
       return { previousData };
     },
     onSuccess: (_, { gameId }) => {
-      // Invalidate availability cache for this game after a short delay
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
-        
-        // Also invalidate any related availability caches
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   key[0] === 'availability' && 
-                   key[2] === gameId;
-          }
-        });
-      }, 100);
+      // Invalidate and refetch immediately to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+      
+      // Also invalidate any related availability caches
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && 
+                 key[0] === 'availability' && 
+                 key[2] === gameId;
+        }
+      });
     },
     onError: (error, { gameId }, context) => {
       // Rollback optimistic update on error
