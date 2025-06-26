@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PlayerBox from '@/components/ui/player-box';
 import { 
   Users, RotateCcw, Plus, Shuffle, Copy, Target, Grid3X3, Clock,
   ArrowUpDown, Save, Trash2, MoreHorizontal, Move3D, Crown, Trophy,
@@ -118,42 +119,7 @@ const samplePlayers = [
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-// Simple Player Card Component
-const PlayerCard = ({ player, size = "normal", onDragStart, className = "" }: any) => {
-  const initials = `${player.firstName?.[0] || ''}${player.lastName?.[0] || ''}`.toUpperCase();
 
-  return (
-    <div 
-      className={cn(
-        "bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-move",
-        size === "sm" && "p-2",
-        className
-      )}
-      draggable
-      onDragStart={() => onDragStart?.(player.id)}
-    >
-      <div className="flex items-center gap-2">
-        <div className={cn(
-          "flex items-center justify-center rounded-full text-white font-medium",
-          size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm",
-          player.avatarColor
-        )}>
-          {initials}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-gray-900 truncate">
-            {player.displayName}
-          </div>
-          {player.positionPreferences && (
-            <div className="text-xs text-gray-500">
-              {player.positionPreferences.slice(0, 2).join(', ')}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // 1. Classic Court Layout
 const ClassicCourtLayout = () => {
@@ -214,11 +180,18 @@ const ClassicCourtLayout = () => {
       >
         <div className="text-sm font-semibold mb-2">{position}</div>
         {player ? (
-          <PlayerCard 
-            player={player} 
-            size="sm" 
-            onDragStart={setDraggedPlayer}
-          />
+          <div 
+            className="cursor-move"
+            draggable
+            onDragStart={() => setDraggedPlayer(player.id)}
+          >
+            <PlayerBox 
+              player={player} 
+              size="sm" 
+              showPositions={true}
+              className="transition-all duration-200 hover:shadow-md"
+            />
+          </div>
         ) : (
           <div className="text-center">
             <Plus className="h-8 w-8 text-gray-400 mb-1" />
@@ -293,11 +266,19 @@ const ClassicCourtLayout = () => {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {availablePlayers.map(player => (
-              <PlayerCard 
+              <div 
                 key={player.id}
-                player={player} 
-                onDragStart={setDraggedPlayer}
-              />
+                className="cursor-move"
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+              >
+                <PlayerBox 
+                  player={player} 
+                  showPositions={true}
+                  size="sm"
+                  className="transition-all duration-200 hover:shadow-md"
+                />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -369,11 +350,19 @@ const ListBasedRoster = () => {
           {teams[currentQuarter][teamType].map(playerId => {
             const player = samplePlayers.find(p => p.id === playerId);
             return player ? (
-              <PlayerCard
+              <div 
                 key={playerId}
-                player={player}
-                onDragStart={setDraggedPlayer}
-              />
+                className="cursor-move"
+                draggable
+                onDragStart={() => setDraggedPlayer(playerId)}
+              >
+                <PlayerBox
+                  player={player}
+                  showPositions={true}
+                  size="sm"
+                  className="transition-all duration-200 hover:shadow-md"
+                />
+              </div>
             ) : null;
           })}
           {teams[currentQuarter][teamType].length === 0 && (
@@ -448,11 +437,19 @@ const ListBasedRoster = () => {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {availablePlayers.map(player => (
-              <PlayerCard
+              <div 
                 key={player.id}
-                player={player}
-                onDragStart={setDraggedPlayer}
-              />
+                className="cursor-move"
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+              >
+                <PlayerBox
+                  player={player}
+                  showPositions={true}
+                  size="sm"
+                  className="transition-all duration-200 hover:shadow-md"
+                />
+              </div>
             ))}
           </div>
         </CardContent>
