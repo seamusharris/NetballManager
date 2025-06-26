@@ -201,7 +201,7 @@ export default function PlayerAvailabilityManager({
           <CardTitle>Player Availability</CardTitle>
           {/* Quick Actions moved to header right */}
           <div className="flex gap-2">
-            <div className="bg-muted text-muted-foreground px-3 py-1.5 rounded-md text-sm font-medium border">
+            <div className="h-8 bg-muted text-muted-foreground px-4 rounded-md text-xs font-medium border flex items-center">
               {availableCount} / {totalCount}
             </div>
             <Button 
