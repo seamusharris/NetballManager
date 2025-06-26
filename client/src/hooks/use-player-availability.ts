@@ -43,31 +43,50 @@ export function useSetPlayerAvailability(teamId?: number) {
 
   return useMutation({
     mutationFn: async ({ gameId, data }: { gameId: number; data: SetAvailabilityData }) => {
+      // Add a small delay to help prevent rapid-fire requests
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       if (!teamId) {
         return apiClient.post(`/api/games/${gameId}/availability`, data);
       }
       return apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data);
     },
-    onSuccess: (_, { gameId }) => {
-      // Invalidate availability cache for this game
-      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+    // Use optimistic updates with proper rollback
+    onMutate: async ({ gameId, data }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['availability', teamId, gameId] });
       
-      // Also invalidate any related availability caches
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey;
-          return Array.isArray(key) && 
-                 key[0] === 'availability' && 
-                 key[2] === gameId;
-        }
-      });
-
-      toast({
-        title: "Success",
-        description: "Player availability updated successfully",
-      });
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['availability', teamId, gameId]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(['availability', teamId, gameId], data);
+      
+      // Return a context object with the snapshotted value
+      return { previousData };
     },
-    onError: (error) => {
+    onSuccess: (_, { gameId }) => {
+      // Invalidate availability cache for this game after a short delay
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+        
+        // Also invalidate any related availability caches
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key[0] === 'availability' && 
+                   key[2] === gameId;
+          }
+        });
+      }, 100);
+    },
+    onError: (error, { gameId }, context) => {
+      // Rollback optimistic update on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['availability', teamId, gameId], context.previousData);
+      }
+      
       console.error('Failed to update player availability:', error);
       toast({
         title: "Error",

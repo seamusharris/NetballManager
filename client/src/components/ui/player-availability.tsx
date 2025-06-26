@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, RotateCcw } from 'lucide-react';
+import { Zap, RotateCcw, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@shared/schema';
 import { PlayerBox } from '@/components/ui/player-box';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PlayerAvailabilityProps {
   players: Player[];
@@ -18,7 +19,9 @@ interface PlayerAvailabilityProps {
   showQuickActions?: boolean;
   className?: string;
   gameId?: number;
+  teamId?: number;
   variant?: 'compact' | 'detailed';
+  autoSave?: boolean;
 }
 
 export function PlayerAvailability({
@@ -29,58 +32,158 @@ export function PlayerAvailability({
   showQuickActions = true,
   className,
   gameId,
-  variant = 'detailed'
+  teamId,
+  variant = 'detailed',
+  autoSave = true
 }: PlayerAvailabilityProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Debouncing refs
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const isProcessingRef = useRef(false);
+  const lastSavePromiseRef = useRef<Promise<void>>(Promise.resolve());
 
-  const handleSetAllAvailable = () => {
+  // Debounced save function
+  const debouncedSave = useCallback(async (finalAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>) => {
+    if (!gameId || !autoSave) return;
+
+    // Wait for any previous save to complete to prevent race conditions
+    await lastSavePromiseRef.current;
+    
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
+    
+    setIsSaving(true);
+    
+    const savePromise = (async () => {
+      try {
+        // Convert to available player IDs format expected by API
+        const availablePlayerIds = Object.entries(finalAvailabilityData)
+          .filter(([_, status]) => status === 'available')
+          .map(([playerId, _]) => parseInt(playerId));
+
+        console.log(`Saving availability for game ${gameId}: ${availablePlayerIds.length} players available`);
+
+        // Use team-based endpoint when available
+        if (teamId) {
+          await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
+            availablePlayerIds
+          });
+        } else {
+          await apiClient.post(`/api/games/${gameId}/availability`, {
+            availablePlayerIds
+          });
+        }
+
+        // Invalidate relevant queries
+        queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+        
+        // Clear pending changes after successful save
+        setPendingChanges({});
+        
+        toast({
+          title: "Availability saved",
+          description: `${availablePlayerIds.length} players marked as available.`,
+        });
+      } catch (error) {
+        console.error("Failed to save player availability:", error);
+        toast({
+          variant: "destructive",
+          title: "Save failed",
+          description: "Failed to save player availability. Please try again.",
+        });
+      } finally {
+        setIsSaving(false);
+        isProcessingRef.current = false;
+      }
+    })();
+    
+    lastSavePromiseRef.current = savePromise;
+    await savePromise;
+  }, [gameId, teamId, autoSave, queryClient, toast]);
+
+  // Handle individual player changes with debouncing
+  const handlePlayerAvailabilityChange = useCallback((playerId: number, availability: 'available' | 'unavailable' | 'maybe') => {
+    // Optimistically update local state immediately
+    const newAvailabilityData = {
+      ...availabilityData,
+      ...pendingChanges,
+      [playerId]: availability
+    };
+    
+    // Update pending changes
+    setPendingChanges(prev => ({
+      ...prev,
+      [playerId]: availability
+    }));
+    
+    // Update parent state immediately for UI responsiveness
+    onAvailabilityChange(newAvailabilityData);
+
+    // Clear existing timeout and set new one
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce the save operation
+    saveTimeoutRef.current = setTimeout(() => {
+      debouncedSave(newAvailabilityData);
+    }, 500); // 500ms debounce
+  }, [availabilityData, pendingChanges, onAvailabilityChange, debouncedSave]);
+
+  // Handle bulk operations
+  const handleSetAllAvailable = useCallback(async () => {
     const allAvailable = players.reduce((acc, player) => {
       acc[player.id] = 'available';
       return acc;
     }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+    
     onAvailabilityChange(allAvailable);
-  };
+    setPendingChanges({});
+    
+    // Clear any pending debounced saves
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Save immediately for bulk operations
+    await debouncedSave(allAvailable);
+  }, [players, onAvailabilityChange, debouncedSave]);
 
-  const handleSetAllUnavailable = () => {
+  const handleSetAllUnavailable = useCallback(async () => {
     const allUnavailable = players.reduce((acc, player) => {
       acc[player.id] = 'unavailable';
       return acc;
     }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+    
     onAvailabilityChange(allUnavailable);
-  };
-
-  const handlePlayerAvailabilityChange = async (playerId: number, availability: 'available' | 'unavailable' | 'maybe') => {
-    setIsSaving(true);
-    try {
-      // Optimistically update local state
-      onAvailabilityChange({
-        ...availabilityData,
-        [playerId]: availability
-      });
-
-      // Auto-save if gameId is provided
-      if (gameId) {
-        const isAvailable = availability === 'available';
-        await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
-        toast({
-          title: "Availability updated",
-          description: `Player availability updated successfully.`,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to update player availability:", error);
-      toast({
-        variant: "destructive",
-        title: "Error updating availability",
-        description: "Failed to update player availability. Please try again.",
-      });
-
-      // Revert optimistic update on error
-      onAvailabilityChange(availabilityData);
-    } finally {
-      setIsSaving(false);
+    setPendingChanges({});
+    
+    // Clear any pending debounced saves
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
+    
+    // Save immediately for bulk operations
+    await debouncedSave(allUnavailable);
+  }, [players, onAvailabilityChange, debouncedSave]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Merge current data with pending changes for display
+  const displayAvailabilityData = {
+    ...availabilityData,
+    ...pendingChanges
   };
 
   const sortedPlayers = (players || []).filter(player => player).sort((a, b) => {
@@ -89,13 +192,19 @@ export function PlayerAvailability({
     return displayNameA.localeCompare(displayNameB);
   });
 
-  const availableCount = Object.values(availabilityData).filter(status => status === 'available').length;
+  const availableCount = Object.values(displayAvailabilityData).filter(status => status === 'available').length;
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle>{title}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {title}
+            {(isSaving || hasPendingChanges) && (
+              <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+            )}
+          </CardTitle>
           {showQuickActions && (
             <div className="flex space-x-2">
               <Button 
@@ -120,10 +229,21 @@ export function PlayerAvailability({
           )}
         </div>
         <div className="flex items-center gap-2 mt-2">
-          <Badge variant="outline" className="mr-1">
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "mr-1",
+              hasPendingChanges && "border-orange-500 text-orange-600"
+            )}
+          >
             {availableCount}
           </Badge>
-          <span className="text-sm text-gray-600">Available Players</span>
+          <span className="text-sm text-gray-600">
+            Available Players
+            {hasPendingChanges && (
+              <span className="text-orange-600 ml-1">(saving...)</span>
+            )}
+          </span>
         </div>
       </CardHeader>
 
@@ -133,7 +253,8 @@ export function PlayerAvailability({
           "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
         )}>
           {sortedPlayers.map(player => {
-            const isSelected = availabilityData[player.id] === 'available';
+            const isSelected = displayAvailabilityData[player.id] === 'available';
+            const isPending = player.id in pendingChanges;
 
             return (
               <PlayerBox
@@ -151,7 +272,10 @@ export function PlayerAvailability({
                 }}
                 size={variant === 'compact' ? 'sm' : 'md'}
                 showPositions={variant === 'detailed'}
-                isLoading={isSaving}
+                isLoading={isSaving && isPending}
+                className={cn(
+                  isPending && "ring-2 ring-orange-200 ring-offset-2"
+                )}
               />
             );
           })}

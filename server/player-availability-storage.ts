@@ -98,16 +98,18 @@ export class PlayerAvailabilityStorage {
   }
 
   async setPlayerAvailabilityForGame(gameId: number, availablePlayerIds: number[]): Promise<boolean> {
+    const startTime = Date.now();
+    console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
+
     try {
-      console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
-
-      // Start transaction
-      await db.execute(sql`BEGIN`);
-
-      try {
-        // Get team players for this game (not all club players)
-        const gameResult = await db.execute(sql`
-          SELECT home_team_id, away_team_id FROM games WHERE id = ${gameId}
+      // Use a more robust transaction with proper isolation
+      const result = await db.transaction(async (tx) => {
+        // Get team players for this game with row-level locking to prevent race conditions
+        const gameResult = await tx.execute(sql`
+          SELECT home_team_id, away_team_id 
+          FROM games 
+          WHERE id = ${gameId} 
+          FOR UPDATE
         `);
         
         if (gameResult.rows.length === 0) {
@@ -116,46 +118,51 @@ export class PlayerAvailabilityStorage {
 
         const game = gameResult.rows[0] as any;
         const homeTeamId = game.home_team_id;
-        const awayTeamId = game.away_team_id;
 
         // Get players for the home team (assuming we're managing home team availability)
-        const teamPlayersResult = await db.execute(sql`
+        const teamPlayersResult = await tx.execute(sql`
           SELECT p.id 
           FROM players p
           JOIN team_players tp ON p.id = tp.player_id
           WHERE tp.team_id = ${homeTeamId} AND p.active = true
+          ORDER BY p.id
         `);
         
         const teamPlayerIds = teamPlayersResult.rows.map(row => row.id as number);
         console.log(`Found ${teamPlayerIds.length} team players for team ${homeTeamId}`);
 
-        // Use efficient UPSERT for only the team players
-        let upsertedCount = 0;
-        for (const playerId of teamPlayerIds) {
-          const isAvailable = availablePlayerIds.includes(playerId);
-          await db.execute(sql`
-            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-            VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
-            ON CONFLICT (game_id, player_id) 
-            DO UPDATE SET 
-              is_available = EXCLUDED.is_available,
-              updated_at = NOW()
-          `);
-          upsertedCount++;
+        if (teamPlayerIds.length === 0) {
+          console.warn(`No team players found for game ${gameId}, team ${homeTeamId}`);
+          return true;
         }
 
-        console.log(`Upserted ${upsertedCount} availability records for game ${gameId}`);
+        // Delete all existing records for this game first to prevent conflicts
+        await tx.execute(sql`
+          DELETE FROM player_availability 
+          WHERE game_id = ${gameId} 
+          AND player_id = ANY(${teamPlayerIds})
+        `);
 
-        // Commit transaction
-        await db.execute(sql`COMMIT`);
+        // Batch insert all availability records in one operation for better performance
+        if (teamPlayerIds.length > 0) {
+          const values = teamPlayerIds.map(playerId => {
+            const isAvailable = availablePlayerIds.includes(playerId);
+            return `(${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())`;
+          }).join(', ');
+
+          await tx.execute(sql.raw(`
+            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+            VALUES ${values}
+          `));
+        }
+
+        console.log(`Batch updated ${teamPlayerIds.length} availability records for game ${gameId} in ${Date.now() - startTime}ms`);
         return true;
-      } catch (error) {
-        // Rollback on error
-        await db.execute(sql`ROLLBACK`);
-        throw error;
-      }
+      });
+
+      return result;
     } catch (error) {
-      console.error('Error setting player availability:', error);
+      console.error(`Error setting player availability for game ${gameId}:`, error);
       return false;
     }
   }
