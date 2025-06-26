@@ -283,20 +283,9 @@ export default function TeamPlayersManager() {
               showQuickActions={true}
               mode="team-management"
               variant="detailed"
-            >
-              <SelectablePlayerBox.Actions>
-                <Button
-                  disabled={pendingActions.has(player.id)}
-                  className="h-8 px-3"
-                >
-                  {pendingActions.has(player.id) ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    'Remove'
-                  )}
-                </Button>
-              </SelectablePlayerBox.Actions>
-            </SelectablePlayerBox>
+              removingPlayerIds={pendingActions}
+              onRemovePlayer={handleRemovePlayer}
+            />
           )}
         </ContentSection>
 
@@ -351,20 +340,9 @@ export default function TeamPlayersManager() {
               showQuickActions={true}
               mode="team-management"
               variant="detailed"
-            >
-              <SelectablePlayerBox.Actions>
-                <Button
-                  disabled={pendingActions.has(player.id)}
-                  className="h-8 px-3"
-                >
-                  {pendingActions.has(player.id) ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    'Add'
-                  )}
-                </Button>
-              </SelectablePlayerBox.Actions>
-            </SelectablePlayerBox>
+              addingPlayerIds={pendingActions}
+              onAddPlayer={handleAddPlayer}
+            />
           )}
         </ContentSection>
       </PageTemplate>
