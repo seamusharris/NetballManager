@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Users, RotateCcw, Plus, Shuffle, Copy, Target, Grid3X3, Clock,
-  ArrowUpDown, Save, Trash2, MoreHorizontal, Move3D
+  ArrowUpDown, Save, Trash2, MoreHorizontal, Move3D, Crown, Trophy,
+  Zap, Star, Heart, Shield, Flame, Sparkles
 } from 'lucide-react';
 import { PlayerBox } from '@/components/ui/player-box';
 
@@ -95,412 +96,150 @@ const samplePlayers = [
     positionPreferences: ["WA", "C", "GA"],
     avatarColor: "bg-yellow-500",
     active: true
+  },
+  {
+    id: 10,
+    displayName: "Grace",
+    firstName: "Grace",
+    lastName: "",
+    positionPreferences: ["GS", "GA"],
+    avatarColor: "bg-cyan-500",
+    active: true
+  },
+  {
+    id: 11,
+    displayName: "Sophie",
+    firstName: "Sophie",
+    lastName: "",
+    positionPreferences: ["C", "WA"],
+    avatarColor: "bg-emerald-500",
+    active: true
   }
 ];
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-// Enhanced Position Slot Component using your styling patterns
-const PositionSlot = ({ 
-  position, 
-  player, 
-  isDropTarget = false, 
-  isCompatible = true,
-  onDrop,
-  courtSection,
-  onDragStart,
-  variant = "default"
-}: {
-  position: string,
-  player?: any,
-  isDropTarget?: boolean,
-  isCompatible?: boolean,
-  onDrop: () => void,
-  courtSection: 'attacking' | 'center' | 'defending',
-  onDragStart: (playerId: number) => void,
-  variant?: 'default' | 'compact' | 'minimal'
-}) => {
-  const sectionColors = {
-    attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
-    center: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
-    defending: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
-  };
-
-  const slotSizes = {
-    default: 'min-h-[140px] p-4',
-    compact: 'min-h-[100px] p-3',
-    minimal: 'min-h-[80px] p-2'
-  };
-
-  return (
-    <div
-      className={`
-        relative border-2 border-dashed rounded-xl text-center transition-all duration-300 flex flex-col justify-center
-        ${slotSizes[variant]}
-        ${isDropTarget && isCompatible ? 'border-green-400 bg-green-50 scale-105 shadow-lg' : ''}
-        ${isDropTarget && !isCompatible ? 'border-red-400 bg-red-50' : ''}
-        ${!isDropTarget ? sectionColors[courtSection] : ''}
-        hover:shadow-md
-      `}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={onDrop}
-    >
-      {/* Position Label */}
-      <div className="absolute top-2 left-2">
-        <Badge variant="outline" className="font-bold text-sm">
-          {position}
-        </Badge>
-      </div>
-
-      {/* Player or Drop Zone */}
-      {player ? (
-        <div 
-          className="cursor-move w-full" 
-          draggable
-          onDragStart={() => onDragStart(player.id)}
-        >
-          <PlayerBox 
-            player={player}
-            showPositions={variant !== 'minimal'}
-            size={variant === 'compact' ? 'sm' : 'md'}
-            className="transition-all duration-200 hover:scale-105"
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-full text-gray-400">
-          <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-2">
-            <Plus className="h-6 w-6" />
-          </div>
-          <div className="text-xs font-medium">
-            {isDropTarget ? (isCompatible ? 'Drop here' : 'Not compatible') : 'Drag player here'}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Full Roster Manager with Quarter Support
-const QuarterBasedRosterManager = () => {
-  const [currentQuarter, setCurrentQuarter] = useState(1);
-  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
-    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+// 1. Court Visualization with Glass Morphism
+const GlassMorphismCourt = () => {
+  const [assignments, setAssignments] = useState<Record<string, number | null>>({
+    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
   });
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
 
-  const handleDragStart = (playerId: number) => {
-    setDraggedPlayer(playerId);
-  };
-
-  const handleDragOver = (e: React.DragEvent, position: string) => {
-    e.preventDefault();
-    setDragOverPosition(position);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverPosition(null);
-  };
-
   const handleDrop = (position: string) => {
     if (draggedPlayer) {
-      const newAssignments = {
-        ...assignments,
-        [currentQuarter]: { ...assignments[currentQuarter] }
-      };
-
-      // Clear player from any previous position in this quarter
-      Object.keys(newAssignments[currentQuarter]).forEach(pos => {
-        if (newAssignments[currentQuarter][pos] === draggedPlayer) {
-          newAssignments[currentQuarter][pos] = null;
+      const newAssignments = { ...assignments };
+      Object.keys(newAssignments).forEach(pos => {
+        if (newAssignments[pos] === draggedPlayer) {
+          newAssignments[pos] = null;
         }
       });
-
-      // Assign player to new position
-      newAssignments[currentQuarter][position] = draggedPlayer;
+      newAssignments[position] = draggedPlayer;
       setAssignments(newAssignments);
     }
     setDraggedPlayer(null);
     setDragOverPosition(null);
   };
 
-  const isPlayerCompatible = (playerId: number, position: string) => {
-    const player = samplePlayers.find(p => p.id === playerId);
-    return player ? player.positionPreferences.includes(position) : false;
-  };
+  const assignedPlayerIds = Object.values(assignments).filter(id => id !== null);
+  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
 
-  const handleResetQuarter = () => {
-    const newAssignments = {
-      ...assignments,
-      [currentQuarter]: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+  const PositionSlot = ({ position, courtSection }: { position: string, courtSection: 'attack' | 'mid' | 'defense' }) => {
+    const player = assignments[position] ? samplePlayers.find(p => p.id === assignments[position]) : null;
+    const sectionColors = {
+      attack: 'from-red-500/20 to-red-600/30 border-red-300/50',
+      mid: 'from-blue-500/20 to-blue-600/30 border-blue-300/50',
+      defense: 'from-green-500/20 to-green-600/30 border-green-300/50'
     };
-    setAssignments(newAssignments);
+
+    return (
+      <div
+        className={`
+          relative min-h-[140px] rounded-2xl backdrop-blur-lg border-2 transition-all duration-300
+          bg-gradient-to-br ${sectionColors[courtSection]}
+          ${dragOverPosition === position ? 'scale-105 shadow-2xl' : 'shadow-lg'}
+          hover:shadow-xl
+        `}
+        onDragOver={(e) => { e.preventDefault(); setDragOverPosition(position); }}
+        onDragLeave={() => setDragOverPosition(null)}
+        onDrop={() => handleDrop(position)}
+      >
+        <div className="absolute top-3 left-3">
+          <Badge variant="outline" className="bg-white/80 backdrop-blur-sm font-bold">
+            {position}
+          </Badge>
+        </div>
+
+        <div className="flex items-center justify-center h-full p-4">
+          {player ? (
+            <div
+              draggable
+              onDragStart={() => setDraggedPlayer(player.id)}
+              className="cursor-move transform transition-transform hover:scale-105"
+            >
+              <PlayerBox player={player} size="sm" showPositions={true} />
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full border-2 border-dashed border-white/60 flex items-center justify-center mb-2 mx-auto">
+                <Plus className="h-6 w-6 text-white/60" />
+              </div>
+              <p className="text-white/80 text-sm font-medium">Drop here</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
-
-  const handleCopyQuarter = (sourceQuarter: number, targetQuarter: number) => {
-    if (sourceQuarter === targetQuarter) return;
-    const newAssignments = {
-      ...assignments,
-      [targetQuarter]: { ...assignments[sourceQuarter] }
-    };
-    setAssignments(newAssignments);
-  };
-
-  const currentQuarterAssignments = assignments[currentQuarter];
-  const assignedPlayerIds = Object.values(currentQuarterAssignments).filter(id => id !== null);
-  const availablePlayersForDrag = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
-
-  // Player summary
-  const playerSummary = samplePlayers.reduce((acc, player) => {
-    const quartersPlayed = Object.entries(assignments).reduce((qtrs, [quarter, quarterAssignments]) => {
-      if (Object.values(quarterAssignments).includes(player.id)) {
-        qtrs.push(parseInt(quarter));
-      }
-      return qtrs;
-    }, [] as number[]);
-
-    acc[player.id] = {
-      totalQuarters: quartersPlayed.length,
-      quarters: quartersPlayed
-    };
-    return acc;
-  }, {} as Record<number, any>);
 
   return (
     <div className="space-y-6">
-      {/* Game Info Header */}
-      <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-lg">vs Sample Opponents</h3>
-            <p className="text-sm text-gray-600">Saturday, 28 June 2025 at 10:00 AM</p>
-          </div>
-          <Badge variant="outline" className="bg-white">
-            {samplePlayers.length} players available
-          </Badge>
-        </div>
-      </div>
-
-      {/* Quarter Selection and Controls */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col space-y-4">
-            {/* Quarter Tabs */}
-            <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-              <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto">
-                <TabsTrigger value="1">Q1</TabsTrigger>
-                <TabsTrigger value="2">Q2</TabsTrigger>
-                <TabsTrigger value="3">Q3</TabsTrigger>
-                <TabsTrigger value="4">Q4</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {/* Controls */}
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleResetQuarter}
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset Q{currentQuarter}
-              </Button>
-              
-              {/* Copy Quarter Controls */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Copy:</span>
-                {[1, 2, 3, 4].map(sourceQuarter => (
-                  <div key={sourceQuarter} className="flex items-center gap-1">
-                    <span className="text-xs font-medium text-gray-600">Q{sourceQuarter}</span>
-                    <Select
-                      onValueChange={(value) => {
-                        if (value) handleCopyQuarter(sourceQuarter, parseInt(value));
-                      }}
-                    >
-                      <SelectTrigger className="w-12 h-7 text-xs">
-                        <SelectValue placeholder="→" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1, 2, 3, 4]
-                          .filter(q => q !== sourceQuarter)
-                          .map(targetQuarter => (
-                            <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
-                              Q{targetQuarter}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Court Layout */}
-      <div className="bg-gradient-to-b from-green-100 to-green-50 p-6 rounded-xl border border-green-200 shadow-inner">
-        <div className="grid grid-cols-3 gap-6">
-          {/* Attacking Third */}
-          <div className="space-y-3">
-            <div className="text-center">
-              <h4 className="text-sm font-semibold text-red-700 mb-1">Attacking Third</h4>
-              <div className="h-0.5 bg-red-200 rounded"></div>
-            </div>
-            {['GS', 'GA'].map(position => (
-              <div
-                key={position}
-                onDragOver={(e) => handleDragOver(e, position)}
-                onDragLeave={handleDragLeave}
-              >
-                <PositionSlot
-                  position={position}
-                  player={assignments[currentQuarter][position] ? 
-                    samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
-                  }
-                  isDropTarget={dragOverPosition === position}
-                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
-                  onDrop={() => handleDrop(position)}
-                  courtSection="attacking"
-                  onDragStart={handleDragStart}
-                />
-              </div>
-            ))}
+      <div className="relative min-h-[600px] rounded-3xl bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 p-8 shadow-inner">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-3xl"></div>
+        
+        <div className="relative grid grid-cols-3 gap-8 h-full">
+          <div className="space-y-6">
+            <h3 className="text-center font-bold text-red-700 text-lg mb-4">Attack</h3>
+            <PositionSlot position="GS" courtSection="attack" />
+            <PositionSlot position="GA" courtSection="attack" />
           </div>
 
-          {/* Center Third */}
-          <div className="space-y-3">
-            <div className="text-center">
-              <h4 className="text-sm font-semibold text-blue-700 mb-1">Center Third</h4>
-              <div className="h-0.5 bg-blue-200 rounded"></div>
-            </div>
-            {['WA', 'C', 'WD'].map(position => (
-              <div
-                key={position}
-                onDragOver={(e) => handleDragOver(e, position)}
-                onDragLeave={handleDragLeave}
-              >
-                <PositionSlot
-                  position={position}
-                  player={assignments[currentQuarter][position] ? 
-                    samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
-                  }
-                  isDropTarget={dragOverPosition === position}
-                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
-                  onDrop={() => handleDrop(position)}
-                  courtSection="center"
-                  onDragStart={handleDragStart}
-                />
-              </div>
-            ))}
+          <div className="space-y-4">
+            <h3 className="text-center font-bold text-blue-700 text-lg mb-4">Midcourt</h3>
+            <PositionSlot position="WA" courtSection="mid" />
+            <PositionSlot position="C" courtSection="mid" />
+            <PositionSlot position="WD" courtSection="mid" />
           </div>
 
-          {/* Defending Third */}
-          <div className="space-y-3">
-            <div className="text-center">
-              <h4 className="text-sm font-semibold text-green-700 mb-1">Defending Third</h4>
-              <div className="h-0.5 bg-green-200 rounded"></div>
-            </div>
-            {['GD', 'GK'].map(position => (
-              <div
-                key={position}
-                onDragOver={(e) => handleDragOver(e, position)}
-                onDragLeave={handleDragLeave}
-              >
-                <PositionSlot
-                  position={position}
-                  player={assignments[currentQuarter][position] ? 
-                    samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
-                  }
-                  isDropTarget={dragOverPosition === position}
-                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
-                  onDrop={() => handleDrop(position)}
-                  courtSection="defending"
-                  onDragStart={handleDragStart}
-                />
-              </div>
-            ))}
+          <div className="space-y-6">
+            <h3 className="text-center font-bold text-green-700 text-lg mb-4">Defense</h3>
+            <PositionSlot position="GD" courtSection="defense" />
+            <PositionSlot position="GK" courtSection="defense" />
           </div>
         </div>
       </div>
 
-      {/* Available Players Pool */}
-      <Card>
+      <Card className="backdrop-blur-lg bg-white/80">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-600" />
-            Available Players - Quarter {currentQuarter}
-            <Badge variant="secondary">{availablePlayersForDrag.length}</Badge>
+            <Sparkles className="h-5 w-5 text-purple-600" />
+            Available Players
+            <Badge variant="secondary">{availablePlayers.length}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {availablePlayersForDrag.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {availablePlayersForDrag.map(player => (
-                <div
-                  key={player.id}
-                  draggable
-                  onDragStart={() => handleDragStart(player.id)}
-                  className="cursor-move transform hover:scale-105 transition-transform"
-                >
-                  <PlayerBox
-                    player={player}
-                    size="sm"
-                    showPositions={true}
-                    className="transition-all duration-200"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p className="font-medium">All players assigned for this quarter</p>
-              <p className="text-sm">Switch to another quarter or reset assignments</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Player Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-green-600" />
-            Player Game Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {samplePlayers.map(player => {
-              const stats = playerSummary[player.id];
-              const quarterDisplay = stats.quarters.length > 0 
-                ? `Q${stats.quarters.sort().join(', Q')}` 
-                : 'None';
-              const playingTimePercent = (stats.totalQuarters / 4) * 100;
-
-              return (
-                <div key={player.id} className="p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">{player.displayName}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">{stats.totalQuarters}/4</span>
-                      <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 transition-all"
-                          style={{ width: `${playingTimePercent}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-600">{quarterDisplay}</div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {availablePlayers.map(player => (
+              <div
+                key={player.id}
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move transform transition-all hover:scale-105 hover:rotate-2"
+              >
+                <PlayerBox player={player} size="sm" showPositions={true} />
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -508,141 +247,791 @@ const QuarterBasedRosterManager = () => {
   );
 };
 
-// Compact List-Based Interface
-const CompactListInterface = () => {
-  const [currentQuarter, setCurrentQuarter] = useState(1);
-  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
-    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+// 2. Team Builder with Roles & Specialties
+const TeamBuilderInterface = () => {
+  const [teams, setTeams] = useState<Record<string, number[]>>({
+    starters: [],
+    substitutes: [],
+    captains: [],
+    specialists: []
   });
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
 
-  const handleDragStart = (playerId: number) => setDraggedPlayer(playerId);
-  
-  const handleDrop = (position: string) => {
+  const handleDrop = (teamType: string) => {
     if (draggedPlayer) {
-      const newAssignments = {
-        ...assignments,
-        [currentQuarter]: { ...assignments[currentQuarter] }
-      };
-
-      // Clear player from any previous position
-      Object.keys(newAssignments[currentQuarter]).forEach(pos => {
-        if (newAssignments[currentQuarter][pos] === draggedPlayer) {
-          newAssignments[currentQuarter][pos] = null;
-        }
+      const newTeams = { ...teams };
+      Object.keys(newTeams).forEach(type => {
+        newTeams[type] = newTeams[type].filter(id => id !== draggedPlayer);
       });
-
-      newAssignments[currentQuarter][position] = draggedPlayer;
-      setAssignments(newAssignments);
+      newTeams[teamType] = [...newTeams[teamType], draggedPlayer];
+      setTeams(newTeams);
     }
     setDraggedPlayer(null);
   };
 
-  const assignedPlayerIds = Object.values(assignments[currentQuarter]).filter(id => id !== null);
+  const assignedPlayerIds = Object.values(teams).flat();
   const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  const TeamSection = ({ 
+    title, 
+    teamType, 
+    icon, 
+    maxPlayers, 
+    color, 
+    description 
+  }: { 
+    title: string, 
+    teamType: string, 
+    icon: React.ReactNode, 
+    maxPlayers: number, 
+    color: string,
+    description: string 
+  }) => (
+    <Card className="h-full">
+      <CardHeader className={`${color} text-white rounded-t-lg`}>
+        <CardTitle className="flex items-center gap-2">
+          {icon}
+          {title}
+          <Badge variant="secondary" className="bg-white/20 text-white">
+            {teams[teamType].length}/{maxPlayers}
+          </Badge>
+        </CardTitle>
+        <p className="text-sm opacity-90">{description}</p>
+      </CardHeader>
+      <CardContent 
+        className="min-h-[200px] p-4"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() => handleDrop(teamType)}
+      >
+        <div className="space-y-3">
+          {teams[teamType].map(playerId => {
+            const player = samplePlayers.find(p => p.id === playerId);
+            return player ? (
+              <div
+                key={playerId}
+                draggable
+                onDragStart={() => setDraggedPlayer(playerId)}
+                className="cursor-move"
+              >
+                <PlayerBox player={player} size="sm" showPositions={true} />
+              </div>
+            ) : null;
+          })}
+          {teams[teamType].length === 0 && (
+            <div className="text-center py-8 text-gray-400">
+              <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto mb-2">
+                <Plus className="h-8 w-8" />
+              </div>
+              <p className="text-sm">Drag players here</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Quarter Selection */}
-      <div className="flex justify-center">
-        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="1">Quarter 1</TabsTrigger>
-            <TabsTrigger value="2">Quarter 2</TabsTrigger>
-            <TabsTrigger value="3">Quarter 3</TabsTrigger>
-            <TabsTrigger value="4">Quarter 4</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+        <TeamSection
+          title="Starting Seven"
+          teamType="starters"
+          icon={<Star className="h-5 w-5" />}
+          maxPlayers={7}
+          color="bg-gradient-to-r from-purple-600 to-purple-700"
+          description="Your core lineup for the match"
+        />
+        <TeamSection
+          title="Substitutes"
+          teamType="substitutes"
+          icon={<ArrowUpDown className="h-5 w-5" />}
+          maxPlayers={4}
+          color="bg-gradient-to-r from-blue-600 to-blue-700"
+          description="Players ready to rotate in"
+        />
+        <TeamSection
+          title="Leadership"
+          teamType="captains"
+          icon={<Crown className="h-5 w-5" />}
+          maxPlayers={3}
+          color="bg-gradient-to-r from-amber-600 to-amber-700"
+          description="Captain and vice-captains"
+        />
+        <TeamSection
+          title="Specialists"
+          teamType="specialists"
+          icon={<Target className="h-5 w-5" />}
+          maxPlayers={3}
+          color="bg-gradient-to-r from-emerald-600 to-emerald-700"
+          description="Key position specialists"
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Position List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Starting Lineup - Quarter {currentQuarter}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {NETBALL_POSITIONS.map(position => {
-              const player = assignments[currentQuarter][position] ? 
-                samplePlayers.find(p => p.id === assignments[currentQuarter][position]) : null;
-              
-              return (
-                <div
-                  key={position}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleDrop(position)}
-                  className={`
-                    p-3 rounded-lg border-2 border-dashed transition-all duration-200
-                    ${draggedPlayer && !player ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}
-                  `}
-                >
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="font-bold">
-                      {position}
-                    </Badge>
-                    
-                    {player ? (
-                      <div
-                        draggable
-                        onDragStart={() => handleDragStart(player.id)}
-                        className="cursor-move flex-1 ml-4"
-                      >
-                        <PlayerBox 
-                          player={player}
-                          size="sm"
-                          showPositions={true}
-                          className="transition-all duration-200"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex-1 ml-4 text-center text-gray-400 py-3 text-sm">
-                        Drag player here
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Available Players */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Available Players
-              <Badge variant="secondary">{availablePlayers.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Available Players
+            <Badge variant="outline">{availablePlayers.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {availablePlayers.map(player => (
               <div
                 key={player.id}
                 draggable
-                onDragStart={() => handleDragStart(player.id)}
-                className="cursor-move hover:scale-[1.02] transition-transform"
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move transition-transform hover:scale-105"
               >
-                <PlayerBox 
-                  player={player}
-                  showPositions={true}
-                  className="transition-all duration-200"
-                />
+                <PlayerBox player={player} size="sm" showPositions={true} />
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// 3. Rotation Planner with Timing
+const RotationPlanner = () => {
+  const [rotations, setRotations] = useState<Record<string, { time: string, playersIn: number[], playersOut: number[] }>>({
+    'rotation-1': { time: '10:00', playersIn: [], playersOut: [] },
+    'rotation-2': { time: '20:00', playersIn: [], playersOut: [] },
+    'rotation-3': { time: '30:00', playersIn: [], playersOut: [] },
+    'rotation-4': { time: '40:00', playersIn: [], playersOut: [] }
+  });
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+  const [dragContext, setDragContext] = useState<{ rotation: string, type: 'in' | 'out' } | null>(null);
+
+  const handleDrop = (rotation: string, type: 'in' | 'out') => {
+    if (draggedPlayer && dragContext) {
+      const newRotations = { ...rotations };
+      
+      // Remove from previous location
+      if (dragContext.rotation && dragContext.type) {
+        newRotations[dragContext.rotation][dragContext.type === 'in' ? 'playersIn' : 'playersOut'] = 
+          newRotations[dragContext.rotation][dragContext.type === 'in' ? 'playersIn' : 'playersOut']
+            .filter(id => id !== draggedPlayer);
+      }
+      
+      // Add to new location
+      if (type === 'in') {
+        newRotations[rotation].playersIn = [...newRotations[rotation].playersIn, draggedPlayer];
+      } else {
+        newRotations[rotation].playersOut = [...newRotations[rotation].playersOut, draggedPlayer];
+      }
+      
+      setRotations(newRotations);
+    }
+    setDraggedPlayer(null);
+    setDragContext(null);
+  };
+
+  const RotationCard = ({ rotationKey, rotation }: { rotationKey: string, rotation: any }) => (
+    <Card className="relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/20 to-transparent rounded-bl-3xl"></div>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-lg">{rotation.time}</CardTitle>
+          </div>
+          <Badge variant="outline" className="bg-blue-50">
+            Quarter {rotationKey.split('-')[1]}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-1">
+              <ArrowUpDown className="h-4 w-4" />
+              Players In
+            </h4>
+            <div 
+              className="min-h-[100px] p-3 border-2 border-dashed border-green-300 rounded-lg bg-green-50/50"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(rotationKey, 'in')}
+            >
+              <div className="space-y-2">
+                {rotation.playersIn.map((playerId: number) => {
+                  const player = samplePlayers.find(p => p.id === playerId);
+                  return player ? (
+                    <div
+                      key={playerId}
+                      draggable
+                      onDragStart={() => {
+                        setDraggedPlayer(playerId);
+                        setDragContext({ rotation: rotationKey, type: 'in' });
+                      }}
+                      className="cursor-move"
+                    >
+                      <PlayerBox player={player} size="sm" showPositions={false} />
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-1">
+              <ArrowUpDown className="h-4 w-4 rotate-180" />
+              Players Out
+            </h4>
+            <div 
+              className="min-h-[100px] p-3 border-2 border-dashed border-red-300 rounded-lg bg-red-50/50"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(rotationKey, 'out')}
+            >
+              <div className="space-y-2">
+                {rotation.playersOut.map((playerId: number) => {
+                  const player = samplePlayers.find(p => p.id === playerId);
+                  return player ? (
+                    <div
+                      key={playerId}
+                      draggable
+                      onDragStart={() => {
+                        setDraggedPlayer(playerId);
+                        setDragContext({ rotation: rotationKey, type: 'out' });
+                      }}
+                      className="cursor-move"
+                    >
+                      <PlayerBox player={player} size="sm" showPositions={false} />
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {Object.entries(rotations).map(([key, rotation]) => (
+          <RotationCard key={key} rotationKey={key} rotation={rotation} />
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Player Pool
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {samplePlayers.map(player => (
+              <div
+                key={player.id}
+                draggable
+                onDragStart={() => {
+                  setDraggedPlayer(player.id);
+                  setDragContext(null);
+                }}
+                className="cursor-move transition-transform hover:scale-105"
+              >
+                <PlayerBox player={player} size="sm" showPositions={true} />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// 4. Match Strategy Board
+const StrategyBoard = () => {
+  const [formations, setFormations] = useState<Record<string, number[]>>({
+    'attacking-formation': [],
+    'defensive-formation': [],
+    'neutral-formation': [],
+    'power-play': []
+  });
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+
+  const handleDrop = (formation: string) => {
+    if (draggedPlayer) {
+      const newFormations = { ...formations };
+      Object.keys(newFormations).forEach(form => {
+        newFormations[form] = newFormations[form].filter(id => id !== draggedPlayer);
+      });
+      newFormations[formation] = [...newFormations[formation], draggedPlayer].slice(0, 7);
+      setFormations(newFormations);
+    }
+    setDraggedPlayer(null);
+  };
+
+  const FormationZone = ({ 
+    title, 
+    formationKey, 
+    icon, 
+    color, 
+    description 
+  }: { 
+    title: string, 
+    formationKey: string, 
+    icon: React.ReactNode, 
+    color: string,
+    description: string 
+  }) => (
+    <Card className="relative h-full overflow-hidden">
+      <div className={`absolute inset-0 ${color} opacity-5`}></div>
+      <CardHeader className={`${color} text-white relative`}>
+        <CardTitle className="flex items-center gap-2">
+          {icon}
+          {title}
+          <Badge variant="secondary" className="bg-white/20 text-white">
+            {formations[formationKey].length}/7
+          </Badge>
+        </CardTitle>
+        <p className="text-sm opacity-90">{description}</p>
+      </CardHeader>
+      <CardContent 
+        className="min-h-[300px] p-4 relative"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() => handleDrop(formationKey)}
+      >
+        <div className="grid grid-cols-3 gap-3 h-full">
+          {Array.from({ length: 7 }, (_, index) => {
+            const playerId = formations[formationKey][index];
+            const player = playerId ? samplePlayers.find(p => p.id === playerId) : null;
             
-            {availablePlayers.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">All players assigned for this quarter</p>
+            return (
+              <div
+                key={index}
+                className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white/50"
+              >
+                {player ? (
+                  <div
+                    draggable
+                    onDragStart={() => setDraggedPlayer(player.id)}
+                    className="cursor-move w-full h-full flex items-center justify-center"
+                  >
+                    <PlayerBox player={player} size="sm" showPositions={false} />
+                  </div>
+                ) : (
+                  <Plus className="h-6 w-6 text-gray-400" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const assignedPlayerIds = Object.values(formations).flat();
+  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FormationZone
+          title="Attacking Formation"
+          formationKey="attacking-formation"
+          icon={<Zap className="h-5 w-5" />}
+          color="bg-gradient-to-r from-red-600 to-orange-600"
+          description="High-pressure offensive setup"
+        />
+        <FormationZone
+          title="Defensive Formation"
+          formationKey="defensive-formation"
+          icon={<Shield className="h-5 w-5" />}
+          color="bg-gradient-to-r from-blue-600 to-indigo-600"
+          description="Solid defensive structure"
+        />
+        <FormationZone
+          title="Neutral Formation"
+          formationKey="neutral-formation"
+          icon={<Target className="h-5 w-5" />}
+          color="bg-gradient-to-r from-green-600 to-emerald-600"
+          description="Balanced all-around setup"
+        />
+        <FormationZone
+          title="Power Play"
+          formationKey="power-play"
+          icon={<Flame className="h-5 w-5" />}
+          color="bg-gradient-to-r from-purple-600 to-pink-600"
+          description="Special tactical formation"
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Available Players
+            <Badge variant="outline">{availablePlayers.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {availablePlayers.map(player => (
+              <div
+                key={player.id}
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move transition-transform hover:scale-105"
+              >
+                <PlayerBox player={player} size="sm" showPositions={true} />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// 5. Performance-Based Lineup
+const PerformanceLineup = () => {
+  const [lineups, setLineups] = useState<Record<string, number[]>>({
+    'top-performers': [],
+    'rising-stars': [],
+    'consistent-players': [],
+    'clutch-players': []
+  });
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+
+  const handleDrop = (category: string) => {
+    if (draggedPlayer) {
+      const newLineups = { ...lineups };
+      Object.keys(newLineups).forEach(cat => {
+        newLineups[cat] = newLineups[cat].filter(id => id !== draggedPlayer);
+      });
+      newLineups[category] = [...newLineups[category], draggedPlayer];
+      setLineups(newLineups);
+    }
+    setDraggedPlayer(null);
+  };
+
+  const PerformanceCategory = ({ 
+    title, 
+    categoryKey, 
+    icon, 
+    color, 
+    gradient,
+    description 
+  }: { 
+    title: string, 
+    categoryKey: string, 
+    icon: React.ReactNode, 
+    color: string,
+    gradient: string,
+    description: string 
+  }) => (
+    <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+      <div className={`absolute inset-0 ${gradient} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
+      <CardHeader className="relative">
+        <CardTitle className={`flex items-center gap-2 ${color}`}>
+          {icon}
+          {title}
+          <Badge variant="outline" className={`${color} border-current`}>
+            {lineups[categoryKey].length}
+          </Badge>
+        </CardTitle>
+        <p className="text-sm text-gray-600">{description}</p>
+      </CardHeader>
+      <CardContent 
+        className="min-h-[200px] relative"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() => handleDrop(categoryKey)}
+      >
+        <div className="space-y-3">
+          {lineups[categoryKey].map(playerId => {
+            const player = samplePlayers.find(p => p.id === playerId);
+            return player ? (
+              <div
+                key={playerId}
+                draggable
+                onDragStart={() => setDraggedPlayer(playerId)}
+                className="cursor-move transform transition-all hover:scale-102"
+              >
+                <PlayerBox player={player} size="md" showPositions={true} />
+              </div>
+            ) : null;
+          })}
+          {lineups[categoryKey].length === 0 && (
+            <div className="text-center py-12 text-gray-400">
+              <div className={`w-16 h-16 rounded-full border-2 border-dashed ${color} border-opacity-30 flex items-center justify-center mx-auto mb-3`}>
+                <Plus className="h-8 w-8" />
+              </div>
+              <p className="text-sm">Drag top performers here</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const assignedPlayerIds = Object.values(lineups).flat();
+  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PerformanceCategory
+          title="Top Performers"
+          categoryKey="top-performers"
+          icon={<Trophy className="h-5 w-5" />}
+          color="text-amber-600"
+          gradient="bg-gradient-to-br from-amber-400 to-yellow-500"
+          description="Players with exceptional recent performance"
+        />
+        <PerformanceCategory
+          title="Rising Stars"
+          categoryKey="rising-stars"
+          icon={<Star className="h-5 w-5" />}
+          color="text-purple-600"
+          gradient="bg-gradient-to-br from-purple-400 to-pink-500"
+          description="Players showing significant improvement"
+        />
+        <PerformanceCategory
+          title="Consistent Players"
+          categoryKey="consistent-players"
+          icon={<Heart className="h-5 w-5" />}
+          color="text-green-600"
+          gradient="bg-gradient-to-br from-green-400 to-emerald-500"
+          description="Reliable performers week after week"
+        />
+        <PerformanceCategory
+          title="Clutch Players"
+          categoryKey="clutch-players"
+          icon={<Zap className="h-5 w-5" />}
+          color="text-red-600"
+          gradient="bg-gradient-to-br from-red-400 to-orange-500"
+          description="Players who deliver in crucial moments"
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Player Pool
+            <Badge variant="outline">{availablePlayers.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {availablePlayers.map(player => (
+              <div
+                key={player.id}
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move transition-all hover:scale-105 hover:-rotate-1"
+              >
+                <PlayerBox player={player} size="sm" showPositions={true} />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// 6. Game Day Squad Builder
+const GameDaySquad = () => {
+  const [gameDay, setGameDay] = useState<Record<string, number[]>>({
+    'starting-seven': [],
+    'first-substitutes': [],
+    'impact-players': [],
+    'emergency-reserves': []
+  });
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+
+  const handleDrop = (section: string) => {
+    if (draggedPlayer) {
+      const newGameDay = { ...gameDay };
+      Object.keys(newGameDay).forEach(sec => {
+        newGameDay[sec] = newGameDay[sec].filter(id => id !== draggedPlayer);
+      });
+      
+      const maxSizes = {
+        'starting-seven': 7,
+        'first-substitutes': 3,
+        'impact-players': 2,
+        'emergency-reserves': 1
+      };
+      
+      if (newGameDay[section].length < maxSizes[section as keyof typeof maxSizes]) {
+        newGameDay[section] = [...newGameDay[section], draggedPlayer];
+      }
+      
+      setGameDay(newGameDay);
+    }
+    setDraggedPlayer(null);
+  };
+
+  const GameDaySection = ({ 
+    title, 
+    sectionKey, 
+    icon, 
+    priority, 
+    maxPlayers, 
+    description 
+  }: { 
+    title: string, 
+    sectionKey: string, 
+    icon: React.ReactNode, 
+    priority: 'high' | 'medium' | 'low',
+    maxPlayers: number,
+    description: string 
+  }) => {
+    const priorityStyles = {
+      high: 'from-emerald-600 to-teal-700 border-emerald-500',
+      medium: 'from-blue-600 to-indigo-700 border-blue-500',
+      low: 'from-gray-600 to-slate-700 border-gray-500'
+    };
+
+    return (
+      <Card className="h-full overflow-hidden">
+        <CardHeader className={`bg-gradient-to-r ${priorityStyles[priority]} text-white`}>
+          <CardTitle className="flex items-center gap-2">
+            {icon}
+            {title}
+            <Badge variant="secondary" className="bg-white/20 text-white">
+              {gameDay[sectionKey].length}/{maxPlayers}
+            </Badge>
+          </CardTitle>
+          <p className="text-sm opacity-90">{description}</p>
+        </CardHeader>
+        <CardContent 
+          className="min-h-[250px] p-4"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => handleDrop(sectionKey)}
+        >
+          <div className="space-y-3">
+            {gameDay[sectionKey].map((playerId, index) => {
+              const player = samplePlayers.find(p => p.id === playerId);
+              return player ? (
+                <div
+                  key={playerId}
+                  draggable
+                  onDragStart={() => setDraggedPlayer(playerId)}
+                  className="cursor-move flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <Badge variant="outline" className="text-xs">
+                    {index + 1}
+                  </Badge>
+                  <PlayerBox player={player} size="sm" showPositions={true} />
+                </div>
+              ) : null;
+            })}
+            {gameDay[sectionKey].length < maxPlayers && (
+              <div className="text-center py-8 text-gray-400">
+                <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto mb-2">
+                  <Plus className="h-6 w-6" />
+                </div>
+                <p className="text-sm">
+                  {gameDay[sectionKey].length === 0 ? 'Drag players here' : `${maxPlayers - gameDay[sectionKey].length} more needed`}
+                </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const assignedPlayerIds = Object.values(gameDay).flat();
+  const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+        <GameDaySection
+          title="Starting Seven"
+          sectionKey="starting-seven"
+          icon={<Star className="h-5 w-5" />}
+          priority="high"
+          maxPlayers={7}
+          description="Your best seven to start the match"
+        />
+        <GameDaySection
+          title="First Substitutes"
+          sectionKey="first-substitutes"
+          icon={<ArrowUpDown className="h-5 w-5" />}
+          priority="high"
+          maxPlayers={3}
+          description="Primary rotation players"
+        />
+        <GameDaySection
+          title="Impact Players"
+          sectionKey="impact-players"
+          icon={<Zap className="h-5 w-5" />}
+          priority="medium"
+          maxPlayers={2}
+          description="Game-changers for specific situations"
+        />
+        <GameDaySection
+          title="Emergency Reserve"
+          sectionKey="emergency-reserves"
+          icon={<Shield className="h-5 w-5" />}
+          priority="low"
+          maxPlayers={1}
+          description="Backup in case of injury"
+        />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Available Squad
+            <Badge variant="outline">{availablePlayers.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {availablePlayers.map(player => (
+              <div
+                key={player.id}
+                draggable
+                onDragStart={() => setDraggedPlayer(player.id)}
+                className="cursor-move transition-all hover:scale-105 hover:shadow-md"
+              >
+                <PlayerBox player={player} size="sm" showPositions={true} />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-lg text-indigo-900">Squad Status</h3>
+              <p className="text-indigo-700">
+                Total selected: {assignedPlayerIds.length}/13 • 
+                Starting positions: {gameDay['starting-seven'].length}/7 •
+                Bench strength: {gameDay['first-substitutes'].length + gameDay['impact-players'].length + gameDay['emergency-reserves'].length}/6
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Save Squad
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Shuffle className="h-4 w-4" />
+                Auto-Fill
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
@@ -655,97 +1044,123 @@ export default function DragDropExamples() {
 
   return (
     <PageTemplate
-      title="Enhanced Drag & Drop Examples"
-      subtitle="Professional drag and drop interfaces using your PlayerBox components with quarter management"
+      title="Creative Drag & Drop Examples"
+      subtitle="Six beautiful and functional drag and drop interfaces using PlayerBox components"
       breadcrumbs={breadcrumbs}
     >
       <Helmet>
-        <title>Enhanced Drag & Drop Examples | Team Manager</title>
+        <title>Creative Drag & Drop Examples | Team Manager</title>
       </Helmet>
 
       <div className="space-y-8">
-        <Tabs defaultValue="full-roster" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="full-roster">Full Roster Manager</TabsTrigger>
-            <TabsTrigger value="compact-list">Compact List Interface</TabsTrigger>
+        <Tabs defaultValue="glass-court" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+            <TabsTrigger value="glass-court">Glass Court</TabsTrigger>
+            <TabsTrigger value="team-builder">Team Builder</TabsTrigger>
+            <TabsTrigger value="rotation">Rotations</TabsTrigger>
+            <TabsTrigger value="strategy">Strategy</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="gameday">Game Day</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="full-roster" className="space-y-6">
+          <TabsContent value="glass-court" className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-2">Complete Quarter-Based Roster Manager</h3>
+              <h3 className="text-xl font-semibold mb-2">Glass Morphism Court Visualization</h3>
               <p className="text-gray-600 mb-4">
-                Full-featured interface with court visualization, quarter switching, player summaries, and compatibility checking.
-                Uses your actual PlayerBox components and matches your app's styling patterns.
+                A beautiful court layout with glass morphism effects, animated drops, and position-based color coding.
               </p>
-              <QuarterBasedRosterManager />
+              <GlassMorphismCourt />
             </div>
           </TabsContent>
 
-          <TabsContent value="compact-list" className="space-y-6">
+          <TabsContent value="team-builder" className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-2">Compact List-Based Interface</h3>
+              <h3 className="text-xl font-semibold mb-2">Advanced Team Builder</h3>
               <p className="text-gray-600 mb-4">
-                Space-efficient vertical layout with quarter management. Perfect for smaller screens or when you need 
-                to maximize information density while maintaining drag and drop functionality.
+                Organize players into specialized roles: starters, substitutes, leadership group, and specialists.
               </p>
-              <CompactListInterface />
+              <TeamBuilderInterface />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="rotation" className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Rotation Planner with Timing</h3>
+              <p className="text-gray-600 mb-4">
+                Plan strategic player rotations throughout the match with specific timing and in/out tracking.
+              </p>
+              <RotationPlanner />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="strategy" className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Match Strategy Board</h3>
+              <p className="text-gray-600 mb-4">
+                Create different tactical formations for various game situations: attacking, defensive, neutral, and power plays.
+              </p>
+              <StrategyBoard />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Performance-Based Lineup</h3>
+              <p className="text-gray-600 mb-4">
+                Categorize players based on their performance metrics: top performers, rising stars, consistent players, and clutch performers.
+              </p>
+              <PerformanceLineup />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="gameday" className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Game Day Squad Builder</h3>
+              <p className="text-gray-600 mb-4">
+                Build your complete game day squad with prioritized sections and squad status tracking.
+              </p>
+              <GameDaySquad />
             </div>
           </TabsContent>
         </Tabs>
 
-        {/* Feature Comparison */}
+        {/* Feature Showcase */}
         <Card>
           <CardHeader>
-            <CardTitle>Interface Comparison & Features</CardTitle>
+            <CardTitle>Interface Features & Design Elements</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
-                <h4 className="font-semibold mb-3 text-green-600">Full Roster Manager Features</h4>
-                <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Full court visualization with third sections</li>
-                  <li>• Real-time compatibility checking</li>
-                  <li>• Visual drop feedback with animations</li>
-                  <li>• Comprehensive player game summaries</li>
-                  <li>• Quarter copying functionality</li>
-                  <li>• Playing time progress bars</li>
-                  <li>• Position preference validation</li>
+                <h4 className="font-semibold mb-3 text-blue-600">Visual Design</h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• Glass morphism effects with backdrop blur</li>
+                  <li>• Gradient backgrounds and color coding</li>
+                  <li>• Smooth animations and hover effects</li>
+                  <li>• Professional card layouts</li>
+                  <li>• Responsive grid systems</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3 text-blue-600">Compact List Interface Features</h4>
-                <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Space-efficient vertical layout</li>
-                  <li>• Side-by-side position and player panels</li>
-                  <li>• Quick quarter switching</li>
-                  <li>• Simplified drag and drop zones</li>
-                  <li>• Mobile-friendly responsive design</li>
-                  <li>• Clear visual separation of assigned/available</li>
-                  <li>• Minimal visual complexity</li>
+                <h4 className="font-semibold mb-3 text-green-600">Interaction Features</h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• Drag and drop with visual feedback</li>
+                  <li>• Drop zone highlighting</li>
+                  <li>• Automatic conflict resolution</li>
+                  <li>• Player limits and validation</li>
+                  <li>• Context-aware drop zones</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3 text-purple-600">Technical Integration</h4>
-                <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Uses your actual PlayerBox component</li>
-                  <li>• Matches your app's player data structure</li>
-                  <li>• Integrates with your color and styling system</li>
-                  <li>• Compatible with your position preferences</li>
-                  <li>• Follows your UI/UX patterns</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-3 text-orange-600">Enhancements for Production</h4>
-                <ul className="text-sm space-y-2 text-gray-600">
-                  <li>• Add save/load roster functionality</li>
-                  <li>• Implement roster validation rules</li>
-                  <li>• Add undo/redo capabilities</li>
-                  <li>• Include rotation suggestions</li>
-                  <li>• Add keyboard navigation support</li>
-                  <li>• Implement touch/mobile gestures</li>
+                <h4 className="font-semibold mb-3 text-purple-600">Functionality</h4>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• Multiple organizational systems</li>
+                  <li>• Role and performance categorization</li>
+                  <li>• Time-based rotation planning</li>
+                  <li>• Strategic formation building</li>
+                  <li>• Complete squad management</li>
                 </ul>
               </div>
             </div>
