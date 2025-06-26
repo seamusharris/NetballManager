@@ -160,7 +160,7 @@ export default function PlayerAvailabilityManager({
     debouncedSave(allPlayerIds);
   }, [players, selectedPlayers, onAvailabilityChange, debouncedSave]);
 
-  const handleSelectNone = useCallback(async () => {
+  const handleSelectNone = useCallback(() => {
     // Store current state for potential rollback
     pendingStateRef.current = new Set(selectedPlayers);
 
@@ -172,35 +172,37 @@ export default function PlayerAvailabilityManager({
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Save immediately with explicit empty array
-    setIsSaving(true);
-    try {
-      await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
-        availablePlayerIds: [],
-        explicitlyEmpty: true  // Flag to indicate this is intentionally empty
-      });
+    // Use debouncedSave but with explicitlyEmpty flag
+    saveTimeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
+          availablePlayerIds: [],
+          explicitlyEmpty: true  // Flag to indicate this is intentionally empty
+        });
 
-      // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
-      pendingStateRef.current = null;
+        // Invalidate cache
+        queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });
+        pendingStateRef.current = null;
 
-    } catch (error) {
-      console.error('Failed to save availability:', error);
+      } catch (error) {
+        console.error('Failed to save availability:', error);
 
-      // Revert to last saved state if we have one
-      if (pendingStateRef.current) {
-        setSelectedPlayers(pendingStateRef.current);
-        onAvailabilityChange?.(Array.from(pendingStateRef.current));
+        // Revert to last saved state if we have one
+        if (pendingStateRef.current) {
+          setSelectedPlayers(pendingStateRef.current);
+          onAvailabilityChange?.(Array.from(pendingStateRef.current));
+        }
+
+        toast({
+          title: "Error",
+          description: "Failed to save player availability. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
       }
-
-      toast({
-        title: "Error",
-        description: "Failed to save player availability. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    }, 100); // Very short delay for immediate feedback
   }, [selectedPlayers, onAvailabilityChange, teamId, gameId, apiClient, queryClient, toast]);
 
   if (isLoading) {

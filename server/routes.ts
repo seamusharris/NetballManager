@@ -2133,7 +2133,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
       
       // Handle explicitly empty case (Select None button)
-      if (explicitlyEmpty && availablePlayerIds.length === 0) {
+      if (explicitlyEmpty === true && availablePlayerIds.length === 0) {
+        console.log(`API: Handling explicitly empty availability for game ${gameId}`);
         const success = await playerAvailabilityStorage.setExplicitlyEmptyAvailability(gameId);
         if (success) {
           res.json({ message: "Player availability cleared successfully" });
@@ -2141,6 +2142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.status(500).json({ message: "Failed to clear player availability" });
         }
       } else {
+        console.log(`API: Setting normal availability for game ${gameId}: ${availablePlayerIds.length} players`);
         const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
         if (success) {
           res.json({ message: "Player availability updated successfully" });

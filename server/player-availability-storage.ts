@@ -54,7 +54,7 @@ export class PlayerAvailabilityStorage {
         }
       }
 
-      // Return existing availability records
+      // Return existing availability records - only those marked as available
       const result = await db.execute(sql`
         SELECT player_id 
         FROM player_availability 
@@ -63,7 +63,7 @@ export class PlayerAvailabilityStorage {
 
       const playerIds = result.rows.map(row => row.player_id as number);
       const uniquePlayerIds = [...new Set(playerIds)];
-      console.log(`Returning ${uniquePlayerIds.length} available players for game ${gameId}`);
+      console.log(`Returning ${uniquePlayerIds.length} available players for game ${gameId} (from existing records)`);
       return uniquePlayerIds;
 
     } catch (error) {
