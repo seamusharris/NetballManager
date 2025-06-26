@@ -106,38 +106,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const gameRostersMap = batchData?.rosters || {};
   const isLoadingStats = isLoadingBatchData;
 
-  // Use batch endpoint for roster data with improved caching
-  const { data: gameRostersMapOld, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['batchRosters', currentClubId, gameIds.sort().join(',')],
-    queryFn: async () => {
-      if (gameIds.length === 0) return {};
-
-      console.log(`PlayersList: Using batch endpoint for roster fetch of ${gameIds.length} games`);
-      
-      // Use batch endpoint instead of individual calls
-      const response = await fetch('/api/games/rosters/batch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ gameIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch batch rosters: ${response.statusText}`);
-      }
-
-      const rostersMap = await response.json();
-      console.log(`PlayersList: Batch roster fetch completed for ${Object.keys(rostersMap).length} games`);
-      return rostersMap;
-    },
-    enabled: enableQuery && !!currentClubId,
-    staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
-    gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
-  });
-
   // Combined loading state
-  const isLoading = isPlayersLoading || isLoadingStats || isLoadingRosters || isLoadingGames;
+  const isLoading = isPlayersLoading || isLoadingStats || isLoadingGames;
 
   // Calculate player statistics using shared hook
   const playerStatsMap = usePlayerStatsMapping(players, gameStatsMap, gameRostersMap);
