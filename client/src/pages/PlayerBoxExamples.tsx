@@ -1704,6 +1704,312 @@ export default function PlayerBoxExamples() {
             </div>
           </div>
         </div>
+
+        {/* Position Badge Examples */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Position Badge Examples - 4 & 5 Column Grids</h3>
+          <p className="text-sm text-gray-600 mb-6">Examples showing assigned positions with top-left badges in different grid layouts</p>
+
+          <div className="space-y-8">
+            {/* 4 Column Grid - With Position Preferences */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">4 Column Grid - With Position Preferences</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-badges-4col-with-prefs</code></p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 70, displayName: "Anna Smith", positionPreferences: ["GS", "GA"], avatarColor: "bg-blue-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 71, displayName: "Beth Jones", positionPreferences: ["GA", "WA"], avatarColor: "bg-green-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#22c55e15', borderColor: '#22c55e', color: '#15803d' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GD
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 72, displayName: "Chloe Brown", positionPreferences: ["GD", "WD"], avatarColor: "bg-purple-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      C
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 73, displayName: "Diana Wilson", positionPreferences: ["C", "WA"], avatarColor: "bg-orange-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 5 Column Grid - With Position Preferences */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">5 Column Grid - With Position Preferences</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-badges-5col-with-prefs</code></p>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 74, displayName: "Emma Taylor", positionPreferences: ["GS", "GA"], avatarColor: "bg-red-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 75, displayName: "Fiona Clark", positionPreferences: ["GA", "WA"], avatarColor: "bg-amber-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b', color: '#d97706' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-cyan-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WA
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 76, displayName: "Grace Lee", positionPreferences: ["WA", "C"], avatarColor: "bg-cyan-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#06b6d415', borderColor: '#06b6d4', color: '#0891b2' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-pink-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WD
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 77, displayName: "Holly White", positionPreferences: ["WD", "GD"], avatarColor: "bg-pink-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#ec489915', borderColor: '#ec4899', color: '#be185d' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GK
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 78, displayName: "Ivy Martin", positionPreferences: ["GK"], avatarColor: "bg-indigo-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#6366f115', borderColor: '#6366f1', color: '#4338ca' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Column Grid - Without Position Preferences */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">4 Column Grid - Without Position Preferences</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-badges-4col-no-prefs</code></p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 80, displayName: "Julia Green", avatarColor: "bg-teal-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 81, displayName: "Kate Adams", avatarColor: "bg-emerald-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#10b98115', borderColor: '#10b981', color: '#059669' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-slate-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GD
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 82, displayName: "Lucy Hill", avatarColor: "bg-slate-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#64748b15', borderColor: '#64748b', color: '#475569' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      C
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 83, displayName: "Maya Scott", avatarColor: "bg-rose-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#f43f5e15', borderColor: '#f43f5e', color: '#e11d48' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 5 Column Grid - Without Position Preferences */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">5 Column Grid - Without Position Preferences</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-badges-5col-no-prefs</code></p>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-violet-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 84, displayName: "Nina Davis", avatarColor: "bg-violet-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#8b5cf615', borderColor: '#8b5cf6', color: '#7c3aed' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-lime-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 85, displayName: "Olivia King", avatarColor: "bg-lime-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#84cc1615', borderColor: '#84cc16', color: '#65a30d' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-sky-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WA
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 86, displayName: "Penny Young", avatarColor: "bg-sky-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#0ea5e915', borderColor: '#0ea5e9', color: '#0284c7' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-fuchsia-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WD
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 87, displayName: "Quinn Hall", avatarColor: "bg-fuchsia-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#d946ef15', borderColor: '#d946ef', color: '#c026d3' }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-stone-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GK
+                    </div>
+                  </div>
+                  <PlayerBox 
+                    player={{id: 88, displayName: "Ruby Moore", avatarColor: "bg-stone-500"}}
+                    size="md"
+                    showPositions={false}
+                    className="shadow-md"
+                    style={{ backgroundColor: '#78716c15', borderColor: '#78716c', color: '#57534e' }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
 
