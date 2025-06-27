@@ -1245,7 +1245,7 @@ export default function PlayerBoxExamples() {
                       GS
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#16a34a', color: '#15803d' }}>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#16a34a15', borderColor: '#16a34a', color: '#15803d' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-600 w-14 h-14 text-base ml-2">
                       EW
                     </div>
@@ -1261,7 +1261,7 @@ export default function PlayerBoxExamples() {
                       C
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-2">
                       SJ
                     </div>
@@ -1277,7 +1277,7 @@ export default function PlayerBoxExamples() {
                       GK
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#a855f7', color: '#7e22ce' }}>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-2">
                       LC
                     </div>
@@ -1294,7 +1294,7 @@ export default function PlayerBoxExamples() {
               <h4 className="text-sm font-medium mb-3 text-gray-700">Position as Avatar Initials</h4>
               <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-avatar-initials</code></p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#f97316', color: '#ea580c' }}>
+                <div className="flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
                   <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-14 h-14 text-base">
                     GA
                   </div>
@@ -1306,7 +1306,7 @@ export default function PlayerBoxExamples() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#ef4444', color: '#dc2626' }}>
+                <div className="flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
                   <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-14 h-14 text-base">
                     WD
                   </div>
@@ -1318,7 +1318,7 @@ export default function PlayerBoxExamples() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#14b8a6', color: '#0d9488' }}>
+                <div className="flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}>
                   <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base">
                     WA
                   </div>
@@ -1382,7 +1382,7 @@ export default function PlayerBoxExamples() {
                       GS
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-8 h-8 text-sm ml-1">
                       AB
                     </div>
@@ -1398,7 +1398,7 @@ export default function PlayerBoxExamples() {
                       GA
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#22c55e', color: '#15803d' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#22c55e15', borderColor: '#22c55e', color: '#15803d' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-500 w-8 h-8 text-sm ml-1">
                       BC
                     </div>
@@ -1414,7 +1414,7 @@ export default function PlayerBoxExamples() {
                       WA
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f59e0b', color: '#d97706' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b', color: '#d97706' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-8 h-8 text-sm ml-1">
                       CD
                     </div>
@@ -1430,7 +1430,7 @@ export default function PlayerBoxExamples() {
                       C
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f97316', color: '#ea580c' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-8 h-8 text-sm ml-1">
                       DE
                     </div>
@@ -1446,7 +1446,7 @@ export default function PlayerBoxExamples() {
                       WD
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#ef4444', color: '#dc2626' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-8 h-8 text-sm ml-1">
                       EF
                     </div>
@@ -1462,7 +1462,7 @@ export default function PlayerBoxExamples() {
                       GD
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#a855f7', color: '#7e22ce' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-8 h-8 text-sm ml-1">
                       FG
                     </div>
@@ -1478,7 +1478,7 @@ export default function PlayerBoxExamples() {
                       GK
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#ec4899', color: '#be185d' }}>
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#ec489915', borderColor: '#ec4899', color: '#be185d' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-pink-500 w-8 h-8 text-sm ml-1">
                       GH
                     </div>
