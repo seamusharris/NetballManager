@@ -84,7 +84,6 @@ import Preparation2 from './pages/Preparation2';
 import PlayerAvailability from '@/pages/PlayerAvailability';
 import RosterGame from '@/pages/RosterGame';
 import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
-import PlayerBoxTestPage from '@/pages/PlayerBoxTestPage';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
 
