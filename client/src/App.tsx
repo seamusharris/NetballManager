@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -36,7 +35,9 @@ const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 import OpponentPreparation from '@/pages/OpponentPreparation';
 import GameResultExamples from '@/pages/GameResultExamples';
 import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
-import PlayerBoxExamples from './pages/PlayerBoxExamples';
+import PlayerBoxExamples from '@/pages/PlayerBoxExamples';
+import PositionBadgeGridExamples from '@/pages/PositionBadgeGridExamples';
+import PlayerBoxTestPage from '@/pages/PlayerBoxTestPage';
 import TeamBoxExamples from './pages/TeamBoxExamples';
 import ActionButtonExamples from './pages/ActionButtonExamples';
 import AllPlayersDesignExamples from './pages/AllPlayersDesignExamples';
@@ -86,7 +87,6 @@ import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 import PlayerBoxTestPage from '@/pages/PlayerBoxTestPage';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
-import PositionBadgeGridExamples from './pages/PositionBadgeGridExamples';
 
 /**
  * Loading spinner component for suspense fallbacks

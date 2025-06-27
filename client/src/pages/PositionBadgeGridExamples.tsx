@@ -1,24 +1,11 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 
 export default function PositionBadgeGridExamples() {
-  const [selectedPlayers, setSelectedPlayers] = useState(new Set());
-
-  const togglePlayerSelection = (playerId) => {
-    setSelectedPlayers((prevSelectedPlayers) => {
-      const newSelectedPlayers = new Set(prevSelectedPlayers);
-      if (newSelectedPlayers.has(playerId)) {
-        newSelectedPlayers.delete(playerId);
-      } else {
-        newSelectedPlayers.add(playerId);
-      }
-      return newSelectedPlayers;
-    });
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -44,7 +31,7 @@ export default function PositionBadgeGridExamples() {
     >
       <Helmet>
         <title>Position Badge Grid Examples - Component Library</title>
-        <meta name="description" content="Examples showing assigned positions with top-left badges in different grid layouts for netball team management applications." />
+        <meta name="description" content="4 and 5 column grid examples showing assigned positions with top-left badges in different grid layouts" />
         <style type="text/css">{`
           @media print {
             .no-print {
@@ -60,13 +47,11 @@ export default function PositionBadgeGridExamples() {
               max-width: none !important;
             }
 
-            /* Ensure grids stack properly in print */
             .grid {
               break-inside: avoid;
               page-break-inside: avoid;
             }
 
-            /* Reduce spacing for print */
             .space-y-8 > * + * {
               margin-top: 1rem !important;
             }
@@ -79,15 +64,25 @@ export default function PositionBadgeGridExamples() {
               margin-top: 0.5rem !important;
             }
 
-            /* Ensure sections don't break across pages */
             section {
               break-inside: avoid;
               page-break-inside: avoid;
             }
 
-            /* Optimize card shadows for print */
             .shadow-md, .shadow-lg {
               box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .bg-white {
+              background-color: white !important;
+            }
+
+            .text-gray-700 {
+              color: #374151 !important;
+            }
+
+            .text-gray-600 {
+              color: #4b5563 !important;
             }
           }
         `}</style>
@@ -95,97 +90,94 @@ export default function PositionBadgeGridExamples() {
 
       <div className="prose max-w-none mb-6">
         <p className="text-lg text-gray-700">
-          Position badge examples with 4 and 5 column grids showing different spacing configurations
+          Comprehensive 4 and 5 column grid examples showing assigned positions with top-left badges
         </p>
       </div>
 
       {/* Position Badge Examples */}
-      <div className="mb-8">
-        <h3 className="text-lg font-medium mb-4 text-gray-800">Position Badge Examples - 4 & 5 Column Grids</h3>
+      <section className="mb-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Position Badge Examples - 4 & 5 Column Grids</h2>
         <p className="text-sm text-gray-600 mb-6">Examples showing assigned positions with top-left badges in different grid layouts</p>
 
         <div className="space-y-8">
           {/* 4 Column Grid - With Position Preferences */}
           <div>
-            <h4 className="text-sm font-medium mb-3 text-gray-700">4 Column Grid - With Position Preferences & Badges</h4>
+            <h3 className="text-lg font-medium mb-4 text-gray-800">4 Column Grid - With Position Preferences & Badges</h3>
             <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>4col-badges-standard</code> - ml-3, space-x-4</p>
             <div className="space-y-6">
               {/* With Badges */}
-              <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">With Badges - Standard Avatar-Name Spacing</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        GS
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-3">
-                        AS
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-base font-bold player-name">Anna Smith</div>
-                        <div className="text-sm player-positions flex items-center gap-2">
-                          <span>GS, GA</span>
-                        </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-3">
+                      AS
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Anna Smith</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GS, GA</span>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="relative">
-                    <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        GA
-                      </div>
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#22c55e15', borderColor: '#22c55e', color: '#15803d' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-500 w-14 h-14 text-base ml-3">
-                        BJ
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-base font-bold player-name">Beth Jones</div>
-                        <div className="text-sm player-positions flex items-center gap-2">
-                          <span>GA, WA</span>
-                        </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#22c55e15', borderColor: '#22c55e', color: '#15803d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-500 w-14 h-14 text-base ml-3">
+                      BJ
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Beth Jones</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GA, WA</span>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="relative">
-                    <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        GD
-                      </div>
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GD
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-3">
-                        CB
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-base font-bold player-name">Chloe Brown</div>
-                        <div className="text-sm player-positions flex items-center gap-2">
-                          <span>GD, WD</span>
-                        </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-3">
+                      CB
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Chloe Brown</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GD, WD</span>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="relative">
-                    <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        C
-                      </div>
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      C
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-14 h-14 text-base ml-3">
-                        DW
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-base font-bold player-name">Diana Wilson</div>
-                        <div className="text-sm player-positions flex items-center gap-2">
-                          <span>C, WA</span>
-                        </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-14 h-14 text-base ml-3">
+                      DW
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Diana Wilson</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>C, WA</span>
                       </div>
                     </div>
                   </div>
@@ -194,8 +186,7 @@ export default function PositionBadgeGridExamples() {
 
               {/* Without Badges for Comparison */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">Same Players Without Badges (Comparison)</h5>
-                <p className="text-xs text-gray-500 mb-2"><strong>Ref:</strong> <code>4col-no-badges-standard</code> - ml-3, space-x-4</p>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-no-badges-standard</code> - ml-3, space-x-4</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-3">
@@ -249,8 +240,7 @@ export default function PositionBadgeGridExamples() {
 
               {/* Reduced Spacing - With Badges */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">With Badges - Reduced Avatar-Name Spacing</h5>
-                <p className="text-xs text-gray-500 mb-2"><strong>Ref:</strong> <code>4col-badges-reduced-spacing</code> - ml-3, space-x-2</p>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="relative">
                     <div className="absolute -top-2 -left-2 z-10">
@@ -332,8 +322,7 @@ export default function PositionBadgeGridExamples() {
 
               {/* Reduced Spacing - Without Badges */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">Without Badges - Reduced Avatar-Name Spacing</h5>
-                <p className="text-xs text-gray-500 mb-2"><strong>Ref:</strong> <code>4col-no-badges-reduced-spacing</code> - ml-3, space-x-2</p>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-no-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-3">
@@ -384,30 +373,23 @@ export default function PositionBadgeGridExamples() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* 5 Column Grid - With Position Preferences */}
-          <div>
-            <h4 className="text-sm font-medium mb-3 text-gray-700">5 Column Grid - With Position Preferences & Badges</h4>
-            <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>5col-badges-standard</code> - ml-3, space-x-4</p>
-            <div className="space-y-6">
-              {/* With Badges */}
+              {/* Minimal Spacing Variants */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">With Badges - Standard Avatar-Name Spacing</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-badges-minimal-spacing</code> - ml-1, space-x-2</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="relative">
                     <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      <div className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
                         GS
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-14 h-14 text-base ml-3">
-                        ET
+                    <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-1">
+                        AS
                       </div>
                       <div className="flex-1">
-                        <div className="text-base font-bold player-name">Emma Taylor</div>
+                        <div className="text-base font-bold player-name">Anna Smith</div>
                         <div className="text-sm player-positions flex items-center gap-2">
                           <span>GS, GA</span>
                         </div>
@@ -417,16 +399,16 @@ export default function PositionBadgeGridExamples() {
 
                   <div className="relative">
                     <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      <div className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
                         GA
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b', color: '#d97706' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-14 h-14 text-base ml-3">
-                        FC
+                    <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#22c55e15', borderColor: '#22c55e', color: '#15803d' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-500 w-14 h-14 text-base ml-1">
+                        BJ
                       </div>
                       <div className="flex-1">
-                        <div className="text-base font-bold player-name">Fiona Clark</div>
+                        <div className="text-base font-bold player-name">Beth Jones</div>
                         <div className="text-sm player-positions flex items-center gap-2">
                           <span>GA, WA</span>
                         </div>
@@ -436,18 +418,18 @@ export default function PositionBadgeGridExamples() {
 
                   <div className="relative">
                     <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-cyan-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        WA
+                      <div className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                        GD
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#06b6d415', borderColor: '#06b6d4', color: '#0891b2' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-cyan-500 w-14 h-14 text-base ml-3">
-                        GL
+                    <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-1">
+                        CB
                       </div>
                       <div className="flex-1">
-                        <div className="text-base font-bold player-name">Grace Lee</div>
+                        <div className="text-base font-bold player-name">Chloe Brown</div>
                         <div className="text-sm player-positions flex items-center gap-2">
-                          <span>WA, C</span>
+                          <span>GD, WD</span>
                         </div>
                       </div>
                     </div>
@@ -455,38 +437,178 @@ export default function PositionBadgeGridExamples() {
 
                   <div className="relative">
                     <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-pink-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        WD
+                      <div className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                        C
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ec489915', borderColor: '#ec4899', color: '#be185d' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-pink-500 w-14 h-14 text-base ml-3">
-                        HW
+                    <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-14 h-14 text-base ml-1">
+                        DW
                       </div>
                       <div className="flex-1">
-                        <div className="text-base font-bold player-name">Holly White</div>
+                        <div className="text-base font-bold player-name">Diana Wilson</div>
                         <div className="text-sm player-positions flex items-center gap-2">
-                          <span>WD, GD</span>
+                          <span>C, WA</span>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div className="relative">
-                    <div className="absolute -top-2 -left-2 z-10">
-                      <div className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
-                        GK
+              {/* Minimal Spacing - No Badges */}
+              <div>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-no-badges-minimal-spacing</code> - ml-1, space-x-2</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-1">
+                      AS
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Anna Smith</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GS, GA</span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#6366f115', borderColor: '#6366f1', color: '#4338ca' }}>
-                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-indigo-500 w-14 h-14 text-base ml-3">
-                        IM
+                  </div>
+
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#22c55e15', borderColor: '#22c55e', color: '#15803d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-500 w-14 h-14 text-base ml-1">
+                      BJ
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Beth Jones</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GA, WA</span>
                       </div>
-                      <div className="flex-1">
-                        <div className="text-base font-bold player-name">Ivy Martin</div>
-                        <div className="text-sm player-positions flex items-center gap-2">
-                          <span>GK</span>
-                        </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-1">
+                      CB
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Chloe Brown</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GD, WD</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-14 h-14 text-base ml-1">
+                      DW
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Diana Wilson</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>C, WA</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 5 Column Grid - With Position Preferences */}
+          <div>
+            <h3 className="text-lg font-medium mb-4 text-gray-800">5 Column Grid - With Position Preferences & Badges</h3>
+            <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>5col-badges-standard</code> - ml-3, space-x-4</p>
+            <div className="space-y-6">
+              {/* With Badges */}
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-14 h-14 text-base ml-3">
+                      ET
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Emma Taylor</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GS, GA</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b', color: '#d97706' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-14 h-14 text-base ml-3">
+                      FC
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Fiona Clark</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GA, WA</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-cyan-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WA
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#06b6d415', borderColor: '#06b6d4', color: '#0891b2' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-cyan-500 w-14 h-14 text-base ml-3">
+                      GL
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Grace Lee</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>WA, C</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-pink-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WD
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ec489915', borderColor: '#ec4899', color: '#be185d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-pink-500 w-14 h-14 text-base ml-3">
+                      HW
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Holly White</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>WD, GD</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GK
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#6366f115', borderColor: '#6366f1', color: '#4338ca' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-indigo-500 w-14 h-14 text-base ml-3">
+                      IM
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Ivy Martin</div>
+                      <div className="text-sm player-positions flex items-center gap-2">
+                        <span>GK</span>
                       </div>
                     </div>
                   </div>
@@ -495,8 +617,7 @@ export default function PositionBadgeGridExamples() {
 
               {/* Without Badges for Comparison */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">Same Players Without Badges (Comparison)</h5>
-                <p className="text-xs text-gray-500 mb-2"><strong>Ref:</strong> <code>5col-no-badges-standard</code> - ml-3, space-x-4</p>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>5col-no-badges-standard</code> - ml-3, space-x-4</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
                   <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-14 h-14 text-base ml-3">
@@ -562,8 +683,7 @@ export default function PositionBadgeGridExamples() {
 
               {/* Reduced Spacing - With Badges */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">With Badges - Reduced Avatar-Name Spacing</h5>
-                <p className="text-xs text-gray-500 mb-2"><strong>Ref:</strong> <code>5col-badges-reduced-spacing</code> - ml-3, space-x-2</p>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>5col-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
                   <div className="relative">
                     <div className="absolute -top-2 -left-2 z-10">
@@ -664,8 +784,7 @@ export default function PositionBadgeGridExamples() {
 
               {/* Reduced Spacing - Without Badges */}
               <div>
-                <h5 className="text-xs font-medium mb-2 text-gray-600">Without Badges - Reduced Avatar-Name Spacing</h5>
-                <p className="text-xs text-gray-500 mb-2"><strong>Ref:</strong> <code>5col-no-badges-reduced-spacing</code> - ml-3, space-x-2</p>
+                <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>5col-no-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
                   <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
                     <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-14 h-14 text-base ml-3">
@@ -730,8 +849,502 @@ export default function PositionBadgeGridExamples() {
               </div>
             </div>
           </div>
+
+          {/* No Position Preferences Examples */}
+          <div>
+            <h3 className="text-lg font-medium mb-4 text-gray-800">4 Column Grid - Without Position Preferences</h3>
+            <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>4col-no-prefs-badges-standard</code> - ml-3, space-x-4</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    GS
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base ml-3">
+                    JG
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Julia Green</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    GA
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#10b98115', borderColor: '#10b981', color: '#059669' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-emerald-500 w-14 h-14 text-base ml-3">
+                    KA
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Kate Adams</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-slate-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    GD
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#64748b15', borderColor: '#64748b', color: '#475569' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-slate-500 w-14 h-14 text-base ml-3">
+                    LH
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Lucy Hill</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    C
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f43f5e15', borderColor: '#f43f5e', color: '#e11d48' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-rose-500 w-14 h-14 text-base ml-3">
+                    MS
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Maya Scott</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-no-prefs-no-badges-standard</code> - ml-3, space-x-4</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base ml-3">
+                    JG
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Julia Green</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#10b98115', borderColor: '#10b981', color: '#059669' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-emerald-500 w-14 h-14 text-base ml-3">
+                    KA
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Kate Adams</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#64748b15', borderColor: '#64748b', color: '#475569' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-slate-500 w-14 h-14 text-base ml-3">
+                    LH
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Lucy Hill</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f43f5e15', borderColor: '#f43f5e', color: '#e11d48' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-rose-500 w-14 h-14 text-base ml-3">
+                    MS
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Maya Scott</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-no-prefs-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base ml-3">
+                      JG
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Julia Green</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#10b98115', borderColor: '#10b981', color: '#059669' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-emerald-500 w-14 h-14 text-base ml-3">
+                      KA
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Kate Adams</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-slate-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GD
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#64748b15', borderColor: '#64748b', color: '#475569' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-slate-500 w-14 h-14 text-base ml-3">
+                      LH
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Lucy Hill</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      C
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f43f5e15', borderColor: '#f43f5e', color: '#e11d48' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-rose-500 w-14 h-14 text-base ml-3">
+                      MS
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Maya Scott</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>4col-no-prefs-no-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base ml-3">
+                    JG
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Julia Green</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#10b98115', borderColor: '#10b981', color: '#059669' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-emerald-500 w-14 h-14 text-base ml-3">
+                    KA
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Kate Adams</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#64748b15', borderColor: '#64748b', color: '#475569' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-slate-500 w-14 h-14 text-base ml-3">
+                    LH
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Lucy Hill</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f43f5e15', borderColor: '#f43f5e', color: '#e11d48' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-rose-500 w-14 h-14 text-base ml-3">
+                    MS
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Maya Scott</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 5 Column Grid - Without Position Preferences */}
+          <div>
+            <h3 className="text-lg font-medium mb-4 text-gray-800">5 Column Grid - Without Position Preferences</h3>
+            <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>5col-no-prefs-badges-standard</code> - ml-3, space-x-4</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-violet-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    GS
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#8b5cf615', borderColor: '#8b5cf6', color: '#7c3aed' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-violet-500 w-14 h-14 text-base ml-3">
+                    ND
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Nina Davis</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-lime-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    GA
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#84cc1615', borderColor: '#84cc16', color: '#65a30d' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-lime-500 w-14 h-14 text-base ml-3">
+                    OK
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Olivia King</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-sky-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    WA
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#0ea5e915', borderColor: '#0ea5e9', color: '#0284c7' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-sky-500 w-14 h-14 text-base ml-3">
+                    PY
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Penny Young</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-fuchsia-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    WD
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#d946ef15', borderColor: '#d946ef', color: '#c026d3' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-fuchsia-500 w-14 h-14 text-base ml-3">
+                    QH
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Quinn Hall</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 z-10">
+                  <div className="bg-stone-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                    GK
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#78716c15', borderColor: '#78716c', color: '#57534e' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-stone-500 w-14 h-14 text-base ml-3">
+                    RM
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Ruby Moore</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>5col-no-prefs-no-badges-standard</code> - ml-3, space-x-4</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#8b5cf615', borderColor: '#8b5cf6', color: '#7c3aed' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-violet-500 w-14 h-14 text-base ml-3">
+                    ND
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Nina Davis</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#84cc1615', borderColor: '#84cc16', color: '#65a30d' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-lime-500 w-14 h-14 text-base ml-3">
+                    OK
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Olivia King</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#0ea5e915', borderColor: '#0ea5e9', color: '#0284c7' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-sky-500 w-14 h-14 text-base ml-3">
+                    PY
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Penny Young</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#d946ef15', borderColor: '#d946ef', color: '#c026d3' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-fuchsia-500 w-14 h-14 text-base ml-3">
+                    QH
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Quinn Hall</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#78716c15', borderColor: '#78716c', color: '#57534e' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-stone-500 w-14 h-14 text-base ml-3">
+                    RM
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Ruby Moore</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>5col-no-prefs-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-violet-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GS
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#8b5cf615', borderColor: '#8b5cf6', color: '#7c3aed' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-violet-500 w-14 h-14 text-base ml-3">
+                      ND
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Nina Davis</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-lime-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GA
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#84cc1615', borderColor: '#84cc16', color: '#65a30d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-lime-500 w-14 h-14 text-base ml-3">
+                      OK
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Olivia King</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-sky-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WA
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#0ea5e915', borderColor: '#0ea5e9', color: '#0284c7' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-sky-500 w-14 h-14 text-base ml-3">
+                      PY
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Penny Young</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-fuchsia-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      WD
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#d946ef15', borderColor: '#d946ef', color: '#c026d3' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-fuchsia-500 w-14 h-14 text-base ml-3">
+                      QH
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Quinn Hall</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div className="bg-stone-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg border-2 border-white">
+                      GK
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#78716c15', borderColor: '#78716c', color: '#57534e' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-stone-500 w-14 h-14 text-base ml-3">
+                      RM
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Ruby Moore</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-xs font-medium mb-2 text-gray-600"><strong>Ref:</strong> <code>5col-no-prefs-no-badges-reduced-spacing</code> - ml-3, space-x-2</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#8b5cf615', borderColor: '#8b5cf6', color: '#7c3aed' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-violet-500 w-14 h-14 text-base ml-3">
+                    ND
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Nina Davis</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#84cc1615', borderColor: '#84cc16', color: '#65a30d' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-lime-500 w-14 h-14 text-base ml-3">
+                    OK
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Olivia King</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#0ea5e915', borderColor: '#0ea5e9', color: '#0284c7' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-sky-500 w-14 h-14 text-base ml-3">
+                    PY
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Penny Young</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#d946ef15', borderColor: '#d946ef', color: '#c026d3' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-fuchsia-500 w-14 h-14 text-base ml-3">
+                    QH
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Quinn Hall</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#78716c15', borderColor: '#78716c', color: '#57534e' }}>
+                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-stone-500 w-14 h-14 text-base ml-3">
+                    RM
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold player-name">Ruby Moore</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </PageTemplate>
   );
 }
