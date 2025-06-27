@@ -1,7 +1,4 @@
-Adding the route for PositionBadgeGridExamples to App.tsx.
-```
 
-```replit_final_file
 import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
