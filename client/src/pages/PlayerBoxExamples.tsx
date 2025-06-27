@@ -1236,8 +1236,8 @@ export default function PlayerBoxExamples() {
           <div className="space-y-8">
             {/* Top-Left Position Badge Approach */}
             <div>
-              <h4 className="text-sm font-medium mb-3 text-gray-700">Top-Left Position Badge</h4>
-              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-badge-overlay</code></p>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Top-Left Position Badge (Improved Spacing)</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>position-badge-overlay</code> - Added extra left margin to prevent badge crowding</p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="relative">
                   <div className="absolute -top-2 -left-2 z-10">
@@ -1245,13 +1245,14 @@ export default function PlayerBoxExamples() {
                       GS
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 60, displayName: "Emma Wilson", avatarColor: "bg-green-600"}}
-                    size="md"
-                    showPositions={false}
-                    className="shadow-md"
-                    style={{ borderColor: '#16a34a', color: '#15803d' }}
-                  />
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#16a34a', color: '#15803d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-600 w-14 h-14 text-base ml-2">
+                      EW
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Emma Wilson</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1260,13 +1261,14 @@ export default function PlayerBoxExamples() {
                       C
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 61, displayName: "Sarah Johnson", avatarColor: "bg-blue-500"}}
-                    size="md"
-                    showPositions={false}
-                    className="shadow-md"
-                    style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
-                  />
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-2">
+                      SJ
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Sarah Johnson</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1275,13 +1277,14 @@ export default function PlayerBoxExamples() {
                       GK
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 62, displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
-                    size="md"
-                    showPositions={false}
-                    className="shadow-md"
-                    style={{ borderColor: '#a855f7', color: '#7e22ce' }}
-                  />
+                  <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#a855f7', color: '#7e22ce' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-2">
+                      LC
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold player-name">Lily Chen</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1370,8 +1373,8 @@ export default function PlayerBoxExamples() {
 
             {/* Small Court Assignment Examples */}
             <div>
-              <h4 className="text-sm font-medium mb-3 text-gray-700">Small Court Assignment Layout</h4>
-              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>small-court-assignment</code> - Perfect for team sheet or court allocation views</p>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Small Court Assignment Layout (Improved Spacing)</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>small-court-assignment</code> - Added extra left margin to prevent badge crowding</p>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 <div className="relative">
                   <div className="absolute -top-1 -left-1 z-10">
@@ -1379,13 +1382,14 @@ export default function PlayerBoxExamples() {
                       GS
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 65, displayName: "Anna B", avatarColor: "bg-blue-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-8 h-8 text-sm ml-1">
+                      AB
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Anna B</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1394,13 +1398,14 @@ export default function PlayerBoxExamples() {
                       GA
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 66, displayName: "Beth C", avatarColor: "bg-green-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#22c55e', color: '#15803d' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#22c55e', color: '#15803d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-green-500 w-8 h-8 text-sm ml-1">
+                      BC
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Beth C</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1409,13 +1414,14 @@ export default function PlayerBoxExamples() {
                       WA
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 67, displayName: "Chloe D", avatarColor: "bg-amber-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#f59e0b', color: '#d97706' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f59e0b', color: '#d97706' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-8 h-8 text-sm ml-1">
+                      CD
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Chloe D</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1424,13 +1430,14 @@ export default function PlayerBoxExamples() {
                       C
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 68, displayName: "Daisy E", avatarColor: "bg-orange-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#f97316', color: '#ea580c' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f97316', color: '#ea580c' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-8 h-8 text-sm ml-1">
+                      DE
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Daisy E</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1439,13 +1446,14 @@ export default function PlayerBoxExamples() {
                       WD
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 69, displayName: "Ella F", avatarColor: "bg-red-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#ef4444', color: '#dc2626' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#ef4444', color: '#dc2626' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-8 h-8 text-sm ml-1">
+                      EF
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Ella F</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1454,13 +1462,14 @@ export default function PlayerBoxExamples() {
                       GD
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 70, displayName: "Fiona G", avatarColor: "bg-purple-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#a855f7', color: '#7e22ce' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#a855f7', color: '#7e22ce' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-8 h-8 text-sm ml-1">
+                      FG
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Fiona G</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative">
@@ -1469,13 +1478,14 @@ export default function PlayerBoxExamples() {
                       GK
                     </div>
                   </div>
-                  <PlayerBox 
-                    player={{id: 71, displayName: "Grace H", avatarColor: "bg-pink-500"}}
-                    size="sm"
-                    showPositions={false}
-                    className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{ borderColor: '#ec4899', color: '#be185d' }}
-                  />
+                  <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#ec4899', color: '#be185d' }}>
+                    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-pink-500 w-8 h-8 text-sm ml-1">
+                      GH
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold player-name">Grace H</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1597,6 +1607,91 @@ export default function PlayerBoxExamples() {
                       style={{ borderColor: '#6366f1', color: '#4338ca' }}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Normal Player Boxes with Improved Margins */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Normal Player Boxes (Improved Spacing)</h4>
+              <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>normal-improved-spacing</code> - Standard player boxes with the same improved left margins for consistency</p>
+              <div className="space-y-4">
+                <div>
+                  <h5 className="text-sm font-medium mb-2 text-gray-600">Medium Size - With Position Preferences</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#06b6d4', color: '#0891b2' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-cyan-500 w-14 h-14 text-base ml-2">
+                        JM
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Jessica Miller</div>
+                        <div className="text-sm player-positions flex items-center gap-2">
+                          <span>GS, GA</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#14b8a6', color: '#0d9488' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base ml-2">
+                        KW
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Katie Williams</div>
+                        <div className="text-sm player-positions flex items-center gap-2">
+                          <span>WD, GD, GK</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="text-sm font-medium mb-2 text-gray-600">Small Size - Names Only</h5>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f59e0b', color: '#d97706' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-8 h-8 text-sm ml-1">
+                        LB
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold player-name">Lucy Brown</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#8b5cf6', color: '#7c3aed' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-violet-500 w-8 h-8 text-sm ml-1">
+                        MD
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold player-name">Megan Davis</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f43f5e', color: '#e11d48' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-rose-500 w-8 h-8 text-sm ml-1">
+                        NW
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold player-name">Nicole Wilson</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#6366f1', color: '#4338ca' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-indigo-500 w-8 h-8 text-sm ml-1">
+                        OT
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold player-name">Olivia Taylor</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="text-sm font-medium mb-2 text-gray-600">Comparison Note</h5>
+                  <p className="text-xs text-gray-500 mb-2">
+                    All player boxes now use consistent left margins (<code>ml-2</code> for medium size, <code>ml-1</code> for small size) 
+                    to ensure adequate spacing whether or not position badges are present.
+                  </p>
                 </div>
               </div>
             </div>
