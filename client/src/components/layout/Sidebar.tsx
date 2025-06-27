@@ -44,6 +44,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     const devLinks = [
       { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" />, section: 'dev' },
       { path: '/player-box-test', label: 'PlayerBox Tests', icon: <Users className="w-5 h-5" />, section: 'dev' },
+      { path: '/position-badge-grid-examples', label: 'Position Badge Grids', icon: <Target className="w-5 h-5" />, section: 'dev' },
       { path: '/drag-drop-examples', label: 'Drag Drop Examples', icon: <Users className="w-5 h-5" />, section: 'dev' },
     ];
 

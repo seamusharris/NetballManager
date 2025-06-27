@@ -48,6 +48,14 @@ const examples: ExampleSection[] = [
     status: 'Complete'
   },
   {
+    title: 'Position Badge Grids',
+    description: '4 and 5 column grid examples with position badges showing different spacing configurations.',
+    path: '/position-badge-grid-examples',
+    icon: <Target className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
+  {
     title: 'Team Boxes',
     description: 'Different team display formats including stats, player listings, and action buttons.',
     path: '/team-box-examples',

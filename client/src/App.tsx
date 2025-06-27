@@ -1,3 +1,7 @@
+Adding the route for PositionBadgeGridExamples to App.tsx.
+```
+
+```replit_final_file
 import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -85,6 +89,7 @@ import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 import PlayerBoxTestPage from '@/pages/PlayerBoxTestPage';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
+import PositionBadgeGridExamples from './pages/PositionBadgeGridExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -170,6 +175,7 @@ function Router() {
         <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
         <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
         <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />
+        <Route path="/position-badge-grid-examples" component={withErrorBoundary(PositionBadgeGridExamples, 'PositionBadgeGridExamples')} />
         <Route path="/drag-drop-examples" component={withErrorBoundary(DragDropExamples, 'DragDropExamples')} />
         <Route path="/team-box-examples" component={withErrorBoundary(TeamBoxExamples, 'TeamBoxExamples')} />
         <Route path="/action-button-examples" component={ActionButtonExamples} />
