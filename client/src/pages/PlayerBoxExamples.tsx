@@ -1377,7 +1377,7 @@ export default function PlayerBoxExamples() {
               <p className="text-xs text-gray-500 mb-4"><strong>Ref:</strong> <code>small-court-assignment</code> - Added extra left margin to prevent badge crowding</p>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       GS
                     </div>
@@ -1393,7 +1393,7 @@ export default function PlayerBoxExamples() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       GA
                     </div>
@@ -1409,7 +1409,7 @@ export default function PlayerBoxExamples() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-amber-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       WA
                     </div>
@@ -1425,7 +1425,7 @@ export default function PlayerBoxExamples() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-orange-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       C
                     </div>
@@ -1441,7 +1441,7 @@ export default function PlayerBoxExamples() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       WD
                     </div>
@@ -1457,7 +1457,7 @@ export default function PlayerBoxExamples() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-purple-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       GD
                     </div>
@@ -1473,7 +1473,7 @@ export default function PlayerBoxExamples() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -top-1 -left-1 z-10">
+                  <div className="absolute -top-2 -left-2 z-10">
                     <div className="bg-pink-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow border border-white">
                       GK
                     </div>
@@ -1503,13 +1503,14 @@ export default function PlayerBoxExamples() {
                         GS
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 72, displayName: "Attack Player 1", avatarColor: "bg-red-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#ef4444', color: '#dc2626' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#ef444415', borderColor: '#ef4444', color: '#dc2626' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-red-500 w-14 h-14 text-base ml-2">
+                        AP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Attack Player 1</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="relative">
@@ -1518,13 +1519,14 @@ export default function PlayerBoxExamples() {
                         GA
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 73, displayName: "Attack Player 2", avatarColor: "bg-orange-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#f97316', color: '#ea580c' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f9731615', borderColor: '#f97316', color: '#ea580c' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-orange-500 w-14 h-14 text-base ml-2">
+                        AP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Attack Player 2</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="relative">
@@ -1533,13 +1535,14 @@ export default function PlayerBoxExamples() {
                         WA
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 74, displayName: "Attack Player 3", avatarColor: "bg-amber-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#f59e0b', color: '#d97706' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b', color: '#d97706' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-14 h-14 text-base ml-2">
+                        AP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Attack Player 3</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1551,13 +1554,14 @@ export default function PlayerBoxExamples() {
                         C
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 75, displayName: "Centre Player", avatarColor: "bg-gray-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#6b7280', color: '#4b5563' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#6b728015', borderColor: '#6b7280', color: '#4b5563' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-gray-500 w-14 h-14 text-base ml-2">
+                        CP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Centre Player</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1569,13 +1573,14 @@ export default function PlayerBoxExamples() {
                         WD
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 76, displayName: "Defence Player 1", avatarColor: "bg-blue-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f6', color: '#1d4ed8' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-blue-500 w-14 h-14 text-base ml-2">
+                        DP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Defence Player 1</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="relative">
@@ -1584,13 +1589,14 @@ export default function PlayerBoxExamples() {
                         GD
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 77, displayName: "Defence Player 2", avatarColor: "bg-purple-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#a855f7', color: '#7e22ce' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#a855f715', borderColor: '#a855f7', color: '#7e22ce' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-purple-500 w-14 h-14 text-base ml-2">
+                        DP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Defence Player 2</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="relative">
@@ -1599,13 +1605,14 @@ export default function PlayerBoxExamples() {
                         GK
                       </div>
                     </div>
-                    <PlayerBox 
-                      player={{id: 78, displayName: "Defence Player 3", avatarColor: "bg-indigo-500"}}
-                      size="md"
-                      showPositions={false}
-                      className="shadow-md"
-                      style={{ borderColor: '#6366f1', color: '#4338ca' }}
-                    />
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#6366f115', borderColor: '#6366f1', color: '#4338ca' }}>
+                      <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-indigo-500 w-14 h-14 text-base ml-2">
+                        DP
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-base font-bold player-name">Defence Player 3</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1619,7 +1626,7 @@ export default function PlayerBoxExamples() {
                 <div>
                   <h5 className="text-sm font-medium mb-2 text-gray-600">Medium Size - With Position Preferences</h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#06b6d4', color: '#0891b2' }}>
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#06b6d415', borderColor: '#06b6d4', color: '#0891b2' }}>
                       <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-cyan-500 w-14 h-14 text-base ml-2">
                         JM
                       </div>
@@ -1631,7 +1638,7 @@ export default function PlayerBoxExamples() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ borderColor: '#14b8a6', color: '#0d9488' }}>
+                    <div className="flex items-center space-x-4 rounded-lg shadow-md transition-all duration-200 border-2 p-3" style={{ backgroundColor: '#14b8a615', borderColor: '#14b8a6', color: '#0d9488' }}>
                       <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-teal-500 w-14 h-14 text-base ml-2">
                         KW
                       </div>
@@ -1648,7 +1655,7 @@ export default function PlayerBoxExamples() {
                 <div>
                   <h5 className="text-sm font-medium mb-2 text-gray-600">Small Size - Names Only</h5>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f59e0b', color: '#d97706' }}>
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#f59e0b15', borderColor: '#f59e0b', color: '#d97706' }}>
                       <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-amber-500 w-8 h-8 text-sm ml-1">
                         LB
                       </div>
@@ -1657,7 +1664,7 @@ export default function PlayerBoxExamples() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#8b5cf6', color: '#7c3aed' }}>
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#8b5cf615', borderColor: '#8b5cf6', color: '#7c3aed' }}>
                       <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-violet-500 w-8 h-8 text-sm ml-1">
                         MD
                       </div>
@@ -1666,7 +1673,7 @@ export default function PlayerBoxExamples() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#f43f5e', color: '#e11d48' }}>
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#f43f5e15', borderColor: '#f43f5e', color: '#e11d48' }}>
                       <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-rose-500 w-8 h-8 text-sm ml-1">
                         NW
                       </div>
@@ -1675,7 +1682,7 @@ export default function PlayerBoxExamples() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ borderColor: '#6366f1', color: '#4338ca' }}>
+                    <div className="flex items-center space-x-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-2 p-2" style={{ backgroundColor: '#6366f115', borderColor: '#6366f1', color: '#4338ca' }}>
                       <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg bg-indigo-500 w-8 h-8 text-sm ml-1">
                         OT
                       </div>
