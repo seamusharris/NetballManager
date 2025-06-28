@@ -336,6 +336,13 @@ export default function GameResultCard({
               {customRoundDisplay || (layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`)}
             </span>
           )}
+
+          {/* Position stats indicator */}
+          {game.statusIsCompleted && (
+            <span className="text-xs text-gray-500 ml-1">
+              {gameStats && gameStats.length > 0 ? '✓' : '×'}
+            </span>
+          )}
         </div>
       </div>
 
