@@ -193,23 +193,60 @@ export const apiClient = new ApiClient();
 
 // Helper function for mutations with automatic cache invalidation
 export async function mutateWithInvalidation<T>(
-  mutationFn: () => Promise<T>,
-  invalidatePatterns: (string | (string | number | undefined)[])[]
-): Promise<T> {
-  const result = await mutationFn();
+  method: string,
+  url: string,
+  data?: any,
+  options?: {
+    invalidatePattern?: string;
+    onSuccess?: () => void;
+    onError?: (error: any) => void;
+    smartInvalidation?: {
+      type: 'GAME_STATS' | 'GAME_SCORES' | 'GAME_STATUS' | 'ROSTER_CHANGES';
+      gameId: number;
+      context?: {
+        teamId?: number;
+        clubId?: number;
+        isLiveGame?: boolean;
+      };
+    };
+  }
+): Promise<any> {
+  try {
+    const response = await apiClient.request<T>(method, url, data);
 
-  // Invalidate queries after successful mutation
-  invalidatePatterns.forEach(pattern => {
-    if (Array.isArray(pattern)) {
-      // Filter out undefined values from the array
-      const cleanPattern = pattern.filter(p => p !== undefined);
-      queryClient.invalidateQueries({ queryKey: cleanPattern });
-    } else {
-      queryClient.invalidateQueries({ queryKey: [pattern] });
+    // Success callback
+    if (options?.onSuccess) {
+      options.onSuccess();
     }
-  });
 
-  return result;
+    // Smart hierarchical invalidation (preferred)
+    if (options?.smartInvalidation) {
+      const { SmartCacheInvalidator } = await import('./cacheInvalidation');
+      const invalidator = SmartCacheInvalidator.getInstance();
+      await invalidator.invalidateGameData(
+        options.smartInvalidation.gameId,
+        options.smartInvalidation.type,
+        options.smartInvalidation.context
+      );
+    }
+    // Fallback to pattern-based cache invalidation
+    else if (options?.invalidatePattern) {
+      console.log(`Invalidating cache pattern: ${options.invalidatePattern}`);
+      await queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.includes(options.invalidatePattern!);
+        }
+      });
+    }
+
+    return response;
+  } catch (error) {
+    if (options?.onError) {
+      options.onError(error);
+    }
+    throw error;
+  }
 }
 
 // Legacy export for backward compatibility - creating a unified request method

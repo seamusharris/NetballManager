@@ -1,6 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
-import { useToast } from './use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, mutateWithInvalidation } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
+import { invalidateAfterStatsSave, invalidateAfterScoreUpdate, invalidateAfterStatusChange } from '@/lib/cacheInvalidation';
 
 interface UseCrudMutationsOptions {
   entityName: string;

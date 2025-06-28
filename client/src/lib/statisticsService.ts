@@ -7,6 +7,8 @@ import {
   clearGameCache, 
   invalidateGameCache 
 } from './scoresCache';
+import { invalidateAfterStatsSave, invalidateAfterScoreUpdate } from './cacheInvalidation';
+import { safeInvalidate } from './cacheInvalidationErrorHandler';
 
 /**
  * Unified Statistics Service - handles all game statistics operations
