@@ -540,4 +540,3 @@ export function GamesList({
     </div>
   );
 }
-```The code needs to pass `gameStats` to the `GameResultCard` component.
