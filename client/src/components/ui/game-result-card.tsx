@@ -54,7 +54,7 @@ export default function GameResultCard({
   const { currentTeamId, currentClubId, currentClubTeams } = useClub();
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
-  
+
   // Extract club ID from URL or use prop - more reliable than context
   const urlClubId = useMemo(() => {
     const clubMatch = location.match(/\/club\/(\d+)/);
@@ -83,10 +83,10 @@ export default function GameResultCard({
   // Use unified game score service for all calculations
   const scoreResult = useMemo(() => {
     const perspective = 'club-wide'; // Always use club-wide for dashboard
-    
+
     // Use URL-based club teams for reliable perspective calculation
     const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
-    
+
     // Debug logging for games where we need to verify perspective
     if (clubTeamIds.length > 0 && (clubTeamIds.includes(game.homeTeamId || 0) || clubTeamIds.includes(game.awayTeamId || 0))) {
       console.log(`🔍 GAME ${game.id} - Our team perspective:`, {
@@ -101,7 +101,7 @@ export default function GameResultCard({
                                      clubTeamIds.includes(game.awayTeamId || 0) ? 'away' : 'neither'
       });
     }
-    
+
     // Debug for any team 128 game
     if (game.homeTeamId === 128 || game.awayTeamId === 128) {
       console.log(`🔍 GAME RESULT CARD - Team 128 game ${game.id} inputs:`, {
@@ -116,14 +116,14 @@ export default function GameResultCard({
         }
       });
     }
-    
+
     const result = UnifiedGameScoreService.calculateGameScore(
       game, 
       centralizedScores || [], 
       perspective,
       clubTeamIds
     );
-    
+
     // Debug result for Matrix team games
     if (game.homeTeamId === 1 || game.awayTeamId === 1) {
       console.log(`🔍 MATRIX GAME ${game.id} - Final result:`, {
@@ -135,7 +135,7 @@ export default function GameResultCard({
         isInterClubGame: result.isInterClubGame
       });
     }
-    
+
     return result;
   }, [game, centralizedScores, effectiveTeamId, urlClubId, urlClubTeams]);
 
@@ -144,7 +144,7 @@ export default function GameResultCard({
     if (!scoreResult.hasValidScore) {
       return null;
     }
-    
+
     return {
       finalScore: {
         for: scoreResult.ourScore,
@@ -369,7 +369,7 @@ export default function GameResultCard({
             (() => {
               let homeScore = 0;
               let awayScore = 0;
-              
+
               if (currentTeamId) {
                 // Team perspective: convert "for/against" to "home/away" display
                 if (game.homeTeamId === currentTeamId) {
@@ -386,7 +386,7 @@ export default function GameResultCard({
                 homeScore = scores.finalScore.for;
                 awayScore = scores.finalScore.against;
               }
-              
+
               return (
                 <ScoreBadge 
                   teamScore={homeScore} // Home team score (displayed first)
@@ -410,7 +410,7 @@ export default function GameResultCard({
     const gameUrl = currentTeamId 
       ? `/team/${currentTeamId}/games/${game.id}`
       : `/game/${game.id}`;
-    
+
     return (
       <Link href={gameUrl}>
         <CardContent />
