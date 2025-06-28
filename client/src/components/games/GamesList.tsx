@@ -456,72 +456,84 @@ export function GamesList({
             </div>
           ) : (
             <div className="space-y-6">
-              {finalGames.map((game) => (
-                <div key={game.id} className="relative group">
-                  <GameResultCard
-                    game={game}
-                    layout="wide"
-                    gameStats={centralizedStats?.[game.id] || []}
-                    centralizedScores={scoresMap?.[game.id]}
-                    useOfficialPriority={true}
-                    showDate={true}
-                    showRound={true}
-                    showScore={true}
-                    showLink={true}
-                    currentTeamId={urlTeamId || currentTeamId}
-                    clubTeams={teams || []}
-                    currentClubId={currentClub?.id}
-                    availabilityLink={`/team/${game.homeTeamId}/availability/${game.id}`}
-                  />
+              {finalGames.map((game) => {
+                // Debug: Check if we have stats for this game
+                const hasStats = centralizedStats?.[game.id]?.length > 0;
+                if (game.statusIsCompleted) {
+                  console.log(`Game ${game.id} stats check:`, {
+                    hasStats,
+                    statsCount: centralizedStats?.[game.id]?.length || 0,
+                    gameId: game.id
+                  });
+                }
 
-                  {/* Action buttons overlay */}
-                  {showActions && (
-                    <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => onViewStats?.(game.id)}
-                        className="bg-white/90 hover:bg-white shadow-sm"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => onEdit?.(game)}
-                        className="bg-white/90 hover:bg-white shadow-sm"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="bg-white/90 hover:bg-white shadow-sm text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Game</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this game? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onDelete?.(game.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
-                </div>
-              ))}
+                return (
+                  <div key={game.id} className="relative group">
+                    <GameResultCard
+                      game={game}
+                      layout="wide"
+                      gameStats={centralizedStats?.[game.id] || []}
+                      centralizedScores={scoresMap?.[game.id]}
+                      useOfficialPriority={true}
+                      showDate={true}
+                      showRound={true}
+                      showScore={true}
+                      showLink={true}
+                      currentTeamId={urlTeamId || currentTeamId}
+                      clubTeams={teams || []}
+                      currentClubId={currentClub?.id}
+                      availabilityLink={`/team/${game.homeTeamId}/availability/${game.id}`}
+                    />
+
+                    {/* Action buttons overlay */}
+                    {showActions && (
+                      <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => onViewStats?.(game.id)}
+                          className="bg-white/90 hover:bg-white shadow-sm"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => onEdit?.(game)}
+                          className="bg-white/90 hover:bg-white shadow-sm"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="bg-white/90 hover:bg-white shadow-sm text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Game</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this game? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onDelete?.(game.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

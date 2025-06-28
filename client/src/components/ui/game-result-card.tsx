@@ -339,9 +339,12 @@ export default function GameResultCard({
 
           {/* Position stats indicator */}
           {game.statusIsCompleted && (
-            <span className="text-xs text-gray-500 ml-1">
-              {gameStats && gameStats.length > 0 ? '✓' : '×'}
-            </span>
+            <>
+              <span className="text-xs text-gray-500 mx-1">•</span>
+              <span className="text-xs text-gray-500">
+                {gameStats && gameStats.length > 0 ? '✓' : '×'}
+              </span>
+            </>
           )}
         </div>
       </div>
