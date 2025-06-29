@@ -342,7 +342,7 @@ export default function GameResultCard({
             <>
               <span className="text-xs text-gray-500 mx-1">•</span>
               <span className="text-xs text-gray-500">
-                {centralizedScores && centralizedScores.length > 0 ? '✓' : '×'}
+                {gameStats && gameStats.length > 0 ? '✓' : '×'}
               </span>
             </>
           )}
