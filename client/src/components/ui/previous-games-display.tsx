@@ -419,7 +419,7 @@ export default function PreviousGamesDisplay({
                 if (!game.statusAllowsStatistics) return;
 
                 const gameStats = batchStats?.[game.id] || [];
-                if (gameStats.length > 0) {
+                if (hasPositionStats(gameStats)) {
                   // Check if this game has position stats for any of our target positions
                   const hasRelevantStats = gameStats.some(stat => 
                     ['GS', 'GA', 'GD', 'GK'].includes(stat.position)
