@@ -67,31 +67,16 @@ export function GameStatusDialog({
       });
       onOpenChange(false);
 
-      // Comprehensive cache invalidation for game status changes
+      // Targeted cache invalidation for game status changes
       queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/games`] });
       queryClient.invalidateQueries({ queryKey: ['game', game.id] });
 
-      // Invalidate all games lists since status affects filtering
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey;
-          return Array.isArray(queryKey) && queryKey[0] === 'games';
-        }
-      });
-
-      // Invalidate batch data that includes status-dependent calculations
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey;
-          return Array.isArray(queryKey) && (
-            queryKey[0] === 'batch-scores' ||
-            queryKey[0] === 'official-scores' ||
-            queryKey[0] === 'dashboard' ||
-            queryKey[0] === 'team-performance' ||
-            queryKey[0] === 'batch-game-data'
-          );
-        }
+      // Invalidate games lists and force immediate refetch
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/games'],
+        type: 'active'
       });
     },
     onError: (error) => {

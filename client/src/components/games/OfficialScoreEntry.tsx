@@ -115,41 +115,23 @@ export function OfficialScoreEntry({
           description: "Official scores have been updated."
         });
 
-        // Comprehensive cache invalidation for official scores
+        // Targeted cache invalidation for official scores
         queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/scores`] });
         queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
         queryClient.invalidateQueries({ queryKey: ['scores', gameId] });
         queryClient.invalidateQueries({ queryKey: ['game', gameId] });
 
-        // Invalidate batch score queries that include this game
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const queryKey = query.queryKey;
-            return Array.isArray(queryKey) && (
-              queryKey[0] === 'batch-scores' ||
-              queryKey[0] === 'official-scores' ||
-              (typeof queryKey[0] === 'string' && queryKey[0].includes('/api/games/scores/batch'))
-            );
-          }
-        });
-
-        // Invalidate games lists for dashboard updates
+        // Invalidate specific game in games list
+        queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+        
+        // Invalidate team-specific games lists
         if (currentClub?.id) {
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const queryKey = query.queryKey;
-              return Array.isArray(queryKey) && 
-                     queryKey[0] === 'games' && 
-                     queryKey[1] === currentClub.id;
-            }
-          });
-
-          // Invalidate dashboard data
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const queryKey = query.queryKey;
-              return Array.isArray(queryKey) && queryKey[0] === 'dashboard';
-            }
+          queryClient.invalidateQueries({ queryKey: ['games', currentClub.id] });
+          
+          // Force refetch on window focus for immediate updates
+          queryClient.refetchQueries({ 
+            queryKey: ['/api/games'],
+            type: 'active'
           });
         }
       },
