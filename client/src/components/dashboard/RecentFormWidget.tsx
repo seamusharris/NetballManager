@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import { hasPositionStats } from '@/lib/positionStats';
 
 interface RecentFormWidgetProps {
   games: any[];

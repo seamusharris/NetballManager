@@ -6,6 +6,7 @@ import { formatShortDate } from '@/lib/utils';
 import { calculateTeamWinRate } from '@/lib/winRateCalculator';
 import GameResultCard from '@/components/ui/game-result-card';
 import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
+import { hasPositionStats } from '@/lib/positionStats';
 
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
