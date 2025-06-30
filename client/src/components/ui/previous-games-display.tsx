@@ -11,20 +11,22 @@ interface PreviousGamesDisplayProps {
   historicalGames: any[];
   currentTeamId: number;
   currentClubId: number;
-  batchScores: Record<string, any[]>;
-  batchStats?: Record<string, any[]>;
-  opponentName: string;
+  batchScores: Record<number, any[]>;
+  batchStats: Record<number, any[]>;
+  opponentName?: string;
   className?: string;
+  hideWinLossIndicators?: boolean;
 }
 
-export default function PreviousGamesDisplay({
-  historicalGames,
-  currentTeamId,
-  currentClubId,
-  batchScores,
-  batchStats,
-  opponentName,
-  className = ""
+export default function PreviousGamesDisplay({ 
+  historicalGames, 
+  currentTeamId, 
+  currentClubId, 
+  batchScores, 
+  batchStats, 
+  opponentName = "Opponent",
+  className = "",
+  hideWinLossIndicators = false
 }: PreviousGamesDisplayProps) {
   if (historicalGames.length === 0) {
     return (

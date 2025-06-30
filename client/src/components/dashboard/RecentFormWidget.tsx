@@ -48,6 +48,7 @@ export function RecentFormWidget({
           batchStats={gameStatsMap}
           opponentName="Recent Opponents"
           className=""
+          hideWinLossIndicators={true}
         />
       </CardContent>
     </Card>
