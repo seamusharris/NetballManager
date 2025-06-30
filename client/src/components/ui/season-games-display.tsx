@@ -147,6 +147,7 @@ export default function SeasonGamesDisplay({
                     game={game}
                     currentTeamId={currentTeamId}
                     centralizedScores={transformedScores}
+                    gameStats={batchStats?.[game.id] || []}
                     showLink={true}
                     className="w-full"
                   />
