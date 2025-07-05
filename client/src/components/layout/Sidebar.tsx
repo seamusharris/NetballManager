@@ -33,6 +33,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       { path: `/club/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
       { path: `/club/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
       { path: `/club/${currentClubId}/games`, label: 'All Games', icon: <Calendar className="w-5 h-5" />, section: 'club' },
+      { path: '/team-ladder', label: 'Team Ladder', icon: <Trophy className="w-5 h-5" />, section: 'club' },
     ];
 
     const adminLinks = [
