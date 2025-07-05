@@ -173,7 +173,7 @@ export default function TeamLadder() {
   return (
     <>
       <Helmet>
-        <title>Team Ladder | {currentClub?.name} Stats Tracker</title>
+        <title>Team Ladder | {currentClub?.name || 'Club'} Stats Tracker</title>
         <meta name="description" content="View team standings and ladder positions" />
       </Helmet>
 
