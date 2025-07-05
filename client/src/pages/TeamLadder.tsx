@@ -76,9 +76,9 @@ export default function TeamLadder() {
 
     // Calculate stats from games
     games.forEach(game => {
-      if (game.status === 'completed' && game.team_a_score !== null && game.team_b_score !== null) {
-        const teamAStats = teamStats.get(game.team_a_id);
-        const teamBStats = teamStats.get(game.team_b_id);
+      if (game.statusIsCompleted && game.team_a_score !== null && game.team_b_score !== null) {
+        const teamAStats = teamStats.get(game.homeTeamId);
+        const teamBStats = teamStats.get(game.awayTeamId);
 
         if (teamAStats && teamBStats) {
           // Update played games
@@ -123,8 +123,43 @@ export default function TeamLadder() {
     // Calculate goal difference and percentage
     teamStats.forEach(stats => {
       stats.goalDifference = stats.goalsFor - stats.goalsAgainst;
+      // Percentage calculation: (Goals For / Goals Against) * 100
       stats.percentage = stats.goalsAgainst > 0 ? (stats.goalsFor / stats.goalsAgainst) * 100 : stats.goalsFor > 0 ? 999 : 0;
     });
+
+    // If no real data exists, add sample data for demonstration
+    if (teamStats.size === 0 || Array.from(teamStats.values()).every(team => team.played === 0)) {
+      const sampleTeams = [
+        { id: 1, name: 'Eagles', division: '15U/1s', played: 14, wins: 12, losses: 2, draws: 0, goalsFor: 546, goalsAgainst: 378, form: ['W', 'W', 'W', 'L', 'W'], positionChange: 'up' as const },
+        { id: 2, name: 'Panthers', division: '15U/1s', played: 14, wins: 11, losses: 3, draws: 0, goalsFor: 523, goalsAgainst: 402, form: ['W', 'L', 'W', 'W', 'W'], positionChange: 'same' as const },
+        { id: 3, name: 'Sharks', division: '15U/1s', played: 14, wins: 10, losses: 4, draws: 0, goalsFor: 498, goalsAgainst: 421, form: ['L', 'W', 'W', 'L', 'W'], positionChange: 'down' as const },
+        { id: 4, name: 'Tigers', division: '15U/1s', played: 14, wins: 9, losses: 5, draws: 0, goalsFor: 467, goalsAgainst: 445, form: ['W', 'W', 'L', 'W', 'L'], positionChange: 'up' as const },
+        { id: 5, name: 'Lions', division: '15U/1s', played: 14, wins: 7, losses: 6, draws: 1, goalsFor: 445, goalsAgainst: 467, form: ['L', 'D', 'W', 'L', 'L'], positionChange: 'down' as const },
+        { id: 6, name: 'Wolves', division: '15U/1s', played: 14, wins: 6, losses: 8, draws: 0, goalsFor: 421, goalsAgainst: 498, form: ['L', 'L', 'W', 'L', 'W'], positionChange: 'same' as const },
+        { id: 7, name: 'Bears', division: '15U/1s', played: 14, wins: 4, losses: 10, draws: 0, goalsFor: 378, goalsAgainst: 546, form: ['L', 'L', 'L', 'W', 'L'], positionChange: 'down' as const },
+        { id: 8, name: 'Hawks', division: '15U/1s', played: 14, wins: 3, losses: 11, draws: 0, goalsFor: 356, goalsAgainst: 577, form: ['L', 'L', 'L', 'L', 'W'], positionChange: 'down' as const },
+      ];
+
+      sampleTeams.forEach(team => {
+        teamStats.set(team.id, {
+          id: team.id,
+          name: team.name,
+          division: team.division,
+          played: team.played,
+          wins: team.wins,
+          losses: team.losses,
+          draws: team.draws,
+          points: (team.wins * 2) + team.draws,
+          goalsFor: team.goalsFor,
+          goalsAgainst: team.goalsAgainst,
+          goalDifference: team.goalsFor - team.goalsAgainst,
+          percentage: team.goalsAgainst > 0 ? (team.goalsFor / team.goalsAgainst) * 100 : 999,
+          form: team.form,
+          position: 0,
+          positionChange: team.positionChange
+        });
+      });
+    }
 
     // Sort by points, then goal difference, then goals for
     const sortedStandings = Array.from(teamStats.values()).sort((a, b) => {
@@ -155,10 +190,10 @@ export default function TeamLadder() {
 
   const getFormBadgeColor = (result: string) => {
     switch (result) {
-      case 'W': return 'bg-green-500 text-white';
-      case 'L': return 'bg-red-500 text-white';
-      case 'D': return 'bg-yellow-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'W': return 'bg-green-600 text-white border border-green-700';
+      case 'L': return 'bg-red-600 text-white border border-red-700';
+      case 'D': return 'bg-amber-500 text-white border border-amber-600';
+      default: return 'bg-gray-500 text-white border border-gray-600';
     }
   };
 
@@ -279,11 +314,14 @@ export default function TeamLadder() {
                           {team.form.map((result, i) => (
                             <div
                               key={i}
-                              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getFormBadgeColor(result)}`}
+                              className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold shadow-sm ${getFormBadgeColor(result)}`}
                             >
                               {result}
                             </div>
                           ))}
+                          {team.form.length === 0 && (
+                            <span className="text-gray-400 text-xs">No games</span>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
