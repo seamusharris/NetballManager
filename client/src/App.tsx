@@ -80,6 +80,7 @@ import Preparation from '@/pages/Preparation';
 import GamePreparation from '@/pages/GamePreparation';
 import TeamPreparation from './pages/TeamPreparation';
 import Preparation2 from './pages/Preparation2';
+import TeamLadder from '@/pages/TeamLadder';
 // Import actual components for PlayerAvailability and RosterGame
 import PlayerAvailability from '@/pages/PlayerAvailability';
 import RosterGame from '@/pages/RosterGame';
@@ -209,6 +210,7 @@ function Router() {
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />
         <Route path="/recommendation-examples" component={RecommendationExamples} />
+        <Route path="/team-ladder" component={withErrorBoundary(TeamLadder, 'TeamLadder')} />
         <Route path="/tournament-bracket-examples" component={TournamentBracketExamples} />
         <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
         <Route path="/roster-management-examples">
