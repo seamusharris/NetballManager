@@ -71,8 +71,8 @@ export default function UpcomingGamesWidget({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold mb-2">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {upcomingGames.map((game) => (

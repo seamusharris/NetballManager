@@ -320,10 +320,11 @@ export default function Dashboard() {
                   {/* Recent Games - Right Column */}
                   <RecentGamesWidget 
                     games={games || []}
-                    currentTeamId={currentTeamId}
-                    currentClubId={currentClubId}
-                    gameScoresMap={gameScoresMap}
-                    gameStatsMap={gameStatsMap}
+                    teamId={currentTeamId}
+                    clubId={currentClubId}
+                    centralizedScores={gameScoresMap}
+                    gameStats={gameStatsMap}
+                    clubTeams={clubTeams || []}
                     limit={5}
                     title="Recent Games"
                     className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
