@@ -242,69 +242,100 @@ export default function Dashboard() {
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
 
-      <div className="container py-8 mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Team Dashboard
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Performance metrics and insights for your team
-              {currentTeamId && currentTeam && (
-                <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {currentTeam.name}
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <TeamSwitcher mode="required" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <div className="container py-8 mx-auto space-y-8">
+          {/* Enhanced Header with Card Background */}
+          <Card className="border-0 shadow-xl bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden relative">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+            <CardContent className="relative p-8">
+              <div className="flex items-center justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <div className="w-6 h-6 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h1 className="text-4xl font-bold tracking-tight">
+                        Team Dashboard
+                      </h1>
+                      <div className="flex items-center gap-3 mt-2">
+                        <p className="text-blue-100 text-lg">
+                          Performance metrics and insights for your team
+                        </p>
+                        {currentTeamId && currentTeam && (
+                          <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium border border-white/30">
+                            {currentTeam.name}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-1 border border-white/20">
+                    <TeamSwitcher mode="required" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
+          {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
+
+          {/* Enhanced Content Grid */}
+          <div className="grid gap-8 lg:gap-10">
+            {/* Recent Form Section with Enhanced Card */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-0">
+                <RecentFormWidget 
+                  games={games || []}
+                  currentTeamId={currentTeamId}
+                  currentClubId={currentClubId}
+                  gameScoresMap={gameScoresMap}
+                  gameStatsMap={gameStatsMap}
+                  className=""
+                />
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Games Section with Enhanced Card */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-0">
+                <UpcomingGamesWidget
+                  games={games || []}
+                  teamId={currentTeamId}
+                  clubId={currentClubId}
+                  limit={5}
+                  title="Upcoming Games"
+                  className=""
+                  centralizedScores={gameScoresMap}
+                  gameStats={gameStatsMap}
+                  clubTeams={clubTeams || []}
+                  showDate={true}
+                  showRound={true}
+                  showScore={false}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Team Performance Metrics Dashboard with Enhanced Container */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
+              <DashboardSummary 
+                players={players || []} 
+                games={games || []} 
+                seasons={seasons || []}
+                activeSeason={activeSeason}
+                isLoading={isLoading}
+                centralizedRosters={gameRostersMap}
+                centralizedStats={gameStatsMap}
+                centralizedScores={gameScoresMap}
+                isBatchDataLoading={isLoadingBatchData}
+                teams={clubTeams}
+              />
+            </div>
           </div>
         </div>
-
-      {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
-      {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
-
-        {/* Recent Form Section */}
-        <RecentFormWidget 
-          games={games || []}
-          currentTeamId={currentTeamId}
-          currentClubId={currentClubId}
-          gameScoresMap={gameScoresMap}
-          gameStatsMap={gameStatsMap}
-          className="mb-8"
-        />
-
-      {/* Upcoming Games Section - Full Width */}
-        <UpcomingGamesWidget
-          games={games || []}
-          teamId={currentTeamId}
-          clubId={currentClubId}
-          limit={5}
-          title="Upcoming Games"
-          className="mb-8"
-          centralizedScores={gameScoresMap}
-          gameStats={gameStatsMap}
-          clubTeams={clubTeams || []}
-          showDate={true}
-          showRound={true}
-          showScore={false}
-        />
-
-        {/* Team Performance Metrics Dashboard */}
-        <DashboardSummary 
-          players={players || []} 
-          games={games || []} 
-          seasons={seasons || []}
-          activeSeason={activeSeason}
-          isLoading={isLoading}
-          centralizedRosters={gameRostersMap}
-          centralizedStats={gameStatsMap}
-          centralizedScores={gameScoresMap}
-          isBatchDataLoading={isLoadingBatchData}
-          teams={clubTeams}
-        />
       </div>
     </>
   );

@@ -174,15 +174,24 @@ export default function DashboardSummary({
   console.log('Dashboard proceeding with render - core data loaded');
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-heading font-bold text-neutral-dark">Dashboard</h2>
+    <div className="space-y-8">
+      {/* Enhanced Header */}
+      <div className="flex items-center justify-between p-6 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200/60">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-5 h-5 bg-white rounded-full"></div>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Performance Analytics</h2>
+            <p className="text-slate-600 text-sm">Comprehensive team insights and metrics</p>
+          </div>
+        </div>
         <div className="flex space-x-3">
           <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
-            <SelectTrigger className="bg-white border rounded-md w-[200px]">
+            <SelectTrigger className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm rounded-lg w-[200px] hover:bg-white transition-colors">
               <SelectValue placeholder={activeSeason ? `${activeSeason.name} (Current)` : "Select Season"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white/95 backdrop-blur-sm border border-slate-200">
               {seasons.map((season) => (
                 <SelectItem key={season.id} value={season.id === activeSeason?.id ? "current" : season.id.toString()}>
                   {getSeasonDisplayName(season)}
@@ -193,24 +202,28 @@ export default function DashboardSummary({
         </div>
       </div>
 
-      {/* Show a message if no data is available */}
+      {/* Enhanced No Data Message */}
       {filteredGames.length === 0 && (
-        <Card className="p-6 shadow-md mb-6">
-          <CardContent className="text-center">
-            <h3 className="text-lg font-medium mb-2">No Games Available</h3>
-            <p className="text-gray-500 mb-4">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-50 to-blue-50/50">
+          <CardContent className="text-center py-12">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">No Games Available</h3>
+            <p className="text-slate-600 mb-4 max-w-md mx-auto">
               {selectedSeasonId === 'current' 
-                ? 'There are no games in the current season yet.' 
-                : 'There are no games in the selected season.'}
+                ? 'There are no games in the current season yet. Start by adding your first game to see performance metrics.' 
+                : 'There are no games in the selected season. Try selecting a different season or add new games.'}
             </p>
-            <p className="text-sm text-gray-400">
-              Add some games to see your team's performance metrics.
-            </p>
+            <div className="inline-flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              Add games to unlock insights
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Performance Metrics - 9 widget grid */}
+      {/* Enhanced Performance Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {isLoading ? (
           Array.from({ length: 9 }).map((_, i) => (
