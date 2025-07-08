@@ -293,6 +293,11 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-8">
+              {/* Overview Section Header */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">Overview</h2>
+              </div>
+
               <div className="grid gap-8 lg:gap-10">
                 {/* Upcoming Games Section */}
                 <UpcomingGamesWidget
