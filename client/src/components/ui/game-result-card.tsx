@@ -139,23 +139,7 @@ export default function GameResultCard({
     return result;
   }, [game, centralizedScores, effectiveTeamId, urlClubId, urlClubTeams]);
 
-  // Convert to legacy format for backward compatibility with existing UI
-  const scores = useMemo(() => {
-    if (!scoreResult.hasValidScore) {
-      return null;
-    }
-
-    return {
-      finalScore: {
-        for: scoreResult.ourScore,
-        against: scoreResult.theirScore
-      },
-      result: scoreResult.result,
-      quarterBreakdown: scoreResult.quarterBreakdown,
-      hasValidScore: scoreResult.hasValidScore,
-      scoreSource: scoreResult.scoreSource
-    };
-  }, [scoreResult]);
+  // Use the unified service result directly - no conversion needed
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
@@ -269,37 +253,13 @@ export default function GameResultCard({
     // For upcoming games, show dash
     if (isUpcoming) return "—";
 
-    // Use unified service scores - the service already handles perspective correctly
-    if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
-      // The unified service returns ourScore/theirScore from our perspective
-      // We need to convert this back to home/away format for display
-      let homeScore = 0;
-      let awayScore = 0;
-
-      // Check if our team is home or away
-      const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
-      const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
-
-      if (homeIsOurs) {
-        // Our team is home - ourScore = homeScore, theirScore = awayScore
-        homeScore = scores.finalScore.for;
-        awayScore = scores.finalScore.against;
-      } else if (awayIsOurs) {
-        // Our team is away - ourScore = awayScore, theirScore = homeScore
-        // So: homeScore = theirScore, awayScore = ourScore
-        homeScore = scores.finalScore.against;
-        awayScore = scores.finalScore.for;
-      } else {
-        // Neither team is ours - display as-is (shouldn't happen in club context)
-        homeScore = scores.finalScore.for;
-        awayScore = scores.finalScore.against;
-      }
-
+    // Use scoreResult directly - it already provides home/away scores
+    if (scoreResult.hasValidScore) {
       return (
         <ScoreBadge 
-          teamScore={homeScore} // Home team score (displayed first)
-          opponentScore={awayScore} // Away team score (displayed second)
-          result={scores.result} // Use the unified service result for coloring
+          teamScore={scoreResult.homeScore} // Home team score (displayed first)
+          opponentScore={scoreResult.awayScore} // Away team score (displayed second)
+          result={scoreResult.result} // Use the unified service result for coloring
         />
       );
     }
@@ -360,12 +320,12 @@ export default function GameResultCard({
       {/* Right side - Score and Quarter Scores */}
       <div className="ml-auto flex items-center gap-4">
         {/* Quarter scores if enabled and available */}
-        {showQuarterScores && scores && scores.quarterBreakdown && scores.quarterBreakdown.length > 0 && (
+        {showQuarterScores && scoreResult.quarterBreakdown && scoreResult.quarterBreakdown.length > 0 && (
           <QuarterScoresDisplay
-            quarterScores={scores.quarterBreakdown.map(q => ({
+            quarterScores={scoreResult.quarterBreakdown.map(q => ({
               quarter: q.quarter,
-              teamScore: q.ourScore,
-              opponentScore: q.theirScore
+              teamScore: q.homeScore,
+              opponentScore: q.awayScore
             }))}
             size="sm"
             className="mr-4"
@@ -382,40 +342,16 @@ export default function GameResultCard({
             <div className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded">
               —
             </div>
+          ) : scoreResult.hasValidScore ? (
+            <ScoreBadge 
+              teamScore={scoreResult.homeScore} // Home team score (displayed first)
+              opponentScore={scoreResult.awayScore} // Away team score (displayed second)
+              result={scoreResult.result} // Use the unified service result for coloring
+            />
           ) : (
-            (() => {
-              // The unified service returns ourScore/theirScore from our perspective
-              // Convert back to home/away format for display
-              let homeScore = 0;
-              let awayScore = 0;
-
-              // Check if our team is home or away
-              const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
-              const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
-
-              if (homeIsOurs) {
-                // Our team is home - ourScore = homeScore, theirScore = awayScore
-                homeScore = scores.finalScore.for;
-                awayScore = scores.finalScore.against;
-              } else if (awayIsOurs) {
-                // Our team is away - ourScore = awayScore, theirScore = homeScore
-                // So: homeScore = theirScore, awayScore = ourScore
-                homeScore = scores.finalScore.against;
-                awayScore = scores.finalScore.for;
-              } else {
-                // Neither team is ours - display as-is (shouldn't happen in club context)
-                homeScore = scores.finalScore.for;
-                awayScore = scores.finalScore.against;
-              }
-
-              return (
-                <ScoreBadge 
-                  teamScore={homeScore} // Home team score (displayed first)
-                  opponentScore={awayScore} // Away team score (displayed second)
-                  result={scores.result} // Use the unified service result for coloring
-                />
-              );
-            })()
+            <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
+              —
+            </div>
           )
         )}
       </div>
