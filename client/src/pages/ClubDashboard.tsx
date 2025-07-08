@@ -556,7 +556,7 @@ export default function ClubDashboard() {
                   opponents={[]} 
                   className="" 
                   centralizedStats={batchData?.stats || {}}
-                  centralizedScores={batchData?.scores || {}}
+                  centralizedScores={officialScores || {}}
                   teams={teams}
                   clubWide={true}
                 />
