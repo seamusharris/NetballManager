@@ -306,9 +306,7 @@ export default function Dashboard() {
                     historicalGames={games?.filter(game => {
                       const currentDate = new Date().toISOString().split('T')[0];
                       return game.date >= currentDate && 
-                        !game.statusIsCompleted &&
-                        !game.isBye &&
-                        game.statusName !== 'bye';
+                        !game.statusIsCompleted;
                     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5) || []}
                     currentTeamId={currentTeamId || 0}
                     currentClubId={currentClubId || 0}
@@ -325,9 +323,7 @@ export default function Dashboard() {
                   {/* Recent Games - Right Column */}
                   <PreviousGamesDisplay
                     historicalGames={games?.filter(game => 
-                      game.statusIsCompleted && 
-                      !game.isBye && 
-                      game.statusName !== 'bye'
+                      game.statusIsCompleted
                     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5) || []}
                     currentTeamId={currentTeamId || 0}
                     currentClubId={currentClubId || 0}
