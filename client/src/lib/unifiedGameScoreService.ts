@@ -104,7 +104,7 @@ export class UnifiedGameScoreService {
     }
 
     // Fall back to status scores
-    const statusResult = this.calculateFromStatusScores(game, teamIds);
+    const statusResult = this.calculateFromStatusScores(game, teamIds, clubTeamIds);
     if (statusResult.hasValidScore) {
       console.log(`🔍 UNIFIED SERVICE - Game ${game.id} using STATUS scores result:`, statusResult);
       return statusResult;
@@ -360,7 +360,8 @@ export class UnifiedGameScoreService {
 
   private static calculateFromStatusScores(
     game: Game, 
-    teamIds: { ourTeamId: number; theirTeamId: number }
+    teamIds: { ourTeamId: number; theirTeamId: number },
+    clubTeamIds: number[] = []
   ): GameScoreResult {
     // Check if game status has fixed scores (forfeit games, etc.)
     if (typeof game.statusTeamGoals !== 'number' || typeof game.statusOpponentGoals !== 'number') {
