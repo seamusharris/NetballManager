@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { cacheKeys } from '@/lib/cacheKeys';
 import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
+import OpponentFormWidget from '@/components/dashboard/OpponentFormWidget';
 
 export default function Dashboard() {
   const params = useParams();
@@ -276,12 +277,15 @@ export default function Dashboard() {
 
           {/* Enhanced Content Grid with Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <TabsList className="grid w-full grid-cols-4 mb-8 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
               <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
                 Overview
               </TabsTrigger>
               <TabsTrigger value="recent" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
                 Recent Form
+              </TabsTrigger>
+              <TabsTrigger value="opponent" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
+                Opponent Form
               </TabsTrigger>
               <TabsTrigger value="season" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
                 Season Form
@@ -327,6 +331,18 @@ export default function Dashboard() {
             <TabsContent value="recent" className="space-y-8">
               {/* Recent Form Section */}
               <RecentFormWidget 
+                games={games || []}
+                currentTeamId={currentTeamId}
+                currentClubId={currentClubId}
+                gameScoresMap={gameScoresMap}
+                gameStatsMap={gameStatsMap}
+                className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
+              />
+            </TabsContent>
+
+            <TabsContent value="opponent" className="space-y-8">
+              {/* Opponent Form Section */}
+              <OpponentFormWidget 
                 games={games || []}
                 currentTeamId={currentTeamId}
                 currentClubId={currentClubId}

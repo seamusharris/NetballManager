@@ -28,12 +28,16 @@ export function useNextGame() {
         .filter(game => {
           const isCompleted = game.statusIsCompleted === true;
           const gameDate = new Date(game.date);
-          const now = new Date();
 
           // Include games that are not completed and are today or in the future
           const today = new Date();
           today.setHours(0, 0, 0, 0); // Reset to start of day for comparison
-          return !isCompleted && !game.isBye && gameDate >= today;
+          
+          const isUpcoming = !isCompleted && !game.isBye && gameDate >= today;
+          
+          console.log(`Game ${game.id} (${game.date}): completed=${isCompleted}, isBye=${game.isBye}, gameDate=${gameDate.toISOString()}, today=${today.toISOString()}, isUpcoming=${isUpcoming}`);
+          
+          return isUpcoming;
         })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
