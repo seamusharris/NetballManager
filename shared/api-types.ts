@@ -16,6 +16,8 @@ export interface ApiGame {
   statusDisplayName?: string;
   statusIsCompleted?: boolean;
   statusAllowsStatistics?: boolean;
+  statusTeamGoals?: number | null;
+  statusOpponentGoals?: number | null;
   
   // Season fields (flat)
   seasonId?: number;

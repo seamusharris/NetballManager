@@ -38,6 +38,8 @@ interface GameStatusFormData {
   requiresOpponent: boolean;
   colorClass: string;
   sortOrder: number;
+  teamGoals: number | null;
+  opponentGoals: number | null;
 }
 
 export function GameStatusManager() {
@@ -54,6 +56,8 @@ export function GameStatusManager() {
     requiresOpponent: true,
     colorClass: 'bg-gray-500',
     sortOrder: 0,
+    teamGoals: null,
+    opponentGoals: null,
   });
 
   const queryClient = useQueryClient();
@@ -140,6 +144,8 @@ export function GameStatusManager() {
       requiresOpponent: true,
       colorClass: 'bg-gray-500',
       sortOrder: 0,
+      teamGoals: null,
+      opponentGoals: null,
     });
   };
 
@@ -155,6 +161,8 @@ export function GameStatusManager() {
       requiresOpponent: status.requiresOpponent,
       colorClass: status.colorClass || 'bg-gray-500',
       sortOrder: status.sortOrder,
+      teamGoals: null,
+      opponentGoals: null,
     });
     setIsEditDialogOpen(true);
   };
@@ -244,6 +252,29 @@ export function GameStatusManager() {
                         type="number"
                         value={formData.opponentPoints}
                         onChange={(e) => setFormData({ ...formData, opponentPoints: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="teamGoals">Fixed Team Goals (leave empty for calculated scores)</Label>
+                      <Input
+                        id="teamGoals"
+                        type="number"
+                        value={formData.teamGoals || ''}
+                        onChange={(e) => setFormData({ ...formData, teamGoals: e.target.value ? parseInt(e.target.value) : null })}
+                        placeholder="e.g., 10 for forfeit win"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="opponentGoals">Fixed Opponent Goals (leave empty for calculated scores)</Label>
+                      <Input
+                        id="opponentGoals"
+                        type="number"
+                        value={formData.opponentGoals || ''}
+                        onChange={(e) => setFormData({ ...formData, opponentGoals: e.target.value ? parseInt(e.target.value) : null })}
+                        placeholder="e.g., 0 for forfeit win"
                       />
                     </div>
                   </div>
@@ -411,6 +442,29 @@ export function GameStatusManager() {
                       type="number"
                       value={formData.opponentPoints}
                       onChange={(e) => setFormData({ ...formData, opponentPoints: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-teamGoals">Fixed Team Goals (leave empty for calculated scores)</Label>
+                    <Input
+                      id="edit-teamGoals"
+                      type="number"
+                      value={formData.teamGoals || ''}
+                      onChange={(e) => setFormData({ ...formData, teamGoals: e.target.value ? parseInt(e.target.value) : null })}
+                      placeholder="e.g., 10 for forfeit win"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-opponentGoals">Fixed Opponent Goals (leave empty for calculated scores)</Label>
+                    <Input
+                      id="edit-opponentGoals"
+                      type="number"
+                      value={formData.opponentGoals || ''}
+                      onChange={(e) => setFormData({ ...formData, opponentGoals: e.target.value ? parseInt(e.target.value) : null })}
+                      placeholder="e.g., 0 for forfeit win"
                     />
                   </div>
                 </div>
