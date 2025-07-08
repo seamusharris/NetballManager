@@ -272,7 +272,9 @@ export function getWinLoseClass(status: 'Win' | 'Loss' | 'Draw'): string {
  * @returns true if the game status indicates a forfeit
  */
 export function isForfeitStatus(gameStatus: { name: string }): boolean {
-  return gameStatus.name.startsWith('forfeit-');
+  return gameStatus.name.startsWith('forfeit-') || 
+         gameStatus.name === 'home-team-forfeit' || 
+         gameStatus.name === 'away-team-forfeit';
 }
 
 /**
@@ -317,8 +319,33 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
  */
 export function getForfeitGameScoreFromStatus(gameStatus: { name: string, teamGoals?: number | null, opponentGoals?: number | null }) {
   // Use the database-defined scores, with fallback to legacy values
-  const teamScore = gameStatus.teamGoals ?? (gameStatus.name === 'forfeit-win' ? 10 : 0);
-  const opponentScore = gameStatus.opponentGoals ?? (gameStatus.name === 'forfeit-win' ? 0 : 10);
+  let teamScore: number;
+  let opponentScore: number;
+  
+  if (gameStatus.teamGoals !== null && gameStatus.teamGoals !== undefined &&
+      gameStatus.opponentGoals !== null && gameStatus.opponentGoals !== undefined) {
+    // Use database-defined scores
+    teamScore = gameStatus.teamGoals;
+    opponentScore = gameStatus.opponentGoals;
+  } else {
+    // Fallback to legacy logic
+    if (gameStatus.name === 'forfeit-win') {
+      teamScore = 10;
+      opponentScore = 0;
+    } else if (gameStatus.name === 'forfeit-loss') {
+      teamScore = 0;
+      opponentScore = 10;
+    } else if (gameStatus.name === 'home-team-forfeit') {
+      teamScore = 0;   // Home team forfeited
+      opponentScore = 10;
+    } else if (gameStatus.name === 'away-team-forfeit') {
+      teamScore = 10;  // Away team forfeited, home team wins
+      opponentScore = 0;
+    } else {
+      teamScore = 0;
+      opponentScore = 0;
+    }
+  }
 
   return {
     quarterScores: {

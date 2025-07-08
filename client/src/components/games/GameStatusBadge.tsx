@@ -54,6 +54,8 @@ function getStatusDisplay(status: string): string {
     case 'completed': return 'Completed';
     case 'forfeit-win': return 'Forfeit Win';
     case 'forfeit-loss': return 'Forfeit Loss';
+    case 'home-team-forfeit': return 'Home Team Forfeit';
+    case 'away-team-forfeit': return 'Away Team Forfeit';
     case 'bye': return 'BYE';
     case 'abandoned': return 'Abandoned';
     default: return status;
@@ -229,6 +231,12 @@ export function GameStatusButton({
               )}
               {selectedStatus === 'forfeit-loss' && (
                 <p>Our team forfeited the game. Score will be recorded as 0-10.</p>
+              )}
+              {selectedStatus === 'home-team-forfeit' && (
+                <p>Home team forfeited the game. Away team wins 10-0.</p>
+              )}
+              {selectedStatus === 'away-team-forfeit' && (
+                <p>Away team forfeited the game. Home team wins 10-0.</p>
               )}
             </div>
           )}

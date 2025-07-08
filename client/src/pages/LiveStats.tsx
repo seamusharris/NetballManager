@@ -24,6 +24,7 @@ import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/score
 import PlayerInterchangeTracker from '@/components/games/PlayerInterchangeTracker';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { isForfeitGame, isForfeitStatus } from '@/lib/utils';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
