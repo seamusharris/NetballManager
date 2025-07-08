@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation, useParams } from 'wouter';
@@ -12,7 +13,6 @@ import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Badge } from '@/components/ui/badge';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 import RecentGames from '@/components/dashboard/RecentGames';
-import { RecentFormWidget } from '@/components/dashboard/RecentFormWidget';
 import PlayerStatsCard from '@/components/statistics/PlayerStatsCard';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { cn } from '@/lib/utils';
@@ -192,7 +192,7 @@ export default function ClubDashboard() {
   // Team performance metrics (memoized to prevent unnecessary recalculations)
   const teamPerformance = useMemo(() => {
     if (!activeTeams.length || !games.length) return [];
-
+    
     return activeTeams.map(team => {
       // Filter games for this specific team
       const teamGames = games.filter(game => 
@@ -292,7 +292,7 @@ export default function ClubDashboard() {
                   </div>
                 </div>
               </div>
-
+              
               <div className="flex items-center gap-4">
                 <div className="text-right space-y-2">
                   <ClubSwitcher />
@@ -420,7 +420,7 @@ export default function ClubDashboard() {
                 </div>
               </CardHeader>
             </div>
-
+            
             <CardContent className="p-0">
               {teamPerformance.length > 0 ? (
                 <div className="divide-y divide-slate-100">
@@ -448,7 +448,7 @@ export default function ClubDashboard() {
                               </div>
                             )}
                           </div>
-
+                          
                           <div className="space-y-1">
                             <h4 className="font-bold text-lg text-slate-900 group-hover:text-blue-700 transition-colors">
                               {team.name}
@@ -477,12 +477,12 @@ export default function ClubDashboard() {
                               <div className="font-bold text-lg text-slate-900">{team.totalGames}</div>
                               <div className="text-xs text-slate-600 font-medium">Games</div>
                             </div>
-
+                            
                             <div className="text-center p-3 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 group-hover:shadow-md transition-all">
                               <div className="font-bold text-lg text-emerald-700">{team.wins}</div>
                               <div className="text-xs text-emerald-600 font-medium">Wins</div>
                             </div>
-
+                            
                             <div className="text-center p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 group-hover:shadow-md transition-all">
                               <div className="font-bold text-lg text-blue-700">{Math.round(team.winRate)}%</div>
                               <div className="text-xs text-blue-600 font-medium">Win Rate</div>
@@ -510,7 +510,7 @@ export default function ClubDashboard() {
                                 <><Target className="w-3 h-3 mr-1" /> Focus Needed</>
                               )}
                             </Badge>
-
+                            
                             <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                           </div>
                         </div>
@@ -535,16 +535,44 @@ export default function ClubDashboard() {
           {/* Recent Activity & Quick Actions Row */}
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Recent Club Activity - Takes 2 columns */}
-            
-{/* Recent Form Widget */}
-          <RecentFormWidget 
-            games={games || []}
-            currentTeamId={undefined} // Club-wide view
-            currentClubId={currentClubId}
-            gameScoresMap={officialScores || {}}
-            gameStatsMap={centralizedStats || {}}
-            className="border-0 shadow-lg bg-white/80 backdrop-blur-sm w-full"
-          />
+            <Card className="lg:col-span-2 shadow-lg border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Recent Club Activity</CardTitle>
+                      <p className="text-emerald-100 text-sm mt-1">Latest matches across all teams</p>
+                    </div>
+                  </div>
+                </CardHeader>
+              </div>
+              
+              <CardContent className="p-6">
+                <RecentGames 
+                  games={games} 
+                  opponents={[]} 
+                  className="" 
+                  centralizedStats={batchData?.stats || {}}
+                  centralizedScores={officialScores || {}}
+                  teams={teams}
+                  clubWide={true}
+                />
+                {recentGames.length === 0 && (
+                  <div className="text-center py-12 space-y-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                      <Calendar className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-slate-900">No Recent Games</h3>
+                      <p className="text-slate-600">Recent matches will appear here once games are completed</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Quick Actions - Takes 1 column */}
             <Card className="shadow-lg border-0 overflow-hidden">
@@ -558,7 +586,7 @@ export default function ClubDashboard() {
                   </div>
                 </CardHeader>
               </div>
-
+              
               <CardContent className="p-6 space-y-3">
                 <Button variant="ghost" className="w-full justify-start h-auto p-4 hover:bg-blue-50 hover:text-blue-700 transition-all group">
                   <div className="flex items-center gap-3">
