@@ -102,7 +102,7 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
               // Calculate scores using the UnifiedGameScoreService
               const scoreResult = UnifiedGameScoreService.calculateGameScore(
                 game,
-                centralizedScores,
+                transformedScores[game.id] || [],
                 'club-wide',
                 clubTeamIds
               );
