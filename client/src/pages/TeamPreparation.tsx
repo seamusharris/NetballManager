@@ -336,24 +336,14 @@ export default function TeamPreparation() {
 
             <TabsContent value="overview" className="space-y-6">
               {/* Head-to-Head Record */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-yellow-600" />
-                    Head-to-Head Record
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PreviousGamesDisplay
-                    historicalGames={historicalGames}
-                    currentTeamId={currentTeamId || 0}
-                    currentClubId={currentClubId || 0}
-                    batchScores={scoresMap}
-                    batchStats={statsMap}
-                    opponentName={selectedOpponent?.name || 'Unknown'}
-                  />
-                </CardContent>
-              </Card>
+              <PreviousGamesDisplay
+                historicalGames={historicalGames}
+                currentTeamId={currentTeamId || 0}
+                currentClubId={currentClubId || 0}
+                batchScores={scoresMap}
+                batchStats={statsMap}
+                opponentName={selectedOpponent?.name || 'Unknown'}
+              />
 
               {/* Quick Comparison */}
               <Card>
