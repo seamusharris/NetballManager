@@ -331,10 +331,10 @@ export default function Dashboard() {
               {/* Season Games Display */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
                 <SeasonGamesDisplay
-                  games={games || []}
+                  seasonGames={games || []}
                   currentTeamId={currentTeamId}
-                  centralizedScores={gameScoresMap}
-                  gameStats={gameStatsMap}
+                  batchScores={gameScoresMap}
+                  batchStats={gameStatsMap}
                 />
               </div>
             </TabsContent>
