@@ -299,21 +299,36 @@ export default function Dashboard() {
               </div>
 
               <div className="grid gap-8 lg:gap-10">
-                {/* Upcoming Games Section */}
-                <UpcomingGamesWidget
-                  games={games || []}
-                  teamId={currentTeamId}
-                  clubId={currentClubId}
-                  limit={5}
-                  title="Upcoming Games"
-                  className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
-                  centralizedScores={gameScoresMap}
-                  gameStats={gameStatsMap}
-                  clubTeams={clubTeams || []}
-                  showDate={true}
-                  showRound={true}
-                  showScore={false}
-                />
+                {/* Two-column layout for Upcoming and Recent Games */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Upcoming Games - Left Column */}
+                  <UpcomingGamesWidget
+                    games={games || []}
+                    teamId={currentTeamId}
+                    clubId={currentClubId}
+                    limit={5}
+                    title="Upcoming Games"
+                    className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
+                    centralizedScores={gameScoresMap}
+                    gameStats={gameStatsMap}
+                    clubTeams={clubTeams || []}
+                    showDate={true}
+                    showRound={true}
+                    showScore={false}
+                  />
+
+                  {/* Recent Games - Right Column */}
+                  <RecentGamesWidget 
+                    games={games || []}
+                    currentTeamId={currentTeamId}
+                    currentClubId={currentClubId}
+                    gameScoresMap={gameScoresMap}
+                    gameStatsMap={gameStatsMap}
+                    limit={5}
+                    title="Recent Games"
+                    className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
+                  />
+                </div>
 
                 {/* Team Performance Metrics Dashboard with Enhanced Container */}
                 <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
