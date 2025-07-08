@@ -76,12 +76,12 @@ export default function PreviousGamesDisplay({
 
   return (
     <Card className={className}>
-      <CardHeader className={compact ? "pb-3" : "pb-6"}>
-        <CardTitle>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold text-gray-800">
           {title || (opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`)}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="space-y-3">
           {historicalGames.slice(0, maxGames === undefined ? historicalGames.length : maxGames || 5).map((game, index) => {
             // Check for special status games (e.g., forfeit, bye)
