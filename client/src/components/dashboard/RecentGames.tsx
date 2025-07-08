@@ -10,6 +10,7 @@ import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { statisticsService } from '@/lib/statisticsService';
+import { UnifiedGameScoreService } from '@/lib/unifiedGameScoreService';
 
 interface RecentGamesProps {
   games: Game[];
@@ -95,23 +96,54 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
           ) : recentGames.length === 0 ? (
             <p className="text-gray-500 text-center py-4">No recent games to display</p>
           ) : (
-            recentGames.map(game => (
-              <GameResultCard
-                key={game.id}
-                game={game}
-                layout="medium"
-                gameStats={centralizedStats?.[game.id] || []}
-                centralizedScores={transformedScores[game.id] || []}
-                useOfficialPriority={true}
-                showDate={true}
-                showRound={true}
-                showScore={true}
-                className="mb-4"
-                currentTeamId={clubWide ? null : currentTeam?.id}
-                clubTeams={teams || []}
-                showLink={true}
-              />
-            ))
+            recentGames.map(game => {
+              const clubTeamIds = teams?.map(team => team.id) || [];
+
+              // Calculate scores using the UnifiedGameScoreService
+              const scoreResult = UnifiedGameScoreService.calculateGameScore(
+                game,
+                centralizedScores,
+                'club-wide',
+                clubTeamIds
+              );
+
+              console.log(`🔍 GAME ${game.id} - Our team perspective:`, {
+                perspective: 'club-wide',
+                clubTeamIds: clubTeamIds,
+                urlClubId: currentTeam?.clubId,
+                homeTeamId: game.homeTeamId,
+                awayTeamId: game.awayTeamId,
+                homeIsOurs: clubTeamIds.includes(game.homeTeamId || 0),
+                awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0),
+                calculatingFromPerspectiveOf: clubTeamIds.includes(game.homeTeamId || 0) ? 'home' : 'away'
+              });
+
+              return (
+                <GameResultCard
+                  key={game.id}
+                  game={game}
+                  layout="medium"
+                  gameStats={centralizedStats?.[game.id] || []}
+                  centralizedScores={transformedScores[game.id] || []}
+                  useOfficialPriority={true}
+                  showDate={true}
+                  showRound={true}
+                  showScore={true}
+                  className="mb-4"
+                  currentTeamId={clubWide ? null : currentTeam?.id}
+                  clubTeams={teams || []}
+                  ourScore={scoreResult.ourScore}
+                  theirScore={scoreResult.theirScore}
+                  result={scoreResult.result as 'win' | 'loss' | 'draw'}
+                  quarterScores={scoreResult.quarterBreakdown.map(q => ({
+                    quarter: q.quarter,
+                    teamScore: q.ourScore,
+                    opponentScore: q.theirScore
+                  }))}
+                  showLink={true}
+                />
+              );
+            })
           )}
         </div>
 
