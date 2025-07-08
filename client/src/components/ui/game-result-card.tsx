@@ -269,38 +269,57 @@ export default function GameResultCard({
     // For upcoming games, show dash
     if (isUpcoming) return "—";
 
-    // Use unified service scores - convert perspective scores to home-away display
+    // Use unified service scores - always display in home-away format
     if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
+      // Always get home and away scores in proper order
       let homeScore = 0;
       let awayScore = 0;
 
-      if (effectiveTeamId) {
-        // Team perspective: convert "for/against" to "home/away" display
-        if (game.homeTeamId === effectiveTeamId) {
+      if (currentTeamId) {
+        // Team perspective: determine home/away scores correctly
+        if (game.homeTeamId === currentTeamId) {
           // Current team is home - for=home, against=away
           homeScore = scores.finalScore.for;
           awayScore = scores.finalScore.against;
         } else if (game.awayTeamId === currentTeamId) {
-          // Current team is away - for=away, against=home
+          // Current team is away - for=away, against=home, so flip for home-away display
           homeScore = scores.finalScore.against;
           awayScore = scores.finalScore.for;
         }
       } else {
-        // Club-wide view - scores should already be in correct format
-        homeScore = scores.finalScore.for;
-        awayScore = scores.finalScore.against;
+        // Club-wide view - determine home/away based on which team is ours
+        const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
+        const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
+
+        if (homeIsOurs) {
+          // Home team is ours - for=home, against=away
+          homeScore = scores.finalScore.for;
+          awayScore = scores.finalScore.against;
+        } else if (awayIsOurs) {
+          // Away team is ours - for=away, against=home, so flip for home-away display
+          homeScore = scores.finalScore.against;
+          awayScore = scores.finalScore.for;
+        } else {
+          // Neither team is ours - assume scores are in home-away format already
+          homeScore = scores.finalScore.for;
+          awayScore = scores.finalScore.against;
+        }
       }
 
-      return `${homeScore}-${awayScore}`;
+      return (
+        <ScoreBadge 
+          teamScore={homeScore} // Home team score (displayed first)
+          opponentScore={awayScore} // Away team score (displayed second)
+          result={scores.result} // Use the unified service result for coloring
+        />
+      );
     }
 
-    // For completed games without scores, show placeholder
-    if (game.statusIsCompleted) {
-      return "0-0";
-    }
-
-    // Default fallback
-    return "—";
+    return (
+      <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
+        —
+      </div>
+    );
   };
 
   const CardContent = () => (
@@ -374,41 +393,51 @@ export default function GameResultCard({
             <div className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded">
               —
             </div>
-          ) : scores ? (
-            // Convert perspective-based scores (for/against) to home-away display format
+          ) : (
             (() => {
+              // Always get home and away scores in proper order
               let homeScore = 0;
               let awayScore = 0;
 
               if (currentTeamId) {
-                // Team perspective: convert "for/against" to "home/away" display
+                // Team perspective: determine home/away scores correctly
                 if (game.homeTeamId === currentTeamId) {
                   // Current team is home - for=home, against=away
                   homeScore = scores.finalScore.for;
                   awayScore = scores.finalScore.against;
                 } else if (game.awayTeamId === currentTeamId) {
-                  // Current team is away - for=away, against=home
+                  // Current team is away - for=away, against=home, so flip for home-away display
                   homeScore = scores.finalScore.against;
                   awayScore = scores.finalScore.for;
                 }
               } else {
-                // Club-wide view - assume scores are already in home/away format
-                homeScore = scores.finalScore.for;
-                awayScore = scores.finalScore.against;
+                // Club-wide view - determine home/away based on which team is ours
+                const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
+                const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
+
+                if (homeIsOurs) {
+                  // Home team is ours - for=home, against=away
+                  homeScore = scores.finalScore.for;
+                  awayScore = scores.finalScore.against;
+                } else if (awayIsOurs) {
+                  // Away team is ours - for=away, against=home, so flip for home-away display
+                  homeScore = scores.finalScore.against;
+                  awayScore = scores.finalScore.for;
+                } else {
+                  // Neither team is ours - assume scores are in home-away format already
+                  homeScore = scores.finalScore.for;
+                  awayScore = scores.finalScore.against;
+                }
               }
 
               return (
                 <ScoreBadge 
                   teamScore={homeScore} // Home team score (displayed first)
                   opponentScore={awayScore} // Away team score (displayed second)
-                  result={scores.result}
+                  result={scores.result} // Use the unified service result for coloring
                 />
               );
             })()
-          ) : (
-            <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
-              —
-            </div>
           )
         )}
       </div>

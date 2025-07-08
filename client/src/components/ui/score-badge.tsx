@@ -22,16 +22,7 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
 
 
 
-  // Debug for Team 128 
-  if (teamScore === 5 && opponentScore === 36) {
-    console.log(`🔍 SCORE BADGE - Team 128 game (5-36):`, {
-      teamScore,
-      opponentScore,
-      result,
-      expectedColor: 'red (loss)',
-      willUseResult: !!result
-    });
-  }
+  
 
   const getResultColor = () => {
     // Use the result from unified service if provided, otherwise calculate
