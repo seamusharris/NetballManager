@@ -6,6 +6,7 @@ import DashboardSummary from '@/components/dashboard/DashboardSummary';
 import BatchScoreDisplay from '@/components/dashboard/BatchScoreDisplay';
 import { TEAM_NAME } from '@/lib/settings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
@@ -29,6 +30,7 @@ import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
 import { cacheKeys } from '@/lib/cacheKeys';
 import { AttackDefenseDisplay } from '@/components/ui/attack-defense-display';
+import SeasonGamesDisplay from '@/components/ui/season-games-display';
 
 export default function Dashboard() {
   const params = useParams();
@@ -283,50 +285,80 @@ export default function Dashboard() {
           {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
           {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
 
-          {/* Enhanced Content Grid */}
-          <div className="grid gap-8 lg:gap-10">
-            {/* Recent Form Section */}
-            <RecentFormWidget 
-              games={games || []}
-              currentTeamId={currentTeamId}
-              currentClubId={currentClubId}
-              gameScoresMap={gameScoresMap}
-              gameStatsMap={gameStatsMap}
-              className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
-            />
+          {/* Enhanced Content Grid with Tabs */}
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="recent" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
+                Recent Form
+              </TabsTrigger>
+              <TabsTrigger value="season" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
+                Season
+              </TabsTrigger>
+            </TabsList>
 
-            {/* Upcoming Games Section */}
-            <UpcomingGamesWidget
-              games={games || []}
-              teamId={currentTeamId}
-              clubId={currentClubId}
-              limit={5}
-              title="Upcoming Games"
-              className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
-              centralizedScores={gameScoresMap}
-              gameStats={gameStatsMap}
-              clubTeams={clubTeams || []}
-              showDate={true}
-              showRound={true}
-              showScore={false}
-            />
+            <TabsContent value="overview" className="space-y-8">
+              <div className="grid gap-8 lg:gap-10">
+                {/* Upcoming Games Section */}
+                <UpcomingGamesWidget
+                  games={games || []}
+                  teamId={currentTeamId}
+                  clubId={currentClubId}
+                  limit={5}
+                  title="Upcoming Games"
+                  className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
+                  centralizedScores={gameScoresMap}
+                  gameStats={gameStatsMap}
+                  clubTeams={clubTeams || []}
+                  showDate={true}
+                  showRound={true}
+                  showScore={false}
+                />
 
-            {/* Team Performance Metrics Dashboard with Enhanced Container */}
-            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
-              <DashboardSummary 
-                players={players || []} 
-                games={games || []} 
-                seasons={seasons || []}
-                activeSeason={activeSeason}
-                isLoading={isLoading}
-                centralizedRosters={gameRostersMap}
-                centralizedStats={gameStatsMap}
-                centralizedScores={gameScoresMap}
-                isBatchDataLoading={isLoadingBatchData}
-                teams={clubTeams}
+                {/* Team Performance Metrics Dashboard with Enhanced Container */}
+                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
+                  <DashboardSummary 
+                    players={players || []} 
+                    games={games || []} 
+                    seasons={seasons || []}
+                    activeSeason={activeSeason}
+                    isLoading={isLoading}
+                    centralizedRosters={gameRostersMap}
+                    centralizedStats={gameStatsMap}
+                    centralizedScores={gameScoresMap}
+                    isBatchDataLoading={isLoadingBatchData}
+                    teams={clubTeams}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="recent" className="space-y-8">
+              {/* Recent Form Section */}
+              <RecentFormWidget 
+                games={games || []}
+                currentTeamId={currentTeamId}
+                currentClubId={currentClubId}
+                gameScoresMap={gameScoresMap}
+                gameStatsMap={gameStatsMap}
+                className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
               />
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="season" className="space-y-8">
+              {/* Season Games Display */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
+                <SeasonGamesDisplay
+                  games={games || []}
+                  currentTeamId={currentTeamId}
+                  centralizedScores={gameScoresMap}
+                  gameStats={gameStatsMap}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>
