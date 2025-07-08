@@ -141,14 +141,6 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
                   className="mb-4"
                   currentTeamId={clubWide ? null : currentTeam?.id}
                   clubTeams={teams || []}
-                  ourScore={displayHomeScore}
-                  theirScore={displayAwayScore}
-                  result={scoreResult.result as 'win' | 'loss' | 'draw'}
-                  quarterScores={scoreResult.quarterBreakdown.map(q => ({
-                    quarter: q.quarter,
-                    teamScore: q.homeScore,
-                    opponentScore: q.awayScore
-                  }))}
                   showLink={true}
                 />
               );
