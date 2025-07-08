@@ -8,6 +8,7 @@ import GameResultCard from '@/components/ui/game-result-card';
 import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 import QuarterPerformanceAnalysis from '@/components/ui/quarter-performance-analysis';
 import { hasPositionStats } from '@/lib/positionStats';
+import { ViewMoreButton } from '@/components/ui/view-more-button';
 
 interface PreviousGamesDisplayProps {
   historicalGames: any[];
@@ -26,6 +27,9 @@ interface PreviousGamesDisplayProps {
   title?: string; // Custom title override
   compact?: boolean; // More compact display for widgets
   excludeSpecialGames?: boolean; // Exclude BYE/forfeit games from analytics
+  showViewMore?: boolean; // Show view more button
+  viewMoreHref?: string; // Link for view more button
+  viewMoreText?: string; // Custom text for view more button
 }
 
 export default function PreviousGamesDisplay({ 
@@ -43,7 +47,10 @@ export default function PreviousGamesDisplay({
   maxGames,
   title,
   compact = false,
-  excludeSpecialGames = false
+  excludeSpecialGames = false,
+  showViewMore = false,
+  viewMoreHref,
+  viewMoreText = "View more →"
 }: PreviousGamesDisplayProps) {
   if (!historicalGames || historicalGames.length === 0) {
     return (
@@ -349,6 +356,13 @@ export default function PreviousGamesDisplay({
                 )
             })()}
           </div>
+        )}
+
+        {/* View More Button */}
+        {showViewMore && viewMoreHref && historicalGames.length > (maxGames || 5) && (
+          <ViewMoreButton href={viewMoreHref}>
+            {viewMoreText}
+          </ViewMoreButton>
         )}
       </CardContent>
     </Card>

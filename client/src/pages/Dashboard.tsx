@@ -293,11 +293,6 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-8">
-              {/* Overview Section Header */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg p-6 mb-6">
-                <h2 className="text-lg font-semibold text-gray-800">Overview</h2>
-              </div>
-
               <div className="grid gap-8 lg:gap-10">
                 {/* Two-column layout for Upcoming and Recent Games */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -324,7 +319,7 @@ export default function Dashboard() {
                   <PreviousGamesDisplay
                     historicalGames={games?.filter(game => 
                       game.statusIsCompleted
-                    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5) || []}
+                    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || []}
                     currentTeamId={currentTeamId || 0}
                     currentClubId={currentClubId || 0}
                     batchScores={gameScoresMap}
@@ -334,25 +329,25 @@ export default function Dashboard() {
                     showQuarterScores={false}
                     maxGames={5}
                     compact={true}
+                    showViewMore={true}
+                    viewMoreHref={`/team/${currentTeamId}/games?status=completed`}
                     className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
                   />
                 </div>
 
                 {/* Team Performance Metrics Dashboard with Enhanced Container */}
-                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
-                  <DashboardSummary 
-                    players={players || []} 
-                    games={games || []} 
-                    seasons={seasons || []}
-                    activeSeason={activeSeason}
-                    isLoading={isLoading}
-                    centralizedRosters={gameRostersMap}
-                    centralizedStats={gameStatsMap}
-                    centralizedScores={gameScoresMap}
-                    isBatchDataLoading={isLoadingBatchData}
-                    teams={clubTeams}
-                  />
-                </div>
+                <DashboardSummary 
+                  players={players || []} 
+                  games={games || []} 
+                  seasons={seasons || []}
+                  activeSeason={activeSeason}
+                  isLoading={isLoading}
+                  centralizedRosters={gameRostersMap}
+                  centralizedStats={gameStatsMap}
+                  centralizedScores={gameScoresMap}
+                  isBatchDataLoading={isLoadingBatchData}
+                  teams={clubTeams}
+                />
               </div>
             </TabsContent>
 
