@@ -302,19 +302,24 @@ export default function Dashboard() {
                 {/* Two-column layout for Upcoming and Recent Games */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Upcoming Games - Left Column */}
-                  <UpcomingGamesWidget
-                    games={games || []}
-                    teamId={currentTeamId}
-                    clubId={currentClubId}
-                    limit={5}
+                  <PreviousGamesDisplay
+                    historicalGames={games?.filter(game => {
+                      const currentDate = new Date().toISOString().split('T')[0];
+                      return game.date >= currentDate && 
+                        !game.statusIsCompleted &&
+                        !game.isBye &&
+                        game.statusName !== 'bye';
+                    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5) || []}
+                    currentTeamId={currentTeamId || 0}
+                    currentClubId={currentClubId || 0}
+                    batchScores={gameScoresMap}
+                    batchStats={gameStatsMap}
                     title="Upcoming Games"
+                    showAnalytics={false}
+                    showQuarterScores={false}
+                    maxGames={5}
+                    compact={true}
                     className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
-                    centralizedScores={gameScoresMap}
-                    gameStats={gameStatsMap}
-                    clubTeams={clubTeams || []}
-                    showDate={true}
-                    showRound={true}
-                    showScore={false}
                   />
 
                   {/* Recent Games - Right Column */}
@@ -330,7 +335,7 @@ export default function Dashboard() {
                     batchStats={gameStatsMap}
                     title="Recent Games"
                     showAnalytics={false}
-                    showQuarterScores={true}
+                    showQuarterScores={false}
                     maxGames={5}
                     compact={true}
                     className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
