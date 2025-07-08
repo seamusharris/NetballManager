@@ -47,9 +47,10 @@ export function RecentFormWidget({
           currentClubId={currentClubId || 0}
           batchScores={gameScoresMap}
           batchStats={gameStatsMap}
-          opponentName="Recent Opponents"
+          opponentName="Recent Form"
           className=""
           hideWinLossIndicators={true}
+          centralizedScores={gameScoresMap}
         />
       </CardContent>
     </Card>

@@ -12,11 +12,12 @@ interface PreviousGamesDisplayProps {
   historicalGames: any[];
   currentTeamId: number;
   currentClubId: number;
-  batchScores: Record<number, any[]>;
-  batchStats: Record<number, any[]>;
+  batchScores?: Record<number, any[]>;
+  batchStats?: Record<number, any[]>;
   opponentName?: string;
   className?: string;
   hideWinLossIndicators?: boolean;
+  centralizedScores?: Record<number, any[]>;
 }
 
 export default function PreviousGamesDisplay({ 
@@ -27,7 +28,8 @@ export default function PreviousGamesDisplay({
   batchStats, 
   opponentName = "Opponent",
   className = "",
-  hideWinLossIndicators = false
+  hideWinLossIndicators = false,
+  centralizedScores
 }: PreviousGamesDisplayProps) {
   if (historicalGames.length === 0) {
     return (
@@ -61,7 +63,9 @@ export default function PreviousGamesDisplay({
   return (
     <Card className={className}>
       <CardHeader className="pb-6">
-        {opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`}
+        <CardTitle>
+          {opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -113,7 +117,7 @@ export default function PreviousGamesDisplay({
                 <GameResultCard
                   game={game}
                   currentTeamId={currentTeamId}
-                  centralizedScores={transformedScores}
+                  centralizedScores={centralizedScores?.[game.id] || []}
                   gameStats={batchStats?.[game.id] || []}
                   showLink={true}
                   className="w-full"
