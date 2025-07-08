@@ -12,6 +12,7 @@ import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Badge } from '@/components/ui/badge';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 import RecentGames from '@/components/dashboard/RecentGames';
+import { RecentFormWidget } from '@/components/dashboard/RecentFormWidget';
 import PlayerStatsCard from '@/components/statistics/PlayerStatsCard';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { cn } from '@/lib/utils';
