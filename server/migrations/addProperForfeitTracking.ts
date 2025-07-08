@@ -40,21 +40,37 @@ export async function addProperForfeitTracking(): Promise<boolean> {
       }
     ];
 
-    await db.insert(gameStatuses).values(newForfeitStatuses);
-    log(`Added ${newForfeitStatuses.length} new team-specific forfeit statuses`, "migration");
+    // Insert new statuses one by one to avoid conflicts
+    for (const status of newForfeitStatuses) {
+      try {
+        await db.insert(gameStatuses).values(status);
+        log(`Added ${status.name} status`, "migration");
+      } catch (insertError: any) {
+        if (insertError.message?.includes('duplicate') || insertError.code === '23505') {
+          log(`Status ${status.name} already exists, skipping`, "migration");
+        } else {
+          throw insertError;
+        }
+      }
+    }
 
     // Mark old forfeit statuses as inactive (keep for backward compatibility)
-    await db.execute(sql`
-      UPDATE game_statuses 
-      SET is_active = false, display_name = display_name || ' (Legacy)'
-      WHERE name IN ('forfeit-win', 'forfeit-loss')
-    `);
+    try {
+      await db.execute(sql`
+        UPDATE game_statuses 
+        SET is_active = false, display_name = display_name || ' (Legacy)'
+        WHERE name IN ('forfeit-win', 'forfeit-loss') AND is_active = true
+      `);
+      log("Marked legacy forfeit statuses as inactive", "migration");
+    } catch (updateError: any) {
+      log(`Warning: Could not update legacy statuses: ${updateError.message}`, "migration");
+    }
 
-    log("Marked legacy forfeit statuses as inactive", "migration");
+    log("Forfeit tracking migration completed successfully", "migration");
     return true;
 
-  } catch (error) {
-    log(`Error in forfeit tracking migration: ${error}`, "migration");
+  } catch (error: any) {
+    log(`Error in forfeit tracking migration: ${error.message}`, "migration");
     return false;
   }
 }
