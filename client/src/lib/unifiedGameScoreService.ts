@@ -4,8 +4,8 @@
  */
 
 export interface GameScoreResult {
-  ourScore: number;
-  theirScore: number;
+  homeScore: number;
+  awayScore: number;
   result: 'win' | 'loss' | 'draw' | 'upcoming' | 'bye' | 'unknown' | 'inter-club';
   quarterBreakdown: QuarterScore[];
   hasValidScore: boolean;
@@ -15,8 +15,8 @@ export interface GameScoreResult {
 
 export interface QuarterScore {
   quarter: number;
-  ourScore: number;
-  theirScore: number;
+  homeScore: number;
+  awayScore: number;
 }
 
 export interface WinRateResult {
@@ -72,8 +72,8 @@ export class UnifiedGameScoreService {
     // Handle BYE games first
     if (this.isByeGame(game)) {
       return {
-        ourScore: 0,
-        theirScore: 0,
+        homeScore: 0,
+        awayScore: 0,
         result: 'bye',
         quarterBreakdown: [],
         hasValidScore: false,
@@ -84,8 +84,8 @@ export class UnifiedGameScoreService {
     // Handle upcoming games
     if (!game.statusIsCompleted) {
       return {
-        ourScore: 0,
-        theirScore: 0,
+        homeScore: 0,
+        awayScore: 0,
         result: 'upcoming',
         quarterBreakdown: [],
         hasValidScore: false,
@@ -123,7 +123,7 @@ export class UnifiedGameScoreService {
   }
 
   /**
-   * Get game result (win/loss/draw) for display
+   * Get game result (win/loss/draw) for display from team perspective
    */
   static getGameResult(
     game: Game, 
@@ -131,8 +131,25 @@ export class UnifiedGameScoreService {
     perspective: number | 'club-wide' = 'club-wide',
     clubTeamIds: number[] = []
   ): 'win' | 'loss' | 'draw' | 'upcoming' | 'bye' | 'unknown' {
-    const result = this.calculateGameScore(game, officialScores, perspective, clubTeamIds);
-    return result.result;
+    const scores = this.calculateGameScore(game, officialScores, perspective, clubTeamIds);
+    
+    if (['bye', 'upcoming', 'unknown'].includes(scores.result as string)) {
+      return scores.result;
+    }
+    
+    // For team perspective, determine win/loss based on which team they are
+    if (typeof perspective === 'number') {
+      const isHomeTeam = game.homeTeamId === perspective;
+      const teamScore = isHomeTeam ? scores.homeScore : scores.awayScore;
+      const opponentScore = isHomeTeam ? scores.awayScore : scores.homeScore;
+      
+      if (teamScore > opponentScore) return 'win';
+      if (teamScore < opponentScore) return 'loss';
+      return 'draw';
+    }
+    
+    // For club-wide perspective, no team-specific result
+    return 'unknown';
   }
 
   /**
