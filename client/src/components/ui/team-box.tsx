@@ -230,8 +230,6 @@ export function TeamBox({
           </Badge>
         </div>
       )}
-
-
     </div>
   );
 
