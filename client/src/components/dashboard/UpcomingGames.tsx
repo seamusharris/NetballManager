@@ -111,11 +111,9 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
   };
 
   return (
-    <BaseWidget 
-      title="Upcoming Games" 
-      className={className}
-      contentClassName="px-4 py-6 pb-2"
-    >
+    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg ${className}`}>
+      <div className="px-6 py-6">
+        <h3 className="text-xl font-semibold mb-4">Upcoming Games</h3>
 
         {upcomingGames.length > 0 ? (
           <div className="space-y-6">
@@ -163,7 +161,8 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
         ) : (
           <div className="mb-4" />
         )}
-    </BaseWidget>
+      </div>
+    </div>
   );
 }
 
