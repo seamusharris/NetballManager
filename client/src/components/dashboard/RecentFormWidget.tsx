@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import { hasPositionStats } from '@/lib/positionStats';
 
@@ -34,26 +34,17 @@ export function RecentFormWidget({
   if (recentGames.length === 0) return null;
 
   return (
-    <Card className={className || "mb-8"}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Recent Form
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <PreviousGamesDisplay
-          historicalGames={recentGames}
-          currentTeamId={currentTeamId || 0}
-          currentClubId={currentClubId || 0}
-          batchScores={gameScoresMap}
-          batchStats={gameStatsMap}
-          opponentName="Recent Form"
-          className=""
-          hideWinLossIndicators={true}
-          centralizedScores={gameScoresMap}
-        />
-      </CardContent>
-    </Card>
+    <PreviousGamesDisplay
+      historicalGames={recentGames}
+      currentTeamId={currentTeamId || 0}
+      currentClubId={currentClubId || 0}
+      batchScores={gameScoresMap}
+      batchStats={gameStatsMap}
+      opponentName="Recent Form"
+      className={className}
+      hideWinLossIndicators={true}
+      centralizedScores={gameScoresMap}
+    />
   );
 }
 
