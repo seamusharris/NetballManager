@@ -423,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await db.execute(sql`
             INSERT INTO game_statuses (
-              id, name, display_name, points, opponent_points, team_goals, opponent_goals,
+              id, name, display_name, points, opponent_points, home_team_goals, away_team_goals,
               is_completed, allows_statistics, requires_opponent, color_class, sort_order, is_active
             ) VALUES (
               ${status.id}, 
@@ -431,8 +431,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ${status.displayName || "Unknown"}, 
               ${status.points || 0}, 
               ${status.opponentPoints || 0}, 
-              ${status.teamGoals || null}, 
-              ${status.opponentGoals || null}, 
+              ${status.homeTeamGoals || null}, 
+              ${status.awayTeamGoals || null}, 
               ${status.isCompleted !== false}, 
               ${status.allowsStatistics !== false}, 
               ${status.requires_opponent !== false}, 
@@ -1594,8 +1594,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             gs.display_name as status_display_name, 
             gs.is_completed, 
             gs.allows_statistics, 
-            gs.team_goals, 
-            gs.opponent_goals,
+            gs.home_team_goals, 
+            gs.away_team_goals,
             s.name as season_name, 
             s.start_date as season_start, 
             s.end_date as season_end, 
@@ -1630,8 +1630,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             gs.display_name as status_display_name, 
             gs.is_completed, 
             gs.allows_statistics, 
-            gs.team_goals, 
-            gs.opponent_goals,
+            gs.home_team_goals, 
+            gs.away_team_goals,
             s.name as season_name, 
             s.start_date as season_start, 
             s.end_date as season_end, 
@@ -1702,8 +1702,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gs.display_name as status_display_name, 
           gs.is_completed, 
           gs.allows_statistics, 
-          gs.team_goals, 
-          gs.opponent_goals,
+          gs.home_team_goals, 
+          gs.away_team_goals,
           s.name as season_name, 
           s.start_date as season_start, 
           s.end_date as season_end, 
@@ -1749,7 +1749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await db.execute(sql`
         SELECT 
           g.*,
-          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.team_goals, gs.opponent_goals,
+          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.home_team_goals, gs.away_team_goals,
           s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
           ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
           at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
@@ -1789,8 +1789,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.is_completed,
         statusAllowsStatistics: row.allows_statistics,
-        statusTeamGoals: row.team_goals,
-        statusOpponentGoals: row.opponent_goals,
+        statusTeamGoals: row.home_team_goals,
+        statusOpponentGoals: row.away_team_goals,
 
         // Season fields (consistent camelCase)
         seasonName: row.season_name,
@@ -3576,8 +3576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             gs.display_name as status_display_name,
             gs.is_completed as status_is_completed,
             gs.allows_statistics as status_allows_statistics,
-            gs.team_goals as status_team_goals,
-            gs.opponent_goals as status_opponent_goals
+            gs.home_team_goals as status_home_team_goals,
+            gs.away_team_goals as status_away_team_goals
           FROM games g
           LEFT JOIN teams ht ON g.home_team_id = ht.id
           LEFT JOIN teams at ON g.away_team_id = at.id
@@ -3603,8 +3603,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             gs.display_name as status_display_name,
             gs.is_completed as status_is_completed,
             gs.allows_statistics as status_allows_statistics,
-            gs.team_goals as status_team_goals,
-            gs.opponent_goals as status_opponent_goals
+            gs.home_team_goals as status_home_team_goals,
+            gs.away_team_goals as status_away_team_goals
           FROM games g
           LEFT JOIN teams ht ON g.home_team_id = ht.id
           LEFT JOIN teams at ON g.away_team_id = at.id
@@ -3631,8 +3631,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             gs.display_name as status_display_name,
             gs.is_completed as status_is_completed,
             gs.allows_statistics as status_allows_statistics,
-            gs.team_goals as status_team_goals,
-            gs.opponent_goals as status_opponent_goals
+            gs.home_team_goals as status_home_team_goals,
+            gs.away_team_goals as status_away_team_goals
           FROM games g
           LEFT JOIN teams ht ON g.home_team_id = ht.id
           LEFT JOIN teams at ON g.away_team_id = at.id
@@ -3668,8 +3668,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.status_is_completed,
         statusAllowsStatistics: row.status_allows_statistics,
-        statusTeamGoals: row.status_team_goals,
-        statusOpponentGoals: row.status_opponent_goals
+        statusTeamGoals: row.status_home_team_goals,
+        statusOpponentGoals: row.status_away_team_goals
       }));
 
       res.json(games);
