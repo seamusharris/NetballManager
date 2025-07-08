@@ -48,12 +48,12 @@ export default function PreviousGamesDisplay({
   if (!historicalGames || historicalGames.length === 0) {
     return (
       <Card className={className}>
-        <CardHeader className="pb-6">
-          <CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-gray-800">
             Previous Games vs {opponentName}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="text-center py-8">
             <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
             <p className="text-gray-600">No previous matches against {opponentName}</p>
