@@ -247,19 +247,16 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="container py-8 mx-auto space-y-8">
           {/* Clean Header */}
-          <Card className="border-0 shadow-lg bg-slate-900 text-white">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-navy-900 to-blue-900 text-white" style={{backgroundColor: '#1e3a8a'}}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">
+                  <h1 className="text-3xl font-bold tracking-tight mb-2 text-white">
                     {currentClub?.name} {currentTeam?.name} Dashboard
                   </h1>
-                  <p className="text-slate-300">
+                  <p className="text-blue-100">
                     Performance metrics and insights for your team
                   </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <TeamSwitcher mode="required" />
                 </div>
               </div>
             </CardContent>
