@@ -66,7 +66,7 @@ export default function Dashboard() {
       }
     } else if (!teamIdFromUrl) {
       console.log('Dashboard: No team ID in URL, redirecting to teams page');
-      // No team ID provided, redirect to teams page
+      // No team ID provided, redirecting to teams page
       setLocation('/teams');
       return;
     }
