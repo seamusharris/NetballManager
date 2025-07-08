@@ -286,6 +286,7 @@ export default function GameResultCard({
         awayScore = scores.finalScore.against;
       } else if (awayIsOurs) {
         // Our team is away - ourScore = awayScore, theirScore = homeScore
+        // So: homeScore = theirScore, awayScore = ourScore
         homeScore = scores.finalScore.against;
         awayScore = scores.finalScore.for;
       } else {
@@ -398,6 +399,7 @@ export default function GameResultCard({
                 awayScore = scores.finalScore.against;
               } else if (awayIsOurs) {
                 // Our team is away - ourScore = awayScore, theirScore = homeScore
+                // So: homeScore = theirScore, awayScore = ourScore
                 homeScore = scores.finalScore.against;
                 awayScore = scores.finalScore.for;
               } else {
