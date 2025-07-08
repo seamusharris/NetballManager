@@ -83,7 +83,7 @@ export default function PreviousGamesDisplay({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {historicalGames.slice(0, maxGames || 5).map((game, index) => {
+          {historicalGames.slice(0, maxGames === undefined ? historicalGames.length : maxGames || 5).map((game, index) => {
             // Check for special status games (e.g., forfeit, bye)
             const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
 
@@ -265,7 +265,7 @@ export default function PreviousGamesDisplay({
               historicalGames.forEach(game => {
                 // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
                 if (!game.statusAllowsStatistics) return;
-                
+
                 // Skip special status games if requested
                 if (excludeSpecialGames && (
                   game.statusName === 'bye' || 
