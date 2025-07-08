@@ -107,17 +107,26 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
                 clubTeamIds
               );
 
-              console.log(`🔍 GAME ${game.id} - Our team perspective:`, {
+              console.log(`🔍 GAME ${game.id} - Score calculation result:`, {
                 perspective: 'club-wide',
                 clubTeamIds: clubTeamIds,
-                urlClubId: currentTeam?.clubId,
                 homeTeamId: game.homeTeamId,
                 awayTeamId: game.awayTeamId,
                 homeIsOurs: clubTeamIds.includes(game.homeTeamId || 0),
                 awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0),
-                calculatingFromPerspectiveOf: clubTeamIds.includes(game.homeTeamId || 0) ? 'home' : 'away'
+                scoreResult: {
+                  homeScore: scoreResult.homeScore,
+                  awayScore: scoreResult.awayScore,
+                  result: scoreResult.result,
+                  hasValidScore: scoreResult.hasValidScore,
+                  scoreSource: scoreResult.scoreSource
+                }
               });
 
+              // For club-wide display, show home/away scores directly
+              const displayHomeScore = scoreResult.homeScore;
+              const displayAwayScore = scoreResult.awayScore;
+              
               return (
                 <GameResultCard
                   key={game.id}
@@ -132,13 +141,13 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
                   className="mb-4"
                   currentTeamId={clubWide ? null : currentTeam?.id}
                   clubTeams={teams || []}
-                  ourScore={scoreResult.ourScore}
-                  theirScore={scoreResult.theirScore}
+                  ourScore={displayHomeScore}
+                  theirScore={displayAwayScore}
                   result={scoreResult.result as 'win' | 'loss' | 'draw'}
                   quarterScores={scoreResult.quarterBreakdown.map(q => ({
                     quarter: q.quarter,
-                    teamScore: q.ourScore,
-                    opponentScore: q.theirScore
+                    teamScore: q.homeScore,
+                    opponentScore: q.awayScore
                   }))}
                   showLink={true}
                 />
