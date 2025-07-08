@@ -340,7 +340,8 @@ export class UnifiedGameScoreService {
     game: Game, 
     teamIds: { ourTeamId: number; theirTeamId: number }
   ): GameScoreResult {
-    // Check if we have valid status scores
+    // Check if game status has fixed scores (forfeit games, etc.)
+    // The game object should have statusTeamGoals and statusOpponentGoals from the game_statuses table
     if (typeof game.statusTeamGoals !== 'number' || typeof game.statusOpponentGoals !== 'number') {
       return {
         ourScore: 0,
@@ -357,13 +358,14 @@ export class UnifiedGameScoreService {
     let ourScore: number;
     let theirScore: number;
 
-    // Determine our score based on which team is ours
+    // For status-based games (forfeit), the scores are already set by game status
+    // We need to apply them from the perspective of our team
     if (game.homeTeamId === ourTeamId) {
-      // We are home team
+      // We are home team - we get the "team" score, opponent gets "opponent" score
       ourScore = game.statusTeamGoals;
       theirScore = game.statusOpponentGoals;
     } else if (game.awayTeamId === ourTeamId) {
-      // We are away team - statusTeamGoals is home score, statusOpponentGoals is away score
+      // We are away team - we get the "opponent" score, they get the "team" score
       ourScore = game.statusOpponentGoals;
       theirScore = game.statusTeamGoals;
     } else {
@@ -384,6 +386,9 @@ export class UnifiedGameScoreService {
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} STATUS final calculation:`, {
       ourTeamId,
       theirTeamId,
+      statusName: game.statusName,
+      statusTeamGoals: game.statusTeamGoals,
+      statusOpponentGoals: game.statusOpponentGoals,
       ourScore,
       theirScore,
       result,
