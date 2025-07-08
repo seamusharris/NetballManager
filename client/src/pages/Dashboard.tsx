@@ -291,6 +291,20 @@ export default function Dashboard() {
           showRound={true}
           showScore={false}
         />
+
+        {/* Team Performance Metrics Dashboard */}
+        <DashboardSummary 
+          players={players || []} 
+          games={games || []} 
+          seasons={seasons || []}
+          activeSeason={activeSeason}
+          isLoading={isLoading}
+          centralizedRosters={gameRostersMap}
+          centralizedStats={gameStatsMap}
+          centralizedScores={gameScoresMap}
+          isBatchDataLoading={isLoadingBatchData}
+          teams={clubTeams}
+        />
       </div>
     </>
   );
