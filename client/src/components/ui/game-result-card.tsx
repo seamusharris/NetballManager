@@ -269,41 +269,29 @@ export default function GameResultCard({
     // For upcoming games, show dash
     if (isUpcoming) return "—";
 
-    // Use unified service scores - always display in home-away format
+    // Use unified service scores - the service already handles perspective correctly
     if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
-      // Always get home and away scores in proper order
+      // The unified service returns ourScore/theirScore from our perspective
+      // We need to convert this back to home/away format for display
       let homeScore = 0;
       let awayScore = 0;
 
-      if (currentTeamId) {
-        // Team perspective: determine home/away scores correctly
-        if (game.homeTeamId === currentTeamId) {
-          // Current team is home - for=home, against=away
-          homeScore = scores.finalScore.for;
-          awayScore = scores.finalScore.against;
-        } else if (game.awayTeamId === currentTeamId) {
-          // Current team is away - for=away, against=home, so flip for home-away display
-          homeScore = scores.finalScore.against;
-          awayScore = scores.finalScore.for;
-        }
-      } else {
-        // Club-wide view - determine home/away based on which team is ours
-        const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
-        const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
+      // Check if our team is home or away
+      const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
+      const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
 
-        if (homeIsOurs) {
-          // Home team is ours - for=home, against=away
-          homeScore = scores.finalScore.for;
-          awayScore = scores.finalScore.against;
-        } else if (awayIsOurs) {
-          // Away team is ours - for=away, against=home, so flip for home-away display
-          homeScore = scores.finalScore.against;
-          awayScore = scores.finalScore.for;
-        } else {
-          // Neither team is ours - assume scores are in home-away format already
-          homeScore = scores.finalScore.for;
-          awayScore = scores.finalScore.against;
-        }
+      if (homeIsOurs) {
+        // Our team is home - ourScore = homeScore, theirScore = awayScore
+        homeScore = scores.finalScore.for;
+        awayScore = scores.finalScore.against;
+      } else if (awayIsOurs) {
+        // Our team is away - ourScore = awayScore, theirScore = homeScore
+        homeScore = scores.finalScore.against;
+        awayScore = scores.finalScore.for;
+      } else {
+        // Neither team is ours - display as-is (shouldn't happen in club context)
+        homeScore = scores.finalScore.for;
+        awayScore = scores.finalScore.against;
       }
 
       return (
@@ -395,39 +383,27 @@ export default function GameResultCard({
             </div>
           ) : (
             (() => {
-              // Always get home and away scores in proper order
+              // The unified service returns ourScore/theirScore from our perspective
+              // Convert back to home/away format for display
               let homeScore = 0;
               let awayScore = 0;
 
-              if (currentTeamId) {
-                // Team perspective: determine home/away scores correctly
-                if (game.homeTeamId === currentTeamId) {
-                  // Current team is home - for=home, against=away
-                  homeScore = scores.finalScore.for;
-                  awayScore = scores.finalScore.against;
-                } else if (game.awayTeamId === currentTeamId) {
-                  // Current team is away - for=away, against=home, so flip for home-away display
-                  homeScore = scores.finalScore.against;
-                  awayScore = scores.finalScore.for;
-                }
-              } else {
-                // Club-wide view - determine home/away based on which team is ours
-                const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
-                const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
+              // Check if our team is home or away
+              const homeIsOurs = urlClubTeams?.some(t => t.id === game.homeTeamId);
+              const awayIsOurs = urlClubTeams?.some(t => t.id === game.awayTeamId);
 
-                if (homeIsOurs) {
-                  // Home team is ours - for=home, against=away
-                  homeScore = scores.finalScore.for;
-                  awayScore = scores.finalScore.against;
-                } else if (awayIsOurs) {
-                  // Away team is ours - for=away, against=home, so flip for home-away display
-                  homeScore = scores.finalScore.against;
-                  awayScore = scores.finalScore.for;
-                } else {
-                  // Neither team is ours - assume scores are in home-away format already
-                  homeScore = scores.finalScore.for;
-                  awayScore = scores.finalScore.against;
-                }
+              if (homeIsOurs) {
+                // Our team is home - ourScore = homeScore, theirScore = awayScore
+                homeScore = scores.finalScore.for;
+                awayScore = scores.finalScore.against;
+              } else if (awayIsOurs) {
+                // Our team is away - ourScore = awayScore, theirScore = homeScore
+                homeScore = scores.finalScore.against;
+                awayScore = scores.finalScore.for;
+              } else {
+                // Neither team is ours - display as-is (shouldn't happen in club context)
+                homeScore = scores.finalScore.for;
+                awayScore = scores.finalScore.against;
               }
 
               return (

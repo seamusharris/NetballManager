@@ -54,7 +54,7 @@ interface Game {
  * Provides consistent score calculations across all components
  */
 export class UnifiedGameScoreService {
-  
+
   /**
    * Calculate game score from team or club perspective
    * @param game - Game data
@@ -68,7 +68,7 @@ export class UnifiedGameScoreService {
     perspective: number | 'club-wide' = 'club-wide',
     clubTeamIds: number[] = []
   ): GameScoreResult {
-    
+
     // Handle BYE games first
     if (this.isByeGame(game)) {
       return {
@@ -250,7 +250,7 @@ export class UnifiedGameScoreService {
     const quarterBreakdown: QuarterScore[] = [];
 
     const { ourTeamId, theirTeamId } = teamIds;
-    
+
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} official scores calculation:`, {
       ourTeamId,
       theirTeamId,
@@ -279,7 +279,7 @@ export class UnifiedGameScoreService {
     Object.keys(scoresByQuarter).forEach(quarterStr => {
       const quarter = parseInt(quarterStr);
       const quarterScores = scoresByQuarter[quarter];
-      
+
       const ourQuarterScore = quarterScores[ourTeamId] || 0;
       const theirQuarterScore = quarterScores[theirTeamId] || 0;
 
@@ -317,7 +317,7 @@ export class UnifiedGameScoreService {
     quarterBreakdown.sort((a, b) => a.quarter - b.quarter);
 
     const result = this.determineResult(ourTotalScore, theirTotalScore);
-    
+
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} OFFICIAL final calculation:`, {
       ourTotalScore,
       theirTotalScore,
@@ -353,7 +353,7 @@ export class UnifiedGameScoreService {
     }
 
     const { ourTeamId, theirTeamId } = teamIds;
-    
+
     let ourScore: number;
     let theirScore: number;
 
@@ -418,7 +418,7 @@ export class UnifiedGameScoreService {
     if (clubTeamIds.length > 0) {
       const homeIsOurs = clubTeamIds.includes(game.homeTeamId || 0);
       const awayIsOurs = clubTeamIds.includes(game.awayTeamId || 0);
-      
+
       console.log(`🔍 UNIFIED SERVICE - Game ${game.id} getTeamIds:`, {
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
@@ -427,7 +427,7 @@ export class UnifiedGameScoreService {
         awayIsOurs,
         perspective
       });
-      
+
       if (homeIsOurs && awayIsOurs) {
         // Inter-club game: both teams are ours
         console.log(`🔍 UNIFIED SERVICE - Game ${game.id} INTER-CLUB: our=${game.homeTeamId}, their=${game.awayTeamId}`);
@@ -466,11 +466,11 @@ export class UnifiedGameScoreService {
       isInterClubGame,
       calculation: ourScore > theirScore ? 'WIN' : ourScore < theirScore ? 'LOSS' : 'DRAW'
     });
-    
+
     if (isInterClubGame) {
       return 'inter-club';
     }
-    
+
     if (ourScore > theirScore) return 'win';
     if (ourScore < theirScore) return 'loss';
     return 'draw';
