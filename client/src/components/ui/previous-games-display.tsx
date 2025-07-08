@@ -117,7 +117,7 @@ export default function PreviousGamesDisplay({
                 <GameResultCard
                   game={game}
                   currentTeamId={currentTeamId}
-                  centralizedScores={centralizedScores?.[game.id] || []}
+                  centralizedScores={gameScores}
                   gameStats={batchStats?.[game.id] || []}
                   showLink={true}
                   className="w-full"
