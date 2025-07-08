@@ -13,7 +13,7 @@ import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationA
 import TeamPositionAnalysis from '@/components/dashboard/TeamPositionAnalysis';
 import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRequestMonitor } from '@/hooks/use-request-monitor';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -110,21 +110,14 @@ export default function Dashboard() {
     refetchOnWindowFocus: true,
   });
 
-  // Fetch ALL season games for the Season tab (not limited to recent games)
-  const { data: allSeasonGames = [], isLoading: seasonGamesLoading, error: allSeasonGamesError } = useQuery<any[]>({
-    queryKey: ['season-games', currentTeamId, 'all'],
-    queryFn: async () => {
-      if (!currentTeamId) return [];
-      console.log(`Dashboard: Fetching ALL season games for team ${currentTeamId}`);
-      // Use club-wide games endpoint to ensure we get all games
-      const result = await apiClient.get(`/api/clubs/${currentClub?.id}/games?teamId=${currentTeamId}`);
-      console.log(`Dashboard: Received ${result?.length || 0} complete season games for team ${currentTeamId}`);
-      return result;
-    },
-    enabled: !!(currentTeamId && currentClub?.id),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 0,
-  });
+  // Filter season games from main games data (same approach as Team Preparation)
+  const seasonGames = useMemo(() => {
+    if (!currentTeamId || !games.length) return [];
+    return games.filter(game => 
+      (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId) &&
+      game.statusIsCompleted
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [games, currentTeamId]);
 
   // Opponents system has been completely removed
 
@@ -226,7 +219,7 @@ export default function Dashboard() {
   const isLoading = (isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingBatchData) && (!hasBasicData || !hasBatchData);
 
   // Show error state if any query fails
-  if (playersError || gamesError || seasonsError || activeSeasonError || allSeasonGamesError) {
+  if (playersError || gamesError || seasonsError || activeSeasonError) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Dashboard Error</h1>
@@ -235,7 +228,6 @@ export default function Dashboard() {
           {gamesError && <p>Games error: {String(gamesError)}</p>}
           {seasonsError && <p>Seasons error: {String(seasonsError)}</p>}
           {activeSeasonError && <p>Active season error: {String(activeSeasonError)}</p>}
-          {allSeasonGamesError && <p>All Season Games error: {String(allSeasonGamesError)}</p>}
         </div>
       </div>
     );
@@ -348,7 +340,7 @@ export default function Dashboard() {
               {/* Season Games Display */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
                 <SeasonGamesDisplay
-                  seasonGames={allSeasonGames || []}
+                  seasonGames={seasonGames || []}
                   currentTeamId={currentTeamId}
                   batchScores={gameScoresMap}
                   batchStats={gameStatsMap}
