@@ -284,7 +284,7 @@ export default function Dashboard() {
                 Recent Form
               </TabsTrigger>
               <TabsTrigger value="season" className="data-[state=active]:bg-white data-[state=active]:shadow-md">
-                Season
+                Season Form
               </TabsTrigger>
             </TabsList>
 
@@ -337,6 +337,15 @@ export default function Dashboard() {
             </TabsContent>
 
             <TabsContent value="season" className="space-y-8">
+              {/* Season Form Header */}
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-center">
+                    Season Form - {activeSeason?.name || 'Current Season'}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+
               {/* Season Games Display */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
                 <SeasonGamesDisplay
