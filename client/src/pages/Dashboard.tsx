@@ -285,39 +285,31 @@ export default function Dashboard() {
 
           {/* Enhanced Content Grid */}
           <div className="grid gap-8 lg:gap-10">
-            {/* Recent Form Section with Enhanced Card */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-0">
-                <RecentFormWidget 
-                  games={games || []}
-                  currentTeamId={currentTeamId}
-                  currentClubId={currentClubId}
-                  gameScoresMap={gameScoresMap}
-                  gameStatsMap={gameStatsMap}
-                  className=""
-                />
-              </CardContent>
-            </Card>
+            {/* Recent Form Section */}
+            <RecentFormWidget 
+              games={games || []}
+              currentTeamId={currentTeamId}
+              currentClubId={currentClubId}
+              gameScoresMap={gameScoresMap}
+              gameStatsMap={gameStatsMap}
+              className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
+            />
 
-            {/* Upcoming Games Section with Enhanced Card */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-0">
-                <UpcomingGamesWidget
-                  games={games || []}
-                  teamId={currentTeamId}
-                  clubId={currentClubId}
-                  limit={5}
-                  title="Upcoming Games"
-                  className=""
-                  centralizedScores={gameScoresMap}
-                  gameStats={gameStatsMap}
-                  clubTeams={clubTeams || []}
-                  showDate={true}
-                  showRound={true}
-                  showScore={false}
-                />
-              </CardContent>
-            </Card>
+            {/* Upcoming Games Section */}
+            <UpcomingGamesWidget
+              games={games || []}
+              teamId={currentTeamId}
+              clubId={currentClubId}
+              limit={5}
+              title="Upcoming Games"
+              className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
+              centralizedScores={gameScoresMap}
+              gameStats={gameStatsMap}
+              clubTeams={clubTeams || []}
+              showDate={true}
+              showRound={true}
+              showScore={false}
+            />
 
             {/* Team Performance Metrics Dashboard with Enhanced Container */}
             <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
