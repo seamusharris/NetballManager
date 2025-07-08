@@ -193,20 +193,22 @@ export class UnifiedGameScoreService {
 
     for (const game of eligibleGames) {
       const officialScores = officialScoresMap[game.id] || [];
-      const result = this.calculateGameScore(game, officialScores, teamId, clubTeamIds);
-
-      if (result.hasValidScore) {
+      const scores = this.calculateGameScore(game, officialScores, teamId, clubTeamIds);
+      
+      if (scores.hasValidScore) {
         totalGames++;
-        switch (result.result) {
-          case 'win':
-            wins++;
-            break;
-          case 'loss':
-            losses++;
-            break;
-          case 'draw':
-            draws++;
-            break;
+        
+        // Determine result from team perspective
+        const isHomeTeam = game.homeTeamId === teamId;
+        const teamScore = isHomeTeam ? scores.homeScore : scores.awayScore;
+        const opponentScore = isHomeTeam ? scores.awayScore : scores.homeScore;
+        
+        if (teamScore > opponentScore) {
+          wins++;
+        } else if (teamScore < opponentScore) {
+          losses++;
+        } else {
+          draws++;
         }
       }
     }
@@ -265,8 +267,7 @@ export class UnifiedGameScoreService {
     const awayTeamId = game.awayTeamId || 0;
 
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} official scores calculation:`, {
-      ourTeamId,
-      theirTeamId,
+      teamIds,
       homeTeamId: game.homeTeamId,
       awayTeamId: game.awayTeamId,
       scoresCount: officialScores.length
@@ -277,8 +278,7 @@ export class UnifiedGameScoreService {
       console.log(`🔍 UNIFIED SERVICE - Team 128 official scores for game ${game.id}:`, {
         homeTeamId: game.homeTeamId,
         awayTeamId: game.awayTeamId,
-        ourTeamId,
-        theirTeamId,
+        teamIds,
         officialScoresCount: officialScores.length,
         officialScores: officialScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`)
       });
@@ -325,13 +325,24 @@ export class UnifiedGameScoreService {
     // Sort quarter breakdown by quarter number
     quarterBreakdown.sort((a, b) => a.quarter - b.quarter);
 
+    // Check if this is an inter-club game
+    const homeIsOurs = clubTeamIds.includes(homeTeamId);
+    const awayIsOurs = clubTeamIds.includes(awayTeamId);
+    const isInterClubGame = homeIsOurs && awayIsOurs;
+    
     // For display purposes, result is always from home team perspective for consistency
-    const result = this.determineHomeAwayResult(homeTotalScore, awayTotalScore);
+    let result: 'win' | 'loss' | 'draw' | 'inter-club';
+    if (isInterClubGame) {
+      result = 'inter-club';
+    } else {
+      result = this.determineHomeAwayResult(homeTotalScore, awayTotalScore);
+    }
 
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} OFFICIAL final calculation:`, {
       homeTotalScore,
       awayTotalScore,
       result,
+      isInterClubGame,
       hasValidScore: true,
       quarterBreakdown: quarterBreakdown.length
     });
@@ -342,7 +353,8 @@ export class UnifiedGameScoreService {
       result,
       quarterBreakdown,
       hasValidScore: true,
-      scoreSource: 'official'
+      scoreSource: 'official',
+      isInterClubGame
     };
   }
 
@@ -362,12 +374,22 @@ export class UnifiedGameScoreService {
       };
     }
 
-    // For status-based games (forfeit), convert to home/away format
-    // statusTeamGoals/statusOpponentGoals are from the home team's perspective
+    // For status-based games (forfeit), scores are already in home/away format
     const homeScore = game.statusTeamGoals;
     const awayScore = game.statusOpponentGoals;
 
-    const result = this.determineHomeAwayResult(homeScore, awayScore);
+    // Check if this is an inter-club game
+    const homeIsOurs = clubTeamIds.includes(game.homeTeamId || 0);
+    const awayIsOurs = clubTeamIds.includes(game.awayTeamId || 0);
+    const isInterClubGame = homeIsOurs && awayIsOurs;
+    
+    let result: 'win' | 'loss' | 'draw' | 'inter-club';
+    if (isInterClubGame) {
+      result = 'inter-club';
+    } else {
+      result = this.determineHomeAwayResult(homeScore, awayScore);
+    }
+    
     const hasValidScore = homeScore >= 0 && awayScore >= 0;
 
     console.log(`🔍 UNIFIED SERVICE - Game ${game.id} STATUS final calculation:`, {
@@ -388,7 +410,8 @@ export class UnifiedGameScoreService {
       result,
       quarterBreakdown: [],
       hasValidScore,
-      scoreSource: 'status'
+      scoreSource: 'status',
+      isInterClubGame
     };
   }
 
