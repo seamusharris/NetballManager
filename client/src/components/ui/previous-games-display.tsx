@@ -29,7 +29,7 @@ interface PreviousGamesDisplayProps {
 }
 
 export default function PreviousGamesDisplay({ 
-  historicalGames, 
+  historicalGames = [], 
   currentTeamId, 
   currentClubId, 
   batchScores, 
@@ -45,7 +45,7 @@ export default function PreviousGamesDisplay({
   compact = false,
   excludeSpecialGames = false
 }: PreviousGamesDisplayProps) {
-  if (historicalGames.length === 0) {
+  if (!historicalGames || historicalGames.length === 0) {
     return (
       <Card className={className}>
         <CardHeader className="pb-6">
