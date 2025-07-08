@@ -110,6 +110,22 @@ export default function Dashboard() {
     refetchOnWindowFocus: true,
   });
 
+  // Fetch ALL season games for the Season tab (not limited to recent games)
+  const { data: allSeasonGames = [], isLoading: seasonGamesLoading, error: allSeasonGamesError } = useQuery<any[]>({
+    queryKey: ['season-games', currentTeamId, 'all'],
+    queryFn: async () => {
+      if (!currentTeamId) return [];
+      console.log(`Dashboard: Fetching ALL season games for team ${currentTeamId}`);
+      // Use club-wide games endpoint to ensure we get all games
+      const result = await apiClient.get(`/api/clubs/${currentClub?.id}/games?teamId=${currentTeamId}`);
+      console.log(`Dashboard: Received ${result?.length || 0} complete season games for team ${currentTeamId}`);
+      return result;
+    },
+    enabled: !!(currentTeamId && currentClub?.id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 0,
+  });
+
   // Opponents system has been completely removed
 
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
@@ -210,7 +226,7 @@ export default function Dashboard() {
   const isLoading = (isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingBatchData) && (!hasBasicData || !hasBatchData);
 
   // Show error state if any query fails
-  if (playersError || gamesError || seasonsError || activeSeasonError) {
+  if (playersError || gamesError || seasonsError || activeSeasonError || allSeasonGamesError) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Dashboard Error</h1>
@@ -219,6 +235,7 @@ export default function Dashboard() {
           {gamesError && <p>Games error: {String(gamesError)}</p>}
           {seasonsError && <p>Seasons error: {String(seasonsError)}</p>}
           {activeSeasonError && <p>Active season error: {String(activeSeasonError)}</p>}
+          {allSeasonGamesError && <p>All Season Games error: {String(allSeasonGamesError)}</p>}
         </div>
       </div>
     );
@@ -331,7 +348,7 @@ export default function Dashboard() {
               {/* Season Games Display */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg">
                 <SeasonGamesDisplay
-                  seasonGames={games || []}
+                  seasonGames={allSeasonGames || []}
                   currentTeamId={currentTeamId}
                   batchScores={gameScoresMap}
                   batchStats={gameStatsMap}
