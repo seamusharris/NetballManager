@@ -360,9 +360,11 @@ export default function PreviousGamesDisplay({
 
         {/* View More Button */}
         {showViewMore && viewMoreHref && historicalGames.length > (maxGames || 5) && (
-          <ViewMoreButton href={viewMoreHref}>
-            {viewMoreText}
-          </ViewMoreButton>
+          <div className="mt-3">
+            <ViewMoreButton href={viewMoreHref}>
+              {viewMoreText}
+            </ViewMoreButton>
+          </div>
         )}
       </CardContent>
     </Card>
