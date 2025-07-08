@@ -1473,8 +1473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       statusDisplayName: row.status_display_name,
       statusIsCompleted: row.is_completed,
       statusAllowsStatistics: row.allows_statistics,
-      statusTeamGoals: row.team_goals,
-      statusOpponentGoals: row.opponent_goals,
+      statusTeamGoals: row.home_team_goals,
+      statusOpponentGoals: row.away_team_goals,
 
       // Season fields (consistent camelCase)
       seasonName: row.season_name,
@@ -1517,8 +1517,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gs.display_name as status_display_name, 
           gs.is_completed, 
           gs.allows_statistics, 
-          gs.team_goals, 
-          gs.opponent_goals,
+          gs.home_team_goals, 
+          gs.away_team_goals,
           s.name as season_name, 
           s.start_date as season_start, 
           s.end_date as season_end, 
