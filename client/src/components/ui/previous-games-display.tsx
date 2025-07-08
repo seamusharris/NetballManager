@@ -18,6 +18,12 @@ interface PreviousGamesDisplayProps {
   className?: string;
   hideWinLossIndicators?: boolean;
   centralizedScores?: Record<number, any[]>;
+  // New configuration options
+  showAnalytics?: boolean; // Show quarter averages and attack/defense
+  showQuarterScores?: boolean; // Show quarter-by-quarter overlay
+  maxGames?: number; // Limit number of games displayed
+  title?: string; // Custom title override
+  compact?: boolean; // More compact display for widgets
 }
 
 export default function PreviousGamesDisplay({ 
@@ -29,7 +35,12 @@ export default function PreviousGamesDisplay({
   opponentName = "Opponent",
   className = "",
   hideWinLossIndicators = false,
-  centralizedScores
+  centralizedScores,
+  showAnalytics = true,
+  showQuarterScores = true,
+  maxGames,
+  title,
+  compact = false
 }: PreviousGamesDisplayProps) {
   if (historicalGames.length === 0) {
     return (
@@ -62,14 +73,14 @@ export default function PreviousGamesDisplay({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-6">
+      <CardHeader className={compact ? "pb-3" : "pb-6"}>
         <CardTitle>
-          {opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`}
+          {title || (opponentName === "Recent Form" ? opponentName : `Previous Games vs ${opponentName}`)}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {historicalGames.slice(0, 5).map((game, index) => {
+          {historicalGames.slice(0, maxGames || 5).map((game, index) => {
             // Check for special status games (e.g., forfeit, bye)
             const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
 
@@ -125,7 +136,7 @@ export default function PreviousGamesDisplay({
 
                 {/* Right side - quarter breakdown for non-special games */}
                 <div className="ml-4 flex-shrink-0">
-                  {!isSpecialStatus && hasQuarterData ? (
+                  {showQuarterScores && !isSpecialStatus && hasQuarterData ? (
                     (() => {
                       const { teamScores, opponentScores } = quarterData;
 
@@ -221,6 +232,7 @@ export default function PreviousGamesDisplay({
         </div>
 
         {/* Quarter Average Performance Boxes + Goal Difference */}
+        {showAnalytics && (
         <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
           {[1, 2, 3, 4].map(quarter => {
             // Calculate average scores for this quarter across all historical games
@@ -403,8 +415,10 @@ export default function PreviousGamesDisplay({
           })()}
         </div>
 
+        )}
+
         {/* Attack vs Defense Performance - Side by Side */}
-        {historicalGames.length > 0 && (
+        {showAnalytics && historicalGames.length > 0 && (
           <div className="mt-6">
             {(() => {
               // Calculate attack vs defense breakdown based on actual position stats

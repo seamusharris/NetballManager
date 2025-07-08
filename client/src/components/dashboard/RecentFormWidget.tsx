@@ -1,4 +1,3 @@
-
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
 import { hasPositionStats } from '@/lib/positionStats';
 
@@ -25,7 +24,7 @@ export function RecentFormWidget({
     !game.isBye && 
     game.statusName !== 'bye'
   ) || [];
-  
+
   // Sort by date descending and take last 5
   const recentGames = completedGames
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -35,16 +34,16 @@ export function RecentFormWidget({
 
   return (
     <PreviousGamesDisplay
-      historicalGames={recentGames}
-      currentTeamId={currentTeamId || 0}
-      currentClubId={currentClubId || 0}
-      batchScores={gameScoresMap}
-      batchStats={gameStatsMap}
-      opponentName="Recent Form"
-      className={className}
-      hideWinLossIndicators={true}
-      centralizedScores={gameScoresMap}
-    />
+        historicalGames={recentGames}
+        currentTeamId={currentTeamId}
+        currentClubId={currentClubId}
+        batchScores={gameScoresMap}
+        batchStats={gameStatsMap}
+        title="Recent Form"
+        showAnalytics={true}
+        showQuarterScores={true}
+        maxGames={5}
+      />
   );
 }
 
