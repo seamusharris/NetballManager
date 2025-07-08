@@ -246,37 +246,20 @@ export default function Dashboard() {
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="container py-8 mx-auto space-y-8">
-          {/* Enhanced Header with Card Background */}
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden relative">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KPGcgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjA1Ij4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPgo8L2c+CjwvZz4KPHN2Zz4K')] opacity-30"></div>
-            <CardContent className="relative p-8">
+          {/* Clean Header */}
+          <Card className="border-0 shadow-lg bg-slate-900 text-white">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <div className="w-6 h-6 bg-white rounded-full"></div>
-                    </div>
-                    <div>
-                      <h1 className="text-4xl font-bold tracking-tight">
-                        Team Dashboard
-                      </h1>
-                      <div className="flex items-center gap-3 mt-2">
-                        <p className="text-blue-100 text-lg">
-                          Performance metrics and insights for your team
-                        </p>
-                        {currentTeamId && currentTeam && (
-                          <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium border border-white/30">
-                            {currentTeam.name}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight mb-2">
+                    {currentClub?.name} {currentTeam?.name} Dashboard
+                  </h1>
+                  <p className="text-slate-300">
+                    Performance metrics and insights for your team
+                  </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-1 border border-white/20">
-                    <TeamSwitcher mode="required" />
-                  </div>
+                  <TeamSwitcher mode="required" />
                 </div>
               </div>
             </CardContent>
