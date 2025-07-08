@@ -25,6 +25,7 @@ interface PreviousGamesDisplayProps {
   maxGames?: number; // Limit number of games displayed
   title?: string; // Custom title override
   compact?: boolean; // More compact display for widgets
+  excludeSpecialGames?: boolean; // Exclude BYE/forfeit games from analytics
 }
 
 export default function PreviousGamesDisplay({ 
@@ -41,7 +42,8 @@ export default function PreviousGamesDisplay({
   showQuarterScores = true,
   maxGames,
   title,
-  compact = false
+  compact = false,
+  excludeSpecialGames = false
 }: PreviousGamesDisplayProps) {
   if (historicalGames.length === 0) {
     return (
@@ -239,7 +241,7 @@ export default function PreviousGamesDisplay({
               games={historicalGames}
               currentTeamId={currentTeamId}
               batchScores={batchScores}
-              excludeSpecialGames={false}
+              excludeSpecialGames={excludeSpecialGames}
             />
           </div>
         )}
@@ -263,6 +265,15 @@ export default function PreviousGamesDisplay({
               historicalGames.forEach(game => {
                 // Only include games that allow statistics (excludes forfeit games, BYE games, etc.)
                 if (!game.statusAllowsStatistics) return;
+                
+                // Skip special status games if requested
+                if (excludeSpecialGames && (
+                  game.statusName === 'bye' || 
+                  game.statusName === 'forfeit-win' || 
+                  game.statusName === 'forfeit-loss' ||
+                  game.statusDisplayName === 'Forfeit Loss' ||
+                  game.statusDisplayName === 'Forfeit Win'
+                )) return;
 
                 const gameStats = batchStats?.[game.id] || [];
                 if (hasPositionStats(gameStats)) {
