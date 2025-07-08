@@ -149,7 +149,7 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
         </div>
 
         {games.filter(game => game.statusIsCompleted === true).length > RECENT_GAMES_COUNT ? (
-          <ViewMoreButton href={`/games/${currentTeam?.id}?status=completed`}>
+          <ViewMoreButton href={`/team/${currentTeam?.id}/games?status=completed`}>
             View more →
           </ViewMoreButton>
         ) : (
