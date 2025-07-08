@@ -317,16 +317,16 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
  * @param gameStatus The GameStatus object from the database
  * @returns The forfeit game scores by quarter and final
  */
-export function getForfeitGameScoreFromStatus(gameStatus: { name: string, teamGoals?: number | null, opponentGoals?: number | null }) {
+export function getForfeitGameScoreFromStatus(gameStatus: { name: string, homeTeamGoals?: number | null, awayTeamGoals?: number | null }) {
   // Use the database-defined scores, with fallback to legacy values
   let teamScore: number;
   let opponentScore: number;
-  
-  if (gameStatus.teamGoals !== null && gameStatus.teamGoals !== undefined &&
-      gameStatus.opponentGoals !== null && gameStatus.opponentGoals !== undefined) {
+
+  if (gameStatus.homeTeamGoals !== null && gameStatus.homeTeamGoals !== undefined &&
+      gameStatus.awayTeamGoals !== null && gameStatus.awayTeamGoals !== undefined) {
     // Use database-defined scores
-    teamScore = gameStatus.teamGoals;
-    opponentScore = gameStatus.opponentGoals;
+    teamScore = gameStatus.homeTeamGoals;
+    opponentScore = gameStatus.awayTeamGoals;
   } else {
     // Fallback to legacy logic
     if (gameStatus.name === 'forfeit-win') {
