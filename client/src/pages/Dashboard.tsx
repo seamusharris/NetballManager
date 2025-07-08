@@ -116,7 +116,7 @@ export default function Dashboard() {
     return games.filter(game => 
       (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId) &&
       game.statusIsCompleted
-    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [games, currentTeamId]);
 
   // Opponents system has been completely removed

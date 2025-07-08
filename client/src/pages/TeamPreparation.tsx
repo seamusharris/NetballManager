@@ -244,7 +244,7 @@ export default function TeamPreparation() {
     return allGames.filter(game => 
       (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId) &&
       game.statusIsCompleted
-    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allGames, currentTeamId]);
 
   const getTrendIcon = (current: number, previous: number) => {
