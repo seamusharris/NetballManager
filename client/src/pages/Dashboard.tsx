@@ -318,15 +318,21 @@ export default function Dashboard() {
                   />
 
                   {/* Recent Games - Right Column */}
-                  <RecentGamesWidget 
-                    games={games || []}
-                    teamId={currentTeamId}
-                    clubId={currentClubId}
-                    centralizedScores={gameScoresMap}
-                    gameStats={gameStatsMap}
-                    clubTeams={clubTeams || []}
-                    limit={5}
+                  <PreviousGamesDisplay
+                    historicalGames={games?.filter(game => 
+                      game.statusIsCompleted && 
+                      !game.isBye && 
+                      game.statusName !== 'bye'
+                    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5) || []}
+                    currentTeamId={currentTeamId || 0}
+                    currentClubId={currentClubId || 0}
+                    batchScores={gameScoresMap}
+                    batchStats={gameStatsMap}
                     title="Recent Games"
+                    showAnalytics={false}
+                    showQuarterScores={true}
+                    maxGames={5}
+                    compact={true}
                     className="border-0 shadow-lg bg-white/80 backdrop-blur-sm"
                   />
                 </div>
