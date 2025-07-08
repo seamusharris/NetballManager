@@ -758,12 +758,26 @@ export function registerTeamRoutes(app: Express) {
       const result = await db.execute(sql`
         SELECT 
           g.*,
-          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.team_goals, gs.opponent_goals,
-          s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
-          ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
-          at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
-          hc.name as home_club_name, hc.code as home_club_code,
-          ac.name as away_club_name, ac.code as away_club_code,
+          gs.name as status, 
+          gs.display_name as status_display_name, 
+          gs.is_completed, 
+          gs.allows_statistics, 
+          gs.home_team_goals, 
+          gs.away_team_goals,
+          s.name as season_name, 
+          s.start_date as season_start, 
+          s.end_date as season_end, 
+          s.is_active as season_active,
+          ht.name as home_team_name, 
+          ht.division as home_team_division, 
+          ht.club_id as home_club_id,
+          at.name as away_team_name, 
+          at.division as away_team_division, 
+          at.club_id as away_club_id,
+          hc.name as home_club_name, 
+          hc.code as home_club_code,
+          ac.name as away_club_name, 
+          ac.code as away_club_code,
           CASE 
             WHEN g.home_team_id = ${teamId} THEN 'home'
             WHEN g.away_team_id = ${teamId} THEN 'away'
@@ -803,8 +817,8 @@ export function registerTeamRoutes(app: Express) {
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.is_completed,
         statusAllowsStatistics: row.allows_statistics,
-        statusTeamGoals: row.team_goals,
-        statusOpponentGoals: row.opponent_goals,
+        statusTeamGoals: row.home_team_goals,
+        statusOpponentGoals: row.away_team_goals,
 
         // Season fields
         seasonName: row.season_name,
