@@ -435,21 +435,21 @@ export class UnifiedGameScoreService {
 
       if (homeIsOurs && awayIsOurs) {
         // Inter-club game: both teams are ours
-        console.log(`🔍 UNIFIED SERVICE - Game ${game.id} INTER-CLUB: our=${game.homeTeamId}, their=${game.awayTeamId}`);
+        console.log('🔍 UNIFIED SERVICE - Game ' + game.id + ' INTER-CLUB: our=' + game.homeTeamId + ', their=' + game.awayTeamId);
         return { 
           ourTeamId: game.homeTeamId || 0, 
           theirTeamId: game.awayTeamId || 0 
         };
       } else if (homeIsOurs) {
         // Home team is ours
-        console.log(`🔍 UNIFIED SERVICE - Game ${game.id} HOME IS OURS: our=${game.homeTeamId}, their=${game.awayTeamId}`);
+        console.log('🔍 UNIFIED SERVICE - Game ' + game.id + ' HOME IS OURS: our=' + game.homeTeamId + ', their=' + game.awayTeamId);
         return { 
           ourTeamId: game.homeTeamId || 0, 
           theirTeamId: game.awayTeamId || 0 
         };
       } else if (awayIsOurs) {
         // Away team is ours
-        console.log(`🔍 UNIFIED SERVICE - Game ${game.id} AWAY IS OURS: our=${game.awayTeamId}, their=${game.homeTeamId}`);
+        console.log('🔍 UNIFIED SERVICE - Game ' + game.id + ' AWAY IS OURS: our=' + game.awayTeamId + ', their=' + game.homeTeamId);
         return { 
           ourTeamId: game.awayTeamId || 0, 
           theirTeamId: game.homeTeamId || 0 
