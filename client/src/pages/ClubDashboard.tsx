@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation, useParams } from 'wouter';
@@ -6,7 +7,7 @@ import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
 import { calculateTeamWinRate, calculateClubWinRate } from '@/lib/winRateCalculator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award } from 'lucide-react';
+import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award, BarChart3, Settings, Plus, ArrowRight, Crown, Zap, Activity, Clock, Star } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,9 @@ import PlayerStatsCard from '@/components/statistics/PlayerStatsCard';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { cn } from '@/lib/utils';
 import { winRateCalculator } from '@/lib/winRateCalculator';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 
 export default function ClubDashboard() {
   const params = useParams();
@@ -226,10 +230,16 @@ export default function ClubDashboard() {
 
   if (clubLoading || !currentClubId) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <Crown className="w-6 h-6 text-blue-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-slate-900">Loading Club Data</h3>
+            <p className="text-sm text-slate-600">Please wait while we load your club information...</p>
+          </div>
         </div>
       </div>
     );
@@ -237,11 +247,19 @@ export default function ClubDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Loading Club Dashboard</h2>
-          <p className="text-muted-foreground">Please wait while we load your club data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <Activity className="w-8 h-8 text-blue-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-slate-900">Loading Dashboard</h2>
+            <p className="text-slate-600 max-w-md">Gathering your club's performance data and team statistics...</p>
+            <div className="w-64 mx-auto">
+              <Progress value={66} className="h-2" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -254,225 +272,375 @@ export default function ClubDashboard() {
         <meta name="description" content={`View ${currentClub?.name || 'club'} overall performance metrics and team statistics`} />
       </Helmet>
 
-      <div className="container py-8 mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Club Dashboard
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Overview of {currentClub?.name} performance across all teams
-            </p>
-          </div>
-          <div className="text-right space-y-2">
-            <div className="flex justify-end">
-              <ClubSwitcher />
-            </div>
-            <Badge variant="outline" className="text-sm">
-              {activeSeason?.name || 'No Active Season'}
-            </Badge>
-            <p className="text-sm text-muted-foreground">
-              {activeTeams.length} active teams
-            </p>
-          </div>
-        </div>
-
-        {/* Key Metrics Row */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700">Active Teams</CardTitle>
-              <div className="p-2 bg-blue-100 rounded-full">
-                <Users className="h-4 w-4 text-blue-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-900">{activeTeams.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Competing in {activeSeason?.name}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Total Players</CardTitle>
-              <div className="p-2 bg-green-100 rounded-full">
-                <Target className="h-4 w-4 text-green-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-900">{totalPlayers}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {activePlayers.length} active players
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700">Games Played</CardTitle>
-              <div className="p-2 bg-purple-100 rounded-full">
-                <Calendar className="h-4 w-4 text-purple-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-900">{clubWinRate.totalGames}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {completedGames.length} total completed, {upcomingGames.length} upcoming
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">Club Win Rate</CardTitle>
-              <div className="p-2 bg-orange-100 rounded-full">
-                <Trophy className="h-4 w-4 text-orange-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-900">
-                {Math.round(clubWinRate.winRate)}%
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {clubWinRate.wins} wins from {clubWinRate.totalGames} games
-                {clubWinRate.draws > 0 && `, ${clubWinRate.draws} draws`}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Team Performance Overview */}
-        <Card className="shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-lg">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <div className="p-2 bg-slate-200 rounded-full">
-                <TrendingUp className="h-5 w-5 text-slate-700" />
-              </div>
-              Team Performance Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {teamPerformance.map((team) => (
-                <div 
-                  key={team.id} 
-                  onClick={async () => {
-                    // First set the team in context, then navigate
-                    console.log(`ClubDashboard: Setting team context to ${team.id} (${team.name})`);
-                    setCurrentTeamId(team.id);
-                    
-                    // Small delay to ensure context is set before navigation
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    
-                    console.log(`ClubDashboard: Navigating to team ${team.id} dashboard`);
-                    navigate(`/team/${team.id}/dashboard`);
-                  }}
-                  className="flex items-center justify-between p-6 border-2 rounded-xl cursor-pointer transform transition-all duration-300 ease-in-out bg-gradient-to-r from-white to-slate-50 hover:from-blue-50 hover:to-blue-100 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 active:scale-[0.98]"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-primary/20">
-                      <span className="text-primary font-bold text-lg">
-                        {team.name.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-lg text-slate-900 transition-colors duration-300 hover:text-primary">{team.name}</h4>
-                      <p className="text-sm text-slate-600 font-medium">{team.division}</p>
-                    </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        {/* Header Section */}
+        <div className="bg-white border-b border-slate-200 shadow-sm">
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Crown className="w-6 h-6 text-white" />
                   </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="text-center p-3 bg-blue-50 rounded-lg transition-all duration-300 hover:bg-blue-100 hover:scale-105">
-                      <div className="font-bold text-xl text-blue-700">{team.totalGames}</div>
-                      <div className="text-blue-600 font-medium">Games</div>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg transition-all duration-300 hover:bg-green-100 hover:scale-105">
-                      <div className="font-bold text-xl text-green-700">{team.wins}</div>
-                      <div className="text-green-600 font-medium">Wins</div>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg transition-all duration-300 hover:bg-purple-100 hover:scale-105">
-                      <div className="font-bold text-xl text-purple-700">{Math.round(team.winRate)}%</div>
-                      <div className="text-purple-600 font-medium">Win Rate</div>
-                    </div>
-                    <Badge 
-                      variant={team.winRate >= 60 ? "default" : team.winRate >= 40 ? "secondary" : "destructive"}
-                      className="text-sm px-3 py-1 font-medium transition-all duration-300 hover:scale-110"
-                    >
-                      {team.winRate >= 60 ? "Strong" : team.winRate >= 40 ? "Average" : "Needs Focus"}
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                      Club Dashboard
+                    </h1>
+                    <p className="text-lg text-slate-600 mt-1">
+                      {currentClub?.name} Performance Overview
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="text-right space-y-2">
+                  <ClubSwitcher />
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200">
+                      <Activity className="w-3 h-3 mr-1" />
+                      {activeSeason?.name || 'No Active Season'}
+                    </Badge>
+                    <Badge variant="secondary" className="text-sm">
+                      {activeTeams.length} Teams
                     </Badge>
                   </div>
-
                 </div>
-              ))}
-              {teamPerformance.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-6 py-8 space-y-8">
+          {/* Key Metrics Grid */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* Active Teams Metric */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-blue-700">Active Teams</CardTitle>
+                    <div className="text-3xl font-bold text-blue-900">{activeTeams.length}</div>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-xs text-blue-600 font-medium">
+                  Competing in {activeSeason?.name || 'current season'}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Total Players Metric */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-emerald-50 to-emerald-100/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-emerald-700">Total Players</CardTitle>
+                    <div className="text-3xl font-bold text-emerald-900">{totalPlayers}</div>
+                  </div>
+                  <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Target className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-xs text-emerald-600 font-medium">
+                  {activePlayers.length} currently active
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Games Played Metric */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-purple-50 to-purple-100/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-purple-700">Games Played</CardTitle>
+                    <div className="text-3xl font-bold text-purple-900">{clubWinRate.totalGames}</div>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Calendar className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-xs text-purple-600 font-medium">
+                  {upcomingGames.length} upcoming matches
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Club Win Rate Metric */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-amber-50 to-amber-100/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-amber-700">Club Win Rate</CardTitle>
+                    <div className="text-3xl font-bold text-amber-900">
+                      {Math.round(clubWinRate.winRate)}%
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Trophy className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <Progress value={clubWinRate.winRate} className="h-2" />
+                  <p className="text-xs text-amber-600 font-medium">
+                    {clubWinRate.wins}W • {clubWinRate.losses}L {clubWinRate.draws > 0 && `• ${clubWinRate.draws}D`}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Team Performance Overview */}
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-900 to-blue-900 text-white">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Team Performance Overview</CardTitle>
+                      <p className="text-blue-100 text-sm mt-1">Click any team to view detailed analytics</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                    {teamPerformance.length} Teams
+                  </Badge>
+                </div>
+              </CardHeader>
+            </div>
+            
+            <CardContent className="p-0">
+              {teamPerformance.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {teamPerformance.map((team, index) => (
+                    <div 
+                      key={team.id} 
+                      onClick={async () => {
+                        console.log(`ClubDashboard: Setting team context to ${team.id} (${team.name})`);
+                        setCurrentTeamId(team.id);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        console.log(`ClubDashboard: Navigating to team ${team.id} dashboard`);
+                        navigate(`/team/${team.id}/dashboard`);
+                      }}
+                      className="group p-6 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 cursor-pointer transition-all duration-300 transform hover:scale-[1.01]"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:shadow-xl transition-shadow">
+                              {team.name.charAt(0)}
+                            </div>
+                            {team.winRate >= 70 && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+                                <Star className="w-3 h-3 text-yellow-800" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <h4 className="font-bold text-lg text-slate-900 group-hover:text-blue-700 transition-colors">
+                              {team.name}
+                            </h4>
+                            <p className="text-sm text-slate-600 font-medium">{team.division}</p>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-slate-200 rounded-full h-1.5">
+                                <div 
+                                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                                    team.winRate >= 70 ? 'bg-emerald-500' : 
+                                    team.winRate >= 50 ? 'bg-blue-500' : 
+                                    team.winRate >= 30 ? 'bg-amber-500' : 'bg-red-500'
+                                  }`}
+                                  style={{ width: `${Math.max(team.winRate, 5)}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-slate-500">{Math.round(team.winRate)}%</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center p-3 bg-slate-50 rounded-lg group-hover:bg-white group-hover:shadow-md transition-all">
+                              <div className="font-bold text-lg text-slate-900">{team.totalGames}</div>
+                              <div className="text-xs text-slate-600 font-medium">Games</div>
+                            </div>
+                            
+                            <div className="text-center p-3 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 group-hover:shadow-md transition-all">
+                              <div className="font-bold text-lg text-emerald-700">{team.wins}</div>
+                              <div className="text-xs text-emerald-600 font-medium">Wins</div>
+                            </div>
+                            
+                            <div className="text-center p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 group-hover:shadow-md transition-all">
+                              <div className="font-bold text-lg text-blue-700">{Math.round(team.winRate)}%</div>
+                              <div className="text-xs text-blue-600 font-medium">Win Rate</div>
+                            </div>
+                          </div>
+
+                          {/* Performance Badge */}
+                          <div className="flex items-center gap-3">
+                            <Badge 
+                              variant={team.winRate >= 70 ? "default" : team.winRate >= 50 ? "secondary" : team.winRate >= 30 ? "outline" : "destructive"}
+                              className={cn(
+                                "px-3 py-1 font-semibold transition-all duration-300 group-hover:scale-110",
+                                team.winRate >= 70 && "bg-emerald-500 hover:bg-emerald-600",
+                                team.winRate >= 50 && team.winRate < 70 && "bg-blue-500 hover:bg-blue-600 text-white",
+                                team.winRate >= 30 && team.winRate < 50 && "bg-amber-500 hover:bg-amber-600 text-white"
+                              )}
+                            >
+                              {team.winRate >= 70 ? (
+                                <><Star className="w-3 h-3 mr-1" /> Excellent</>
+                              ) : team.winRate >= 50 ? (
+                                <><Zap className="w-3 h-3 mr-1" /> Strong</>
+                              ) : team.winRate >= 30 ? (
+                                <><Clock className="w-3 h-3 mr-1" /> Developing</>
+                              ) : (
+                                <><Target className="w-3 h-3 mr-1" /> Focus Needed</>
+                              )}
+                            </Badge>
+                            
+                            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 space-y-4">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
                     <TrendingUp className="h-8 w-8 text-slate-400" />
                   </div>
-                  <p className="text-lg font-medium">No team performance data available</p>
-                  <p className="text-sm">Teams will appear here once games are played</p>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-slate-900">No Team Data Available</h3>
+                    <p className="text-slate-600">Teams will appear here once games are played and recorded</p>
+                  </div>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Recent Club Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Recent Club Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <RecentGames 
-                games={games} 
-                opponents={[]} 
-                className="md:col-span-2" 
-                centralizedStats={batchData?.stats || {}}
-                centralizedScores={batchData?.scores || {}}
-                teams={teams}
-                clubWide={true}
-              />
-              {recentGames.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No recent games to display
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Recent Activity & Quick Actions Row */}
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Recent Club Activity - Takes 2 columns */}
+            <Card className="lg:col-span-2 shadow-lg border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Recent Club Activity</CardTitle>
+                      <p className="text-emerald-100 text-sm mt-1">Latest matches across all teams</p>
+                    </div>
+                  </div>
+                </CardHeader>
+              </div>
+              
+              <CardContent className="p-6">
+                <RecentGames 
+                  games={games} 
+                  opponents={[]} 
+                  className="" 
+                  centralizedStats={batchData?.stats || {}}
+                  centralizedScores={batchData?.scores || {}}
+                  teams={teams}
+                  clubWide={true}
+                />
+                {recentGames.length === 0 && (
+                  <div className="text-center py-12 space-y-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                      <Calendar className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-slate-900">No Recent Games</h3>
+                      <p className="text-slate-600">Recent matches will appear here once games are completed</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <button className="p-4 border rounded-lg hover:bg-muted/50 transition-colors text-left">
-                <div className="font-medium">Manage Teams</div>
-                <div className="text-sm text-muted-foreground">Add or edit team information</div>
-              </button>
-              <button className="p-4 border rounded-lg hover:bg-muted/50 transition-colors text-left">
-                <div className="font-medium">Player Management</div>
-                <div className="text-sm text-muted-foreground">View all club players</div>
-              </button>
-              <button className="p-4 border rounded-lg hover:bg-muted/50 transition-colors text-left">
-                <div className="font-medium">Schedule Games</div>
-                <div className="text-sm text-muted-foreground">Add upcoming fixtures</div>
-              </button>
-              <button className="p-4 border rounded-lg hover:bg-muted/50 transition-colors text-left">
-                <div className="font-medium">Club Settings</div>
-                <div className="text-sm text-muted-foreground">Configure club preferences</div>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Quick Actions - Takes 1 column */}
+            <Card className="shadow-lg border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Zap className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-xl font-bold">Quick Actions</CardTitle>
+                  </div>
+                </CardHeader>
+              </div>
+              
+              <CardContent className="p-6 space-y-3">
+                <Button variant="ghost" className="w-full justify-start h-auto p-4 hover:bg-blue-50 hover:text-blue-700 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <Users className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold">Manage Teams</div>
+                      <div className="text-sm text-slate-600">Add or edit team information</div>
+                    </div>
+                  </div>
+                </Button>
+
+                <Button variant="ghost" className="w-full justify-start h-auto p-4 hover:bg-emerald-50 hover:text-emerald-700 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                      <Target className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold">Player Management</div>
+                      <div className="text-sm text-slate-600">View all club players</div>
+                    </div>
+                  </div>
+                </Button>
+
+                <Button variant="ghost" className="w-full justify-start h-auto p-4 hover:bg-purple-50 hover:text-purple-700 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                      <Calendar className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold">Schedule Games</div>
+                      <div className="text-sm text-slate-600">Add upcoming fixtures</div>
+                    </div>
+                  </div>
+                </Button>
+
+                <Separator className="my-4" />
+
+                <Button variant="ghost" className="w-full justify-start h-auto p-4 hover:bg-slate-50 hover:text-slate-700 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                      <Settings className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold">Club Settings</div>
+                      <div className="text-sm text-slate-600">Configure preferences</div>
+                    </div>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </>
   );
