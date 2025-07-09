@@ -57,7 +57,7 @@ import DropdownExamples from './pages/DropdownExamples';
 import NavigationExamples from './pages/NavigationExamples';
 import TableExamples from './pages/TableExamples';
 import ListExamples from './pages/ListExamples';
-import ModalExamples from './pages/ModalExamples';
+import Modal Examples from './pages/ModalExamples';
 import SearchExamples from './pages/SearchExamples';
 import LoadingExamples from './pages/LoadingExamples';
 import ErrorExamples from './pages/ErrorExamples';
@@ -88,6 +88,7 @@ import RosterGame from '@/pages/RosterGame';
 import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
+const ResultBadgeExamples = lazy(() => import('./pages/ResultBadgeExamples'));
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -270,6 +271,7 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
+        <Route path="/result-badge-examples" component={ResultBadgeExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
