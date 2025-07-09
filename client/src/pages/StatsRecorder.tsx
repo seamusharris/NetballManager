@@ -117,7 +117,11 @@ export default function StatsRecorder() {
     },
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId),
     staleTime: 30 * 1000, // 30 seconds - stats change frequently during recording
-    gcTime: 5 * 60 * 1000 // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error) => {
+      console.error(`StatsRecorder: Stats fetch failed (attempt ${failureCount + 1}):`, error);
+      return failureCount < 2; // Retry up to 2 times
+    }
   });
 
   // Initialize stats from existing data
