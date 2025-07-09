@@ -80,7 +80,8 @@ import Preparation from '@/pages/Preparation';
 import GamePreparation from '@/pages/GamePreparation';
 import TeamPreparation from './pages/TeamPreparation';
 import Preparation2 from './pages/Preparation2';
-import TeamLadder from '@/pages/TeamLadder';
+import TeamLadder from './pages/TeamLadder';
+import TeamPerformanceExamples from './pages/TeamPerformanceExamples';
 // Import actual components for PlayerAvailability and RosterGame
 import PlayerAvailability from '@/pages/PlayerAvailability';
 import RosterGame from '@/pages/RosterGame';
@@ -174,7 +175,7 @@ function Router() {
         <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />
         <Route path="/position-badge-grid-examples" component={withErrorBoundary(PositionBadgeGridExamples, 'PositionBadgeGridExamples')} />
         <Route path="/drag-drop-examples" component={withErrorBoundary(DragDropExamples, 'DragDropExamples')} />
-        <Route path="/team-box-examples" component={withErrorBoundary(TeamBoxExamples, 'TeamBoxExamples')} />
+        <Route path="/team-box-examples" component={TeamBoxExamples} />
         <Route path="/action-button-examples" component={ActionButtonExamples} />
         <Route path="/all-players-design-examples" component={AllPlayersDesignExamples} />
         <Route path="/component-examples" component={ComponentExamples} />
@@ -268,6 +269,7 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
+        <Route path="/team-performance-examples" component={TeamPerformanceExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
