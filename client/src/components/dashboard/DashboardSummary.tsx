@@ -175,32 +175,7 @@ export default function DashboardSummary({
 
   return (
     <div className="space-y-8">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between p-6 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200/60">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-            <div className="w-5 h-5 bg-white rounded-full"></div>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Performance Analytics</h2>
-            <p className="text-slate-600 text-sm">Comprehensive team insights and metrics</p>
-          </div>
-        </div>
-        <div className="flex space-x-3">
-          <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
-            <SelectTrigger className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm rounded-lg w-[200px] hover:bg-white transition-colors">
-              <SelectValue placeholder={activeSeason ? `${activeSeason.name} (Current)` : "Select Season"} />
-            </SelectTrigger>
-            <SelectContent className="bg-white/95 backdrop-blur-sm border border-slate-200">
-              {seasons.map((season) => (
-                <SelectItem key={season.id} value={season.id === activeSeason?.id ? "current" : season.id.toString()}>
-                  {getSeasonDisplayName(season)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      
 
       {/* Enhanced No Data Message */}
       {filteredGames.length === 0 && (
