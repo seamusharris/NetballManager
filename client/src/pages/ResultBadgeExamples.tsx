@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -204,168 +203,101 @@ export default function ResultBadgeExamples() {
           </Card>
         </section>
 
-        {/* Shadow Variations in All Sizes */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Shadow Variations</h2>
-          
-          {/* Subtle Shadow (shadow-md) */}
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Subtle Shadow (shadow-md)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                
-                {/* Small Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Small</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
-                      W
-                    </div>
-                    <div className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
-                      L
-                    </div>
-                    <div className="w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
-                      D
-                    </div>
+        {/* Subtle Shadow - All Sizes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Subtle Shadow - All Sizes</CardTitle>
+            <p className="text-sm text-gray-600">The preferred style for result badges with subtle shadow</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Extra Small */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium w-20">Extra Small:</span>
+                <div className="flex gap-2">
+                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    W
                   </div>
-                  <p className="text-sm text-muted-foreground">For compact displays</p>
-                </div>
-
-                {/* Medium Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Medium</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                      W
-                    </div>
-                    <div className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                      L
-                    </div>
-                    <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                      D
-                    </div>
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    L
                   </div>
-                  <p className="text-sm text-muted-foreground">Standard size for lists</p>
-                </div>
-
-                {/* Default Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Default</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold shadow-md">
-                      W
-                    </div>
-                    <div className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-bold shadow-md">
-                      L
-                    </div>
-                    <div className="w-10 h-10 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold shadow-md">
-                      D
-                    </div>
+                  <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    D
                   </div>
-                  <p className="text-sm text-muted-foreground">Standard size for most uses</p>
                 </div>
-
-                {/* Large Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Large</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-14 h-14 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md">
-                      W
-                    </div>
-                    <div className="w-14 h-14 bg-red-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md">
-                      L
-                    </div>
-                    <div className="w-14 h-14 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md">
-                      D
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Prominent display</p>
-                </div>
+                <span className="text-xs text-gray-500">20px - For compact lists</span>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Strong Shadow (shadow-lg) */}
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Strong Shadow (shadow-lg)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                
-                {/* Small Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Small</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
-                      W
-                    </div>
-                    <div className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
-                      L
-                    </div>
-                    <div className="w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
-                      D
-                    </div>
+              {/* Small */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium w-20">Small:</span>
+                <div className="flex gap-2">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    W
                   </div>
-                  <p className="text-sm text-muted-foreground">Emphasized compact</p>
-                </div>
-
-                {/* Medium Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Medium</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                      W
-                    </div>
-                    <div className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                      L
-                    </div>
-                    <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                      D
-                    </div>
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    L
                   </div>
-                  <p className="text-sm text-muted-foreground">Emphasized standard</p>
-                </div>
-
-                {/* Default Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Default</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      W
-                    </div>
-                    <div className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      L
-                    </div>
-                    <div className="w-10 h-10 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      D
-                    </div>
+                  <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    D
                   </div>
-                  <p className="text-sm text-muted-foreground">Strong emphasis</p>
                 </div>
-
-                {/* Large Size */}
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Large</h3>
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-14 h-14 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                      W
-                    </div>
-                    <div className="w-14 h-14 bg-red-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                      L
-                    </div>
-                    <div className="w-14 h-14 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                      D
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Maximum impact</p>
-                </div>
+                <span className="text-xs text-gray-500">24px - Standard size</span>
               </div>
-            </CardContent>
-          </Card>
-        </section>
+
+              {/* Medium */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium w-20">Medium:</span>
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    W
+                  </div>
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    L
+                  </div>
+                  <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    D
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500">32px - For cards and widgets</span>
+              </div>
+
+              {/* Large */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium w-20">Large:</span>
+                <div className="flex gap-2">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm">
+                    W
+                  </div>
+                  <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm">
+                    L
+                  </div>
+                  <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm">
+                    D
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500">40px - For headers and emphasis</span>
+              </div>
+
+              {/* Extra Large */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium w-20">Extra Large:</span>
+                <div className="flex gap-2">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-sm">
+                    W
+                  </div>
+                  <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-sm">
+                    L
+                  </div>
+                  <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-sm">
+                    D
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500">48px - For dashboard highlights</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Integration Examples */}
         <section>
