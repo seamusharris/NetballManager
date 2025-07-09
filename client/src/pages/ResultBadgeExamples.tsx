@@ -3,13 +3,16 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { ResultBadge } from '@/components/ui/result-badge';
+import { Trophy, Target, TrendingUp, Users } from 'lucide-react';
 
 export default function ResultBadgeExamples() {
   return (
     <PageTemplate
       title="Result Badge Examples"
-      subtitle="Win/Loss/Draw circle badges and result indicators"
+      subtitle="Standardized win/loss/draw badges and result indicators"
       breadcrumbs={[
         { label: 'Component Examples', href: '/component-examples' },
         { label: 'Result Badge Examples' }
@@ -25,21 +28,35 @@ export default function ResultBadgeExamples() {
           <h2 className="text-2xl font-bold mb-4">Basic Result Badges</h2>
           <Card>
             <CardHeader>
-              <CardTitle>Standard W/L/D Circles</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Standard Result Badges
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <ResultBadge result="win" />
-                  <p className="text-sm mt-2">Win</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center space-y-3">
+                  <h3 className="font-semibold text-green-800">Win</h3>
+                  <div className="flex justify-center">
+                    <ResultBadge result="W" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Green background for wins</p>
                 </div>
-                <div className="text-center">
-                  <ResultBadge result="loss" />
-                  <p className="text-sm mt-2">Loss</p>
+                
+                <div className="text-center space-y-3">
+                  <h3 className="font-semibold text-red-800">Loss</h3>
+                  <div className="flex justify-center">
+                    <ResultBadge result="L" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Red background for losses</p>
                 </div>
-                <div className="text-center">
-                  <ResultBadge result="draw" />
-                  <p className="text-sm mt-2">Draw</p>
+                
+                <div className="text-center space-y-3">
+                  <h3 className="font-semibold text-yellow-800">Draw</h3>
+                  <div className="flex justify-center">
+                    <ResultBadge result="D" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Yellow background for draws</p>
                 </div>
               </div>
             </CardContent>
@@ -54,197 +71,215 @@ export default function ResultBadgeExamples() {
               <CardTitle>Size Variations</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Small (sm)</h3>
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="win" size="sm" />
-                    <ResultBadge result="loss" size="sm" />
-                    <ResultBadge result="draw" size="sm" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="text-center space-y-4">
+                  <h3 className="font-semibold">Small</h3>
+                  <div className="flex justify-center space-x-2">
+                    <ResultBadge result="W" size="sm" />
+                    <ResultBadge result="L" size="sm" />
+                    <ResultBadge result="D" size="sm" />
                   </div>
+                  <p className="text-sm text-muted-foreground">For compact displays</p>
                 </div>
                 
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Medium (default)</h3>
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="win" />
-                    <ResultBadge result="loss" />
-                    <ResultBadge result="draw" />
+                <div className="text-center space-y-4">
+                  <h3 className="font-semibold">Medium (Default)</h3>
+                  <div className="flex justify-center space-x-2">
+                    <ResultBadge result="W" />
+                    <ResultBadge result="L" />
+                    <ResultBadge result="D" />
                   </div>
+                  <p className="text-sm text-muted-foreground">Standard size for most uses</p>
                 </div>
                 
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Large (lg)</h3>
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="win" size="lg" />
-                    <ResultBadge result="loss" size="lg" />
-                    <ResultBadge result="draw" size="lg" />
+                <div className="text-center space-y-4">
+                  <h3 className="font-semibold">Large</h3>
+                  <div className="flex justify-center space-x-2">
+                    <ResultBadge result="W" size="lg" />
+                    <ResultBadge result="L" size="lg" />
+                    <ResultBadge result="D" size="lg" />
                   </div>
+                  <p className="text-sm text-muted-foreground">For emphasis or headers</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </section>
 
-        {/* Usage in Game Results */}
+        {/* Usage Examples */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Usage in Game Results</h2>
-          <Card>
+          <h2 className="text-2xl font-bold mb-4">Usage Examples</h2>
+          
+          {/* Recent Games */}
+          <Card className="mb-4">
             <CardHeader>
-              <CardTitle>Game Result Cards</CardTitle>
+              <CardTitle>Recent Games</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">vs Deep Creek</p>
-                    <p className="text-sm text-gray-500">June 7, 2025</p>
+              <div className="space-y-3">
+                {[
+                  { opponent: 'Doncaster Eagles', result: 'W', score: '45-38', date: '2024-03-15' },
+                  { opponent: 'Eltham Panthers', result: 'L', score: '32-41', date: '2024-03-08' },
+                  { opponent: 'Warrandyte Wolves', result: 'D', score: '35-35', date: '2024-03-01' },
+                  { opponent: 'Deep Creek Demons', result: 'W', score: '42-29', date: '2024-02-23' },
+                  { opponent: 'Donvale Dragons', result: 'L', score: '28-39', date: '2024-02-16' },
+                ].map((game, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <ResultBadge result={game.result} />
+                      <div>
+                        <p className="font-medium">{game.opponent}</p>
+                        <p className="text-sm text-muted-foreground">{game.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{game.score}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg font-bold">45 - 42</span>
-                    <ResultBadge result="win" />
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">vs Doncaster</p>
-                    <p className="text-sm text-gray-500">May 31, 2025</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg font-bold">38 - 41</span>
-                    <ResultBadge result="loss" />
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">vs Donvale</p>
-                    <p className="text-sm text-gray-500">May 24, 2025</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg font-bold">35 - 35</span>
-                    <ResultBadge result="draw" />
-                  </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
-        </section>
 
-        {/* Recent Form */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Recent Form Display</h2>
-          <Card>
+          {/* Team Performance Summary */}
+          <Card className="mb-4">
             <CardHeader>
-              <CardTitle>Team Form Tracker</CardTitle>
+              <CardTitle>Team Performance Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Lyrebirds - Last 5 Games</h3>
-                  <div className="flex items-center space-x-2">
-                    <ResultBadge result="win" size="sm" />
-                    <ResultBadge result="win" size="sm" />
-                    <ResultBadge result="loss" size="sm" />
-                    <ResultBadge result="win" size="sm" />
-                    <ResultBadge result="draw" size="sm" />
-                    <span className="text-sm text-gray-500 ml-2">(Most recent on right)</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Eagles - Last 5 Games</h3>
-                  <div className="flex items-center space-x-2">
-                    <ResultBadge result="loss" size="sm" />
-                    <ResultBadge result="loss" size="sm" />
-                    <ResultBadge result="win" size="sm" />
-                    <ResultBadge result="loss" size="sm" />
-                    <ResultBadge result="win" size="sm" />
-                    <span className="text-sm text-gray-500 ml-2">(Most recent on right)</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Compact List View */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Compact List View</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Game Results Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="win" size="sm" />
-                    <span>vs Deep Creek</span>
-                  </div>
-                  <span className="text-sm font-medium">45-42</span>
-                </div>
-                
-                <div className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="loss" size="sm" />
-                    <span>vs Doncaster</span>
-                  </div>
-                  <span className="text-sm font-medium">38-41</span>
-                </div>
-                
-                <div className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="win" size="sm" />
-                    <span>vs Donvale</span>
-                  </div>
-                  <span className="text-sm font-medium">42-39</span>
-                </div>
-                
-                <div className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center space-x-3">
-                    <ResultBadge result="draw" size="sm" />
-                    <span>vs Eltham Panthers</span>
-                  </div>
-                  <span className="text-sm font-medium">35-35</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Statistics Integration */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Statistics Integration</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Season Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="flex justify-center mb-2">
-                    <ResultBadge result="win" size="lg" />
+                    <ResultBadge result="W" size="lg" />
                   </div>
-                  <p className="text-2xl font-bold text-green-700">12</p>
+                  <p className="text-2xl font-bold text-green-800">8</p>
                   <p className="text-sm text-green-600">Wins</p>
                 </div>
                 
                 <div className="text-center p-4 bg-red-50 rounded-lg">
                   <div className="flex justify-center mb-2">
-                    <ResultBadge result="loss" size="lg" />
+                    <ResultBadge result="L" size="lg" />
                   </div>
-                  <p className="text-2xl font-bold text-red-700">6</p>
+                  <p className="text-2xl font-bold text-red-800">3</p>
                   <p className="text-sm text-red-600">Losses</p>
                 </div>
                 
                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
                   <div className="flex justify-center mb-2">
-                    <ResultBadge result="draw" size="lg" />
+                    <ResultBadge result="D" size="lg" />
                   </div>
-                  <p className="text-2xl font-bold text-yellow-700">2</p>
+                  <p className="text-2xl font-bold text-yellow-800">1</p>
                   <p className="text-sm text-yellow-600">Draws</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Recent Form (Last 5 Games)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Oldest</span>
+                <div className="flex space-x-1">
+                  <ResultBadge result="L" size="sm" />
+                  <ResultBadge result="W" size="sm" />
+                  <ResultBadge result="W" size="sm" />
+                  <ResultBadge result="D" size="sm" />
+                  <ResultBadge result="W" size="sm" />
+                </div>
+                <span className="text-sm text-muted-foreground">Newest</span>
+              </div>
+              <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                <p className="text-sm text-green-800">
+                  <strong>Good form:</strong> 3 wins, 1 draw, 1 loss in last 5 games
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Integration Examples */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Integration Examples</h2>
+          
+          {/* With Player Stats */}
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Player Performance with Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[
+                  { player: 'Sarah Johnson', position: 'GS', games: 5, results: ['W', 'W', 'L', 'W', 'D'] },
+                  { player: 'Emma Wilson', position: 'C', games: 4, results: ['W', 'L', 'W', 'W'] },
+                  { player: 'Kate Brown', position: 'GD', games: 6, results: ['W', 'W', 'L', 'D', 'W', 'L'] },
+                ].map((player, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div>
+                        <p className="font-medium">{player.player}</p>
+                        <p className="text-sm text-muted-foreground">{player.position} • {player.games} games</p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-1">
+                      {player.results.map((result, idx) => (
+                        <ResultBadge key={idx} result={result} size="sm" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* With Team Comparison */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Head-to-Head Comparison</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="text-center">
+                    <p className="font-semibold">Warrandyte Wolves</p>
+                    <p className="text-sm text-muted-foreground">vs Doncaster Eagles</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="text-center">
+                      <div className="flex space-x-1 mb-1">
+                        <ResultBadge result="W" size="sm" />
+                        <ResultBadge result="L" size="sm" />
+                        <ResultBadge result="W" size="sm" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">Last 3 games</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Win Rate</p>
+                    <p className="text-lg font-bold">67%</p>
+                    <div className="flex justify-center space-x-1 mt-1">
+                      <ResultBadge result="W" size="sm" />
+                      <ResultBadge result="W" size="sm" />
+                      <ResultBadge result="L" size="sm" />
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Current Streak</p>
+                    <p className="text-lg font-bold">1 Win</p>
+                    <div className="flex justify-center mt-1">
+                      <ResultBadge result="W" size="sm" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
