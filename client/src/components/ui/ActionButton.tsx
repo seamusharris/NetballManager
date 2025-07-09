@@ -14,7 +14,7 @@ interface ActionButtonProps {
   disabled?: boolean;
   loading?: boolean;
   className?: string;
-  size?: "default" | "sm" | "lg" | "icon";
+  size?: "sm" | "md" | "lg" | "xl" | "icon";
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   icon?: React.ReactNode;
 }
@@ -26,7 +26,7 @@ export function ActionButton({
   disabled,
   loading,
   className,
-  size = "default",
+  size = "md",
   variant,
   icon
 }: ActionButtonProps) {

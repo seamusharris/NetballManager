@@ -29,7 +29,7 @@ interface PlayerBoxProps {
     value: string | number;
   }[];
   className?: string;
-  size?: 'sm' | 'ms' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   style?: React.CSSProperties;
   onClick?: (playerId: number) => void;
   customBadge?: React.ReactNode;
@@ -80,26 +80,21 @@ function PlayerBox({
   // Size-based styling
   const sizeClasses = {
     sm: "p-2",
-    ms: "p-2.5", // Medium-small: between small and medium
     md: "p-3", 
-    lg: "p-4"
+    lg: "p-4",
+    xl: "p-6"
   };
 
   const avatarSizes = {
     sm: 8, // 32px
-    ms: 10, // 40px - between small and medium
     md: 12, // 48px  
-    lg: 16  // 64px
+    lg: 16, // 64px
+    xl: 20  // 80px
   };
 
   const textSizes = {
     sm: {
       name: "text-sm",
-      position: "text-xs",
-      stats: "text-sm"
-    },
-    ms: {
-      name: "text-sm", // Same as small but with more space
       position: "text-xs",
       stats: "text-sm"
     },
@@ -112,6 +107,11 @@ function PlayerBox({
       name: "text-lg",
       position: "text-base",
       stats: "text-lg"
+    },
+    xl: {
+      name: "text-xl",
+      position: "text-lg",
+      stats: "text-xl"
     }
   };
 
@@ -257,10 +257,10 @@ function PlayerBox({
           "rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg",
           player.avatarColor || 'bg-gray-500',
           {
-            'w-10 h-10 text-sm': size === 'sm',
-            'w-12 h-12 text-sm': size === 'ms',
-            'w-14 h-14 text-base': size === 'md',
-            'w-20 h-20 text-2xl': size === 'lg'
+            'w-8 h-8 text-sm': size === 'sm',
+            'w-12 h-12 text-base': size === 'md',
+            'w-16 h-16 text-lg': size === 'lg',
+            'w-20 h-20 text-xl': size === 'xl'
           }
         )}
       >

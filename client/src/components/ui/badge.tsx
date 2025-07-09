@@ -25,14 +25,15 @@ const badgeVariants = cva(
         completed: "border-transparent bg-green-500/10 text-green-700 ring-1 ring-green-500/20",
       },
       size: {
-        default: "px-3 py-1 text-xs",
         sm: "px-2 py-0.5 text-xs",
+        md: "px-3 py-1 text-xs",
         lg: "px-4 py-1.5 text-sm",
+        xl: "px-6 py-2 text-base",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      size: "md",
     },
   }
 )

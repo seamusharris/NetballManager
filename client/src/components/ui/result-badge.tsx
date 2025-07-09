@@ -8,14 +8,15 @@ export type GameResult = 'Win' | 'Loss' | 'Draw' | 'Bye';
 interface ResultBadgeProps {
   result: GameResult;
   className?: string;
-  size?: 'sm' | 'md' | 'default';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function ResultBadge({ result, className, size = 'default' }: ResultBadgeProps) {
+export function ResultBadge({ result, className, size = 'md' }: ResultBadgeProps) {
   const sizeClasses = {
     'sm': 'h-6 w-6 text-xs',
-    'md': 'h-7 w-7 text-sm', 
-    'default': 'h-8 w-8 text-sm'
+    'md': 'h-8 w-8 text-sm',
+    'lg': 'h-10 w-10 text-base',
+    'xl': 'h-12 w-12 text-lg'
   };
 
   return (
