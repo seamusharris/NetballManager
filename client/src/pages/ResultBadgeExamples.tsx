@@ -57,6 +57,14 @@ export default function ResultBadgeExamples() {
                   </div>
                   <p className="text-sm text-muted-foreground">Yellow background for draws</p>
                 </div>
+
+                <div className="text-center space-y-3">
+                  <h3 className="font-semibold text-gray-800">Bye</h3>
+                  <div className="flex justify-center">
+                    <ResultBadge result="Bye" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Grey background for byes</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -77,6 +85,7 @@ export default function ResultBadgeExamples() {
                     <ResultBadge result="Win" size="sm" />
                     <ResultBadge result="Loss" size="sm" />
                     <ResultBadge result="Draw" size="sm" />
+                    <ResultBadge result="Bye" size="sm" />
                   </div>
                   <p className="text-sm text-muted-foreground">For compact displays</p>
                 </div>
@@ -87,6 +96,7 @@ export default function ResultBadgeExamples() {
                     <ResultBadge result="Win" size="md" />
                     <ResultBadge result="Loss" size="md" />
                     <ResultBadge result="Draw" size="md" />
+                    <ResultBadge result="Bye" size="md" />
                   </div>
                   <p className="text-sm text-muted-foreground">Standard size for most uses</p>
                 </div>
@@ -97,6 +107,7 @@ export default function ResultBadgeExamples() {
                     <ResultBadge result="Win" />
                     <ResultBadge result="Loss" />
                     <ResultBadge result="Draw" />
+                    <ResultBadge result="Bye" />
                   </div>
                   <p className="text-sm text-muted-foreground">Default size</p>
                 </div>
@@ -224,6 +235,9 @@ export default function ResultBadgeExamples() {
                   <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                     D
                   </div>
+                  <div className="w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    B
+                  </div>
                 </div>
                 <span className="text-xs text-gray-500">20px - For compact lists</span>
               </div>
@@ -240,6 +254,9 @@ export default function ResultBadgeExamples() {
                   </div>
                   <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                     D
+                  </div>
+                  <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    B
                   </div>
                 </div>
                 <span className="text-xs text-gray-500">24px - Standard size</span>
@@ -258,6 +275,9 @@ export default function ResultBadgeExamples() {
                   <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
                     D
                   </div>
+                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    B
+                  </div>
                 </div>
                 <span className="text-xs text-gray-500">32px - For cards and widgets</span>
               </div>
@@ -275,6 +295,9 @@ export default function ResultBadgeExamples() {
                   <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm">
                     D
                   </div>
+                  <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm">
+                    B
+                  </div>
                 </div>
                 <span className="text-xs text-gray-500">40px - For headers and emphasis</span>
               </div>
@@ -291,6 +314,9 @@ export default function ResultBadgeExamples() {
                   </div>
                   <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-sm">
                     D
+                  </div>
+                  <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-sm">
+                    B
                   </div>
                 </div>
                 <span className="text-xs text-gray-500">48px - For dashboard highlights</span>
