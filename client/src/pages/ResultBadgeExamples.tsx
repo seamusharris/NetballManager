@@ -392,6 +392,220 @@ export default function ResultBadgeExamples() {
           </CardContent>
         </Card>
 
+        {/* Border Variations */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Border Variations</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Different Border Styles</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Testing various border combinations that work on both light and dark backgrounds
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                {/* Main Color + White Border + Main Color Outer Border */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → White Border → Main Color Outer Border</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Double White Border */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → Double White Border</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contrast Ring Border */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → Ring Shadow (Auto-Contrast)</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-gray-400">
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-gray-400">
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-gray-400">
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-white">
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-white">
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-white">
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-white">
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-gray-300">
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gradient Border Effect */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → Gradient Border Effect</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(0,0,0,0.1)'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(0,0,0,0.1)'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(0,0,0,0.1)'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(0,0,0,0.1)'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(255,255,255,0.2)'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(255,255,255,0.2)'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(255,255,255,0.2)'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 1px rgba(255,255,255,0.2)'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mixed Color Backgrounds Test */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Testing on Various Background Colors</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 bg-blue-100 rounded-lg">
+                      <p className="text-xs text-blue-800 mb-2">Blue background:</p>
+                      <div className="flex gap-1">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>W</div>
+                        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>L</div>
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>D</div>
+                        <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>B</div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-yellow-100 rounded-lg">
+                      <p className="text-xs text-yellow-800 mb-2">Yellow background:</p>
+                      <div className="flex gap-1">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>W</div>
+                        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>L</div>
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>D</div>
+                        <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>B</div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-green-100 rounded-lg">
+                      <p className="text-xs text-green-800 mb-2">Green background:</p>
+                      <div className="flex gap-1">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>W</div>
+                        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>L</div>
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>D</div>
+                        <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>B</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Integration Examples */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Integration Examples</h2>
