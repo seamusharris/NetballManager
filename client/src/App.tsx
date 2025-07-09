@@ -88,7 +88,7 @@ import RosterGame from '@/pages/RosterGame';
 import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
-const ResultBadgeExamples = lazy(() => import('./pages/ResultBadgeExamples'));
+import ResultBadgeExamples from './pages/ResultBadgeExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -271,7 +271,7 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
-        <Route path="/result-badge-examples" component={ResultBadgeExamples} />
+        <Route path="/result-badge-examples" component={withErrorBoundary(ResultBadgeExamples, 'ResultBadgeExamples')} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>

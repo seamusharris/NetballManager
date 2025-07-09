@@ -289,3 +289,216 @@ export default function ResultBadgeExamples() {
     </PageTemplate>
   );
 }
+import React from 'react';
+import { Helmet } from 'react-helmet';
+import PageTemplate from '@/components/layout/PageTemplate';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ResultBadge } from '@/components/ui/result-badge';
+import { Badge } from '@/components/ui/badge';
+
+export default function ResultBadgeExamples() {
+  return (
+    <PageTemplate 
+      title="Result Badge Examples" 
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "Result Badge Examples" }
+      ]}
+    >
+      <div className="space-y-8">
+        <Helmet>
+          <title>Result Badge Examples - Netball App</title>
+        </Helmet>
+
+        <div className="prose max-w-none">
+          <p className="text-lg text-gray-700">
+            Standardized result badges for displaying win/loss/draw outcomes with consistent styling and colors.
+          </p>
+        </div>
+
+        {/* Basic Result Badges */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Result Badges</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-3">Standard Results</h4>
+                  <div className="flex gap-4 items-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <ResultBadge result="win" />
+                      <span className="text-sm text-gray-600">Win</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                      <ResultBadge result="loss" />
+                      <span className="text-sm text-gray-600">Loss</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                      <ResultBadge result="draw" />
+                      <span className="text-sm text-gray-600">Draw</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Different Sizes */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Different Sizes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-3">Small Size</h4>
+                  <div className="flex gap-4 items-center">
+                    <ResultBadge result="win" size="sm" />
+                    <ResultBadge result="loss" size="sm" />
+                    <ResultBadge result="draw" size="sm" />
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-3">Medium Size (Default)</h4>
+                  <div className="flex gap-4 items-center">
+                    <ResultBadge result="win" />
+                    <ResultBadge result="loss" />
+                    <ResultBadge result="draw" />
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-3">Large Size</h4>
+                  <div className="flex gap-4 items-center">
+                    <ResultBadge result="win" size="lg" />
+                    <ResultBadge result="loss" size="lg" />
+                    <ResultBadge result="draw" size="lg" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Usage Examples */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Usage Examples</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-3">In Game Results</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                      <span className="font-medium">Jets vs Emus</span>
+                      <ResultBadge result="win" />
+                      <span className="text-sm text-gray-600">31-28</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                      <span className="font-medium">Emeralds vs Dingoes</span>
+                      <ResultBadge result="loss" />
+                      <span className="text-sm text-gray-600">10-24</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                      <span className="font-medium">Panthers vs Lions</span>
+                      <ResultBadge result="draw" />
+                      <span className="text-sm text-gray-600">22-22</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-3">Recent Form</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Last 5 games:</span>
+                    <ResultBadge result="win" size="sm" />
+                    <ResultBadge result="win" size="sm" />
+                    <ResultBadge result="loss" size="sm" />
+                    <ResultBadge result="win" size="sm" />
+                    <ResultBadge result="draw" size="sm" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Color Coding */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Color Coding</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <ResultBadge result="win" size="lg" />
+                    <p className="mt-2 text-sm font-medium">Win</p>
+                    <p className="text-xs text-gray-600">Green background</p>
+                    <p className="text-xs text-gray-600">Indicates victory</p>
+                  </div>
+                  <div className="text-center">
+                    <ResultBadge result="loss" size="lg" />
+                    <p className="mt-2 text-sm font-medium">Loss</p>
+                    <p className="text-xs text-gray-600">Red background</p>
+                    <p className="text-xs text-gray-600">Indicates defeat</p>
+                  </div>
+                  <div className="text-center">
+                    <ResultBadge result="draw" size="lg" />
+                    <p className="mt-2 text-sm font-medium">Draw</p>
+                    <p className="text-xs text-gray-600">Yellow background</p>
+                    <p className="text-xs text-gray-600">Indicates tie</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Technical Details */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Technical Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-3">Component Props</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <pre className="text-sm">
+{`<ResultBadge 
+  result="win" | "loss" | "draw" 
+  size="sm" | "md" | "lg"
+  className="..." 
+/>`}
+                    </pre>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-3">Design Guidelines</h4>
+                  <ul className="text-sm space-y-2 text-gray-600">
+                    <li>• Use consistent colors across all result displays</li>
+                    <li>• Small size for compact lists and form elements</li>
+                    <li>• Medium size for general usage and cards</li>
+                    <li>• Large size for emphasis and primary displays</li>
+                    <li>• Always pair with contextual information (scores, dates, etc.)</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </PageTemplate>
+  );
+}
