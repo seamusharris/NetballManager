@@ -154,8 +154,8 @@ export default function StatsRecorder() {
   // NEW: Stats save mutation using game-centric endpoint with comprehensive error handling
   const saveStatsMutation = useMutation({
     mutationFn: async (statsData: PositionStats) => {
-      console.log('StatsRecorder: Starting save operation with game-centric API');
-      console.log(`StatsRecorder: Using endpoint /api/game/${gameId}/team/${teamId}/stats`);
+      console.log('StatsRecorder: Starting save operation with NEW game-centric API');
+      console.log(`StatsRecorder: Using NEW endpoint /api/game/${gameId}/team/${teamId}/stats`);
       
       const statsArray = [];
       
@@ -189,12 +189,13 @@ export default function StatsRecorder() {
         }
       }
       
-      console.log(`StatsRecorder: Saving ${statsArray.length} stats via game-centric endpoint`);
+      console.log(`StatsRecorder: Saving ${statsArray.length} stats via NEW game-centric endpoint`);
+      console.log('StatsRecorder: This will use POST /api/game/' + gameId + '/team/' + teamId + '/stats');
       
       // Use the NEW game-centric endpoint with team context
       const response = await apiClient.post(`/api/game/${gameId}/team/${teamId}/stats`, { stats: statsArray });
       
-      console.log('StatsRecorder: Successfully saved stats via game-centric API');
+      console.log('StatsRecorder: Successfully saved stats via NEW game-centric API');
       return response;
     },
     onSuccess: (data) => {
