@@ -65,6 +65,21 @@ export default function StatsRecorder() {
   const queryClient = useQueryClient();
   const { currentClubId } = useClub();
 
+  // API verification on mount
+  React.useEffect(() => {
+    console.log('StatsRecorder: Component mounted with game-centric API configuration');
+    console.log(`StatsRecorder: Game ID: ${gameId}, Team ID: ${teamId}`);
+    console.log(`StatsRecorder: Using endpoints:`);
+    console.log(`  - Game data: /api/game/${gameId}/team/${teamId}`);
+    console.log(`  - Stats fetch: /api/game/${gameId}/team/${teamId}/stats`);
+    console.log(`  - Stats save: /api/game/${gameId}/team/${teamId}/stats`);
+    console.log(`  - Rosters: /api/game/${gameId}/team/${teamId}/rosters`);
+    
+    if (!gameId || !teamId || isNaN(gameId) || isNaN(teamId)) {
+      console.error('StatsRecorder: Invalid game ID or team ID parameters');
+    }
+  }, [gameId, teamId]);
+
   // State variables - must declare all state first
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
   const [stats, setStats] = useState<PositionStats>({});
@@ -93,11 +108,16 @@ export default function StatsRecorder() {
     enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
   });
 
-  // NEW: Game-centric stats endpoint
+  // NEW: Game-centric stats endpoint with enhanced logging
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
     queryKey: ['/api/game', gameId, 'team', teamId, 'stats'],
-    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`),
-    enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId)
+    queryFn: () => {
+      console.log(`StatsRecorder: Fetching stats via game-centric endpoint /api/game/${gameId}/team/${teamId}/stats`);
+      return apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`);
+    },
+    enabled: !!gameId && !!teamId && !isNaN(gameId) && !isNaN(teamId),
+    staleTime: 30 * 1000, // 30 seconds - stats change frequently during recording
+    gcTime: 5 * 60 * 1000 // 5 minutes
   });
 
   // Initialize stats from existing data
@@ -131,9 +151,12 @@ export default function StatsRecorder() {
     }
   }, [existingStats]);
 
-  // NEW: Stats save mutation using game-centric endpoint
+  // NEW: Stats save mutation using game-centric endpoint with comprehensive error handling
   const saveStatsMutation = useMutation({
     mutationFn: async (statsData: PositionStats) => {
+      console.log('StatsRecorder: Starting save operation with game-centric API');
+      console.log(`StatsRecorder: Using endpoint /api/game/${gameId}/team/${teamId}/stats`);
+      
       const statsArray = [];
       
       // Convert PositionStats to GameStat array
@@ -166,18 +189,68 @@ export default function StatsRecorder() {
         }
       }
       
-      return apiClient.post(`/api/game/${gameId}/team/${teamId}/stats`, { stats: statsArray });
+      console.log(`StatsRecorder: Saving ${statsArray.length} stats via game-centric endpoint`);
+      
+      // Use the NEW game-centric endpoint with team context
+      const response = await apiClient.post(`/api/game/${gameId}/team/${teamId}/stats`, { stats: statsArray });
+      
+      console.log('StatsRecorder: Successfully saved stats via game-centric API');
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('StatsRecorder: Save successful, invalidating caches...');
+      
+      // Comprehensive cache invalidation for both old and new patterns
+      const cacheInvalidationPromises = [
+        // Primary game-centric cache key
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/game', gameId, 'team', teamId, 'stats'] 
+        }),
+        
+        // Legacy cache keys for backward compatibility
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/games', gameId, 'stats'] 
+        }),
+        
+        // Game data itself may need updating
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/game', gameId, 'team', teamId] 
+        }),
+        
+        // Dashboard and summary queries
+        queryClient.invalidateQueries({ 
+          predicate: (query) => {
+            const key = query.queryKey?.[0] as string;
+            return key?.includes('dashboard') || 
+                   key?.includes('summary') || 
+                   (key?.includes('game') && key?.includes(gameId.toString()));
+          }
+        }),
+        
+        // Batch stats queries that might include this game
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey?.[0] as string;
+            return key?.includes('batch') && key?.includes('stats');
+          }
+        })
+      ];
+      
+      // Execute all cache invalidations
+      Promise.all(cacheInvalidationPromises).then(() => {
+        console.log('StatsRecorder: All cache invalidations completed');
+      }).catch((err) => {
+        console.warn('StatsRecorder: Some cache invalidations failed:', err);
+      });
+      
       toast({
         title: "Stats Saved",
-        description: "Game statistics have been saved successfully.",
+        description: "Game statistics have been saved successfully using the new API.",
       });
-      // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ['/api/game', gameId, 'team', teamId, 'stats'] });
     },
     onError: (error) => {
-      console.error('Error saving stats:', error);
+      console.error('StatsRecorder: Error saving stats via game-centric API:', error);
+      
       toast({
         title: "Save Failed",
         description: "Failed to save statistics. Please try again.",

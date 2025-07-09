@@ -20,21 +20,28 @@ export default function LiveStatsButton({ game, className = "" }: LiveStatsButto
 
   // Use team from club context - determine which team the user represents
   const handleRecordStats = () => {
+    console.log('LiveStatsButton: Routing to game-centric StatsRecorder');
+    
     // Prefer current team context if available and matches one of the game teams
     const userTeamId = currentTeam?.id;
     let targetTeamId;
     
     if (userTeamId && (userTeamId === game.homeTeamId || userTeamId === game.awayTeamId)) {
       targetTeamId = userTeamId;
+      console.log(`LiveStatsButton: Using current team ${targetTeamId} for game ${game.id}`);
     } else {
       // Fallback to home team (could be away team based on user preference)
       targetTeamId = game.homeTeamId;
+      console.log(`LiveStatsButton: Fallback to home team ${targetTeamId} for game ${game.id}`);
     }
     
     if (targetTeamId) {
-      navigate(`/game/${game.id}/team/${targetTeamId}/stats/record`);
+      const route = `/game/${game.id}/team/${targetTeamId}/stats/record`;
+      console.log(`LiveStatsButton: Navigating to game-centric route: ${route}`);
+      navigate(route);
     } else {
-      // Last resort: legacy stats
+      console.warn('LiveStatsButton: No valid team ID found, falling back to legacy route');
+      // Last resort: legacy stats (this should rarely happen)
       navigate(`/game/${game.id}/livestats`);
     }
   };
