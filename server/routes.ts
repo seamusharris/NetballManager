@@ -2879,6 +2879,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game-centric stats routes
   const { registerGameStatsRoutes } = await import('./game-stats-routes');
   registerGameStatsRoutes(app);
+
+  // Game-centric roster endpoint
+  app.get('/api/game/:gameId/team/:teamId/rosters', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const teamId = parseInt(req.params.teamId);
+
+      if (isNaN(gameId) || isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid game ID or team ID' });
+      }
+
+      console.log(`Game-centric rosters endpoint: fetching rosters for game ${gameId}, team ${teamId}`);
+
+      // Get rosters for this game
+      const rosters = await storage.getRostersByGame(gameId);
+      
+      console.log(`Found ${rosters.length} roster entries for game ${gameId}`);
+      res.json(rosters);
+    } catch (error) {
+      console.error('Error fetching game-centric rosters:', error);
+      res.status(500).json({ error: 'Failed to fetch rosters' });
+    }
+  });
   // Team Game Awards endpoints
   app.get('/api/games/:gameId/team-awards', async (req, res) => {
     try {
