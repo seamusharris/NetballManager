@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -37,7 +38,7 @@ export default function ResultBadgeExamples() {
                 <div className="text-center space-y-3">
                   <h3 className="font-semibold text-green-800">Win</h3>
                   <div className="flex justify-center">
-                    <ResultBadge result="W" />
+                    <ResultBadge result="Win" />
                   </div>
                   <p className="text-sm text-muted-foreground">Green background for wins</p>
                 </div>
@@ -45,7 +46,7 @@ export default function ResultBadgeExamples() {
                 <div className="text-center space-y-3">
                   <h3 className="font-semibold text-red-800">Loss</h3>
                   <div className="flex justify-center">
-                    <ResultBadge result="L" />
+                    <ResultBadge result="Loss" />
                   </div>
                   <p className="text-sm text-muted-foreground">Red background for losses</p>
                 </div>
@@ -53,7 +54,7 @@ export default function ResultBadgeExamples() {
                 <div className="text-center space-y-3">
                   <h3 className="font-semibold text-yellow-800">Draw</h3>
                   <div className="flex justify-center">
-                    <ResultBadge result="D" />
+                    <ResultBadge result="Draw" />
                   </div>
                   <p className="text-sm text-muted-foreground">Yellow background for draws</p>
                 </div>
@@ -74,31 +75,31 @@ export default function ResultBadgeExamples() {
                 <div className="text-center space-y-4">
                   <h3 className="font-semibold">Small</h3>
                   <div className="flex justify-center space-x-2">
-                    <ResultBadge result="W" size="sm" />
-                    <ResultBadge result="L" size="sm" />
-                    <ResultBadge result="D" size="sm" />
+                    <ResultBadge result="Win" size="sm" />
+                    <ResultBadge result="Loss" size="sm" />
+                    <ResultBadge result="Draw" size="sm" />
                   </div>
                   <p className="text-sm text-muted-foreground">For compact displays</p>
                 </div>
 
                 <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Medium (Default)</h3>
+                  <h3 className="font-semibold">Medium</h3>
                   <div className="flex justify-center space-x-2">
-                    <ResultBadge result="W" />
-                    <ResultBadge result="L" />
-                    <ResultBadge result="D" />
+                    <ResultBadge result="Win" size="md" />
+                    <ResultBadge result="Loss" size="md" />
+                    <ResultBadge result="Draw" size="md" />
                   </div>
                   <p className="text-sm text-muted-foreground">Standard size for most uses</p>
                 </div>
 
                 <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Large</h3>
+                  <h3 className="font-semibold">Default</h3>
                   <div className="flex justify-center space-x-2">
-                    <ResultBadge result="W" size="lg" />
-                    <ResultBadge result="L" size="lg" />
-                    <ResultBadge result="D" size="lg" />
+                    <ResultBadge result="Win" />
+                    <ResultBadge result="Loss" />
+                    <ResultBadge result="Draw" />
                   </div>
-                  <p className="text-sm text-muted-foreground">For emphasis or headers</p>
+                  <p className="text-sm text-muted-foreground">Default size</p>
                 </div>
               </div>
             </CardContent>
@@ -117,11 +118,11 @@ export default function ResultBadgeExamples() {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { opponent: 'Doncaster Eagles', result: 'W', score: '45-38', date: '2024-03-15' },
-                  { opponent: 'Eltham Panthers', result: 'L', score: '32-41', date: '2024-03-08' },
-                  { opponent: 'Warrandyte Wolves', result: 'D', score: '35-35', date: '2024-03-01' },
-                  { opponent: 'Deep Creek Demons', result: 'W', score: '42-29', date: '2024-02-23' },
-                  { opponent: 'Donvale Dragons', result: 'L', score: '28-39', date: '2024-02-16' },
+                  { opponent: 'Doncaster Eagles', result: 'Win' as const, score: '45-38', date: '2024-03-15' },
+                  { opponent: 'Eltham Panthers', result: 'Loss' as const, score: '32-41', date: '2024-03-08' },
+                  { opponent: 'Warrandyte Wolves', result: 'Draw' as const, score: '35-35', date: '2024-03-01' },
+                  { opponent: 'Deep Creek Demons', result: 'Win' as const, score: '42-29', date: '2024-02-23' },
+                  { opponent: 'Donvale Dragons', result: 'Loss' as const, score: '28-39', date: '2024-02-16' },
                 ].map((game, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
@@ -149,7 +150,7 @@ export default function ResultBadgeExamples() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="flex justify-center mb-2">
-                    <ResultBadge result="W" size="lg" />
+                    <ResultBadge result="Win" />
                   </div>
                   <p className="text-2xl font-bold text-green-800">8</p>
                   <p className="text-sm text-green-600">Wins</p>
@@ -157,7 +158,7 @@ export default function ResultBadgeExamples() {
 
                 <div className="text-center p-4 bg-red-50 rounded-lg">
                   <div className="flex justify-center mb-2">
-                    <ResultBadge result="L" size="lg" />
+                    <ResultBadge result="Loss" />
                   </div>
                   <p className="text-2xl font-bold text-red-800">3</p>
                   <p className="text-sm text-red-600">Losses</p>
@@ -165,7 +166,7 @@ export default function ResultBadgeExamples() {
 
                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
                   <div className="flex justify-center mb-2">
-                    <ResultBadge result="D" size="lg" />
+                    <ResultBadge result="Draw" />
                   </div>
                   <p className="text-2xl font-bold text-yellow-800">1</p>
                   <p className="text-sm text-yellow-600">Draws</p>
@@ -186,11 +187,11 @@ export default function ResultBadgeExamples() {
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">Oldest</span>
                 <div className="flex space-x-1">
-                  <ResultBadge result="L" size="sm" />
-                  <ResultBadge result="W" size="sm" />
-                  <ResultBadge result="W" size="sm" />
-                  <ResultBadge result="D" size="sm" />
-                  <ResultBadge result="W" size="sm" />
+                  <ResultBadge result="Loss" size="sm" />
+                  <ResultBadge result="Win" size="sm" />
+                  <ResultBadge result="Win" size="sm" />
+                  <ResultBadge result="Draw" size="sm" />
+                  <ResultBadge result="Win" size="sm" />
                 </div>
                 <span className="text-sm text-muted-foreground">Newest</span>
               </div>
@@ -215,9 +216,9 @@ export default function ResultBadgeExamples() {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { player: 'Sarah Johnson', position: 'GS', games: 5, results: ['W', 'W', 'L', 'W', 'D'] },
-                  { player: 'Emma Wilson', position: 'C', games: 4, results: ['W', 'L', 'W', 'W'] },
-                  { player: 'Kate Brown', position: 'GD', games: 6, results: ['W', 'W', 'L', 'D', 'W', 'L'] },
+                  { player: 'Sarah Johnson', position: 'GS', games: 5, results: ['Win', 'Win', 'Loss', 'Win', 'Draw'] as const },
+                  { player: 'Emma Wilson', position: 'C', games: 4, results: ['Win', 'Loss', 'Win', 'Win'] as const },
+                  { player: 'Kate Brown', position: 'GD', games: 6, results: ['Win', 'Win', 'Loss', 'Draw', 'Win', 'Loss'] as const },
                 ].map((player, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
@@ -252,9 +253,9 @@ export default function ResultBadgeExamples() {
                   <div className="flex items-center space-x-2">
                     <div className="text-center">
                       <div className="flex space-x-1 mb-1">
-                        <ResultBadge result="W" size="sm" />
-                        <ResultBadge result="L" size="sm" />
-                        <ResultBadge result="W" size="sm" />
+                        <ResultBadge result="Win" size="sm" />
+                        <ResultBadge result="Loss" size="sm" />
+                        <ResultBadge result="Win" size="sm" />
                       </div>
                       <p className="text-xs text-muted-foreground">Last 3 games</p>
                     </div>
@@ -266,9 +267,9 @@ export default function ResultBadgeExamples() {
                     <p className="text-sm text-muted-foreground">Win Rate</p>
                     <p className="text-lg font-bold">67%</p>
                     <div className="flex justify-center space-x-1 mt-1">
-                      <ResultBadge result="W" size="sm" />
-                      <ResultBadge result="W" size="sm" />
-                      <ResultBadge result="L" size="sm" />
+                      <ResultBadge result="Win" size="sm" />
+                      <ResultBadge result="Win" size="sm" />
+                      <ResultBadge result="Loss" size="sm" />
                     </div>
                   </div>
 
@@ -276,7 +277,7 @@ export default function ResultBadgeExamples() {
                     <p className="text-sm text-muted-foreground">Current Streak</p>
                     <p className="text-lg font-bold">1 Win</p>
                     <div className="flex justify-center mt-1">
-                      <ResultBadge result="W" size="sm" />
+                      <ResultBadge result="Win" size="sm" />
                     </div>
                   </div>
                 </div>
