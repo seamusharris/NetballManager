@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { ActivitySquare } from 'lucide-react';
 import { Game } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
+import { startTransition } from 'react';
 
 interface LiveStatsButtonProps {
   game: Game;
@@ -38,11 +39,17 @@ export default function LiveStatsButton({ game, className = "" }: LiveStatsButto
     if (targetTeamId) {
       const route = `/game/${game.id}/team/${targetTeamId}/stats/record`;
       console.log(`LiveStatsButton: Navigating to game-centric route: ${route}`);
-      navigate(route);
+      
+      // Wrap navigation in startTransition to prevent suspension during synchronous input
+      startTransition(() => {
+        navigate(route);
+      });
     } else {
       console.warn('LiveStatsButton: No valid team ID found, falling back to legacy route');
       // Last resort: legacy stats (this should rarely happen)
-      navigate(`/game/${game.id}/livestats`);
+      startTransition(() => {
+        navigate(`/game/${game.id}/livestats`);
+      });
     }
   };
 
