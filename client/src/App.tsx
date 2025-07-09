@@ -259,6 +259,7 @@ function Router() {
             </ErrorBoundary>
           )}
         </Route>
+        <Route path="/team-performance-examples" component={TeamPerformanceExamples} />
         <Route path="/score-progression-examples">
           {() => (
             <ErrorBoundary>
@@ -269,7 +270,6 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
-        <Route path="/team-performance-examples" component={TeamPerformanceExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
