@@ -27,6 +27,7 @@ import {
   getTeamAvatarGradient,
   type TeamColor 
 } from '@/lib/teamColorUtils';
+import { TeamAvatar } from '@/components/ui/team-avatar';
 
 // Sample data - in real implementation, this would come from the game score service
 const sampleTeamStats = {
@@ -627,14 +628,12 @@ const TeamPerformanceExamples = () => {
                   <div className="flex items-center space-x-4">
                     {/* Team Avatar/Logo Area */}
                     <div className="flex-shrink-0">
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${teamStyles.avatarGradient.from}, ${teamStyles.avatarGradient.to})`
-                        }}
-                      >
-                        <span className="text-white font-bold text-lg">{team.teamCode}</span>
-                      </div>
+                      <TeamAvatar 
+                        teamName={team.teamName}
+                        teamColor={team.color}
+                        size="lg"
+                        className="shadow-lg"
+                      />
                     </div>
 
                     {/* Team Details */}
@@ -715,6 +714,87 @@ const TeamPerformanceExamples = () => {
             );
           })}
         </div>
+
+        {/* Team Avatar Showcase */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-blue-600" />
+              Team Avatar Examples
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Size variations */}
+              <div>
+                <h4 className="font-semibold mb-3">Avatar Sizes</h4>
+                <div className="flex items-end gap-4">
+                  <div className="text-center">
+                    <TeamAvatar teamName="WNC Emus" teamColor="team-blue" size="sm" />
+                    <p className="text-xs text-gray-600 mt-1">Small</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="WNC Emus" teamColor="team-blue" size="md" />
+                    <p className="text-xs text-gray-600 mt-1">Medium</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="WNC Emus" teamColor="team-blue" size="lg" />
+                    <p className="text-xs text-gray-600 mt-1">Large</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="WNC Emus" teamColor="team-blue" size="xl" />
+                    <p className="text-xs text-gray-600 mt-1">Extra Large</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color variations */}
+              <div>
+                <h4 className="font-semibold mb-3">Team Color Variations</h4>
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
+                  {sampleTeams.map((team, index) => (
+                    <div key={index} className="text-center">
+                      <TeamAvatar 
+                        teamName={team.teamName}
+                        teamColor={team.color}
+                        size="md"
+                        className="mx-auto"
+                      />
+                      <p className="text-xs text-gray-600 mt-1">{team.teamCode}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Different team name examples */}
+              <div>
+                <h4 className="font-semibold mb-3">Team Name Variations</h4>
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+                  <div className="text-center">
+                    <TeamAvatar teamName="Eagles" teamColor="team-yellow" size="md" />
+                    <p className="text-xs text-gray-600 mt-1">Single Word</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="Thunder Hawks" teamColor="team-purple" size="md" />
+                    <p className="text-xs text-gray-600 mt-1">Two Words</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="Lightning Storm Riders" teamColor="team-teal" size="md" />
+                    <p className="text-xs text-gray-600 mt-1">Three Words</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="WNC" teamColor="team-emerald" size="md" />
+                    <p className="text-xs text-gray-600 mt-1">Abbreviation</p>
+                  </div>
+                  <div className="text-center">
+                    <TeamAvatar teamName="A" teamColor="team-rose" size="md" />
+                    <p className="text-xs text-gray-600 mt-1">Single Letter</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
