@@ -21,6 +21,13 @@ import {
   Award,
   Clock
 } from 'lucide-react';
+import { 
+  getTeamColorHex, 
+  getTeamLightBg, 
+  getTeamBorderColor, 
+  getTeamAvatarGradient,
+  type TeamColor 
+} from '@/lib/teamColorUtils';
 
 // Sample data - in real implementation, this would come from the game score service
 const sampleTeamStats = {
@@ -539,12 +546,12 @@ const TeamPerformanceExamples = () => {
         ...sampleTeamStats,
         teamName: "WNC Emus",
         teamCode: "WE",
-        color: "blue"
+        color: "team-blue" as TeamColor
       },
       {
         teamName: "Lightning Bolts",
         teamCode: "LB",
-        color: "yellow",
+        color: "team-yellow" as TeamColor,
         totalGames: 12,
         wins: 7,
         losses: 4,
@@ -558,7 +565,7 @@ const TeamPerformanceExamples = () => {
       {
         teamName: "Thunder Hawks",
         teamCode: "TH",
-        color: "purple",
+        color: "team-purple" as TeamColor,
         totalGames: 13,
         wins: 10,
         losses: 2,
@@ -572,7 +579,7 @@ const TeamPerformanceExamples = () => {
       {
         teamName: "Storm Riders",
         teamCode: "SR",
-        color: "green",
+        color: "team-emerald" as TeamColor,
         totalGames: 11,
         wins: 4,
         losses: 6,
@@ -585,39 +592,16 @@ const TeamPerformanceExamples = () => {
       }
     ];
 
-    const getTeamColorClasses = (color: string) => {
-      switch (color) {
-        case 'blue':
-          return {
-            gradient: 'from-blue-50 to-indigo-50',
-            border: 'border-blue-200',
-            avatar: 'from-blue-600 to-blue-700'
-          };
-        case 'yellow':
-          return {
-            gradient: 'from-yellow-50 to-orange-50',
-            border: 'border-yellow-200',
-            avatar: 'from-yellow-500 to-orange-500'
-          };
-        case 'purple':
-          return {
-            gradient: 'from-purple-50 to-pink-50',
-            border: 'border-purple-200',
-            avatar: 'from-purple-600 to-purple-700'
-          };
-        case 'green':
-          return {
-            gradient: 'from-green-50 to-emerald-50',
-            border: 'border-green-200',
-            avatar: 'from-green-600 to-green-700'
-          };
-        default:
-          return {
-            gradient: 'from-gray-50 to-slate-50',
-            border: 'border-gray-200',
-            avatar: 'from-gray-600 to-gray-700'
-          };
-      }
+    const getTeamStyles = (teamColor: TeamColor) => {
+      const lightBg = getTeamLightBg(teamColor);
+      const borderColor = getTeamBorderColor(teamColor);
+      const avatarGradient = getTeamAvatarGradient(teamColor);
+      
+      return {
+        lightBg,
+        borderColor,
+        avatarGradient
+      };
     };
 
     return (
@@ -629,15 +613,27 @@ const TeamPerformanceExamples = () => {
 
         <div className="space-y-4">
           {sampleTeams.map((team, index) => {
-            const colorClasses = getTeamColorClasses(team.color);
+            const teamStyles = getTeamStyles(team.color);
             
             return (
-              <Card key={index} className={`bg-gradient-to-r ${colorClasses.gradient} ${colorClasses.border}`}>
+              <Card 
+                key={index} 
+                className="border-2"
+                style={{ 
+                  backgroundColor: teamStyles.lightBg,
+                  borderColor: teamStyles.borderColor
+                }}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-4">
                     {/* Team Avatar/Logo Area */}
                     <div className="flex-shrink-0">
-                      <div className={`w-16 h-16 bg-gradient-to-br ${colorClasses.avatar} rounded-full flex items-center justify-center border-4 border-white shadow-lg`}>
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${teamStyles.avatarGradient.from}, ${teamStyles.avatarGradient.to})`
+                        }}
+                      >
                         <span className="text-white font-bold text-lg">{team.teamCode}</span>
                       </div>
                     </div>
@@ -655,21 +651,21 @@ const TeamPerformanceExamples = () => {
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
                             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">{Math.round(team.wins)}</span>
+                              <span className="text-white text-xs font-bold">{team.wins}</span>
                             </div>
                             <span className="text-xs text-gray-500">W</span>
                           </div>
                           
                           <div className="flex items-center gap-1">
                             <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">{Math.round(team.losses)}</span>
+                              <span className="text-white text-xs font-bold">{team.losses}</span>
                             </div>
                             <span className="text-xs text-gray-500">L</span>
                           </div>
                           
                           <div className="flex items-center gap-1">
                             <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">{Math.round(team.draws)}</span>
+                              <span className="text-white text-xs font-bold">{team.draws}</span>
                             </div>
                             <span className="text-xs text-gray-500">D</span>
                           </div>
@@ -678,13 +674,16 @@ const TeamPerformanceExamples = () => {
                         <span className="mx-1">•</span>
                         <div className="flex gap-1">
                           {team.recentForm.map((result, formIndex) => (
-                            <Badge 
-                              key={formIndex} 
-                              variant={result === 'W' ? 'win' : result === 'L' ? 'loss' : 'draw'}
-                              className="w-5 h-5 p-0 text-xs"
+                            <div
+                              key={formIndex}
+                              className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                                result === 'W' ? 'bg-green-500' :
+                                result === 'L' ? 'bg-red-500' :
+                                'bg-gray-400'
+                              }`}
                             >
                               {result}
-                            </Badge>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -693,21 +692,21 @@ const TeamPerformanceExamples = () => {
                     {/* Stats Grid - Similar to player box stats */}
                     <div className="flex space-x-8">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">{Math.round(team.winRate)}%</div>
+                        <div className="text-2xl font-bold text-green-600">{team.winRate}%</div>
                         <div className="text-xs text-gray-600">Win Rate</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">{Math.round(team.goalRatio)}%</div>
+                        <div className="text-2xl font-bold text-blue-600">{team.goalRatio}%</div>
                         <div className="text-xs text-gray-600">Goal Ratio</div>
                       </div>
                       <div className="text-center">
                         <div className={`text-2xl font-bold ${team.goalDifferential >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {team.goalDifferential >= 0 ? '+' : ''}{Math.round(team.goalDifferential)}
+                          {team.goalDifferential >= 0 ? '+' : ''}{team.goalDifferential}
                         </div>
                         <div className="text-xs text-gray-600">Goal Diff</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-600">{Math.round(team.averageGoalsFor)}</div>
+                        <div className="text-2xl font-bold text-orange-600">{team.averageGoalsFor}</div>
                         <div className="text-xs text-gray-600">Avg Goals</div>
                       </div>
                     </div>
