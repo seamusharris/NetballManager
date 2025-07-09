@@ -289,14 +289,6 @@ export default function ResultBadgeExamples() {
     </PageTemplate>
   );
 }
-import React from 'react';
-import { Helmet } from 'react-helmet';
-import PageTemplate from '@/components/layout/PageTemplate';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResultBadge } from '@/components/ui/result-badge';
-import { Badge } from '@/components/ui/badge';
-
-export default function ResultBadgeExamples() {
   return (
     <PageTemplate 
       title="Result Badge Examples" 
