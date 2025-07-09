@@ -1622,19 +1622,12 @@ export default function GameDetails() {
               </Button>
             )}
 
-            {/* Live Stats Button */}
-            {!game.isBye && !game.completed &&(
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild 
+            {/* Record Stats Button */}
+            {!game.isBye && !game.completed && (
+              <LiveStatsButton 
+                game={game} 
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900"
-              >
-                <Link to={`/game/${gameId}/details`}>
-                  <ActivitySquare className="mr-2 h-4 w-4" />
-                  Live Stats
-                </Link>
-              </Button>
+              />
             )}
 
             {/* Manage Roster Button */}
