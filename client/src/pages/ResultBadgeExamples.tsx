@@ -406,7 +406,7 @@ export default function ResultBadgeExamples() {
               <div className="space-y-8">
                 {/* Main Color + White Border + Main Color Outer Border */}
                 <div>
-                  <h4 className="text-sm font-semibold mb-3">Main Color → White Border → Main Color Outer Border</h4>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → White Border (2px) → Main Color Outer Border (2px)</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white rounded-lg border">
                       <p className="text-xs text-gray-600 mb-2">On white background:</p>
@@ -445,9 +445,50 @@ export default function ResultBadgeExamples() {
                   </div>
                 </div>
 
-                {/* Double White Border */}
+                {/* Single White Border */}
                 <div>
-                  <h4 className="text-sm font-semibold mb-3">Main Color → Double White Border</h4>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → Single White Border (1px)</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background (barely visible):</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background (clearly visible):</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white">
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Thick White Border */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → Thick White Border (4px)</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white rounded-lg border">
                       <p className="text-xs text-gray-600 mb-2">On white background:</p>
