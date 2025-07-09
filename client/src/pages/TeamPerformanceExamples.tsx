@@ -531,6 +531,386 @@ const TeamPerformanceExamples = () => {
     </div>
   );
 
+  // Design 4: Player Box Inspired Layout
+  const PlayerBoxInspiredDesign = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">Player Box Inspired Layout</h2>
+        <p className="text-gray-600">Taking design cues from player boxes with avatars and side stats</p>
+      </div>
+
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-4">
+          <div className="flex items-center space-x-4">
+            {/* Team Avatar/Logo Area */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                <span className="text-white font-bold text-lg">WE</span>
+              </div>
+            </div>
+
+            {/* Team Details */}
+            <div className="flex-1">
+              <div className="text-lg font-bold text-gray-800 mb-1">
+                {sampleTeamStats.teamName}
+              </div>
+              <div className="text-sm text-gray-600 flex items-center gap-2">
+                <span>2024 Season</span>
+                <span className="mx-1">•</span>
+                <div className="flex gap-1">
+                  {sampleTeamStats.recentForm.map((result, index) => (
+                    <Badge 
+                      key={index} 
+                      variant={result === 'W' ? 'default' : result === 'L' ? 'destructive' : 'secondary'}
+                      className="w-5 h-5 p-0 text-xs"
+                    >
+                      {result}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Grid - Similar to player box stats */}
+            <div className="flex space-x-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{sampleTeamStats.winRate}%</div>
+                <div className="text-xs text-gray-600">Win Rate</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{sampleTeamStats.goalRatio}%</div>
+                <div className="text-xs text-gray-600">Goal Ratio</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">+{sampleTeamStats.goalDifferential}</div>
+                <div className="text-xs text-gray-600">Goal Diff</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{sampleTeamStats.averageGoalsFor}</div>
+                <div className="text-xs text-gray-600">Avg Goals</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Design 5: Game Result Card Style
+  const GameResultCardStyle = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">Game Result Card Style</h2>
+        <p className="text-gray-600">Mimicking the game result card layout with left border and compact info</p>
+      </div>
+
+      <div className="border-l-4 border-green-500 bg-green-50 rounded transition-colors hover:bg-green-100 cursor-pointer">
+        <div className="flex items-center justify-between p-4 space-x-4">
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-800 text-base mb-1">
+              {sampleTeamStats.teamName} Season Performance
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>{sampleTeamStats.totalGames} games</span>
+              <span className="mx-1">•</span>
+              <span>{sampleTeamStats.wins}W-{sampleTeamStats.losses}L-{sampleTeamStats.draws}D</span>
+              <span className="mx-1">•</span>
+              <span>Goals: {sampleTeamStats.totalGoalsFor}-{sampleTeamStats.totalGoalsAgainst}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-600">{sampleTeamStats.winRate}%</div>
+              <div className="text-xs text-gray-600">Win Rate</div>
+            </div>
+            <div className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded">
+              +{sampleTeamStats.goalDifferential}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional performance cards */}
+      <div className="space-y-2">
+        <div className="border-l-4 border-blue-500 bg-blue-50 rounded p-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-800">Attack Performance</span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Avg: {sampleTeamStats.averageGoalsFor}</span>
+              <span className="text-sm text-gray-600">High: {sampleTeamStats.highestScoreFor}</span>
+              <Badge variant="outline" className="text-blue-600 border-blue-600">{sampleTeamStats.highScoringGames} High</Badge>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-l-4 border-red-500 bg-red-50 rounded p-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-800">Defense Performance</span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Avg: {sampleTeamStats.averageGoalsAgainst}</span>
+              <span className="text-sm text-gray-600">Best: {sampleTeamStats.lowestScoreAgainst}</span>
+              <Badge variant="outline" className="text-red-600 border-red-600">{sampleTeamStats.cleanSheets} Clean</Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Design 6: Horizontal Stats Bar
+  const HorizontalStatsBar = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">Horizontal Stats Bar</h2>
+        <p className="text-gray-600">Compact horizontal layout with visual progress indicators</p>
+      </div>
+
+      <Card className="overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-800 to-blue-800 text-white p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">{sampleTeamStats.teamName}</h3>
+              <p className="text-blue-200 text-sm">Season Overview</p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold">{sampleTeamStats.winRate}%</div>
+              <div className="text-blue-200 text-sm">Win Rate</div>
+            </div>
+          </div>
+        </div>
+        
+        <CardContent className="p-4">
+          <div className="grid grid-cols-5 gap-4 mb-4">
+            <div className="text-center p-2 bg-green-50 rounded border border-green-200">
+              <div className="text-xl font-bold text-green-700">{sampleTeamStats.wins}</div>
+              <div className="text-xs text-green-600">Wins</div>
+            </div>
+            <div className="text-center p-2 bg-red-50 rounded border border-red-200">
+              <div className="text-xl font-bold text-red-700">{sampleTeamStats.losses}</div>
+              <div className="text-xs text-red-600">Losses</div>
+            </div>
+            <div className="text-center p-2 bg-gray-50 rounded border border-gray-200">
+              <div className="text-xl font-bold text-gray-700">{sampleTeamStats.draws}</div>
+              <div className="text-xs text-gray-600">Draws</div>
+            </div>
+            <div className="text-center p-2 bg-blue-50 rounded border border-blue-200">
+              <div className="text-xl font-bold text-blue-700">{sampleTeamStats.totalGoalsFor}</div>
+              <div className="text-xs text-blue-600">Goals For</div>
+            </div>
+            <div className="text-center p-2 bg-orange-50 rounded border border-orange-200">
+              <div className="text-xl font-bold text-orange-700">{sampleTeamStats.totalGoalsAgainst}</div>
+              <div className="text-xs text-orange-600">Goals Against</div>
+            </div>
+          </div>
+
+          {/* Progress bars for key metrics */}
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Win Rate</span>
+                <span className="font-semibold">{sampleTeamStats.winRate}%</span>
+              </div>
+              <Progress value={sampleTeamStats.winRate} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Goal Efficiency</span>
+                <span className="font-semibold">{sampleTeamStats.goalRatio}%</span>
+              </div>
+              <Progress value={sampleTeamStats.goalRatio} className="h-2" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Design 7: Badge Collection Style
+  const BadgeCollectionStyle = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">Badge Collection Style</h2>
+        <p className="text-gray-600">Visual badges and achievements layout</p>
+      </div>
+
+      <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Trophy className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">{sampleTeamStats.teamName}</CardTitle>
+                <p className="text-sm text-gray-600">Performance Summary</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-blue-600 border-blue-600 font-semibold">
+              {sampleTeamStats.totalGames} Games
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pt-0">
+          {/* Achievement badges */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-3 bg-white rounded-lg border-2 border-green-200 shadow-sm">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-green-600 font-bold text-sm">{sampleTeamStats.winRate}%</span>
+              </div>
+              <div className="text-xs font-medium text-green-700">Win Rate</div>
+            </div>
+            
+            <div className="text-center p-3 bg-white rounded-lg border-2 border-purple-200 shadow-sm">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-purple-600 font-bold text-sm">{sampleTeamStats.bigWins}</span>
+              </div>
+              <div className="text-xs font-medium text-purple-700">Big Wins</div>
+            </div>
+            
+            <div className="text-center p-3 bg-white rounded-lg border-2 border-blue-200 shadow-sm">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-blue-600 font-bold text-sm">{sampleTeamStats.cleanSheets}</span>
+              </div>
+              <div className="text-xs font-medium text-blue-700">Clean Sheets</div>
+            </div>
+          </div>
+
+          {/* Performance metrics */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg p-3 border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium">Attack</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-green-600">{sampleTeamStats.averageGoalsFor}</div>
+                  <div className="text-xs text-gray-600">avg per game</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-3 border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium">Defense</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-blue-600">{sampleTeamStats.averageGoalsAgainst}</div>
+                  <div className="text-xs text-gray-600">avg conceded</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Form indicator */}
+          <div className="mt-4 p-3 bg-white rounded-lg border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Recent Form</span>
+              <div className="flex gap-1">
+                {sampleTeamStats.recentForm.map((result, index) => (
+                  <div
+                    key={index}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      result === 'W' ? 'bg-green-500 text-white' :
+                      result === 'L' ? 'bg-red-500 text-white' :
+                      'bg-gray-400 text-white'
+                    }`}
+                  >
+                    {result}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Design 8: Minimal Status Style
+  const MinimalStatusStyle = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">Minimal Status Style</h2>
+        <p className="text-gray-600">Clean, minimal approach focusing on key metrics</p>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div className="p-4">
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <h3 className="text-lg font-semibold text-gray-900">{sampleTeamStats.teamName}</h3>
+              <Badge variant="secondary" className="text-xs">
+                {sampleTeamStats.totalGames} games
+              </Badge>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-600">Win Rate</div>
+              <div className="text-xl font-bold text-green-600">{sampleTeamStats.winRate}%</div>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-6 gap-4 text-center text-sm">
+            <div>
+              <div className="text-gray-600 mb-1">Record</div>
+              <div className="font-semibold">{sampleTeamStats.wins}-{sampleTeamStats.losses}-{sampleTeamStats.draws}</div>
+            </div>
+            <div>
+              <div className="text-gray-600 mb-1">For</div>
+              <div className="font-semibold text-green-600">{sampleTeamStats.totalGoalsFor}</div>
+            </div>
+            <div>
+              <div className="text-gray-600 mb-1">Against</div>
+              <div className="font-semibold text-red-600">{sampleTeamStats.totalGoalsAgainst}</div>
+            </div>
+            <div>
+              <div className="text-gray-600 mb-1">Diff</div>
+              <div className="font-semibold text-blue-600">+{sampleTeamStats.goalDifferential}</div>
+            </div>
+            <div>
+              <div className="text-gray-600 mb-1">Avg For</div>
+              <div className="font-semibold">{sampleTeamStats.averageGoalsFor}</div>
+            </div>
+            <div>
+              <div className="text-gray-600 mb-1">Form</div>
+              <div className="flex gap-0.5 justify-center">
+                {sampleTeamStats.recentForm.slice(0, 3).map((result, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full ${
+                      result === 'W' ? 'bg-green-500' :
+                      result === 'L' ? 'bg-red-500' :
+                      'bg-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom insights */}
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-4 text-xs text-gray-600">
+              <span>• {sampleTeamStats.bigWins} dominant wins</span>
+              <span>• {sampleTeamStats.cleanSheets} strong defensive games</span>
+              <span>• {sampleTeamStats.closeGames} close contests</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              Last updated: 2 mins ago
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
@@ -541,10 +921,15 @@ const TeamPerformanceExamples = () => {
       </div>
 
       <Tabs value={selectedDesign} onValueChange={setSelectedDesign} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="compact">Compact Design</TabsTrigger>
-          <TabsTrigger value="visual">Visual Dashboard</TabsTrigger>
-          <TabsTrigger value="modern">Modern Cards</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsTrigger value="compact">Compact</TabsTrigger>
+          <TabsTrigger value="visual">Visual</TabsTrigger>
+          <TabsTrigger value="modern">Modern</TabsTrigger>
+          <TabsTrigger value="playerbox">Player Box</TabsTrigger>
+          <TabsTrigger value="gamecard">Game Card</TabsTrigger>
+          <TabsTrigger value="horizontal">Horizontal</TabsTrigger>
+          <TabsTrigger value="badges">Badges</TabsTrigger>
+          <TabsTrigger value="minimal">Minimal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="compact" className="mt-6">
@@ -557,6 +942,26 @@ const TeamPerformanceExamples = () => {
 
         <TabsContent value="modern" className="mt-6">
           <ModernDesign />
+        </TabsContent>
+
+        <TabsContent value="playerbox" className="mt-6">
+          <PlayerBoxInspiredDesign />
+        </TabsContent>
+
+        <TabsContent value="gamecard" className="mt-6">
+          <GameResultCardStyle />
+        </TabsContent>
+
+        <TabsContent value="horizontal" className="mt-6">
+          <HorizontalStatsBar />
+        </TabsContent>
+
+        <TabsContent value="badges" className="mt-6">
+          <BadgeCollectionStyle />
+        </TabsContent>
+
+        <TabsContent value="minimal" className="mt-6">
+          <MinimalStatusStyle />
         </TabsContent>
       </Tabs>
 
