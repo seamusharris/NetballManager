@@ -38,32 +38,38 @@ export default function TopPlayersWidget({
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
 
   // Filter games by selected season and team
-  const filteredGames = games.filter(game => {
-    // Season filter
-    let passesSeasonFilter = true;
-    if (seasonFilter === 'current' && activeSeason) {
-      passesSeasonFilter = game.seasonId === activeSeason.id;
-    } else if (seasonFilter && seasonFilter !== 'current') {
-      const seasonId = parseInt(seasonFilter);
-      passesSeasonFilter = game.seasonId === seasonId;
-    }
+  const filteredGames = useMemo(() => {
+    return games.filter(game => {
+      // Season filter
+      let passesSeasonFilter = true;
+      if (seasonFilter === 'current' && activeSeason) {
+        passesSeasonFilter = game.seasonId === activeSeason.id;
+      } else if (seasonFilter && seasonFilter !== 'current') {
+        const seasonId = parseInt(seasonFilter);
+        passesSeasonFilter = game.seasonId === seasonId;
+      }
 
-    // Team filter - only apply if teamId is provided
-    let passesTeamFilter = true;
-    if (teamId) {
-      passesTeamFilter = game.homeTeamId === teamId || game.awayTeamId === teamId;
-    }
+      // Team filter - only apply if teamId is provided
+      let passesTeamFilter = true;
+      if (teamId) {
+        passesTeamFilter = game.homeTeamId === teamId || game.awayTeamId === teamId;
+      }
 
-    return passesSeasonFilter && passesTeamFilter;
-  });
+      return passesSeasonFilter && passesTeamFilter;
+    });
+  }, [games, seasonFilter, activeSeason, teamId]);
 
   // Filter for completed games that allow statistics
-  const validGames = filteredGames.filter(game => 
-    game.statusIsCompleted === true && 
-    game.statusAllowsStatistics === true
-  );
+  const validGames = useMemo(() => {
+    return filteredGames.filter(game => 
+      game.statusIsCompleted === true && 
+      game.statusAllowsStatistics === true
+    );
+  }, [filteredGames]);
 
-  const gameIds = validGames.map(game => game.id);
+  const gameIds = useMemo(() => {
+    return validGames.map(game => game.id);
+  }, [validGames]);
 
   // Use centralized data instead of making separate API calls
   const gameStatsMap = centralizedStats || {};
@@ -150,23 +156,25 @@ export default function TopPlayersWidget({
     gameRostersMap, 
     players, 
     teamId, 
-    validGames.length, // Use length to avoid deep comparison
-    JSON.stringify(gameIds) // Stable comparison for gameIds
+    validGames,
+    gameIds
   ]);
 
   // Get players with their stats and sort by performance
-  const playersWithStats = players
-    .filter(player => playerStatsMap[player.id])
-    .map(player => ({
-      ...player,
-      stats: playerStatsMap[player.id]
-    }))
-    .sort((a, b) => {
-      // Sort by total contribution (goals + rebounds + intercepts)
-      const aTotal = a.stats.goals + a.stats.rebounds + a.stats.intercepts;
-      const bTotal = b.stats.goals + b.stats.rebounds + b.stats.intercepts;
-      return bTotal - aTotal;
-    });
+  const playersWithStats = useMemo(() => {
+    return players
+      .filter(player => playerStatsMap[player.id])
+      .map(player => ({
+        ...player,
+        stats: playerStatsMap[player.id]
+      }))
+      .sort((a, b) => {
+        // Sort by total contribution (goals + rebounds + intercepts)
+        const aTotal = a.stats.goals + a.stats.rebounds + a.stats.intercepts;
+        const bTotal = b.stats.goals + b.stats.rebounds + b.stats.intercepts;
+        return bTotal - aTotal;
+      });
+  }, [players, playerStatsMap]);
 
   // Take top 3 players
   const topPlayers = playersWithStats.slice(0, 3);
