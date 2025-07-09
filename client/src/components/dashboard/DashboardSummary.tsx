@@ -213,19 +213,6 @@ export default function DashboardSummary({
               centralizedStats={centralizedStats}
               centralizedScores={centralizedScores}
             />
-            <RecentGames 
-              games={pastGames} 
-              seasonFilter={selectedSeasonId} 
-              activeSeason={activeSeason}
-              centralizedStats={centralizedStats}
-              centralizedScores={centralizedScores}
-              teams={teams}
-            />
-            <UpcomingGames 
-              games={upcomingGames} 
-              seasonFilter={selectedSeasonId} 
-              activeSeason={activeSeason}
-            />
             <QuarterPerformanceWidget 
               games={filteredGames} 
               activeSeason={activeSeason} 
