@@ -110,7 +110,7 @@ export default function StatsRecorder() {
 
   // NEW: Game-centric stats endpoint with enhanced logging
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
-    queryKey: ['/api/game', gameId, 'team', teamId, 'stats'],
+    queryKey: ['game-centric-stats', gameId, teamId],
     queryFn: () => {
       console.log(`StatsRecorder: Fetching stats via game-centric endpoint /api/game/${gameId}/team/${teamId}/stats`);
       return apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`);
