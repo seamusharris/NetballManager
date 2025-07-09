@@ -57,7 +57,7 @@ import DropdownExamples from './pages/DropdownExamples';
 import NavigationExamples from './pages/NavigationExamples';
 import TableExamples from './pages/TableExamples';
 import ListExamples from './pages/ListExamples';
-import Modal Examples from './pages/ModalExamples';
+import ModalExamples from './pages/ModalExamples';
 import SearchExamples from './pages/SearchExamples';
 import LoadingExamples from './pages/LoadingExamples';
 import ErrorExamples from './pages/ErrorExamples';
