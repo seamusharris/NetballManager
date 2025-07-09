@@ -22,6 +22,73 @@ export default function ResultBadgeExamples() {
       </Helmet>
 
       <div className="space-y-8">
+        {/* Quick Reference - All Sizes */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Quick Reference - All Sizes</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Result Badge Size Guide
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Standard sizing system: <code>sm</code>, <code>md</code>, <code>lg</code>, <code>xl</code>
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Extra Small */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium w-16">sm:</span>
+                  <div className="flex gap-2">
+                    <ResultBadge result="Win" size="sm" />
+                    <ResultBadge result="Loss" size="sm" />
+                    <ResultBadge result="Draw" size="sm" />
+                    <ResultBadge result="Bye" size="sm" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">24px - For compact lists and inline use</span>
+                </div>
+
+                {/* Medium */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium w-16">md:</span>
+                  <div className="flex gap-2">
+                    <ResultBadge result="Win" size="md" />
+                    <ResultBadge result="Loss" size="md" />
+                    <ResultBadge result="Draw" size="md" />
+                    <ResultBadge result="Bye" size="md" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">32px - Standard size for cards and widgets</span>
+                </div>
+
+                {/* Large */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium w-16">lg:</span>
+                  <div className="flex gap-2">
+                    <ResultBadge result="Win" size="lg" />
+                    <ResultBadge result="Loss" size="lg" />
+                    <ResultBadge result="Draw" size="lg" />
+                    <ResultBadge result="Bye" size="lg" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">40px - For headers and emphasis</span>
+                </div>
+
+                {/* Extra Large */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium w-16">xl:</span>
+                  <div className="flex gap-2">
+                    <ResultBadge result="Win" size="xl" />
+                    <ResultBadge result="Loss" size="xl" />
+                    <ResultBadge result="Draw" size="xl" />
+                    <ResultBadge result="Bye" size="xl" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">48px - For dashboard highlights</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Basic Result Badges */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Basic Result Badges</h2>
