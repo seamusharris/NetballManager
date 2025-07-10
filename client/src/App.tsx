@@ -62,6 +62,8 @@ import SearchExamples from './pages/SearchExamples';
 import LoadingExamples from './pages/LoadingExamples';
 import ErrorExamples from './pages/ErrorExamples';
 import ToastExamples from './pages/ToastExamples';
+import ResultBadgeComponent from './pages/ResultBadgeExamples';
+import Reference from './pages/Reference';
 import SplitViewExamples from './pages/SplitViewExamples';
 import GridExamples from './pages/GridExamples';
 import CardCollectionExamples from './pages/CardCollectionExamples';
@@ -88,7 +90,7 @@ import RosterGame from '@/pages/RosterGame';
 import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
-import ResultBadgeExamples from './pages/ResultBadgeExamples';
+
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -208,6 +210,9 @@ function Router() {
         <Route path="/loading-examples" component={LoadingExamples} />
         <Route path="/error-examples" component={ErrorExamples} />
         <Route path="/toast-examples" component={ToastExamples} />
+        <Route path="/reference" component={Reference} />
+        <Route path="/result-badge-component" component={ResultBadgeComponent} />
+        <Route path="/result-badge-examples" component={ResultBadgeComponent} />
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />
@@ -271,7 +276,6 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
-        <Route path="/result-badge-examples" component={withErrorBoundary(ResultBadgeExamples, 'ResultBadgeExamples')} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
