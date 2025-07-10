@@ -1,4 +1,3 @@
-import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import { hasPositionStats } from '@/lib/positionStats';
 
 interface RecentFormWidgetProps {
