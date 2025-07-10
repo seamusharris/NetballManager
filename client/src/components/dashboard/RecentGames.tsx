@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useClubContext } from '@/contexts/ClubContext';
+import { useClub } from '@/contexts/ClubContext';
 import { Game } from '@/shared/schema';
 import { getCompletedGamesForStats } from '@/lib/gameFilters';
 import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
@@ -12,7 +12,7 @@ interface RecentGamesProps {
 }
 
 export default function RecentGames({ className = "" }: RecentGamesProps) {
-  const { currentTeam, currentClub } = useClubContext();
+  const { currentTeam, currentClub } = useClub();
 
   const { data: games = [], isLoading } = useQuery({
     queryKey: ['team', currentTeam?.id, 'games'],
