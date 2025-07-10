@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResultBadge } from '@/components/ui/result-badge';
 import PageTemplate from '@/components/layout/PageTemplate';
