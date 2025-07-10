@@ -152,6 +152,7 @@ export default function ClubDashboard() {
   });
 
   const centralizedStats = batchData?.stats || {};
+  const centralizedScores = batchData?.scores || {};
   const isLoadingStats = isLoadingBatchData;
 
   // Calculate club-wide metrics (memoized to prevent unnecessary recalculations)
