@@ -23,18 +23,15 @@ export const standardFilters = {
   // For dashboard widgets showing recent activity
   completedGames: (games: Game[]): Game[] => 
     games.filter(game => 
-      gamePredicates.isCompleted(game) && 
-      gamePredicates.isNotBye(game) && 
-      gamePredicates.isNotAbandoned(game)
+      game.statusIsCompleted === true && 
+      game.statusAllowsStatistics === true
     ),
 
   // For statistics calculations (stricter requirements)
   statisticsEligibleGames: (games: Game[]): Game[] => 
     games.filter(game => 
-      gamePredicates.isCompleted(game) && 
-      gamePredicates.allowsStatistics(game) && 
-      gamePredicates.isNotBye(game) && 
-      gamePredicates.isNotAbandoned(game)
+      game.statusIsCompleted === true && 
+      game.statusAllowsStatistics === true
     ),
 
   // For win/loss records (includes forfeits but excludes abandoned)
