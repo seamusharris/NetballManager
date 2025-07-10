@@ -211,7 +211,8 @@ function Router() {
         <Route path="/error-examples" component={ErrorExamples} />
         <Route path="/toast-examples" component={ToastExamples} />
         <Route path="/reference" component={Reference} />
-        <Route path="/reference/result-badge-component" component={ResultBadgeComponent} />
+        <Route path="/reference/result-badge-component" component={lazy(() => import('./pages/ResultBadgeExamples'))} />
+        <Route path="/reference/playerbox-component" component={lazy(() => import('./pages/PlayerBoxReference'))} />
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />

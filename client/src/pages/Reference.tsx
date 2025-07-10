@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { ResultBadge } from '@/components/ui/result-badge';
+import { PlayerBox } from '@/components/ui/player-box';
 import { Link } from 'wouter';
 import { 
   Trophy,
@@ -28,6 +29,14 @@ const referenceItems: ReferenceItem[] = [
     description: 'Standardized win/loss/draw/bye result badges with consistent colors and sizing system.',
     path: '/reference/result-badge-component',
     icon: <Trophy className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
+  {
+    title: 'PlayerBox Component',
+    description: 'Versatile player display component with selection states, statistics, and multiple size variants for team management.',
+    path: '/reference/playerbox-component',
+    icon: <Users className="h-5 w-5" />,
     category: 'Components',
     status: 'Complete'
   },
@@ -173,6 +182,25 @@ export default function Reference() {
                           <ResultBadge result="Loss" size="sm" />
                           <ResultBadge result="Draw" size="sm" />
                           <ResultBadge result="Bye" size="sm" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Live Example for PlayerBox Component */}
+                    {item.title === 'PlayerBox Component' && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-xs font-medium text-gray-600 mb-2">Live Example:</div>
+                        <div className="space-y-2">
+                          <PlayerBox 
+                            player={{
+                              id: 999,
+                              displayName: "Emma Wilson",
+                              positionPreferences: ["GA", "GS"],
+                              avatarColor: "bg-blue-500",
+                              active: true
+                            }}
+                            size="sm"
+                          />
                         </div>
                       </div>
                     )}
