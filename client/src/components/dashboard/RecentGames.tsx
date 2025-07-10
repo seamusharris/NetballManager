@@ -1,79 +1,66 @@
-import { BaseWidget } from '@/components/ui/base-widget';
-import { Game } from '@shared/schema';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useClubContext } from '@/contexts/ClubContext';
+import { Game } from '@/shared/schema';
+import { getCompletedGamesForStats } from '@/lib/gameFilters';
 import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
-import { RECENT_GAMES_COUNT } from '@/lib/constants';
-import { useClub } from '@/contexts/ClubContext';
+
+const RECENT_GAMES_COUNT = 5;
 
 interface RecentGamesProps {
-  games: Game[];
-  opponents: Opponent[];
   className?: string;
-  seasonFilter?: string;
-  activeSeason?: any;
-  centralizedStats?: Record<number, any[]>;
-  teams?: any[];
-  centralizedScores?: Record<number, any[]>;
-  clubWide?: boolean; // When true, don't filter by current team
 }
 
-function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
-  const { currentTeam, currentClub } = useClub();
+export default function RecentGames({ className = "" }: RecentGamesProps) {
+  const { currentTeam, currentClub } = useClubContext();
 
-  // Filter for recent completed games using the new status system
-  const recentGames = (games || [])
-    .filter(game => {
-      const isCompleted = game.statusIsCompleted === true;
+  const { data: games = [], isLoading } = useQuery({
+    queryKey: ['team', currentTeam?.id, 'games'],
+    queryFn: async () => {
+      const response = await fetch(`/api/teams/${currentTeam?.id}/games`);
+      if (!response.ok) throw new Error('Failed to fetch games');
+      return response.json();
+    },
+    enabled: !!currentTeam?.id,
+  });
 
-      console.log(`Game ${game.id} completion check:`, {
-        statusIsCompleted: game.statusIsCompleted,
-        finalResult: isCompleted
-      });
+  // Filter for completed games that allow statistics
+  const completedGames = getCompletedGamesForStats(games);
+  const recentGames = completedGames.slice(0, RECENT_GAMES_COUNT);
 
-      return isCompleted;
-    })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, RECENT_GAMES_COUNT);
-
-  // Debug centralized scores with more detail
-  console.log('RecentGames: Received centralizedScores (batch format):', centralizedScores);
-  console.log('RecentGames: Recent games count:', recentGames.length);
-  console.log('RecentGames: Recent games IDs:', recentGames.map(g => g.id));
-  console.log('RecentGames: Games involved teams:', recentGames.map(g => `${g.id}: ${g.homeTeamId} vs ${g.awayTeamId}`));
-
-  if (recentGames.length === 0) {
+  if (isLoading) {
     return (
-      <BaseWidget 
-        className={className} 
-        title="Recent Games"
-        contentClassName="px-4 py-6 pb-2"
-      >
-        <p className="text-gray-500 text-center py-4">No recent games to display</p>
-      </BaseWidget>
+      <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
+        <h3 className="text-lg font-semibold mb-4">Recent Games</h3>
+        <p className="text-gray-500 text-center py-4">Loading recent games...</p>
+      </div>
     );
   }
 
-  // Use GameAnalysisWidget for consistent display
+  if (recentGames.length === 0) {
+    return (
+      <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
+        <h3 className="text-lg font-semibold mb-4">Recent Games</h3>
+        <p className="text-gray-500 text-center py-4">No recent games available</p>
+      </div>
+    );
+  }
+
   return (
     <GameAnalysisWidget
       historicalGames={recentGames}
-      currentTeamId={clubWide ? 0 : currentTeam?.id || 0}
+      currentTeamId={currentTeam?.id || 0}
       currentClubId={currentClub?.id || 0}
-      batchScores={centralizedScores || {}}
-      batchStats={centralizedStats || {}}
+      opponentName="Recent Form"
       title="Recent Games"
       className={className}
-      showAnalytics={false} // Don't show analytics for recent games widget
-      showQuarterScores={true}
+      showAnalytics={false}
+      showQuarterScores={false}
       maxGames={RECENT_GAMES_COUNT}
       compact={true}
-      showViewMore={games.filter(game => game.statusIsCompleted === true).length > RECENT_GAMES_COUNT}
+      showViewMore={completedGames.length > RECENT_GAMES_COUNT}
       viewMoreHref={`/team/${currentTeam?.id}/games?status=completed`}
       viewMoreText="View more →"
     />
   );
 }
-
-// Export both as default and named export to handle different import styles
-export default RecentGames;
-export { RecentGames };
