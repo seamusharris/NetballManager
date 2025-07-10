@@ -86,6 +86,51 @@ export default function ResultBadgeExamples() {
           </Card>
         </section>
 
+        {/* Component Usage Documentation */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>How to Use the ResultBadge Component</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Simple usage examples with just size and result props
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-semibold mb-2">Basic Usage</h4>
+                  <code className="text-sm bg-white p-2 rounded border block">
+                    {`<ResultBadge result="Win" size="md" />`}
+                  </code>
+                </div>
+                
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-semibold mb-2">All Available Props</h4>
+                  <div className="text-sm space-y-1">
+                    <p><strong>result:</strong> "Win" | "Loss" | "Draw" | "Bye"</p>
+                    <p><strong>size:</strong> "sm" | "md" | "lg" | "xl" (default: "md")</p>
+                    <p><strong>className:</strong> optional additional CSS classes</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-semibold mb-2">Live Examples</h4>
+                  <div className="flex gap-3 items-center">
+                    <code className="text-xs">sm:</code>
+                    <ResultBadge result="Win" size="sm" />
+                    <code className="text-xs">md:</code>
+                    <ResultBadge result="Loss" size="md" />
+                    <code className="text-xs">lg:</code>
+                    <ResultBadge result="Draw" size="lg" />
+                    <code className="text-xs">xl:</code>
+                    <ResultBadge result="Bye" size="xl" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Usage Examples */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Usage Examples</h2>
@@ -179,52 +224,6 @@ export default function ResultBadgeExamples() {
                 <p className="text-sm text-green-800">
                   <strong>Good form:</strong> 3 wins, 1 draw, 1 loss in last 5 games
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Component Usage Documentation */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Component Usage</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>How to Use the ResultBadge Component</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Simple usage examples with just size and result props
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-semibold mb-2">Basic Usage</h4>
-                  <code className="text-sm bg-white p-2 rounded border block">
-                    {`<ResultBadge result="Win" size="md" />`}
-                  </code>
-                </div>
-                
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-semibold mb-2">All Available Props</h4>
-                  <div className="text-sm space-y-1">
-                    <p><strong>result:</strong> "Win" | "Loss" | "Draw" | "Bye"</p>
-                    <p><strong>size:</strong> "sm" | "md" | "lg" | "xl" (default: "md")</p>
-                    <p><strong>className:</strong> optional additional CSS classes</p>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-semibold mb-2">Live Examples</h4>
-                  <div className="flex gap-3 items-center">
-                    <code className="text-xs">sm:</code>
-                    <ResultBadge result="Win" size="sm" />
-                    <code className="text-xs">md:</code>
-                    <ResultBadge result="Loss" size="md" />
-                    <code className="text-xs">lg:</code>
-                    <ResultBadge result="Draw" size="lg" />
-                    <code className="text-xs">xl:</code>
-                    <ResultBadge result="Bye" size="xl" />
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
