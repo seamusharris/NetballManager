@@ -136,6 +136,14 @@ const examples: ExampleSection[] = [
     category: 'Patterns',
     status: 'Complete'
   },
+  {
+    title: 'Live Score Tracking',
+    description: 'Real-time game flow tracking with badge-style event indicators for live statistics recording during games.',
+    path: '/live-score-tracking-examples',
+    icon: <Target className="h-5 w-5" />,
+    category: 'Interactive',
+    status: 'Complete'
+  },
 
   // Navigation
   {
