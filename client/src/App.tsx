@@ -90,6 +90,7 @@ import RosterGame from '@/pages/RosterGame';
 import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
+import LiveScoreTrackingExamples from './pages/LiveScoreTrackingExamples';
 
 
 /**
@@ -310,6 +311,9 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
+        <Route path="/examples/game-results" element={<GameResultExamples />} />
+            <Route path="/examples/score-progression" element={<ScoreProgressionExamples />} />
+            <Route path="/examples/live-score-tracking" element={<LiveScoreTrackingExamples />} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
