@@ -45,7 +45,7 @@ interface HistoricalPerformance {
   lastEncounter?: any;
 }
 
-// Simple GameResultBox component for this page
+// Using standardized GameResultCard component
 const GameResultBox = ({ homeScore, awayScore, isHomeTeam, size = 'md' }: {
   homeScore: number;
   awayScore: number;

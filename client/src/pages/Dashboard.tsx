@@ -21,7 +21,7 @@ import TopPlayersWidget from '@/components/dashboard/TopPlayersWidget';
 import TeamPerformance from '@/components/dashboard/TeamPerformance';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
 import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisWidget';
-import GameAnalysisWidget from '@/components/ui/previous-games-display';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
 import { cacheKeys } from '@/lib/cacheKeys';

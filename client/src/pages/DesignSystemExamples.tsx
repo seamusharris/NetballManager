@@ -668,37 +668,55 @@ export default function DesignSystemExamples() {
           <h2 className="section-header">Game Result Cards</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <GameResultCard
-              date="2025-06-08"
-              time="2:00 PM"
-              round="Round 5"
-              homeTeam="Lightning Bolts"
-              awayTeam="Storm Eagles"
-              homeScore={25}
-              awayScore={18}
-              result="won"
-              venue="Court 1"
+              game={{
+                id: 1,
+                date: "2025-06-08",
+                time: "2:00 PM",
+                round: "Round 5",
+                homeTeamName: "Lightning Bolts",
+                awayTeamName: "Storm Eagles",
+                statusIsCompleted: true,
+                statusDisplayName: "Completed",
+                homeTeamId: 1,
+                awayTeamId: 2
+              }}
+              currentTeamId={1}
+              layout="medium"
+              showLink={false}
             />
             <GameResultCard
-              date="2025-06-01"
-              time="4:30 PM"
-              round="Round 4"
-              homeTeam="Fire Hawks"
-              awayTeam="Lightning Bolts"
-              homeScore={22}
-              awayScore={28}
-              result="lost"
-              venue="Away"
+              game={{
+                id: 2,
+                date: "2025-06-01",
+                time: "4:30 PM",
+                round: "Round 4",
+                homeTeamName: "Fire Hawks",
+                awayTeamName: "Lightning Bolts",
+                statusIsCompleted: true,
+                statusDisplayName: "Completed",
+                homeTeamId: 3,
+                awayTeamId: 1
+              }}
+              currentTeamId={1}
+              layout="medium"
+              showLink={false}
             />
             <GameResultCard
-              date="2025-05-25"
-              time="1:00 PM"
-              round="Round 3"
-              homeTeam="Lightning Bolts"
-              awayTeam="Thunder Jets"
-              homeScore={24}
-              awayScore={24}
-              result="draw"
-              venue="Court 3"
+              game={{
+                id: 3,
+                date: "2025-05-25",
+                time: "1:00 PM",
+                round: "Round 3",
+                homeTeamName: "Lightning Bolts",
+                awayTeamName: "Thunder Jets",
+                statusIsCompleted: true,
+                statusDisplayName: "Completed",
+                homeTeamId: 1,
+                awayTeamId: 4
+              }}
+              currentTeamId={1}
+              layout="medium"
+              showLink={false}
             />
           </div>
         </section>
