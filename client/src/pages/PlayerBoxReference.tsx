@@ -157,7 +157,7 @@ export default function PlayerBoxReference() {
             <TabsTrigger value="usage">Usage</TabsTrigger>
           </TabsList>
 
-          {/* Variants Tab */}```typescript
+          {/* Variants Tab */}
           <TabsContent value="variants" className="space-y-6">
             <Card>
               <CardHeader>
