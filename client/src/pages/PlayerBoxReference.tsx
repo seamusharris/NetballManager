@@ -157,7 +157,7 @@ export default function PlayerBoxReference() {
             <TabsTrigger value="usage">Usage</TabsTrigger>
           </TabsList>
 
-          {/* Variants Tab */}
+          {/* Variants Tab */}```typescript
           <TabsContent value="variants" className="space-y-6">
             <Card>
               <CardHeader>
@@ -330,7 +330,7 @@ export default function PlayerBoxReference() {
                   <CodeBlock 
                     code={`<div className="grid grid-cols-4 gap-2">
   <PlayerBox player={player1} size="sm" showPositions={false} />
-  <PlayerBox player={player2} size="sm" showPositions={false} />
+  <PlayerBox player={player2} size="sm showPositions={false} />
   <PlayerBox player={player3} size="sm" showPositions={false} />
   <PlayerBox player={player4} size="sm" showPositions={false} />
 </div>`}
@@ -393,48 +393,6 @@ const handleSelectionChange = (playerId: number, isSelected: boolean) => {
   onSelectionChange={handleSelectionChange}
 />`}
                     id="interactive-selection"
-                  />
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Selection Positioning</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-600">Right positioned (default):</span>
-                      <PlayerBox
-                        player={samplePlayers[0]}
-                        isSelectable={true}
-                        isSelected={true}
-                        onSelectionChange={() => {}}
-                        selectionPosition="right"
-                      />
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Left positioned:</span>
-                      <PlayerBox
-                        player={samplePlayers[0]}
-                        isSelectable={true}
-                        isSelected={true}
-                        onSelectionChange={() => {}}
-                        selectionPosition="left"
-                      />
-                    </div>
-                  </div>
-                  <CodeBlock 
-                    code={`// Right positioned (default)
-<PlayerBox 
-  player={player} 
-  isSelectable={true}
-  selectionPosition="right" 
-/>
-
-// Left positioned
-<PlayerBox 
-  player={player} 
-  isSelectable={true}
-  selectionPosition="left" 
-/>`}
-                    id="selection-position"
                   />
                 </div>
 
@@ -536,12 +494,6 @@ const handleSelectionChange = (playerId: number, isSelected: boolean) => {
                         <td className="p-2">(id: number, selected: boolean) =&gt; void</td>
                         <td className="p-2">undefined</td>
                         <td className="p-2">Callback when selection changes</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="p-2 font-mono">selectionPosition</td>
-                        <td className="p-2">'left' | 'right'</td>
-                        <td className="p-2">'right'</td>
-                        <td className="p-2">Position of selection checkbox</td>
                       </tr>
                       <tr className="border-b">
                         <td className="p-2 font-mono">isLoading</td>

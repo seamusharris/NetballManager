@@ -39,7 +39,6 @@ interface PlayerBoxProps {
   isSelectable?: boolean;
   onSelectionChange?: (playerId: number, isSelected: boolean) => void;
   selectionMode?: 'checkbox' | 'toggle' | 'none';
-  selectionPosition?: 'right' | 'left';
   // Status indicators for loading states
   isLoading?: boolean;
   isDisabled?: boolean;
@@ -64,7 +63,6 @@ function PlayerBox({
   isSelectable = false,
   onSelectionChange,
   selectionMode = 'checkbox',
-  selectionPosition = 'right',
   // Status indicators
   isLoading = false,
   isDisabled = false,
@@ -327,19 +325,12 @@ function PlayerBox({
         )}
 
         {/* Selection checkbox */}
-        {isSelectable && selectionPosition === 'right' && (
+        {isSelectable && (
           <div className="flex items-center ml-3">
             {renderSelectionCheckbox()}
           </div>
         )}
       </div>
-
-      {/* Selection checkbox on left if positioned there */}
-      {isSelectable && selectionPosition === 'left' && (
-        <div className="flex items-center mr-3">
-          {renderSelectionCheckbox()}
-        </div>
-      )}
     </div>
   );
 
