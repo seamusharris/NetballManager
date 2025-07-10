@@ -873,6 +873,61 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
+
+                {/* Example Chart: Quarter Performance */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Quarter Performance (Brand-Based Colors)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Grid lines */}
+                      {[0, 5, 10, 15, 20].map(y => (
+                        <line key={y} x1="50" y1={180 - (y * 8)} x2="450" y2={180 - (y * 8)} 
+                              stroke="#e5e7eb" strokeWidth="1" />
+                      ))}
+                      
+                      {/* Bars for each quarter */}
+                      {[
+                        { quarter: 'Q1', teamGoals: 12, oppGoals: 8, teamColor: '#3b82f6', oppColor: '#ef4444' },
+                        { quarter: 'Q2', teamGoals: 15, oppGoals: 10, teamColor: '#3b82f6', oppColor: '#ef4444' },
+                        { quarter: 'Q3', teamGoals: 11, oppGoals: 12, teamColor: '#3b82f6', oppColor: '#ef4444' },
+                        { quarter: 'Q4', teamGoals: 18, oppGoals: 9, teamColor: '#3b82f6', oppColor: '#ef4444' }
+                      ].map((q, i) => (
+                        <g key={q.quarter}>
+                          {/* Team goals bar */}
+                          <rect
+                            x={80 + (i * 90)}
+                            y={180 - (q.teamGoals * 8)}
+                            width="35"
+                            height={q.teamGoals * 8}
+                            fill={q.teamColor}
+                            rx="2"
+                          />
+                          {/* Opponent goals bar */}
+                          <rect
+                            x={120 + (i * 90)}
+                            y={180 - (q.oppGoals * 8)}
+                            width="35"
+                            height={q.oppGoals * 8}
+                            fill={q.oppColor}
+                            rx="2"
+                          />
+                          {/* Quarter label */}
+                          <text x={122 + (i * 90)} y="195" fontSize="12" fill="#6b7280" textAnchor="middle">
+                            {q.quarter}
+                          </text>
+                        </g>
+                      ))}
+                      
+                      {/* Legend */}
+                      <g>
+                        <rect x="50" y="20" width="15" height="15" fill="#3b82f6" rx="2" />
+                        <text x="70" y="30" fontSize="12" fill="#374151">Our Team</text>
+                        <rect x="150" y="20" width="15" height="15" fill="#ef4444" rx="2" />
+                        <text x="170" y="30" fontSize="12" fill="#374151">Opponent</text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Performance dashboards, win/loss charts, goal statistics where semantic meaning is important.
@@ -928,6 +983,96 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
+
+                {/* Example Chart: Season Progress Line Chart */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Season Win Rate Progress (Harmonious Spectrum)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Grid lines */}
+                      {[0, 25, 50, 75, 100].map(y => (
+                        <line key={y} x1="50" y1={180 - (y * 1.3)} x2="450" y2={180 - (y * 1.3)} 
+                              stroke="#e5e7eb" strokeWidth="1" />
+                      ))}
+                      
+                      {/* Season progress data */}
+                      {[
+                        { game: 1, winRate: 100, goals: 28, intercepts: 12 },
+                        { game: 2, winRate: 50, goals: 32, intercepts: 15 },
+                        { game: 3, winRate: 67, goals: 35, intercepts: 8 },
+                        { game: 4, winRate: 75, goals: 29, intercepts: 18 },
+                        { game: 5, winRate: 80, goals: 38, intercepts: 22 },
+                        { game: 6, winRate: 67, goals: 24, intercepts: 16 },
+                        { game: 7, winRate: 71, goals: 42, intercepts: 25 }
+                      ].map((point, i) => {
+                        const x = 80 + (i * 55);
+                        const yWin = 180 - (point.winRate * 1.3);
+                        const yGoals = 180 - (point.goals * 3);
+                        const yIntercepts = 180 - (point.intercepts * 5);
+                        
+                        return (
+                          <g key={i}>
+                            {/* Win rate line */}
+                            {i > 0 && (
+                              <line
+                                x1={80 + ((i-1) * 55)}
+                                y1={180 - ([100, 50, 67, 75, 80, 67, 71][i-1] * 1.3)}
+                                x2={x}
+                                y2={yWin}
+                                stroke="#1e40af"
+                                strokeWidth="3"
+                              />
+                            )}
+                            
+                            {/* Goals line */}
+                            {i > 0 && (
+                              <line
+                                x1={80 + ((i-1) * 55)}
+                                y1={180 - ([28, 32, 35, 29, 38, 24, 42][i-1] * 3)}
+                                x2={x}
+                                y2={yGoals}
+                                stroke="#0891b2"
+                                strokeWidth="2"
+                              />
+                            )}
+                            
+                            {/* Intercepts line */}
+                            {i > 0 && (
+                              <line
+                                x1={80 + ((i-1) * 55)}
+                                y1={180 - ([12, 15, 8, 18, 22, 16, 25][i-1] * 5)}
+                                x2={x}
+                                y2={yIntercepts}
+                                stroke="#0d9488"
+                                strokeWidth="2"
+                              />
+                            )}
+                            
+                            {/* Data points */}
+                            <circle cx={x} cy={yWin} r="4" fill="#1e40af" />
+                            <circle cx={x} cy={yGoals} r="3" fill="#0891b2" />
+                            <circle cx={x} cy={yIntercepts} r="3" fill="#0d9488" />
+                            
+                            {/* Game labels */}
+                            <text x={x} y="195" fontSize="10" fill="#6b7280" textAnchor="middle">
+                              G{point.game}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      
+                      {/* Legend */}
+                      <g>
+                        <circle cx="60" cy="25" r="4" fill="#1e40af" />
+                        <text x="70" y="29" fontSize="11" fill="#374151">Win Rate %</text>
+                        <circle cx="140" cy="25" r="3" fill="#0891b2" />
+                        <text x="150" y="29" fontSize="11" fill="#374151">Goals</text>
+                        <circle cx="190" cy="25" r="3" fill="#0d9488" />
+                        <text x="200" y="29" fontSize="11" fill="#374151">Intercepts</text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Multi-series line charts, team comparisons, neutral data where no semantic meaning is needed.
@@ -982,6 +1127,43 @@ export default function ColorStyleGuide() {
                       <div className="text-xs font-medium">C{index + 1}</div>
                     </div>
                   ))}
+                </div>
+
+                {/* Example Chart: Position Performance Matrix */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Position Performance Matrix (Vibrant Categorical)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="space-y-2">
+                      {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map((position, posIndex) => (
+                        <div key={position} className="flex items-center space-x-2">
+                          <span className="w-8 text-sm font-medium">{position}</span>
+                          <div className="flex space-x-1">
+                            {['Goals', 'Assists', 'Defense', 'Accuracy', 'Movement'].map((metric, metricIndex) => {
+                              const intensity = Math.random() * 100;
+                              const colors = ['#4338ca', '#f97316', '#10b981', '#e11d48', '#d97706'];
+                              return (
+                                <div 
+                                  key={metric} 
+                                  className="w-8 h-6 rounded text-xs text-white flex items-center justify-center font-bold"
+                                  style={{ backgroundColor: colors[metricIndex] }}
+                                >
+                                  {Math.round(intensity)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-center space-x-2 mt-4">
+                        <span className="w-8"></span>
+                        {['Goals', 'Assists', 'Defense', 'Accuracy', 'Movement'].map((metric, i) => (
+                          <span key={metric} className="w-8 text-xs text-center" style={{ color: ['#4338ca', '#f97316', '#10b981', '#e11d48', '#d97706'][i] }}>
+                            {metric.slice(0,4)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
