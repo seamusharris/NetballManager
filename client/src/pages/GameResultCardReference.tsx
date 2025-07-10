@@ -295,6 +295,48 @@ export default function GameResultCardReference() {
             </div>
 
             <div className="mt-6">
+              <h4 className="text-sm font-medium mb-3">Quarter-by-Quarter Scoring</h4>
+              <div className="space-y-4">
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Game with Quarter Breakdown</h5>
+                  <GameResultCard 
+                    game={sampleGames[0]} 
+                    gameStats={sampleStats}
+                    currentTeamId={116}
+                    centralizedScores={sampleScores}
+                    showQuarterScores={true}
+                    layout="wide"
+                    showLink={false}
+                  />
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Medium Layout with Quarter Scores</h5>
+                  <GameResultCard 
+                    game={sampleGames[0]} 
+                    gameStats={sampleStats}
+                    currentTeamId={116}
+                    centralizedScores={sampleScores}
+                    showQuarterScores={true}
+                    layout="medium"
+                    showLink={false}
+                  />
+                </div>
+
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <h5 className="text-xs font-medium mb-2 text-blue-800">Quarter Score Breakdown Explained</h5>
+                  <div className="text-xs text-blue-700 space-y-1">
+                    <div>• Each quarter shows: Team Score - Opponent Score</div>
+                    <div>• Green border = Quarter won</div>
+                    <div>• Red border = Quarter lost</div>
+                    <div>• Amber border = Quarter drawn</div>
+                    <div>• Displays alongside final game score</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
               <h4 className="text-sm font-medium mb-3">Different Layouts</h4>
               <div className="space-y-3">
                 <div>
