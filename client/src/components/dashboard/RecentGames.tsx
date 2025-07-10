@@ -15,13 +15,13 @@ export default function RecentGames({ className = "" }: RecentGamesProps) {
   const { currentTeam, currentClub } = useClub();
 
   const { data: games = [], isLoading } = useQuery({
-    queryKey: ['team', currentTeam?.id, 'games'],
+    queryKey: ['club', currentClub?.id, 'games'],
     queryFn: async () => {
-      const response = await fetch(`/api/teams/${currentTeam?.id}/games`);
+      const response = await fetch(`/api/clubs/${currentClub?.id}/games`);
       if (!response.ok) throw new Error('Failed to fetch games');
       return response.json();
     },
-    enabled: !!currentTeam?.id,
+    enabled: !!currentClub?.id,
   });
 
   // Filter for completed games that allow statistics
