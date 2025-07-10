@@ -94,6 +94,14 @@ export const getCompletedGamesForStats = standardFilters.statisticsEligibleGames
 export const getCompletedGamesForRecords = standardFilters.recordEligibleGames;
 export const getUpcomingGames = standardFilters.upcomingGames;
 
+// Individual game validation function
+export const isGameValidForStatistics = (game: Game): boolean => {
+  return gamePredicates.isCompleted(game) && 
+         gamePredicates.allowsStatistics(game) && 
+         gamePredicates.isNotBye(game) && 
+         gamePredicates.isNotAbandoned(game);
+};
+
 // Status-based filtering for game lists
 export function filterGamesByStatus(
   games: Game[],
