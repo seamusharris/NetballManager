@@ -12,7 +12,6 @@ interface ScoreEvent {
   type: 'goal-for' | 'goal-against' | 'miss' | 'intercept' | 'rebound' | 'infringement';
   player?: string;
   position?: string;
-  opposingPlayer?: string;
   description?: string;
 }
 
