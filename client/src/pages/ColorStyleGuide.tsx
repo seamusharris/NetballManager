@@ -546,20 +546,20 @@ export default function ColorStyleGuide() {
           <h2 className="text-2xl font-bold mb-6">Primary Brand Colors</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ColorSwatch
-              name="Netball Court Blue"
-              hex="#4f8ff7"
+              name="Primary Blue"
+              hex="#3b82f6"
               description="Primary brand color for main UI elements"
               usage="Buttons, links, primary actions, brand elements"
             />
             <ColorSwatch
               name="Success Green"
-              hex="#10B981"
+              hex="#22c55e"
               description="Positive outcomes, wins, successful operations"
               usage="Win indicators, success messages, positive metrics"
             />
             <ColorSwatch
-              name="Warning Orange"
-              hex="#F59E0B"
+              name="Warning Yellow"
+              hex="#eab308"
               description="Attention needed, caution, mixed results"
               usage="Warning messages, draws, in-progress states"
             />
@@ -583,36 +583,7 @@ export default function ColorStyleGuide() {
             />
           </div>
           
-          {/* Current Implementation Comparison */}
-          <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-amber-800">Current Implementation vs Style Guide</h3>
-            <p className="text-sm text-amber-700 mb-4">
-              These colors show discrepancies between what's documented above and what's actually being used in the codebase:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <ColorSwatch
-                name="Tailwind Blue (Currently Used)"
-                hex="#3b82f6"
-                description="What's actually used for primary actions"
-                usage="GameResultCard upcoming states, most primary buttons"
-                className="border-2 border-amber-300"
-              />
-              <ColorSwatch
-                name="Yellow (Currently Used for Draws)"
-                hex="#eab308"
-                description="What's actually used for draw states"
-                usage="ResultBadge draw states, some warning indicators"
-                className="border-2 border-amber-300"
-              />
-              <ColorSwatch
-                name="Standard Green (Mostly Consistent)"
-                hex="#22c55e"
-                description="Close to style guide, slight variation"
-                usage="Win badges, success states - mostly aligned"
-                className="border-2 border-green-300"
-              />
-            </div>
-          </div>
+          
         </section>
 
         {/* Netball Position Colors - Multiple Options */}
