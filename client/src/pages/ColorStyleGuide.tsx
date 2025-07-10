@@ -264,7 +264,7 @@ export default function ColorStyleGuide() {
               </div>
               <p className="text-sm mb-3">{status.description}</p>
               <div className="flex gap-2">
-                <Badge className={`${status.bgClass} hover:${status.bgClass}/90`}>
+                <Badge className={`${status.bgClass} hover:${status.bgClass}/90 text-white`}>
                   {status.name}
                 </Badge>
                 <Badge variant="outline" style={{ borderColor: status.color, color: status.color }}>
