@@ -25,7 +25,7 @@ const referenceItems: ReferenceItem[] = [
   {
     title: 'Result Badge Component',
     description: 'Standardized win/loss/draw/bye result badges with consistent colors and sizing system.',
-    path: '/result-badge-component',
+    path: '/reference/result-badge-component',
     icon: <Trophy className="h-5 w-5" />,
     category: 'Components',
     status: 'Complete'

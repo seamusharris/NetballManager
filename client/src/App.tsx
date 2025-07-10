@@ -211,8 +211,7 @@ function Router() {
         <Route path="/error-examples" component={ErrorExamples} />
         <Route path="/toast-examples" component={ToastExamples} />
         <Route path="/reference" component={Reference} />
-        <Route path="/result-badge-component" component={ResultBadgeComponent} />
-        <Route path="/result-badge-examples" component={ResultBadgeComponent} />
+        <Route path="/reference/result-badge-component" component={ResultBadgeComponent} />
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />
