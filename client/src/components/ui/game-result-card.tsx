@@ -12,7 +12,6 @@ import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
-import { QuarterScoresDisplay } from './quarter-scores-display';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
 
@@ -319,17 +318,106 @@ export default function GameResultCard({
 
       {/* Right side - Score and Quarter Scores */}
       <div className="ml-auto flex items-center gap-4">
-        {/* Quarter scores if enabled and available */}
-        {showQuarterScores && scoreResult.quarterBreakdown && scoreResult.quarterBreakdown.length > 0 && (
-          <QuarterScoresDisplay
-            quarterScores={scoreResult.quarterBreakdown.map(q => ({
+        {/* Quarter scores if enabled and available - matching recent form style */}
+        {showQuarterScores && scoreResult.quarterBreakdown && scoreResult.quarterBreakdown.length > 0 && !isByeGame && !isUpcoming && (
+          (() => {
+            const quarterBreakdown = scoreResult.quarterBreakdown;
+            
+            // Determine team perspective for coloring
+            const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
+            const isHomeOurs = clubTeamIds.includes(game.homeTeamId || 0);
+            const isAwayOurs = clubTeamIds.includes(game.awayTeamId || 0);
+            
+            // Transform quarter breakdown to team/opponent perspective
+            const quarterScores = quarterBreakdown.map(q => ({
               quarter: q.quarter,
-              teamScore: q.homeScore,
-              opponentScore: q.awayScore
-            }))}
-            size="sm"
-            className="mr-4"
-          />
+              teamScore: isHomeOurs ? q.homeScore : q.awayScore,
+              opponentScore: isHomeOurs ? q.awayScore : q.homeScore
+            }));
+
+            // Calculate cumulative scores
+            const teamCumulative = [];
+            const opponentCumulative = [];
+            let teamTotal = 0;
+            let opponentTotal = 0;
+
+            for (let i = 0; i < quarterScores.length; i++) {
+              teamTotal += quarterScores[i].teamScore;
+              opponentTotal += quarterScores[i].opponentScore;
+              teamCumulative.push(teamTotal);
+              opponentCumulative.push(opponentTotal);
+            }
+
+            return (
+              <div className="mr-4 flex items-center">
+                <div className="text-xs space-y-1">
+                  {/* Quarter-by-quarter scores on top (lighter) */}
+                  <div className="grid grid-cols-4 gap-1">
+                    {quarterScores.map((quarter, qIndex) => {
+                      const quarterWin = quarter.teamScore > quarter.opponentScore;
+                      const quarterLoss = quarter.teamScore < quarter.opponentScore;
+
+                      // Display in Home-Away format but color by team perspective
+                      let homeScore, awayScore;
+                      if (isHomeOurs) {
+                        // Current team is home
+                        homeScore = quarter.teamScore;
+                        awayScore = quarter.opponentScore;
+                      } else {
+                        // Current team is away
+                        homeScore = quarter.opponentScore;
+                        awayScore = quarter.teamScore;
+                      }
+
+                      const quarterClass = quarterWin 
+                        ? 'bg-green-100 text-green-800 border border-green-400' 
+                        : quarterLoss 
+                          ? 'bg-red-100 text-red-800 border border-red-400'
+                          : 'bg-amber-100 text-amber-800 border border-amber-400';
+
+                      return (
+                        <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
+                          {homeScore}–{awayScore}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  {/* Cumulative scores underneath (darker) */}
+                  <div className="grid grid-cols-4 gap-1">
+                    {teamCumulative.map((teamCum, qIndex) => {
+                      const opponentCum = opponentCumulative[qIndex];
+                      const cumulativeWin = teamCum > opponentCum;
+                      const cumulativeLoss = teamCum < opponentCum;
+
+                      // Display in Home-Away format but color by team perspective
+                      let homeCum, awayCum;
+                      if (isHomeOurs) {
+                        // Current team is home
+                        homeCum = teamCum;
+                        awayCum = opponentCum;
+                      } else {
+                        // Current team is away
+                        homeCum = opponentCum;
+                        awayCum = teamCum;
+                      }
+
+                      const cumulativeClass = cumulativeWin 
+                        ? 'bg-green-200 text-green-800 border border-green-500' 
+                        : cumulativeLoss 
+                          ? 'bg-red-200 text-red-800 border border-red-500'
+                          : 'bg-amber-200 text-amber-800 border border-amber-500';
+
+                      return (
+                        <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
+                          {homeCum}–{awayCum}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })()
         )}
 
         {/* Main score */}
