@@ -30,7 +30,7 @@ export default function RecentGames({ className = "", games = [], isLoading = fa
 
   // Filter to recent completed games
   const recentCompletedGames = games
-    .filter(game => game.statusIsCompleted)
+    .filter(game => game.statusIsCompleted === true || game.statusName === 'completed')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 

@@ -551,6 +551,7 @@ export default function ClubDashboard() {
               </div>
               
               <CardContent className="p-6">
+                {console.log('ClubDashboard: Passing games to RecentGames:', games?.length, 'completed games:', games?.filter(g => g.statusIsCompleted === true || g.statusName === 'completed').length)}
                 <RecentGames 
                   className="" 
                   games={games} 
