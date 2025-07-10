@@ -73,30 +73,8 @@ export default function ColorStyleGuide() {
     { code: "GK", name: "Goal Keeper", color: "#4338ca", bgClass: "bg-indigo-600", description: "Deep indigo - ultimate defense" }
   ];
 
-  // Option 2: Analogous Harmony
-  const positionColorsOption2 = [
-    { code: "GS", name: "Goal Shooter", color: "#e11d48", bgClass: "bg-rose-600", description: "Rose - precision striking" },
-    { code: "GA", name: "Goal Attack", color: "#ec4899", bgClass: "bg-pink-600", description: "Pink - creative attack" },
-    { code: "WA", name: "Wing Attack", color: "#a855f7", bgClass: "bg-purple-600", description: "Purple - wing creativity" },
-    { code: "C", name: "Centre", color: "#7c3aed", bgClass: "bg-violet-600", description: "Violet - central control" },
-    { code: "WD", name: "Wing Defence", color: "#6366f1", bgClass: "bg-indigo-600", description: "Indigo - wing protection" },
-    { code: "GD", name: "Goal Defence", color: "#3b82f6", bgClass: "bg-blue-600", description: "Blue - defensive strength" },
-    { code: "GK", name: "Goal Keeper", color: "#0ea5e9", bgClass: "bg-sky-600", description: "Sky blue - last line defense" }
-  ];
-
-  // Option 3: Triadic Balance
-  const positionColorsOption3 = [
-    { code: "GS", name: "Goal Shooter", color: "#dc2626", bgClass: "bg-red-600", description: "Primary red - power" },
-    { code: "GA", name: "Goal Attack", color: "#f97316", bgClass: "bg-orange-600", description: "Orange-red - energy" },
-    { code: "WA", name: "Wing Attack", color: "#eab308", bgClass: "bg-yellow-600", description: "Primary yellow - speed" },
-    { code: "C", name: "Centre", color: "#84cc16", bgClass: "bg-lime-600", description: "Yellow-green - growth" },
-    { code: "WD", name: "Wing Defence", color: "#10b981", bgClass: "bg-emerald-600", description: "Green - stability" },
-    { code: "GD", name: "Goal Defence", color: "#0891b2", bgClass: "bg-cyan-600", description: "Blue-green - calm strength" },
-    { code: "GK", name: "Goal Keeper", color: "#2563eb", bgClass: "bg-blue-600", description: "Primary blue - trust" }
-  ];
-
-  // Statistics Color Schemes - Multiple Options
-  const statCategoriesOption1 = [
+  // Statistics Color Scheme
+  const statCategories = [
     { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <Target className="h-4 w-4" />, description: "Classic green for positive outcomes" },
     { name: "Goals Against", color: "#dc2626", bgClass: "bg-red-600", icon: <Shield className="h-4 w-4" />, description: "Traditional red for defensive stats" },
     { name: "Intercepts", color: "#2563eb", bgClass: "bg-blue-600", icon: <Zap className="h-4 w-4" />, description: "Blue for active defensive plays" },
@@ -105,42 +83,6 @@ export default function ColorStyleGuide() {
     { name: "Penalties", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertCircle className="h-4 w-4" />, description: "Purple for rule infractions" },
     { name: "Centre Pass", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Play className="h-4 w-4" />, description: "Cyan for neutral possession" },
     { name: "Rating", color: "#059669", bgClass: "bg-emerald-600", icon: <Star className="h-4 w-4" />, description: "Emerald for overall performance" }
-  ];
-
-  // Option 2: Monochromatic Blue Scheme
-  const statCategoriesOption2 = [
-    { name: "Goals For", color: "#1e40af", bgClass: "bg-blue-800", icon: <Target className="h-4 w-4" />, description: "Deep blue for primary positive stat" },
-    { name: "Goals Against", color: "#3b82f6", bgClass: "bg-blue-600", icon: <Shield className="h-4 w-4" />, description: "Medium blue for defensive stat" },
-    { name: "Intercepts", color: "#60a5fa", bgClass: "bg-blue-400", icon: <Zap className="h-4 w-4" />, description: "Light blue for quick actions" },
-    { name: "Rebounds", color: "#93c5fd", bgClass: "bg-blue-300", icon: <TrendingUp className="h-4 w-4" />, description: "Lighter blue for recoveries" },
-    { name: "Turnovers", color: "#dbeafe", bgClass: "bg-blue-200", icon: <AlertTriangle className="h-4 w-4" />, description: "Very light blue for negative events" },
-    { name: "Penalties", color: "#1e3a8a", bgClass: "bg-blue-900", icon: <AlertCircle className="h-4 w-4" />, description: "Darkest blue for infractions" },
-    { name: "Centre Pass", color: "#2563eb", bgClass: "bg-blue-600", icon: <Play className="h-4 w-4" />, description: "Standard blue for neutral events" },
-    { name: "Rating", color: "#1d4ed8", bgClass: "bg-blue-700", icon: <Star className="h-4 w-4" />, description: "Strong blue for ratings" }
-  ];
-
-  // Option 3: Warm/Cool Contrast
-  const statCategoriesOption3 = [
-    { name: "Goals For", color: "#dc2626", bgClass: "bg-red-600", icon: <Target className="h-4 w-4" />, description: "Warm red for attacking stats" },
-    { name: "Goals Against", color: "#2563eb", bgClass: "bg-blue-600", icon: <Shield className="h-4 w-4" />, description: "Cool blue for defensive stats" },
-    { name: "Intercepts", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Zap className="h-4 w-4" />, description: "Cool cyan for defensive actions" },
-    { name: "Rebounds", color: "#f97316", bgClass: "bg-orange-600", icon: <TrendingUp className="h-4 w-4" />, description: "Warm orange for recovery" },
-    { name: "Turnovers", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Neutral purple for errors" },
-    { name: "Penalties", color: "#e11d48", bgClass: "bg-rose-600", icon: <AlertCircle className="h-4 w-4" />, description: "Warm rose for infractions" },
-    { name: "Centre Pass", color: "#10b981", bgClass: "bg-emerald-600", icon: <Play className="h-4 w-4" />, description: "Neutral green for possession" },
-    { name: "Rating", color: "#059669", bgClass: "bg-emerald-600", icon: <Star className="h-4 w-4" />, description: "Green for positive ratings" }
-  ];
-
-  // Option 4: Earth Tones Scheme
-  const statCategoriesOption4 = [
-    { name: "Goals For", color: "#65a30d", bgClass: "bg-lime-600", icon: <Target className="h-4 w-4" />, description: "Natural lime for growth/success" },
-    { name: "Goals Against", color: "#a16207", bgClass: "bg-yellow-700", icon: <Shield className="h-4 w-4" />, description: "Earth yellow for caution" },
-    { name: "Intercepts", color: "#0369a1", bgClass: "bg-sky-700", icon: <Zap className="h-4 w-4" />, description: "Deep sky for decisive actions" },
-    { name: "Rebounds", color: "#b45309", bgClass: "bg-amber-700", icon: <TrendingUp className="h-4 w-4" />, description: "Amber for recovery actions" },
-    { name: "Turnovers", color: "#92400e", bgClass: "bg-orange-700", icon: <AlertTriangle className="h-4 w-4" />, description: "Earth orange for mistakes" },
-    { name: "Penalties", color: "#7c2d12", bgClass: "bg-orange-800", icon: <AlertCircle className="h-4 w-4" />, description: "Deep earth tone for penalties" },
-    { name: "Centre Pass", color: "#059669", bgClass: "bg-emerald-600", icon: <Play className="h-4 w-4" />, description: "Natural emerald for balance" },
-    { name: "Rating", color: "#166534", bgClass: "bg-green-800", icon: <Star className="h-4 w-4" />, description: "Forest green for excellence" }
   ];
 
   // Game Status Color Schemes - Multiple Options
@@ -745,31 +687,19 @@ export default function ColorStyleGuide() {
           
         </section>
 
-        {/* Netball Position Colors - Multiple Options */}
+        {/* Netball Position Colors */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Netball Position Color Schemes</h2>
+          <h2 className="text-2xl font-bold mb-6">Netball Position Colors</h2>
           <p className="text-muted-foreground mb-6">
-            Three different color scheme options based on color theory principles. Each offers different psychological 
-            and visual benefits for position identification.
+            Standardized position color scheme based on warm (attack) to cool (defense) color temperature progression. 
+            Creates strong visual distinction between offensive and defensive roles with intuitive color mapping.
           </p>
           
           <div className="space-y-8">
             <PositionColorScheme
-              title="Option 1: Warm/Cool Contrast"
+              title="Position Color Scheme"
               positions={positionColorsOption1}
               description="Based on warm (attack) to cool (defense) color temperature progression. Creates strong visual distinction between offensive and defensive roles."
-            />
-            
-            <PositionColorScheme
-              title="Option 2: Analogous Harmony"
-              positions={positionColorsOption2}
-              description="Uses adjacent colors on the color wheel for a harmonious, pleasing visual flow. Creates subtle but clear position distinctions."
-            />
-            
-            <PositionColorScheme
-              title="Option 3: Triadic Balance"
-              positions={positionColorsOption3}
-              description="Based on triadic color relationships for vibrant contrast while maintaining balance. Offers high visibility and clear position differentiation."
             />
           </div>
 
@@ -843,37 +773,19 @@ export default function ColorStyleGuide() {
           </Card>
         </section>
 
-        {/* Statistics Colors - Multiple Options */}
+        {/* Statistics Colors */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Statistics Color Schemes</h2>
+          <h2 className="text-2xl font-bold mb-6">Statistics Colors</h2>
           <p className="text-muted-foreground mb-6">
-            Four different color scheme options for statistical categories, each based on different color theory principles 
-            to provide variety while maintaining clear visual communication.
+            Standardized statistics color scheme using classic semantic colors. Traditional color associations with 
+            green for positive outcomes, red for negative outcomes, and complementary colors for neutral statistics.
           </p>
           
           <div className="space-y-8">
             <StatsColorScheme
-              title="Option 1: Classic Semantic Colors"
-              stats={statCategoriesOption1}
+              title="Statistics Color Scheme"
+              stats={statCategories}
               description="Traditional color associations - green for positive, red for negative, with complementary colors for neutral stats."
-            />
-            
-            <StatsColorScheme
-              title="Option 2: Monochromatic Blue Harmony"
-              stats={statCategoriesOption2}
-              description="Single hue variation using different shades and tints of blue for a cohesive, professional appearance."
-            />
-            
-            <StatsColorScheme
-              title="Option 3: Warm/Cool Temperature Contrast"
-              stats={statCategoriesOption3}
-              description="Temperature-based color coding - warm colors for offensive/active stats, cool colors for defensive/passive stats."
-            />
-            
-            <StatsColorScheme
-              title="Option 4: Natural Earth Tones"
-              stats={statCategoriesOption4}
-              description="Earth-inspired palette using natural colors for a softer, more organic visual approach."
             />
           </div>
 
