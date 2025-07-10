@@ -332,51 +332,7 @@ export default function ResultBadgeExamples() {
           </Card>
         </section>
 
-        {/* Different Sizes */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Different Sizes</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Size Variations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Small</h3>
-                  <div className="flex justify-center space-x-2">
-                    <ResultBadge result="Win" size="sm" />
-                    <ResultBadge result="Loss" size="sm" />
-                    <ResultBadge result="Draw" size="sm" />
-                    <ResultBadge result="Bye" size="sm" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">For compact displays</p>
-                </div>
-
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Medium</h3>
-                  <div className="flex justify-center space-x-2">
-                    <ResultBadge result="Win" size="md" />
-                    <ResultBadge result="Loss" size="md" />
-                    <ResultBadge result="Draw" size="md" />
-                    <ResultBadge result="Bye" size="md" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">Standard size for most uses</p>
-                </div>
-
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Default</h3>
-                  <div className="flex justify-center space-x-2">
-                    <ResultBadge result="Win" />
-                    <ResultBadge result="Loss" />
-                    <ResultBadge result="Draw" />
-                    <ResultBadge result="Bye" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">Default size</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        
 
         {/* Usage Examples */}
         <section>
