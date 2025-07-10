@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -174,7 +173,7 @@ export default function PlayerBoxReference() {
                       id="size-sm"
                     />
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-medium mb-2">Medium (md) - Default</h4>
                     <PlayerBox player={samplePlayers[0]} size="md" />
@@ -183,7 +182,7 @@ export default function PlayerBoxReference() {
                       id="size-md"
                     />
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-medium mb-2">Large (lg)</h4>
                     <PlayerBox player={samplePlayers[0]} size="lg" />
@@ -192,7 +191,7 @@ export default function PlayerBoxReference() {
                       id="size-lg"
                     />
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-medium mb-2">Extra Large (xl)</h4>
                     <PlayerBox player={samplePlayers[0]} size="xl" />
@@ -223,7 +222,7 @@ export default function PlayerBoxReference() {
                     id="with-stats"
                   />
                 </div>
-                
+
                 <div>
                   <h4 className="text-sm font-medium mb-2">Without Positions</h4>
                   <PlayerBox player={samplePlayers[0]} showPositions={false} />
@@ -232,7 +231,7 @@ export default function PlayerBoxReference() {
                     id="no-positions"
                   />
                 </div>
-                
+
                 <div>
                   <h4 className="text-sm font-medium mb-2">Inactive Player</h4>
                   <PlayerBox player={samplePlayers[2]} />
@@ -241,6 +240,112 @@ export default function PlayerBoxReference() {
 <PlayerBox player={inactivePlayer} />`}
                     id="inactive"
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Grid Layout Examples</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Single Column (Full Width)</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <PlayerBox player={samplePlayers[0]} size="md" />
+                    <PlayerBox player={samplePlayers[1]} size="md" />
+                  </div>
+                  <CodeBlock 
+                    code={`<div className="grid grid-cols-1 gap-3">
+  <PlayerBox player={player1} size="md" />
+  <PlayerBox player={player2} size="md" />
+</div>`}
+                    id="grid-1-col"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Two Columns</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <PlayerBox player={samplePlayers[0]} size="md" />
+                    <PlayerBox player={samplePlayers[1]} size="md" />
+                    <PlayerBox player={samplePlayers[2]} size="md" />
+                    <PlayerBox player={samplePlayers[3]} size="md" />
+                  </div>
+                  <CodeBlock 
+                    code={`<div className="grid grid-cols-2 gap-3">
+  <PlayerBox player={player1} size="md" />
+  <PlayerBox player={player2} size="md" />
+  <PlayerBox player={player3} size="md" />
+  <PlayerBox player={player4} size="md" />
+</div>`}
+                    id="grid-2-col"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Three Columns</h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    <PlayerBox player={samplePlayers[0]} size="sm" />
+                    <PlayerBox player={samplePlayers[1]} size="sm" />
+                    <PlayerBox player={samplePlayers[2]} size="sm" />
+                  </div>
+                  <CodeBlock 
+                    code={`<div className="grid grid-cols-3 gap-3">
+  <PlayerBox player={player1} size="sm" />
+  <PlayerBox player={player2} size="sm" />
+  <PlayerBox player={player3} size="sm" />
+</div>`}
+                    id="grid-3-col"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Responsive Grid (1-2-3 columns)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <PlayerBox player={samplePlayers[0]} size="sm" />
+                    <PlayerBox player={samplePlayers[1]} size="sm" />
+                    <PlayerBox player={samplePlayers[2]} size="sm" />
+                    <PlayerBox player={samplePlayers[3]} size="sm" />
+                  </div>
+                  <CodeBlock 
+                    code={`<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+  <PlayerBox player={player1} size="sm" />
+  <PlayerBox player={player2} size="sm" />
+  <PlayerBox player={player3} size="sm" />
+  <PlayerBox player={player4} size="sm" />
+</div>`}
+                    id="grid-responsive"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Four Columns (Compact View)</h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    <PlayerBox player={samplePlayers[0]} size="sm" showPositions={false} />
+                    <PlayerBox player={samplePlayers[1]} size="sm" showPositions={false} />
+                    <PlayerBox player={samplePlayers[2]} size="sm" showPositions={false} />
+                    <PlayerBox player={samplePlayers[3]} size="sm" showPositions={false} />
+                  </div>
+                  <CodeBlock 
+                    code={`<div className="grid grid-cols-4 gap-2">
+  <PlayerBox player={player1} size="sm" showPositions={false} />
+  <PlayerBox player={player2} size="sm" showPositions={false} />
+  <PlayerBox player={player3} size="sm" showPositions={false} />
+  <PlayerBox player={player4} size="sm" showPositions={false} />
+</div>`}
+                    id="grid-4-col"
+                  />
+                </div>
+
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <h5 className="text-sm font-semibold text-blue-900 mb-2">Grid Layout Tips</h5>
+                  <ul className="text-xs text-blue-800 space-y-1 list-disc pl-4">
+                    <li>Use <code className="bg-blue-100 px-1 rounded">size="sm"</code> for 3+ column layouts</li>
+                    <li>Consider hiding positions with <code className="bg-blue-100 px-1 rounded">showPositions={false}</code> in narrow columns</li>
+                    <li>Use responsive grids for better mobile experience</li>
+                    <li>Adjust gap spacing based on your design needs</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
