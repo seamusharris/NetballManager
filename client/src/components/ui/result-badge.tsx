@@ -19,17 +19,26 @@ export function ResultBadge({ result, className, size = 'md' }: ResultBadgeProps
     'xl': 'h-12 w-12 text-lg'
   };
 
+  const resultColors = {
+    'Win': { bg: 'bg-green-500', border: '#22c55e' },
+    'Loss': { bg: 'bg-red-500', border: '#ef4444' },
+    'Draw': { bg: 'bg-yellow-500', border: '#eab308' },
+    'Bye': { bg: 'bg-gray-500', border: '#6b7280' }
+  };
+
+  const { bg, border } = resultColors[result];
+
   return (
     <div
       className={cn(
-        'inline-flex items-center justify-center rounded-full font-semibold border-0',
+        'inline-flex items-center justify-center rounded-full font-semibold text-white border border-white',
         sizeClasses[size],
-        result === 'Win' ? 'bg-green-500 text-white' :
-        result === 'Loss' ? 'bg-red-500 text-white' :
-        result === 'Draw' ? 'bg-yellow-500 text-white' :
-        'bg-gray-500 text-white',
+        bg,
         className
       )}
+      style={{
+        boxShadow: `0 0 0 1px ${border}`
+      }}
     >
       {result === 'Win' ? 'W' : result === 'Loss' ? 'L' : result === 'Draw' ? 'D' : 'B'}
     </div>
