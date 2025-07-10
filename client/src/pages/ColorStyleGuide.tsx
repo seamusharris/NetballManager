@@ -816,6 +816,244 @@ export default function ColorStyleGuide() {
           </Card>
         </section>
 
+        {/* Chart Colors */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Chart Color Schemes</h2>
+          <p className="text-muted-foreground mb-6">
+            Suggested color palettes for data visualization components like performance charts, statistics graphs, 
+            and dashboard widgets. Each scheme offers different advantages for various chart types and data contexts.
+          </p>
+          
+          <div className="space-y-8">
+            {/* Option 1: Brand-Based Sequential */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 1: Brand-Based Sequential</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Uses your primary brand colors with semantic meaning - ideal for charts where data categories have inherent positive/negative associations.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Primary)", color: "#3b82f6", usage: "Main data series, primary metrics", description: "Brand blue for most important data" },
+                    { name: "Chart-2 (Success)", color: "#22c55e", usage: "Positive outcomes, wins, goals", description: "Green for positive performance metrics" },
+                    { name: "Chart-3 (Warning)", color: "#eab308", usage: "Neutral metrics, draws, attention", description: "Yellow for metrics needing attention" },
+                    { name: "Chart-4 (Error)", color: "#ef4444", usage: "Negative outcomes, losses, errors", description: "Red for negative performance indicators" },
+                    { name: "Chart-5 (Accent)", color: "#8b5cf6", usage: "Special categories, highlights", description: "Purple for special or premium data" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Color Progression</div>
+                  {["#3b82f6", "#22c55e", "#eab308", "#ef4444", "#8b5cf6"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> Performance dashboards, win/loss charts, goal statistics where semantic meaning is important.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Option 2: Harmonious Spectrum */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 2: Harmonious Blue-Green Spectrum</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Cool, professional palette that works well for all chart types without implying positive/negative associations.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Deep Blue)", color: "#1e40af", usage: "Primary data series, totals", description: "Deep blue for main data categories" },
+                    { name: "Chart-2 (Ocean)", color: "#0891b2", usage: "Secondary metrics, comparisons", description: "Ocean blue for comparative data" },
+                    { name: "Chart-3 (Teal)", color: "#0d9488", usage: "Mid-range values, averages", description: "Balanced teal for neutral metrics" },
+                    { name: "Chart-4 (Emerald)", color: "#059669", usage: "Growth metrics, trends", description: "Emerald for progression indicators" },
+                    { name: "Chart-5 (Forest)", color: "#166534", usage: "Baseline values, minimums", description: "Deep green for foundation data" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Spectrum Flow</div>
+                  {["#1e40af", "#0891b2", "#0d9488", "#059669", "#166534"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> Multi-series line charts, team comparisons, neutral data where no semantic meaning is needed.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Option 3: Vibrant Categorical */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 3: Vibrant Categorical Palette</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  High-contrast colors optimized for distinguishing between multiple data categories in charts with many series.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Royal)", color: "#4338ca", usage: "Category A, Team 1, Q1 data", description: "Strong purple for primary category" },
+                    { name: "Chart-2 (Coral)", color: "#f97316", usage: "Category B, Team 2, Q2 data", description: "Vibrant orange for contrast" },
+                    { name: "Chart-3 (Jade)", color: "#10b981", usage: "Category C, Team 3, Q3 data", description: "Fresh green for middle values" },
+                    { name: "Chart-4 (Rose)", color: "#e11d48", usage: "Category D, Team 4, Q4 data", description: "Bold pink for attention" },
+                    { name: "Chart-5 (Amber)", color: "#d97706", usage: "Category E, additional data", description: "Rich amber for supplementary data" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Maximum Contrast</div>
+                  {["#4338ca", "#f97316", "#10b981", "#e11d48", "#d97706"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> Multi-team comparisons, quarter-by-quarter analysis, position-based charts with many categories.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chart Usage Guidelines */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Chart Color Usage Guidelines</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Performance Charts
+                    </h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• <strong>Goals scored/conceded:</strong> Chart-1 (primary) and Chart-4 (red/negative)</li>
+                      <li>• <strong>Win/loss trends:</strong> Chart-2 (green) for wins, Chart-4 (red) for losses</li>
+                      <li>• <strong>Player performance:</strong> Use Chart-1 through Chart-5 for different players</li>
+                      <li>• <strong>Quarter analysis:</strong> Sequential Chart-1 to Chart-4 for quarters</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Statistics Visualization
+                    </h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• <strong>Position-based stats:</strong> Use Vibrant Categorical (Option 3)</li>
+                      <li>• <strong>Time series data:</strong> Use Harmonious Spectrum (Option 2)</li>
+                      <li>• <strong>Comparison charts:</strong> Use Brand-Based Sequential (Option 1)</li>
+                      <li>• <strong>Multi-dimensional data:</strong> Combine Chart-1, Chart-3, Chart-5</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Team Analysis Charts
+                    </h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• <strong>Our team:</strong> Always use Chart-1 (primary brand color)</li>
+                      <li>• <strong>Opponent teams:</strong> Use Chart-2, Chart-3, Chart-4 in sequence</li>
+                      <li>• <strong>League averages:</strong> Use Chart-5 (accent/neutral)</li>
+                      <li>• <strong>Historical data:</strong> Use muted versions (70% opacity)</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Accessibility Considerations
+                    </h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• <strong>Color blindness:</strong> Avoid red-green combinations (Chart-2 + Chart-4)</li>
+                      <li>• <strong>Contrast ratios:</strong> All chart colors meet WCAG AA standards</li>
+                      <li>• <strong>Pattern alternatives:</strong> Use different line styles, markers, or textures</li>
+                      <li>• <strong>Legend clarity:</strong> Always include descriptive labels, not just colors</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Game Status Colors - Multiple Options */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Game Status Color Schemes</h2>
