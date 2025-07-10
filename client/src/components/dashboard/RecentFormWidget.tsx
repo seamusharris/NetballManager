@@ -1,5 +1,6 @@
 import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import { hasPositionStats } from '@/lib/positionStats';
+import { GamesContainer } from '@/components/ui/games-container';
 
 interface RecentFormWidgetProps {
   games: any[];

@@ -2,7 +2,7 @@ import React from 'react';
 import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
 import { Game } from '@/shared/schema';
-import { UnifiedGameWidget } from '@/components/ui/unified-game-widget';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 
 interface RecentGamesProps {
   className?: string;
@@ -28,27 +28,31 @@ export default function RecentGames({ className = "", games = [], isLoading = fa
     );
   }
 
-  // Configuration for the unified widget
+  // Filter to recent completed games
+  const recentCompletedGames = games
+    .filter(game => game.statusIsCompleted)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
   const title = useClubWideData ? "Recent Club Games" : "Recent Games";
   const viewMoreHref = useClubWideData 
     ? `/club/${currentClub?.id}/games?status=completed`
     : `/team/${currentTeam?.id}/games?status=completed`;
 
   return (
-    <UnifiedGameWidget
-      games={games}
-      currentTeamId={currentTeam?.id}
-      currentClubId={currentClub?.id}
-      mode="recent-form"
+    <GameAnalysisWidget
+      historicalGames={recentCompletedGames}
+      currentTeamId={currentTeam?.id || 0}
+      currentClubId={currentClub?.id || 0}
       title={title}
+      showAnalytics={false}
+      showQuarterScores={false}
       maxGames={5}
       compact={true}
       className={className}
       showViewMore={true}
       viewMoreHref={viewMoreHref}
       viewMoreText="View more →"
-      emptyMessage="No recent games available"
-      emptyDescription="Recent completed games will appear here"
     />
   );
 }
