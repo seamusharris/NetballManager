@@ -94,52 +94,6 @@ export const SPACING_STANDARDS = {
   tightGridGap: 'gap-2',   // Very compact layouts
 } as const;
 
-// Game Result Card Spacing - Use GamesContainer with these semantic values
-export const GAME_CARD_SPACING = {
-  // For different contexts
-  tight: 'tight',      // Sidebar widgets, compact views
-  normal: 'normal',    // Dashboard widgets, main content
-  loose: 'loose',      // Feature pages, detailed views
-  none: 'none',        // Special cases only
-} as const;
-
-// Widget Content Spacing - Consistent spacing within widgets
-export const WIDGET_CONTENT_SPACING = {
-  // Standard classes for widget internals
-  itemSpacing: 'space-y-3',     // Between items in widgets
-  sectionSpacing: 'space-y-4',  // Between sections in widgets
-  compactSpacing: 'space-y-2',  // For compact widgets
-  
-  // Use these instead of arbitrary spacing values
-  standardGap: 'gap-4',         // Standard gap for flex/grid
-  compactGap: 'gap-2',          // Compact gap
-  generousGap: 'gap-6',         // Generous gap
-} as const;
-
-// Helper functions for consistent spacing application
-export const SPACING_HELPERS = {
-  // Get the appropriate spacing for game card lists
-  getGameCardSpacing: (context: 'dashboard' | 'sidebar' | 'page' | 'compact') => {
-    const map = {
-      dashboard: GAME_CARD_SPACING.normal,
-      sidebar: GAME_CARD_SPACING.tight,
-      page: GAME_CARD_SPACING.loose,
-      compact: GAME_CARD_SPACING.tight,
-    };
-    return map[context];
-  },
-  
-  // Get widget content spacing
-  getWidgetSpacing: (size: 'compact' | 'normal' | 'generous') => {
-    const map = {
-      compact: WIDGET_CONTENT_SPACING.compactSpacing,
-      normal: WIDGET_CONTENT_SPACING.itemSpacing,
-      generous: WIDGET_CONTENT_SPACING.sectionSpacing,
-    };
-    return map[size];
-  },
-} as const;
-
 // Helper function to get action button class
 export function getActionButtonClass(action: keyof typeof ACTION_STYLES): string {
   return ACTION_STYLES[action];

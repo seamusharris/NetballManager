@@ -1,7 +1,6 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GameResultCard } from '@/components/ui/game-result-card';
-import { GamesContainer } from '@/components/ui/games-container';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import GameResultCard from '@/components/ui/game-result-card';
 import { Game } from '@shared/schema';
 
 interface UpcomingGamesWidgetProps {
