@@ -582,6 +582,37 @@ export default function ColorStyleGuide() {
               usage="Awards, special metrics, highlights"
             />
           </div>
+          
+          {/* Current Implementation Comparison */}
+          <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-amber-800">Current Implementation vs Style Guide</h3>
+            <p className="text-sm text-amber-700 mb-4">
+              These colors show discrepancies between what's documented above and what's actually being used in the codebase:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <ColorSwatch
+                name="Tailwind Blue (Currently Used)"
+                hex="#3b82f6"
+                description="What's actually used for primary actions"
+                usage="GameResultCard upcoming states, most primary buttons"
+                className="border-2 border-amber-300"
+              />
+              <ColorSwatch
+                name="Yellow (Currently Used for Draws)"
+                hex="#eab308"
+                description="What's actually used for draw states"
+                usage="ResultBadge draw states, some warning indicators"
+                className="border-2 border-amber-300"
+              />
+              <ColorSwatch
+                name="Standard Green (Mostly Consistent)"
+                hex="#22c55e"
+                description="Close to style guide, slight variation"
+                usage="Win badges, success states - mostly aligned"
+                className="border-2 border-green-300"
+              />
+            </div>
+          </div>
         </section>
 
         {/* Netball Position Colors - Multiple Options */}
