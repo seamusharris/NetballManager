@@ -551,8 +551,12 @@ export default function ClubDashboard() {
               </div>
               
               <CardContent className="p-6">
-                <RecentGames className="" />
-                {recentGames.length === 0 && (
+                <RecentGames 
+                  className="" 
+                  games={games} 
+                  isLoading={isLoading} 
+                />
+                {!isLoading && recentGames.length === 0 && (
                   <div className="text-center py-12 space-y-4">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
                       <Calendar className="h-8 w-8 text-slate-400" />

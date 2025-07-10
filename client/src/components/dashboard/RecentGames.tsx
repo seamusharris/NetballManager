@@ -1,5 +1,4 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
 import { Game } from '@/shared/schema';
@@ -7,36 +6,17 @@ import { UnifiedGameWidget } from '@/components/ui/unified-game-widget';
 
 interface RecentGamesProps {
   className?: string;
+  games?: any[]; // Accept games as prop
+  isLoading?: boolean; // Accept loading state as prop
 }
 
-export default function RecentGames({ className = "" }: RecentGamesProps) {
+export default function RecentGames({ className = "", games = [], isLoading = false }: RecentGamesProps) {
   const { currentTeam, currentClub } = useClub();
   const [location] = useLocation();
 
   // Detect context: if we're on club dashboard, use club-wide data; otherwise use team data
   const isClubDashboard = location.includes('/club/') && location.includes('/dashboard');
   const useClubWideData = isClubDashboard || !currentTeam;
-
-  // Choose the appropriate API endpoint based on context
-  const apiEndpoint = useClubWideData 
-    ? `/api/clubs/${currentClub?.id}/games`
-    : `/api/teams/${currentTeam?.id}/games`;
-
-  const queryKey = useClubWideData 
-    ? ['club', currentClub?.id, 'games']
-    : ['team', currentTeam?.id, 'games'];
-
-  const enabled = useClubWideData ? !!currentClub?.id : !!currentTeam?.id;
-
-  const { data: games = [], isLoading } = useQuery({
-    queryKey,
-    queryFn: async () => {
-      const response = await fetch(apiEndpoint);
-      if (!response.ok) throw new Error('Failed to fetch games');
-      return response.json();
-    },
-    enabled,
-  });
 
   // Loading state
   if (isLoading) {
