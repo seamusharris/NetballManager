@@ -22,13 +22,10 @@ export default function ResultBadgeExamples() {
       </Helmet>
 
       <div className="space-y-8">
-        {/* Standard component sizes */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Standard component sizes</h2>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
+              <CardTitle>
                 Result Badge Component
               </CardTitle>
               <p className="text-sm text-muted-foreground">
