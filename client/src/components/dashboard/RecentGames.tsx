@@ -42,8 +42,12 @@ export default function RecentGames({ className = "" }: RecentGamesProps) {
     enabled,
   });
 
-  // Filter for completed games that allow statistics
-  const completedGames = getCompletedGamesForStats(games);
+  // Filter for all completed games (regardless of statistics eligibility)
+  const completedGames = games.filter(game => 
+    game.statusIsCompleted === true && 
+    !game.isBye && 
+    game.statusName !== 'bye'
+  );
   const recentGames = completedGames.slice(0, RECENT_GAMES_COUNT);
 
   if (isLoading) {
