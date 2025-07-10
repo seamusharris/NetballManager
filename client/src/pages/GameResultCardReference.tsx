@@ -165,10 +165,14 @@ const sampleStats = [
 ];
 
 const sampleScores = [
-  { gameId: 1, quarter: 1, teamScore: 12, opponentScore: 8 },
-  { gameId: 1, quarter: 2, teamScore: 23, opponentScore: 18 },
-  { gameId: 1, quarter: 3, teamScore: 33, opponentScore: 28 },
-  { gameId: 1, quarter: 4, teamScore: 45, opponentScore: 38 }
+  { id: 1, gameId: 1, teamId: 116, quarter: 1, score: 12, enteredBy: 1, enteredAt: '2024-06-15T14:15:00Z', updatedAt: '2024-06-15T14:15:00Z', notes: null },
+  { id: 2, gameId: 1, teamId: 117, quarter: 1, score: 8, enteredBy: 1, enteredAt: '2024-06-15T14:15:00Z', updatedAt: '2024-06-15T14:15:00Z', notes: null },
+  { id: 3, gameId: 1, teamId: 116, quarter: 2, score: 11, enteredBy: 1, enteredAt: '2024-06-15T14:30:00Z', updatedAt: '2024-06-15T14:30:00Z', notes: null },
+  { id: 4, gameId: 1, teamId: 117, quarter: 2, score: 10, enteredBy: 1, enteredAt: '2024-06-15T14:30:00Z', updatedAt: '2024-06-15T14:30:00Z', notes: null },
+  { id: 5, gameId: 1, teamId: 116, quarter: 3, score: 10, enteredBy: 1, enteredAt: '2024-06-15T14:45:00Z', updatedAt: '2024-06-15T14:45:00Z', notes: null },
+  { id: 6, gameId: 1, teamId: 117, quarter: 3, score: 10, enteredBy: 1, enteredAt: '2024-06-15T14:45:00Z', updatedAt: '2024-06-15T14:45:00Z', notes: null },
+  { id: 7, gameId: 1, teamId: 116, quarter: 4, score: 12, enteredBy: 1, enteredAt: '2024-06-15T15:00:00Z', updatedAt: '2024-06-15T15:00:00Z', notes: null },
+  { id: 8, gameId: 1, teamId: 117, quarter: 4, score: 10, enteredBy: 1, enteredAt: '2024-06-15T15:00:00Z', updatedAt: '2024-06-15T15:00:00Z', notes: null }
 ];
 
 export default function GameResultCardReference() {
