@@ -664,20 +664,94 @@ const handleSelectionChange = (playerId: number, isSelected: boolean) => {
                 <div>
                   <h4 className="font-semibold mb-2">Color System</h4>
                   <p className="text-sm text-gray-600 mb-3">
-                    PlayerBox uses the player's avatarColor for consistent theming. Colors should be Tailwind CSS classes:
+                    PlayerBox uses the player's avatarColor for consistent theming. All colors are dynamically calculated from the base avatar color using CSS color-mix functions.
                   </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {[
-                      { color: "bg-blue-500", name: "Blue" },
-                      { color: "bg-green-600", name: "Green" },
-                      { color: "bg-purple-500", name: "Purple" },
-                      { color: "bg-orange-500", name: "Orange" },
-                    ].map(({ color, name }) => (
-                      <div key={color} className="flex items-center gap-2 text-xs">
-                        <div className={cn("w-4 h-4 rounded-full", color)}></div>
-                        <span>{name}: "{color}"</span>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Base Avatar Colors</h5>
+                      <p className="text-xs text-gray-600 mb-2">
+                        Avatar colors should be Tailwind CSS classes from the expanded palette:
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {[
+                          { color: "bg-blue-500", name: "Blue" },
+                          { color: "bg-green-600", name: "Green" },
+                          { color: "bg-purple-500", name: "Purple" },
+                          { color: "bg-orange-500", name: "Orange" },
+                        ].map(({ color, name }) => (
+                          <div key={color} className="flex items-center gap-2 text-xs">
+                            <div className={cn("w-4 h-4 rounded-full", color)}></div>
+                            <span>{name}: "{color}"</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Color Calculations</h5>
+                      <p className="text-xs text-gray-600 mb-3">
+                        All UI colors are calculated dynamically from the base avatar color using CSS color-mix functions:
+                      </p>
+                      
+                      <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                        <div className="text-xs">
+                          <span className="font-mono font-semibold">Base Color:</span>
+                          <span className="ml-2">Direct Tailwind class → Hex conversion</span>
+                        </div>
+                        
+                        <div className="text-xs">
+                          <span className="font-mono font-semibold">Light Background:</span>
+                          <span className="ml-2">color-mix(in srgb, baseColor 8%, white 92%)</span>
+                        </div>
+                        
+                        <div className="text-xs">
+                          <span className="font-mono font-semibold">Medium Background:</span>
+                          <span className="ml-2">color-mix(in srgb, baseColor 15%, white 85%)</span>
+                        </div>
+                        
+                        <div className="text-xs">
+                          <span className="font-mono font-semibold">Border/Text Color:</span>
+                          <span className="ml-2">color-mix(in srgb, baseColor 85%, black 15%)</span>
+                        </div>
+                        
+                        <div className="text-xs">
+                          <span className="font-mono font-semibold">Darker Variant:</span>
+                          <span className="ml-2">color-mix(in srgb, baseColor 50%, black 50%)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Selection State Colors</h5>
+                      <div className="text-xs space-y-1">
+                        <div><strong>Unselected (Available):</strong> Light background + border color</div>
+                        <div><strong>Selected:</strong> Medium background + border color</div>
+                        <div><strong>Hover:</strong> Automatic CSS transition between states</div>
+                        <div><strong>Loading/Disabled:</strong> 60% opacity applied to current state</div>
+                        <div><strong>Deselected (when selectable):</strong> 80% opacity on light background</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Implementation Example</h5>
+                      <CodeBlock 
+                        code={`// Color utility functions from playerColorUtils.ts
+const baseColor = getPlayerColorHex(player.avatarColor);
+const lightBg = getLighterColorHex(player.avatarColor);
+const mediumBg = getMediumColorHex(player.avatarColor); 
+const borderColor = getBorderColorHex(player.avatarColor);
+
+// Usage in component styling
+const selectionStyling = {
+  backgroundColor: isSelected ? mediumBg : lightBg,
+  borderColor: borderColor,
+  color: borderColor,
+  opacity: isLoading || isDisabled ? 0.6 : 1
+};`}
+                        id="color-implementation"
+                      />
+                    </div>
                   </div>
                 </div>
 
