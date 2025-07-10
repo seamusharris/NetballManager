@@ -62,6 +62,32 @@ export const WIDGET_COMPONENTS = {
   contentBoxSm: 'content-box-sm',
   widgetContainer: 'widget-container',
   dataBox: 'data-box',
+  gameWidget: 'unified-game-widget',
+} as const;
+
+// Unified Game Widget Standard Configurations
+export const GAME_WIDGET_CONFIGS = {
+  dashboard: {
+    maxGames: 5,
+    compact: true,
+    showViewMore: true,
+    showQuarterScores: false,
+    showAnalytics: false
+  },
+  teamPage: {
+    maxGames: 10,
+    compact: false,
+    showViewMore: true,
+    showQuarterScores: true,
+    showAnalytics: true
+  },
+  sidebar: {
+    maxGames: 3,
+    compact: true,
+    showViewMore: false,
+    showQuarterScores: false,
+    showAnalytics: false
+  }
 } as const;
 
 // Standard page structure classes

@@ -1,90 +1,109 @@
-/**
- * Check if a single game is valid for statistical analysis using the game status table
- */
-export function isGameValidForStatistics(game: Game): boolean {
-  // Must be completed
-  if (!game.statusIsCompleted) return false;
-
-  // Must allow statistics (this covers forfeit games, BYE games, etc.)
-  if (!game.statusAllowsStatistics) return false;
-
-  // Exclude abandoned games from statistics
-  if (game.statusName === 'abandoned') return false;
-
-  return true;
-}
 
 /**
- * Dashboard-specific filters using the game status table
+ * Unified Game Filtering System
+ * Single source of truth for all game filtering logic
  */
-export function getCompletedGamesForStats(games: Game[]): Game[] {
-  return games.filter(game => 
-    game.statusIsCompleted === true && 
-    game.statusAllowsStatistics === true &&
-    game.statusName !== 'abandoned'
-  );
-}
 
-export function getCompletedGamesForRecords(games: Game[]): Game[] {
-  return games.filter(game => 
-    game.statusIsCompleted === true &&
-    game.statusName !== 'abandoned'
-  );
-}
+import { Game } from '@shared/schema';
 
-export function getUpcomingGames(games: Game[]): Game[] {
-  return games.filter(game => 
-    game.statusIsCompleted !== true
-  );
-}
+// Core filter predicates - building blocks for all filters
+export const gamePredicates = {
+  isCompleted: (game: Game): boolean => game.statusIsCompleted === true,
+  allowsStatistics: (game: Game): boolean => game.statusAllowsStatistics === true,
+  isNotBye: (game: Game): boolean => !game.isBye && game.statusName !== 'bye',
+  isNotAbandoned: (game: Game): boolean => game.statusName !== 'abandoned',
+  isUpcoming: (game: Game): boolean => game.statusIsCompleted !== true,
+  hasValidDate: (game: Game): boolean => !!game.date,
+  isInCurrentSeason: (game: Game, seasonId?: number): boolean => 
+    !seasonId || game.seasonId === seasonId
+};
 
-/**
- * Check if a single game counts for win/loss records (excludes abandoned games)
- */
-export function isGameValidForRecords(game: Game): boolean {
-  // Must have a game status
-  if (!game.gameStatus) return false;
+// Standard filter combinations - used across all components
+export const standardFilters = {
+  // For dashboard widgets showing recent activity
+  completedGames: (games: Game[]): Game[] => 
+    games.filter(game => 
+      gamePredicates.isCompleted(game) && 
+      gamePredicates.isNotBye(game) && 
+      gamePredicates.isNotAbandoned(game)
+    ),
 
-  // Must be completed
-  if (!game.gameStatus.isCompleted) return false;
+  // For statistics calculations (stricter requirements)
+  statisticsEligibleGames: (games: Game[]): Game[] => 
+    games.filter(game => 
+      gamePredicates.isCompleted(game) && 
+      gamePredicates.allowsStatistics(game) && 
+      gamePredicates.isNotBye(game) && 
+      gamePredicates.isNotAbandoned(game)
+    ),
 
-  // Exclude abandoned games from win/loss records
-  if (game.gameStatus.name === 'abandoned') return false;
+  // For win/loss records (includes forfeits but excludes abandoned)
+  recordEligibleGames: (games: Game[]): Game[] => 
+    games.filter(game => 
+      gamePredicates.isCompleted(game) && 
+      gamePredicates.isNotBye(game) && 
+      gamePredicates.isNotAbandoned(game)
+    ),
 
-  return true;
-}
+  // For upcoming games display
+  upcomingGames: (games: Game[]): Game[] => 
+    games.filter(game => 
+      gamePredicates.isUpcoming(game) && 
+      gamePredicates.isNotBye(game) && 
+      gamePredicates.hasValidDate(game)
+    ),
 
-/**
- * Check if a single game counts for points/ladder calculations (includes abandoned games with points)
- */
-export function isGameValidForPoints(game: Game): boolean {
-  // Must have a game status
-  if (!game.gameStatus) return false;
+  // For recent form (last N completed games regardless of stats eligibility)
+  recentForm: (games: Game[], limit: number = 5): Game[] => 
+    standardFilters.completedGames(games)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, limit)
+};
 
-  // Must be completed
-  if (!game.gameStatus.isCompleted) return false;
+// Context-aware filtering (team vs club perspective)
+export const contextualFilters = {
+  forTeam: (games: Game[], teamId: number) => ({
+    completed: () => standardFilters.completedGames(games).filter(game => 
+      game.homeTeamId === teamId || game.awayTeamId === teamId
+    ),
+    upcoming: () => standardFilters.upcomingGames(games).filter(game => 
+      game.homeTeamId === teamId || game.awayTeamId === teamId
+    ),
+    recent: (limit?: number) => standardFilters.recentForm(
+      games.filter(game => game.homeTeamId === teamId || game.awayTeamId === teamId), 
+      limit
+    )
+  }),
 
-  // Include all completed games for points calculation (even abandoned games if they award points)
-  return true;
-}
+  forClub: (games: Game[], clubId: number) => ({
+    completed: () => standardFilters.completedGames(games).filter(game => 
+      game.homeClubId === clubId || game.awayClubId === clubId
+    ),
+    upcoming: () => standardFilters.upcomingGames(games).filter(game => 
+      game.homeClubId === clubId || game.awayClubId === clubId
+    ),
+    recent: (limit?: number) => standardFilters.recentForm(
+      games.filter(game => game.homeClubId === clubId || game.awayClubId === clubId), 
+      limit
+    )
+  })
+};
 
+// Legacy function mappings for backward compatibility (will be removed in Phase 2)
+export const getCompletedGamesForStats = standardFilters.statisticsEligibleGames;
+export const getCompletedGamesForRecords = standardFilters.recordEligibleGames;
+export const getUpcomingGames = standardFilters.upcomingGames;
 
-/**
- * Filter games by status using database-driven game status logic
- * @param games Array of games to filter
- * @param statusFilter The status filter value ('all', 'completed', 'upcoming', or exact status name)
- * @param searchQuery Optional search query to filter by opponent name, round, or date
- * @returns Filtered array of games
- */
+// Status-based filtering for game lists
 export function filterGamesByStatus(
   games: Game[],
   statusFilter: string,
   searchQuery?: string
 ): Game[] {
   return games.filter(game => {
-    // Apply search filter if provided
+    // Apply search filter
     let matchesSearch = true;
-    if (searchQuery && searchQuery.trim() !== '') {
+    if (searchQuery?.trim()) {
       const query = searchQuery.toLowerCase();
       matchesSearch = 
         game.opponent?.teamName?.toLowerCase().includes(query) ||
@@ -92,21 +111,11 @@ export function filterGamesByStatus(
         new Date(game.date).toLocaleDateString().includes(query);
     }
 
-    // If 'all' status filter, only apply search filter
-    if (statusFilter === 'all') {
-      return matchesSearch;
-    }
-
-    // Handle special filters using gameStatus.isCompleted
-    if (statusFilter === 'completed') {
-      return matchesSearch && game.gameStatus?.isCompleted === true;
-    }
+    // Apply status filter
+    if (statusFilter === 'all') return matchesSearch;
+    if (statusFilter === 'completed') return matchesSearch && gamePredicates.isCompleted(game);
+    if (statusFilter === 'upcoming') return matchesSearch && gamePredicates.isUpcoming(game);
     
-    if (statusFilter === 'upcoming') {
-      return matchesSearch && game.gameStatus?.isCompleted !== true;
-    }
-
-    // Match exact status name from database
     return matchesSearch && game.gameStatus?.name === statusFilter;
   });
 }

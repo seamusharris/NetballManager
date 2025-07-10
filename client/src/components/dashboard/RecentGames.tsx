@@ -1,13 +1,9 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
 import { Game } from '@/shared/schema';
-import { getCompletedGamesForStats } from '@/lib/gameFilters';
-import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
-
-const RECENT_GAMES_COUNT = 5;
+import { UnifiedGameWidget } from '@/components/ui/unified-game-widget';
 
 interface RecentGamesProps {
   className?: string;
@@ -42,14 +38,7 @@ export default function RecentGames({ className = "" }: RecentGamesProps) {
     enabled,
   });
 
-  // Filter for all completed games (regardless of statistics eligibility)
-  const completedGames = games.filter(game => 
-    game.statusIsCompleted === true && 
-    !game.isBye && 
-    game.statusName !== 'bye'
-  );
-  const recentGames = completedGames.slice(0, RECENT_GAMES_COUNT);
-
+  // Loading state
   if (isLoading) {
     return (
       <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
@@ -59,35 +48,27 @@ export default function RecentGames({ className = "" }: RecentGamesProps) {
     );
   }
 
-  if (recentGames.length === 0) {
-    return (
-      <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-        <h3 className="text-lg font-semibold mb-4">Recent Games</h3>
-        <p className="text-gray-500 text-center py-4">No recent games available</p>
-      </div>
-    );
-  }
-
+  // Configuration for the unified widget
   const title = useClubWideData ? "Recent Club Games" : "Recent Games";
   const viewMoreHref = useClubWideData 
     ? `/club/${currentClub?.id}/games?status=completed`
     : `/team/${currentTeam?.id}/games?status=completed`;
 
   return (
-    <GameAnalysisWidget
-      historicalGames={recentGames}
-      currentTeamId={currentTeam?.id || 0}
-      currentClubId={currentClub?.id || 0}
-      opponentName="Recent Form"
+    <UnifiedGameWidget
+      games={games}
+      currentTeamId={currentTeam?.id}
+      currentClubId={currentClub?.id}
+      mode="recent-form"
       title={title}
-      className={className}
-      showAnalytics={false}
-      showQuarterScores={false}
-      maxGames={RECENT_GAMES_COUNT}
+      maxGames={5}
       compact={true}
-      showViewMore={completedGames.length > RECENT_GAMES_COUNT}
+      className={className}
+      showViewMore={true}
       viewMoreHref={viewMoreHref}
       viewMoreText="View more →"
+      emptyMessage="No recent games available"
+      emptyDescription="Recent completed games will appear here"
     />
   );
 }
