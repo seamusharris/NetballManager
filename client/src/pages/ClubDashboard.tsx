@@ -12,7 +12,7 @@ import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Badge } from '@/components/ui/badge';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
-import RecentGames from '@/components/dashboard/RecentGames';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import PlayerStatsCard from '@/components/statistics/PlayerStatsCard';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { cn } from '@/lib/utils';
@@ -552,12 +552,23 @@ export default function ClubDashboard() {
               </div>
               
               <CardContent className="p-6">
-                {console.log('ClubDashboard: Passing games to RecentGames:', games?.length, 'completed games:', games?.filter(g => g.statusIsCompleted === true || g.statusName === 'completed').length)}
-                <RecentGames 
-                  className="" 
-                  games={games}
-                  centralizedScores={centralizedScores} 
-                  isLoading={isLoading} 
+                {console.log('ClubDashboard: Passing games to GameAnalysisWidget:', games?.length, 'completed games:', games?.filter(g => g.statusIsCompleted === true || g.statusName === 'completed').length)}
+                <GameAnalysisWidget
+                  historicalGames={games?.filter(game => 
+                    game.statusIsCompleted
+                  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || []}
+                  currentTeamId={undefined} // Club-wide perspective
+                  currentClubId={currentClubId || 0}
+                  batchScores={centralizedScores}
+                  batchStats={centralizedStats}
+                  title="Recent Club Games"
+                  showAnalytics={false}
+                  showQuarterScores={false}
+                  maxGames={5}
+                  compact={true}
+                  showViewMore={true}
+                  viewMoreHref={`/club/${currentClubId}/games?status=completed`}
+                  className="border-0"
                 />
                 {!isLoading && recentGames.length === 0 && (
                   <div className="text-center py-12 space-y-4">
