@@ -2,15 +2,23 @@ import React from 'react';
 import { useClub } from '@/contexts/ClubContext';
 import { useLocation } from 'wouter';
 import { Game } from '@/shared/schema';
-import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
+import GameResultCard from '@/components/ui/game-result-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ViewMoreButton } from '@/components/ui/view-more-button';
 
 interface RecentGamesProps {
   className?: string;
   games?: any[]; // Accept games as prop
+  centralizedScores?: any[]; // Accept scores data
   isLoading?: boolean; // Accept loading state as prop
 }
 
-export default function RecentGames({ className = "", games = [], isLoading = false }: RecentGamesProps) {
+export default function RecentGames({ 
+  className = "", 
+  games = [], 
+  centralizedScores = [],
+  isLoading = false 
+}: RecentGamesProps) {
   const { currentTeam, currentClub } = useClub();
   const [location] = useLocation();
 
@@ -21,10 +29,14 @@ export default function RecentGames({ className = "", games = [], isLoading = fa
   // Loading state
   if (isLoading) {
     return (
-      <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-        <h3 className="text-lg font-semibold mb-4">Recent Games</h3>
-        <p className="text-gray-500 text-center py-4">Loading recent games...</p>
-      </div>
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Recent Games</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500 text-center py-4">Loading recent games...</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -39,20 +51,49 @@ export default function RecentGames({ className = "", games = [], isLoading = fa
     ? `/club/${currentClub?.id}/games?status=completed`
     : `/team/${currentTeam?.id}/games?status=completed`;
 
+  if (recentCompletedGames.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500 text-center py-4">No recent games found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <GameAnalysisWidget
-      historicalGames={recentCompletedGames}
-      currentTeamId={currentTeam?.id || 0}
-      currentClubId={currentClub?.id || 0}
-      title={title}
-      showAnalytics={false}
-      showQuarterScores={false}
-      maxGames={5}
-      compact={true}
-      className={className}
-      showViewMore={true}
-      viewMoreHref={viewMoreHref}
-      viewMoreText="View more →"
-    />
+    <Card className={className}>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {recentCompletedGames.map((game) => (
+          <GameResultCard
+            key={game.id}
+            game={game}
+            layout="medium"
+            currentTeamId={useClubWideData ? undefined : currentTeam?.id}
+            currentClubId={currentClub?.id}
+            centralizedScores={centralizedScores}
+            showDate={true}
+            showRound={true}
+            showScore={true}
+            showQuarterScores={false}
+            showLink={true}
+          />
+        ))}
+        
+        {games.length > 5 && (
+          <div className="mt-3">
+            <ViewMoreButton href={viewMoreHref}>
+              View more →
+            </ViewMoreButton>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

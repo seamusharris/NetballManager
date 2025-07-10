@@ -554,7 +554,8 @@ export default function ClubDashboard() {
                 {console.log('ClubDashboard: Passing games to RecentGames:', games?.length, 'completed games:', games?.filter(g => g.statusIsCompleted === true || g.statusName === 'completed').length)}
                 <RecentGames 
                   className="" 
-                  games={games} 
+                  games={games}
+                  centralizedScores={centralizedScores} 
                   isLoading={isLoading} 
                 />
                 {!isLoading && recentGames.length === 0 && (
