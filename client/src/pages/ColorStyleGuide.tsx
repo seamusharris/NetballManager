@@ -654,39 +654,7 @@ export default function ColorStyleGuide() {
               </div>
             </div>
 
-            {/* Avatar Colors Inconsistencies */}
-            <div className="mb-8">
-              <h4 className="font-semibold mb-3">AVATAR_COLORS (constants.ts) - Shade Inconsistencies</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <ColorSwatch
-                  name="Blue Avatar (Current)"
-                  hex="#2563eb"
-                  description="Using blue-600 instead of Primary Blue"
-                  usage="Should use #3b82f6 (Primary Blue)"
-                />
-                <ColorSwatch
-                  name="Green Avatar (Current)"
-                  hex="#16a34a"
-                  description="Using green-600 instead of Success Green"
-                  usage="Should use #22c55e (Success Green)"
-                />
-                <ColorSwatch
-                  name="Purple Avatar (Current)"
-                  hex="#9333ea"
-                  description="Using purple-600 instead of Purple Accent"
-                  usage="Should use #8B5CF6 (Purple Accent)"
-                />
-                <ColorSwatch
-                  name="Red Avatar (Current)"
-                  hex="#dc2626"
-                  description="Using red-600 - close to Error Red but different"
-                  usage="Should use #EF4444 (Error Red)"
-                />
-              </div>
-              <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
-                <strong>Impact:</strong> Avatar colors use different shades of similar colors, creating subtle but noticeable inconsistencies.
-              </div>
-            </div>
+            
 
             {/* Chart Colors Inconsistencies */}
             <div className="mb-8">
@@ -765,13 +733,12 @@ export default function ColorStyleGuide() {
               <h4 className="font-semibold mb-2">🚨 Critical Issues Summary</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• <strong>STAT_COLORS:</strong> 9/9 colors inconsistent (100% mismatch)</li>
-                <li>• <strong>AVATAR_COLORS:</strong> 4+ colors using wrong shades</li>
                 <li>• <strong>Position Schemes:</strong> Only Option 1 partially uses brand colors</li>
                 <li>• <strong>Chart Variables:</strong> Unknown values, likely inconsistent</li>
                 <li>• <strong>Component Usage:</strong> Mixed usage of brand vs non-brand colors</li>
               </ul>
               <div className="mt-3 p-3 bg-background rounded">
-                <strong>Recommendation:</strong> Update STAT_COLORS as highest priority, then AVATAR_COLORS, then establish chart color standards.
+                <strong>Recommendation:</strong> Update STAT_COLORS as highest priority, then establish chart color standards and review position schemes.
               </div>
             </div>
           </div>
