@@ -1,16 +1,9 @@
-import { useState, useEffect } from 'react';
 import { BaseWidget } from '@/components/ui/base-widget';
-import { Link } from 'wouter';
-import { Game, GameStat } from '@shared/schema';
-import { formatShortDate } from '@/lib/utils';
+import { Game } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import GameResultCard from '@/components/ui/game-result-card';
-import { ViewMoreButton } from '@/components/ui/view-more-button';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { useClub } from '@/contexts/ClubContext';
-import { apiClient } from '@/lib/apiClient';
-import { statisticsService } from '@/lib/statisticsService';
-import { UnifiedGameScoreService } from '@/lib/unifiedGameScoreService';
 
 interface RecentGamesProps {
   games: Game[];
@@ -25,7 +18,7 @@ interface RecentGamesProps {
 }
 
 function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
-  const { currentTeam } = useClub();
+  const { currentTeam, currentClub } = useClub();
 
   // Filter for recent completed games using the new status system
   const recentGames = (games || [])
@@ -48,114 +41,36 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
   console.log('RecentGames: Recent games IDs:', recentGames.map(g => g.id));
   console.log('RecentGames: Games involved teams:', recentGames.map(g => `${g.id}: ${g.homeTeamId} vs ${g.awayTeamId}`));
 
-  // Transform and validate batch scores for each game
-  const transformedScores = {};
-  recentGames.forEach(game => {
-    const gameScores = centralizedScores?.[game.id];
-    console.log(`RecentGames: Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) batch scores:`, gameScores);
+  if (recentGames.length === 0) {
+    return (
+      <BaseWidget 
+        className={className} 
+        title="Recent Games"
+        contentClassName="px-4 py-6 pb-2"
+      >
+        <p className="text-gray-500 text-center py-4">No recent games to display</p>
+      </BaseWidget>
+    );
+  }
 
-    if (gameScores && Array.isArray(gameScores) && gameScores.length > 0) {
-      // Transform the batch format to the format expected by GameResultCard
-      try {
-        transformedScores[game.id] = gameScores.map(score => ({
-          id: score.id,
-          gameId: score.gameId,
-          teamId: score.teamId,
-          quarter: score.quarter,
-          score: score.score,
-          enteredBy: score.enteredBy,
-          enteredAt: score.enteredAt,
-          updatedAt: score.updatedAt,
-          notes: score.notes
-        }));
-        console.log(`RecentGames: Game ${game.id} transformed scores:`, transformedScores[game.id].map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
-      } catch (error) {
-        console.error(`RecentGames: Error transforming scores for game ${game.id}:`, error);
-        transformedScores[game.id] = [];
-      }
-    } else {
-      transformedScores[game.id] = [];
-      console.log(`RecentGames: Game ${game.id} has no scores in batch data - setting empty array`);
-    }
-  });
-
-  console.log('RecentGames: Final transformed scores object:', transformedScores);
-
-  // Use centralized stats for game data
-  const isLoading = false;
-
+  // Use GameAnalysisWidget for consistent display
   return (
-    <BaseWidget 
-      className={className} 
+    <GameAnalysisWidget
+      historicalGames={recentGames}
+      currentTeamId={clubWide ? 0 : currentTeam?.id || 0}
+      currentClubId={currentClub?.id || 0}
+      batchScores={centralizedScores || {}}
+      batchStats={centralizedStats || {}}
       title="Recent Games"
-      contentClassName="px-4 py-6 pb-2"
-    >
-        <div className="space-y-6">
-          {isLoading ? (
-            <p className="text-gray-500 text-center py-4">Loading recent games...</p>
-          ) : recentGames.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No recent games to display</p>
-          ) : (
-            recentGames.map(game => {
-              const clubTeamIds = teams?.map(team => team.id) || [];
-
-              // Calculate scores using the UnifiedGameScoreService
-              const scoreResult = UnifiedGameScoreService.calculateGameScore(
-                game,
-                transformedScores[game.id] || [],
-                'club-wide',
-                clubTeamIds
-              );
-
-              console.log(`🔍 GAME ${game.id} - Score calculation result:`, {
-                perspective: 'club-wide',
-                clubTeamIds: clubTeamIds,
-                homeTeamId: game.homeTeamId,
-                awayTeamId: game.awayTeamId,
-                homeIsOurs: clubTeamIds.includes(game.homeTeamId || 0),
-                awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0),
-                scoreResult: {
-                  homeScore: scoreResult.homeScore,
-                  awayScore: scoreResult.awayScore,
-                  result: scoreResult.result,
-                  hasValidScore: scoreResult.hasValidScore,
-                  scoreSource: scoreResult.scoreSource
-                }
-              });
-
-              // For club-wide display, show home/away scores directly
-              const displayHomeScore = scoreResult.homeScore;
-              const displayAwayScore = scoreResult.awayScore;
-              
-              return (
-                <GameResultCard
-                  key={game.id}
-                  game={game}
-                  layout="medium"
-                  gameStats={centralizedStats?.[game.id] || []}
-                  centralizedScores={transformedScores[game.id] || []}
-                  useOfficialPriority={true}
-                  showDate={true}
-                  showRound={true}
-                  showScore={true}
-                  className="mb-4"
-                  currentTeamId={clubWide ? null : currentTeam?.id}
-                  clubTeams={teams || []}
-                  showLink={true}
-                />
-              );
-            })
-          )}
-        </div>
-
-        {games.filter(game => game.statusIsCompleted === true).length > RECENT_GAMES_COUNT ? (
-          <ViewMoreButton href={`/team/${currentTeam?.id}/games?status=completed`}>
-            View more →
-          </ViewMoreButton>
-        ) : (
-          <div className="mb-4" />
-        )}
-    </BaseWidget>
+      className={className}
+      showAnalytics={false} // Don't show analytics for recent games widget
+      showQuarterScores={true}
+      maxGames={RECENT_GAMES_COUNT}
+      compact={true}
+      showViewMore={games.filter(game => game.statusIsCompleted === true).length > RECENT_GAMES_COUNT}
+      viewMoreHref={`/team/${currentTeam?.id}/games?status=completed`}
+      viewMoreText="View more →"
+    />
   );
 }
 
