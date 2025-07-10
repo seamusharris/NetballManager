@@ -1172,6 +1172,305 @@ export default function ColorStyleGuide() {
               </CardContent>
             </Card>
 
+            {/* Option 4: Complementary Split */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 4: Complementary Split Palette</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Based on complementary color theory - uses colors opposite each other on the color wheel for maximum contrast and visual impact.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Blue)", color: "#2563eb", usage: "Primary data, cool metrics", description: "Deep blue for primary data series" },
+                    { name: "Chart-2 (Orange)", color: "#ea580c", usage: "Contrasting data, warm metrics", description: "Vibrant orange as blue's complement" },
+                    { name: "Chart-3 (Blue-Green)", color: "#0891b2", usage: "Supporting cool data", description: "Blue-green split from primary blue" },
+                    { name: "Chart-4 (Red-Orange)", color: "#dc2626", usage: "Supporting warm data", description: "Red-orange split from primary orange" },
+                    { name: "Chart-5 (Purple)", color: "#7c3aed", usage: "Neutral bridge data", description: "Purple as neutral bridge color" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Complementary Harmony</div>
+                  {["#2563eb", "#ea580c", "#0891b2", "#dc2626", "#7c3aed"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> High-impact dashboards, competitive analysis, data that needs maximum visual separation.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Option 5: Triadic Color Scheme */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 5: Triadic Professional Palette</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Triadic color harmony using three colors equally spaced on the color wheel - balanced yet vibrant.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Red)", color: "#dc2626", usage: "Alert data, errors, critical metrics", description: "Primary red - attention-grabbing" },
+                    { name: "Chart-2 (Blue)", color: "#2563eb", usage: "Primary data, stable metrics", description: "Professional blue - trustworthy" },
+                    { name: "Chart-3 (Yellow)", color: "#ca8a04", usage: "Warning data, intermediate values", description: "Rich yellow - balanced energy" },
+                    { name: "Chart-4 (Red-Violet)", color: "#be185d", usage: "Special categories, premium data", description: "Red-violet for sophistication" },
+                    { name: "Chart-5 (Blue-Green)", color: "#059669", usage: "Success data, positive trends", description: "Blue-green for growth indicators" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Triadic Balance</div>
+                  {["#dc2626", "#2563eb", "#ca8a04", "#be185d", "#059669"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> Executive dashboards, financial reports, data requiring both harmony and distinction.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Option 6: Monochromatic Professional */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 6: Monochromatic Blue Professional</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Single-hue variation using different shades and tints of blue - sophisticated and cohesive.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Navy)", color: "#1e3a8a", usage: "Primary data, baselines", description: "Deep navy for foundational data" },
+                    { name: "Chart-2 (Blue)", color: "#3b82f6", usage: "Main metrics, standard data", description: "Standard blue for primary metrics" },
+                    { name: "Chart-3 (Sky)", color: "#0ea5e9", usage: "Supporting data, trends", description: "Sky blue for trending data" },
+                    { name: "Chart-4 (Cyan)", color: "#06b6d4", usage: "Comparative data, benchmarks", description: "Cyan for comparative metrics" },
+                    { name: "Chart-5 (Slate)", color: "#475569", usage: "Neutral data, backgrounds", description: "Slate for neutral categories" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Monochromatic Flow</div>
+                  {["#1e3a8a", "#3b82f6", "#0ea5e9", "#06b6d4", "#475569"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> Corporate presentations, professional reports, data requiring subtle differentiation.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Option 7: Analogous Warm */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Option 7: Analogous Warm Spectrum</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Analogous colors (neighbors on color wheel) in warm tones - harmonious and energetic.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { name: "Chart-1 (Crimson)", color: "#dc143c", usage: "Critical data, alerts", description: "Deep crimson for urgent metrics" },
+                    { name: "Chart-2 (Orange)", color: "#ff6b35", usage: "Warning data, activity", description: "Vibrant orange for active states" },
+                    { name: "Chart-3 (Amber)", color: "#f59e0b", usage: "Caution data, transitions", description: "Rich amber for transitional data" },
+                    { name: "Chart-4 (Gold)", color: "#d97706", usage: "Premium data, achievements", description: "Golden tone for valuable metrics" },
+                    { name: "Chart-5 (Coral)", color: "#ff7f7f", usage: "Soft alerts, notifications", description: "Soft coral for gentle warnings" }
+                  ].map(chart => (
+                    <div key={chart.name} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: chart.color }}
+                        >
+                          {chart.name.split('(')[0].trim()}
+                        </div>
+                        <div>
+                          <div className="font-medium">{chart.name}</div>
+                          <div className="text-sm text-muted-foreground">{chart.color}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-2">{chart.description}</p>
+                      <p className="text-xs text-muted-foreground">{chart.usage}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
+                  <div className="text-xs font-semibold text-center mb-2 col-span-5">Warm Harmony</div>
+                  {["#dc143c", "#ff6b35", "#f59e0b", "#d97706", "#ff7f7f"].map((color, index) => (
+                    <div key={index} className="text-center">
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="text-xs font-medium">C{index + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                  <strong>Best for:</strong> Performance dashboards, activity tracking, energetic or motivational interfaces.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Color Theory Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Color Theory Summary</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Overview of color relationships and their psychological impacts
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div>
+                    <h4 className="font-semibold mb-3 text-blue-600">Monochromatic</h4>
+                    <p className="text-sm text-muted-foreground mb-2">Single hue with variations in saturation and lightness.</p>
+                    <p className="text-xs text-muted-foreground"><strong>Best for:</strong> Professional, cohesive, subtle differentiation</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 text-green-600">Analogous</h4>
+                    <p className="text-sm text-muted-foreground mb-2">Colors next to each other on the color wheel.</p>
+                    <p className="text-xs text-muted-foreground"><strong>Best for:</strong> Harmonious, natural, easy on the eyes</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 text-orange-600">Complementary</h4>
+                    <p className="text-sm text-muted-foreground mb-2">Colors opposite each other on the color wheel.</p>
+                    <p className="text-xs text-muted-foreground"><strong>Best for:</strong> High contrast, attention-grabbing, dynamic</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 text-purple-600">Triadic</h4>
+                    <p className="text-sm text-muted-foreground mb-2">Three colors equally spaced on the color wheel.</p>
+                    <p className="text-xs text-muted-foreground"><strong>Best for:</strong> Balanced vibrancy, diverse data sets</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 text-pink-600">Split-Complementary</h4>
+                    <p className="text-sm text-muted-foreground mb-2">Base color plus two colors adjacent to its complement.</p>
+                    <p className="text-xs text-muted-foreground"><strong>Best for:</strong> Softer contrast than complementary</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 text-teal-600">Tetradic</h4>
+                    <p className="text-sm text-muted-foreground mb-2">Four colors forming a rectangle on the color wheel.</p>
+                    <p className="text-xs text-muted-foreground"><strong>Best for:</strong> Rich, complex data visualization</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-muted/20 rounded-lg">
+                  <h4 className="font-semibold mb-2">Psychological Color Associations</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-blue-600">Blue:</span> Trust, stability, calm
+                    </div>
+                    <div>
+                      <span className="font-medium text-red-600">Red:</span> Energy, urgency, passion
+                    </div>
+                    <div>
+                      <span className="font-medium text-green-600">Green:</span> Growth, success, nature
+                    </div>
+                    <div>
+                      <span className="font-medium text-yellow-600">Yellow:</span> Attention, optimism, caution
+                    </div>
+                    <div>
+                      <span className="font-medium text-purple-600">Purple:</span> Luxury, creativity, wisdom
+                    </div>
+                    <div>
+                      <span className="font-medium text-orange-600">Orange:</span> Enthusiasm, warmth, energy
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Gray:</span> Neutral, professional, balance
+                    </div>
+                    <div>
+                      <span className="font-medium text-pink-600">Pink:</span> Compassion, nurturing, playful
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Chart Usage Guidelines */}
             <Card>
               <CardHeader>
