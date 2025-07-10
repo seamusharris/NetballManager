@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -167,7 +168,7 @@ export default function ColorStyleGuide() {
             </div>
           ))}
         </div>
-
+        
         <div className="grid grid-cols-7 gap-2 p-4 bg-muted/20 rounded-lg">
           <div className="text-xs font-semibold text-center mb-2 col-span-7">Color Flow Visualization</div>
           {positions.map(position => (
@@ -220,7 +221,7 @@ export default function ColorStyleGuide() {
             </div>
           ))}
         </div>
-
+        
         <div className="grid grid-cols-8 gap-2 p-4 bg-muted/20 rounded-lg">
           <div className="text-xs font-semibold text-center mb-2 col-span-8">Color Harmony Visualization</div>
           {stats.map(stat => (
@@ -273,7 +274,7 @@ export default function ColorStyleGuide() {
             </div>
           ))}
         </div>
-
+        
         <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg">
           <div className="text-xs font-semibold text-center mb-2 col-span-5">Status Flow Visualization</div>
           {statuses.map(status => (
@@ -310,7 +311,7 @@ export default function ColorStyleGuide() {
         <section>
           <h2 className="text-2xl font-bold mb-6">Typography System</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
+            
             {/* Main Typography Hierarchy */}
             <Card>
               <CardHeader>
@@ -324,27 +325,27 @@ export default function ColorStyleGuide() {
                   <h1 className="text-4xl font-bold text-foreground mb-2">Heading 1 (H1)</h1>
                   <p className="text-sm text-muted-foreground">4xl, bold, primary color - Page titles</p>
                 </div>
-
+                
                 <div>
                   <h2 className="text-3xl font-semibold text-foreground mb-2">Heading 2 (H2)</h2>
                   <p className="text-sm text-muted-foreground">3xl, semibold - Section headers</p>
                 </div>
-
+                
                 <div>
                   <h3 className="text-2xl font-semibold text-foreground mb-2">Heading 3 (H3)</h3>
                   <p className="text-sm text-muted-foreground">2xl, semibold - Widget headers</p>
                 </div>
-
+                
                 <div>
                   <h4 className="text-xl font-medium text-foreground mb-2">Heading 4 (H4)</h4>
                   <p className="text-sm text-muted-foreground">xl, medium - Card titles</p>
                 </div>
-
+                
                 <div>
                   <h5 className="text-lg font-medium text-foreground mb-2">Heading 5 (H5)</h5>
                   <p className="text-sm text-muted-foreground">lg, medium - Subsection headers</p>
                 </div>
-
+                
                 <div>
                   <h6 className="text-base font-medium text-foreground mb-2">Heading 6 (H6)</h6>
                   <p className="text-sm text-muted-foreground">base, medium - Label headers</p>
@@ -365,22 +366,22 @@ export default function ColorStyleGuide() {
                   <p className="text-lg text-foreground mb-1">Large paragraph text</p>
                   <p className="text-sm text-muted-foreground">lg, normal weight - Introductory text</p>
                 </div>
-
+                
                 <div>
                   <p className="text-base text-foreground mb-1">Regular paragraph text for main content and descriptions.</p>
                   <p className="text-sm text-muted-foreground">base, normal weight - Body content</p>
                 </div>
-
+                
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Small supporting text and captions</p>
                   <p className="text-xs text-muted-foreground">sm, normal weight - Metadata, captions</p>
                 </div>
-
+                
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Extra small text for fine print</p>
                   <p className="text-xs text-muted-foreground">xs, normal weight - Fine print, timestamps</p>
                 </div>
-
+                
                 <div className="border-t pt-4">
                   <p className="text-base font-bold text-foreground mb-1">Bold emphasis text</p>
                   <p className="text-base font-semibold text-primary mb-1">Semibold primary color text</p>
@@ -404,22 +405,22 @@ export default function ColorStyleGuide() {
                   <div className="text-4xl font-bold font-mono text-primary mb-1">89</div>
                   <p className="text-sm text-muted-foreground">4xl, bold, mono - Large statistics</p>
                 </div>
-
+                
                 <div>
                   <div className="text-3xl font-bold font-mono text-foreground mb-1">24-18</div>
                   <p className="text-sm text-muted-foreground">3xl, bold, mono - Scores</p>
                 </div>
-
+                
                 <div>
                   <div className="text-2xl font-semibold font-mono text-green-600 mb-1">78%</div>
                   <p className="text-sm text-muted-foreground">2xl, semibold, mono - Performance metrics</p>
                 </div>
-
+                
                 <div>
                   <div className="text-lg font-medium font-mono text-blue-600 mb-1">15.4</div>
                   <p className="text-sm text-muted-foreground">lg, medium, mono - Small statistics</p>
                 </div>
-
+                
                 <div className="grid grid-cols-3 gap-4 p-4 bg-muted/20 rounded-lg">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">W</div>
@@ -452,27 +453,27 @@ export default function ColorStyleGuide() {
                   </p>
                   <p className="text-sm text-muted-foreground">Foreground → Primary on hover</p>
                 </div>
-
+                
                 <div>
                   <p className="text-base text-primary mb-1">Active/Selected text</p>
                   <p className="text-sm text-muted-foreground">Primary color for active states</p>
                 </div>
-
+                
                 <div>
                   <p className="text-base text-muted-foreground mb-1">Inactive/Disabled text</p>
                   <p className="text-sm text-muted-foreground">Muted foreground for disabled</p>
                 </div>
-
+                
                 <div>
                   <p className="text-base text-destructive mb-1">Error state text</p>
                   <p className="text-sm text-muted-foreground">Destructive color for errors</p>
                 </div>
-
+                
                 <div>
                   <p className="text-base text-green-600 mb-1">Success state text</p>
                   <p className="text-sm text-muted-foreground">Green for success messages</p>
                 </div>
-
+                
                 <div>
                   <p className="text-base text-amber-600 mb-1">Warning state text</p>
                   <p className="text-sm text-muted-foreground">Amber for warning messages</p>
@@ -523,14 +524,14 @@ export default function ColorStyleGuide() {
               usage="Awards, special metrics, highlights"
             />
           </div>
-
+          
           {/* Color Inconsistency Audit */}
           <div className="mt-8 p-6 border rounded-lg">
             <h3 className="text-lg font-semibold mb-4">🔍 Color Inconsistency Audit</h3>
             <p className="text-sm text-muted-foreground mb-6">
               These are the color inconsistencies found across the codebase compared to the Primary Brand Colors above:
             </p>
-
+            
             {/* STAT_COLORS Inconsistencies */}
             <div className="mb-8">
               <h4 className="font-semibold mb-3">STAT_COLORS (constants.ts) - Major Inconsistencies</h4>
@@ -595,7 +596,7 @@ export default function ColorStyleGuide() {
               </div>
             </div>
 
-
+            
 
             {/* Chart Colors Inconsistencies */}
             <div className="mb-8">
@@ -683,7 +684,7 @@ export default function ColorStyleGuide() {
               </div>
             </div>
           </div>
-
+          
         </section>
 
         {/* Netball Position Colors */}
@@ -693,7 +694,7 @@ export default function ColorStyleGuide() {
             Standardized position color scheme based on warm (attack) to cool (defense) color temperature progression. 
             Creates strong visual distinction between offensive and defensive roles with intuitive color mapping.
           </p>
-
+          
           <div className="space-y-8">
             <PositionColorScheme
               title="Position Color Scheme"
@@ -718,7 +719,7 @@ export default function ColorStyleGuide() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 text-blue-600">Cool Colors (Defense)</h4>
-                  <p className="text-sm text-muted-foreground">Blue, indigo, cyan suggest stability, protection, and calm strength - appropriate for Wing Defence, Goal Defence, and Goal Keeper.</p>
+                  <p className="text-sm text-muted-foreground">Blue, indigo, cyan suggest stability, protection, and calm strength - appropriate for Wing Defense, Goal Defense, and Goal Keeper.</p>
                 </div>
               </div>
             </CardContent>
@@ -779,7 +780,7 @@ export default function ColorStyleGuide() {
             Standardized statistics color scheme using classic semantic colors. Traditional color associations with 
             green for positive outcomes, red for negative outcomes, and complementary colors for neutral statistics.
           </p>
-
+          
           <div className="space-y-8">
             <StatsColorScheme
               title="Statistics Color Scheme"
@@ -822,7 +823,7 @@ export default function ColorStyleGuide() {
             Suggested color palettes for data visualization components like performance charts, statistics graphs, 
             and dashboard widgets. Each scheme offers different advantages for various chart types and data contexts.
           </p>
-
+          
           <div className="space-y-8">
             {/* Option 1: Brand-Based Sequential */}
             <Card>
@@ -859,7 +860,7 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
-
+                
                 <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
                   <div className="text-xs font-semibold text-center mb-2 col-span-5">Color Progression</div>
                   {["#3b82f6", "#22c55e", "#eab308", "#ef4444", "#8b5cf6"].map((color, index) => (
@@ -872,7 +873,7 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
-
+                
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Performance dashboards, win/loss charts, goal statistics where semantic meaning is important.
                 </div>
@@ -914,7 +915,7 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
-
+                
                 <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
                   <div className="text-xs font-semibold text-center mb-2 col-span-5">Spectrum Flow</div>
                   {["#1e40af", "#0891b2", "#0d9488", "#059669", "#166534"].map((color, index) => (
@@ -927,7 +928,7 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
-
+                
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Multi-series line charts, team comparisons, neutral data where no semantic meaning is needed.
                 </div>
@@ -969,7 +970,7 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
-
+                
                 <div className="grid grid-cols-5 gap-2 p-4 bg-muted/20 rounded-lg mb-4">
                   <div className="text-xs font-semibold text-center mb-2 col-span-5">Maximum Contrast</div>
                   {["#4338ca", "#f97316", "#10b981", "#e11d48", "#d97706"].map((color, index) => (
@@ -982,406 +983,9 @@ export default function ColorStyleGuide() {
                     </div>
                   ))}
                 </div>
-
+                
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Multi-team comparisons, quarter-by-quarter analysis, position-based charts with many categories.
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Example Charts Using Color Schemes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Example Charts Using Color Schemes</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Practical examples showing how chart colors work in real netball scenarios
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-
-                  {/* Quarter Performance Bar Chart */}
-                  <div>
-                    <h4 className="font-semibold mb-4">Quarter Performance - Bar Chart (Option 1)</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        {[
-                          { quarter: 'Q1', teamScore: 12, opponentScore: 8, rebounds: 6, intercepts: 3 },
-                          { quarter: 'Q2', teamScore: 11, opponentScore: 10, rebounds: 4, intercepts: 5 },
-                          { quarter: 'Q3', teamScore: 10, opponentScore: 10, rebounds: 7, intercepts: 2 },
-                          { quarter: 'Q4', teamScore: 12, opponentScore: 10, rebounds: 5, intercepts: 4 }
-                        ].map((data, index) => (
-                          <div key={data.quarter} className="space-y-2">
-                            <div className="flex justify-between text-sm font-medium">
-                              <span>{data.quarter}</span>
-                              <span>Goals: {data.teamScore} - {data.opponentScore}</span>
-                            </div>
-                            <div className="flex gap-1 h-6">
-                              <div 
-                                className="rounded-l flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#1e40af',
-                                  width: `${(data.teamScore / 15) * 200}px` 
-                                }}
-                              >
-                                {data.teamScore}
-                              </div>
-                              <div 
-                                className="flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#0891b2',
-                                  width: `${(data.rebounds / 8) * 60}px` 
-                                }}
-                              >
-                                R{data.rebounds}
-                              </div>
-                              <div 
-                                className="flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#0d9488',
-                                  width: `${(data.intercepts / 6) * 50}px` 
-                                }}
-                              >
-                                I{data.intercepts}
-                              </div>
-                              <div 
-                                className="rounded-r flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#ef4444',
-                                  width: `${(data.opponentScore / 15) * 120}px` 
-                                }}
-                              >
-                                {data.opponentScore}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="flex gap-4 text-xs mt-3">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#1e40af' }}></div>
-                            <span>Team Goals</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#0891b2' }}></div>
-                            <span>Rebounds</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#0d9488' }}></div>
-                            <span>Intercepts</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-                            <span>Opponent Goals</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Maximum Contrast Version */}
-                      <div className="space-y-3">
-                        <h5 className="text-sm font-semibold">Maximum Contrast Version</h5>
-                        {[
-                          { quarter: 'Q1', teamScore: 12, opponentScore: 8, rebounds: 6, intercepts: 3 },
-                          { quarter: 'Q2', teamScore: 11, opponentScore: 10, rebounds: 4, intercepts: 5 },
-                          { quarter: 'Q3', teamScore: 10, opponentScore: 10, rebounds: 7, intercepts: 2 },
-                          { quarter: 'Q4', teamScore: 12, opponentScore: 10, rebounds: 5, intercepts: 4 }
-                        ].map((data, index) => (
-                          <div key={data.quarter} className="space-y-2">
-                            <div className="flex justify-between text-sm font-medium">
-                              <span>{data.quarter}</span>
-                              <span>Goals: {data.teamScore} - {data.opponentScore}</span>
-                            </div>
-                            <div className="flex gap-1 h-6">
-                              <div 
-                                className="rounded-l flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#4338ca',
-                                  width: `${(data.teamScore / 15) * 200}px` 
-                                }}
-                              >
-                                {data.teamScore}
-                              </div>
-                              <div 
-                                className="flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#10b981',
-                                  width: `${(data.rebounds / 8) * 60}px` 
-                                }}
-                              >
-                                R{data.rebounds}
-                              </div>
-                              <div 
-                                className="flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#d97706',
-                                  width: `${(data.intercepts / 6) * 50}px` 
-                                }}
-                              >
-                                I{data.intercepts}
-                              </div>
-                              <div 
-                                className="rounded-r flex items-center justify-center text-white text-xs font-bold"
-                                style={{ 
-                                  backgroundColor: '#e11d48',
-                                  width: `${(data.opponentScore / 15) * 120}px` 
-                                }}
-                              >
-                                {data.opponentScore}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Player Performance Radar - Multi-Player */}
-                  <div>
-                    <h4 className="font-semibold mb-4">Player Performance Comparison - Radar Chart</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {[
-                        { name: 'Sarah J', color: '#1e40af', shooting: 85, passing: 90, defense: 70, movement: 88 },
-                        { name: 'Emma W', color: '#0891b2', shooting: 75, passing: 95, defense: 80, movement: 85 },
-                        { name: 'Kate B', color: '#0d9488', shooting: 40, passing: 70, defense: 95, movement: 75 },
-                        { name: 'Lily C', color: '#059669', shooting: 65, passing: 88, defense: 75, movement: 92 }
-                      ].map((player, index) => (
-                        <div key={index} className="text-center">
-                          <h5 className="font-medium mb-2">{player.name}</h5>
-                          <div className="relative w-24 h-24 mx-auto">
-                            <svg className="w-full h-full" viewBox="0 0 100 100">
-                              {/* Background grid */}
-                              <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="1" />
-                              <circle cx="50" cy="50" r="30" fill="none" stroke="#e5e7eb" strokeWidth="1" />
-                              <circle cx="50" cy="50" r="20" fill="none" stroke="#e5e7eb" strokeWidth="1" />
-                              <circle cx="50" cy="50" r="10" fill="none" stroke="#e5e7eb" strokeWidth="1" />
-
-                              {/* Axes */}
-                              <line x1="50" y1="10" x2="50" y2="90" stroke="#e5e7eb" strokeWidth="1" />
-                              <line x1="10" y1="50" x2="90" y2="50" stroke="#e5e7eb" strokeWidth="1" />
-
-                              {/* Data polygon */}
-                              <polygon
-                                points={`50,${50 - (player.shooting * 0.4)} ${50 + (player.passing * 0.4)},50 50,${50 + (player.defense * 0.4)} ${50 - (player.movement * 0.4)},50`}
-                                fill={`${player.color}40`}
-                                stroke={player.color}
-                                strokeWidth="2"
-                              />
-                            </svg>
-                          </div>
-                          <div className="grid grid-cols-2 gap-1 text-xs mt-2">
-                            <div>Shoot: {player.shooting}</div>
-                            <div>Pass: {player.passing}</div>
-                            <div>Def: {player.defense}</div>
-                            <div>Move: {player.movement}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Win/Loss Trend Line Chart */}
-                  <div>
-                    <h4 className="font-semibold mb-4">Season Win Rate Trend - Line Chart</h4>
-                    <div className="h-48 relative bg-gray-50 rounded-lg p-4">
-                      <svg className="w-full h-full" viewBox="0 0 400 160">
-                        {/* Grid lines */}
-                        {[0, 25, 50, 75, 100].map(y => (
-                          <line key={y} x1="40" y1={120 - (y * 0.8)} x2="360" y2={120 - (y * 0.8)} 
-                                stroke="#e5e7eb" strokeWidth="1" />
-                        ))}
-
-                        {/* Win rate line */}
-                        <polyline
-                          fill="none"
-                          stroke="#059669"
-                          strokeWidth="3"
-                          points="60,100 100,85 140,75 180,70 220,65 260,60 300,62 340,58"
-                        />
-
-                        {/* Loss rate line */}
-                        <polyline
-                          fill="none"
-                          stroke="#ef4444"
-                          strokeWidth="3"
-                          points="60,40 100,35 140,30 180,25 220,22 260,20 300,22 340,18"
-                        />
-
-                        {/* Data points */}
-                        {[60, 100, 140, 180, 220, 260, 300, 340].map((x, i) => (
-                          <g key={i}>
-                            <circle cx={x} cy={100 - (i * 6)} r="4" fill="#059669" />
-                            <circle cx={x} cy={40 - (i * 3)} r="4" fill="#ef4444" />
-                          </g>
-                        ))}
-
-                        {/* Labels */}
-                        <text x="200" y="145" fontSize="12" fill="#6b7280" textAnchor="middle">Games Played</text>
-                        <text x="15" y="80" fontSize="12" fill="#6b7280" textAnchor="middle" transform="rotate(-90 15 80)">Win Rate %</text>
-                      </svg>
-                      <div className="flex justify-center gap-6 mt-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#059669' }}></div>
-                          <span>Win Rate</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-                          <span>Loss Rate</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Position Performance Heatmap */}
-                  <div>
-                    <h4 className="font-semibold mb-4">Position Performance Matrix - Heatmap</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div>
-                        <h5 className="text-sm font-semibold mb-3">Spectrum Flow Colors</h5>
-                        <div className="space-y-2">
-                          {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map((position, posIndex) => (
-                            <div key={position} className="flex items-center gap-2">
-                              <span className="w-8 text-sm font-medium">{position}</span>
-                              <div className="flex gap-1">
-                                {['Goals', 'Assists', 'Defense', 'Accuracy', 'Movement'].map((metric, metricIndex) => {
-                                  const intensity = Math.random() * 100;
-                                  const colors = ['#1e40af', '#0891b2', '#0d9488', '#059669', '#166534'];
-                                  return (
-                                    <div 
-                                      key={metric} 
-                                      className="w-8 h-6 rounded text-xs text-white flex items-center justify-center font-bold"
-                                      style={{ 
-                                        backgroundColor: colors[metricIndex],
-                                        opacity: intensity / 100
-                                      }}
-                                    >
-                                      {Math.round(intensity)}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h5 className="text-sm font-semibold mb-3">Maximum Contrast Colors</h5>
-                        <div className="space-y-2">
-                          {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map((position, posIndex) => (
-                            <div key={position} className="flex items-center gap-2">
-                              <span className="w-8 text-sm font-medium">{position}</span>
-                              <div className="flex gap-1">
-                                {['Goals', 'Assists', 'Defense', 'Accuracy', 'Movement'].map((metric, metricIndex) => {
-                                  const intensity = Math.random() * 100;
-                                  const colors = ['#4338ca', '#f97316', '#10b981', '#e11d48', '#d97706'];
-                                  return (
-                                    <div 
-                                      key={metric} 
-                                      className="w-8 h-6 rounded text-xs text-white flex items-center justify-center font-bold"
-                                      style={{ 
-                                        backgroundColor: colors[metricIndex],
-                                        opacity: intensity / 100
-                                      }}
-                                    >
-                                      {Math.round(intensity)}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 text-xs text-muted-foreground">
-                      Color opacity represents performance intensity (0-100%). Position rows show different players, columns show different metrics.
-                    </div>
-                  </div>
-
-                  {/* Pie Chart - Game Results */}
-                  <div>
-                    <h4 className="font-semibold mb-4">Season Results - Pie Chart</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="text-center">
-                        <h5 className="text-sm font-semibold mb-3">Using Chart Colors</h5>
-                        <div className="relative w-32 h-32 mx-auto">
-                          <svg className="w-full h-full" viewBox="0 0 100 100">
-                            {/* Wins - 60% */}
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#059669" strokeWidth="20" 
-                                    strokeDasharray="150.8 251.2" transform="rotate(-90 50 50)" />
-                            {/* Losses - 30% */}
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" strokeWidth="20" 
-                                    strokeDasharray="75.4 326.6" strokeDashoffset="-150.8" transform="rotate(-90 50 50)" />
-                            {/* Draws - 10% */}
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#eab308" strokeWidth="20" 
-                                    strokeDasharray="25.1 376.9" strokeDashoffset="-226.2" transform="rotate(-90 50 50)" />
-                          </svg>
-                        </div>
-                        <div className="space-y-2 mt-4 text-sm">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#059669' }}></div>
-                              <span>Wins</span>
-                            </div>
-                            <span className="font-bold">60%</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ef4444' }}></div>
-                              <span>Losses</span>
-                            </div>
-                            <span className="font-bold">30%</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#eab308' }}></div>
-                              <span>Draws</span>
-                            </div>
-                            <span className="font-bold">10%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-center">
-                        <h5 className="text-sm font-semibold mb-3">Brand Color Version</h5>
-                        <div className="relative w-32 h-32 mx-auto">
-                          <svg className="w-full h-full" viewBox="0 0 100 100">
-                            {/* Wins - 60% */}
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--success))" strokeWidth="20" 
-                                    strokeDasharray="150.8 251.2" transform="rotate(-90 50 50)" />
-                            {/* Losses - 30% */}
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--destructive))" strokeWidth="20" 
-                                    strokeDasharray="75.4 326.6" strokeDashoffset="-150.8" transform="rotate(-90 50 50)" />
-                            {/* Draws - 10% */}
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--warning))" strokeWidth="20" 
-                                    strokeDasharray="25.1 376.9" strokeDashoffset="-226.2" transform="rotate(-90 50 50)" />
-                          </svg>
-                        </div>
-                        <div className="space-y-2 mt-4 text-sm">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 bg-success rounded-full"></div>
-                              <span>Wins</span>
-                            </div>
-                            <span className="font-bold">60%</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 bg-destructive rounded-full"></div>
-                              <span>Losses</span>
-                            </div>
-                            <span className="font-bold">30%</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 bg-warning rounded-full"></div>
-                              <span>Draws</span>
-                            </div>
-                            <span className="font-bold">10%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1405,16 +1009,43 @@ export default function ColorStyleGuide() {
                       <li>• <strong>Quarter analysis:</strong> Sequential Chart-1 to Chart-4 for quarters</li>
                     </ul>
                   </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Statistics Visualization
+                    </h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• <strong>Position-based stats:</strong> Use Vibrant Categorical (Option 3)</li>
+                      <li>• <strong>Time series data:</strong> Use Harmonious Spectrum (Option 2)</li>
+                      <li>• <strong>Comparison charts:</strong> Use Brand-Based Sequential (Option 1)</li>
+                      <li>• <strong>Multi-dimensional data:</strong> Combine Chart-1, Chart-3, Chart-5</li>
+                    </ul>
+                  </div>
+
                   <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Team Comparisons
+                      Team Analysis Charts
                     </h4>
                     <ul className="text-sm space-y-2 text-muted-foreground">
-                      <li>• <strong>Multi-team stats:</strong> Assign consistent chart colors per team</li>
-                      <li>• <strong>Position analysis:</strong> Chart-1 to Chart-3 for attack, Chart-4 to Chart-5 for defense</li>
-                      <li>• <strong>Performance matrices:</strong> Use temperature scales (cool to warm)</li>
-                      <li>• <strong>Season comparisons:</strong> Chart-1 for current, Chart-2 for previous seasons</li>
+                      <li>• <strong>Our team:</strong> Always use Chart-1 (primary brand color)</li>
+                      <li>• <strong>Opponent teams:</strong> Use Chart-2, Chart-3, Chart-4 in sequence</li>
+                      <li>• <strong>League averages:</strong> Use Chart-5 (accent/neutral)</li>
+                      <li>• <strong>Historical data:</strong> Use muted versions (70% opacity)</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Accessibility Considerations
+                    </h4>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      <li>• <strong>Color blindness:</strong> Avoid red-green combinations (Chart-2 + Chart-4)</li>
+                      <li>• <strong>Contrast ratios:</strong> All chart colors meet WCAG AA standards</li>
+                      <li>• <strong>Pattern alternatives:</strong> Use different line styles, markers, or textures</li>
+                      <li>• <strong>Legend clarity:</strong> Always include descriptive labels, not just colors</li>
                     </ul>
                   </div>
                 </div>
@@ -1422,7 +1053,7 @@ export default function ColorStyleGuide() {
             </Card>
           </div>
         </section>
-        
+
         {/* Game Status Colors - Multiple Options */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Game Status Color Schemes</h2>
@@ -1430,26 +1061,26 @@ export default function ColorStyleGuide() {
             Four different approaches to game status colors, from traditional traffic light systems to more sophisticated 
             color harmonies that work well together while maintaining clear meaning.
           </p>
-
+          
           <div className="space-y-8">
             <GameStatusColorScheme
               title="Option 1: Standard UI Convention"
               statuses={gameStatusesOption1}
               description="Traditional interface colors - blue for info, amber for warning, green for success, gray for neutral, red for errors."
             />
-
+            
             <GameStatusColorScheme
               title="Option 2: Traffic Light System"
               statuses={gameStatusesOption2}
               description="Clear stop/go metaphor - gray for waiting, amber for proceed with caution, green for go, red for stop."
             />
-
+            
             <GameStatusColorScheme
               title="Option 3: Cool Spectrum Harmony"
               statuses={gameStatusesOption3}
               description="Harmonious cool colors that work well together while maintaining distinct meanings for each status."
             />
-
+            
             <GameStatusColorScheme
               title="Option 4: Soft Seasonal Palette"
               statuses={gameStatusesOption4}
@@ -1528,7 +1159,7 @@ export default function ColorStyleGuide() {
           <Card>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+                
                 <div>
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
                     <Eye className="h-4 w-4" />
