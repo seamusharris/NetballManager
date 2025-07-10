@@ -410,7 +410,7 @@ const handleSelectionChange = (playerId: number, isSelected: boolean) => {
                       </tr>
                       <tr className="border-b">
                         <td className="p-2 font-mono">stats</td>
-                        <td className="p-2">Array&lt;{label: string, value: string}&gt;</td>
+                        <td className="p-2">Array&lt;&#123;label: string, value: string&#125;&gt;</td>
                         <td className="p-2">undefined</td>
                         <td className="p-2">Optional statistics to display</td>
                       </tr>
