@@ -22,14 +22,209 @@ export default function ResultBadgeExamples() {
       </Helmet>
 
       <div className="space-y-8">
-        {/* Quick Reference - All Sizes */}
+        {/* Quick Reference - Single Pixel Double Border */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Quick Reference - All Sizes</h2>
+          <h2 className="text-2xl font-bold mb-4">Quick Reference - Single Pixel Double Border</h2>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
-                Result Badge Size Guide
+                Recommended Border Style - All Sizes
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Main color → White border (1px) → Main color outer border (1px) - Works on all backgrounds
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Small */}
+                <div>
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-sm font-medium w-16">sm (24px):</span>
+                    <span className="text-xs text-muted-foreground">For compact lists and inline use</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medium */}
+                <div>
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-sm font-medium w-16">md (32px):</span>
+                    <span className="text-xs text-muted-foreground">Standard size for cards and widgets</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Large */}
+                <div>
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-sm font-medium w-16">lg (40px):</span>
+                    <span className="text-xs text-muted-foreground">For headers and emphasis</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center text-white text-base font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Extra Large */}
+                <div>
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-sm font-medium w-16">xl (48px):</span>
+                    <span className="text-xs text-muted-foreground">For dashboard highlights</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center text-white text-lg font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Quick Reference - Standard Component Sizes */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Quick Reference - Standard Component Sizes</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Result Badge Component
               </CardTitle>
               <p className="text-sm text-muted-foreground">
                 Standard sizing system: <code>sm</code>, <code>md</code>, <code>lg</code>, <code>xl</code>
