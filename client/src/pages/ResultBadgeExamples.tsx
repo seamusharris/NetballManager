@@ -486,23 +486,23 @@ export default function ResultBadgeExamples() {
                   </div>
                 </div>
 
-                {/* Thick White Border */}
+                {/* Thin Double Border - 1px */}
                 <div>
-                  <h4 className="text-sm font-semibold mb-3">Main Color → Thick White Border (4px)</h4>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → White Border (1px) → Main Color Outer Border (1px)</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white rounded-lg border">
                       <p className="text-xs text-gray-600 mb-2">On white background:</p>
                       <div className="flex gap-2">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
                           W
                         </div>
-                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
                           L
                         </div>
-                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
                           D
                         </div>
-                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
                           B
                         </div>
                       </div>
@@ -510,16 +510,98 @@ export default function ResultBadgeExamples() {
                     <div className="p-4 bg-gray-800 rounded-lg">
                       <p className="text-xs text-gray-300 mb-2">On dark background:</p>
                       <div className="flex gap-2">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #22c55e'}}>
                           W
                         </div>
-                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #ef4444'}}>
                           L
                         </div>
-                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #eab308'}}>
                           D
                         </div>
-                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white">
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white" style={{boxShadow: '0 0 0 1px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medium White Border - 2px */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → White Border (2px) → Main Color Outer Border (2px)</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white" style={{boxShadow: '0 0 0 2px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Thick White Border - 4px */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Main Color → White Border (4px) → Main Color Outer Border (4px)</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <p className="text-xs text-gray-600 mb-2">On white background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #6b7280'}}>
+                          B
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-300 mb-2">On dark background:</p>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #22c55e'}}>
+                          W
+                        </div>
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #ef4444'}}>
+                          L
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #eab308'}}>
+                          D
+                        </div>
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-4 border-white" style={{boxShadow: '0 0 0 4px #6b7280'}}>
                           B
                         </div>
                       </div>
