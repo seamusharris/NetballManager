@@ -1420,6 +1420,8 @@ export default function ColorStyleGuide() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </section>
         
         {/* Game Status Colors - Multiple Options */}
         <section>
