@@ -583,6 +583,211 @@ export default function ColorStyleGuide() {
             />
           </div>
           
+          {/* Color Inconsistency Audit */}
+          <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-amber-800">🔍 Color Inconsistency Audit</h3>
+            <p className="text-sm text-amber-700 mb-6">
+              These are the color inconsistencies found across the codebase compared to the Primary Brand Colors above:
+            </p>
+            
+            {/* STAT_COLORS Inconsistencies */}
+            <div className="mb-8">
+              <h4 className="font-semibold mb-3 text-amber-800">STAT_COLORS (constants.ts) - Major Inconsistencies</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <ColorSwatch
+                  name="Goals (Current)"
+                  hex="#15803d"
+                  description="Using green-700 instead of brand Success Green"
+                  usage="Should use #22c55e (Success Green)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Missed Goals (Current)"
+                  hex="#c2410c"
+                  description="Using orange-700 instead of brand Warning Yellow"
+                  usage="Should use #eab308 (Warning Yellow)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Goals Against (Current)"
+                  hex="#b91c1c"
+                  description="Using red-700 instead of brand Error Red"
+                  usage="Should use #EF4444 (Error Red)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Rebounds (Current)"
+                  hex="#1e40af"
+                  description="Using blue-800 instead of brand Primary Blue"
+                  usage="Should use #3b82f6 (Primary Blue)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Intercepts (Current)"
+                  hex="#3730a3"
+                  description="Using indigo-800 - not in brand palette"
+                  usage="Should use #3b82f6 (Primary Blue) or #8B5CF6 (Purple Accent)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Pick Up (Current)"
+                  hex="#581c87"
+                  description="Using purple-900 - not in brand palette"
+                  usage="Should use #8B5CF6 (Purple Accent)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Bad Pass (Current)"
+                  hex="#92400e"
+                  description="Using amber-800 instead of brand Warning Yellow"
+                  usage="Should use #eab308 (Warning Yellow)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Handling Error (Current)"
+                  hex="#be185d"
+                  description="Using pink-700 - not in brand palette"
+                  usage="Should use #EF4444 (Error Red)"
+                  className="border-2 border-red-300"
+                />
+                <ColorSwatch
+                  name="Infringement (Current)"
+                  hex="#881337"
+                  description="Using rose-900 - not in brand palette"
+                  usage="Should use #EF4444 (Error Red)"
+                  className="border-2 border-red-300"
+                />
+              </div>
+              <div className="text-xs text-amber-700 bg-amber-100 p-3 rounded">
+                <strong>Impact:</strong> All 9 stat colors are inconsistent with brand palette. Creates visual confusion and undermines brand consistency.
+              </div>
+            </div>
+
+            {/* Avatar Colors Inconsistencies */}
+            <div className="mb-8">
+              <h4 className="font-semibold mb-3 text-amber-800">AVATAR_COLORS (constants.ts) - Shade Inconsistencies</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <ColorSwatch
+                  name="Blue Avatar (Current)"
+                  hex="#2563eb"
+                  description="Using blue-600 instead of Primary Blue"
+                  usage="Should use #3b82f6 (Primary Blue)"
+                  className="border-2 border-yellow-300"
+                />
+                <ColorSwatch
+                  name="Green Avatar (Current)"
+                  hex="#16a34a"
+                  description="Using green-600 instead of Success Green"
+                  usage="Should use #22c55e (Success Green)"
+                  className="border-2 border-yellow-300"
+                />
+                <ColorSwatch
+                  name="Purple Avatar (Current)"
+                  hex="#9333ea"
+                  description="Using purple-600 instead of Purple Accent"
+                  usage="Should use #8B5CF6 (Purple Accent)"
+                  className="border-2 border-yellow-300"
+                />
+                <ColorSwatch
+                  name="Red Avatar (Current)"
+                  hex="#dc2626"
+                  description="Using red-600 - close to Error Red but different"
+                  usage="Should use #EF4444 (Error Red)"
+                  className="border-2 border-yellow-300"
+                />
+              </div>
+              <div className="text-xs text-amber-700 bg-amber-100 p-3 rounded">
+                <strong>Impact:</strong> Avatar colors use different shades of similar colors, creating subtle but noticeable inconsistencies.
+              </div>
+            </div>
+
+            {/* Chart Colors Inconsistencies */}
+            <div className="mb-8">
+              <h4 className="font-semibold mb-3 text-amber-800">Chart Variables (CSS) - Unknown Values</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="p-4 border rounded-lg border-orange-300">
+                  <div className="font-medium text-orange-800">Chart Color Variables</div>
+                  <div className="text-sm text-orange-700 mt-2">
+                    <code className="bg-orange-100 px-2 py-1 rounded">--chart-1</code> through <code className="bg-orange-100 px-2 py-1 rounded">--chart-5</code>
+                  </div>
+                  <div className="text-xs mt-2">Values unknown - need to be aligned with brand colors</div>
+                </div>
+                <div className="p-4 border rounded-lg border-orange-300">
+                  <div className="font-medium text-orange-800">Recommended Chart Colors</div>
+                  <div className="text-sm text-orange-700 mt-2">
+                    Chart-1: #3b82f6 (Primary Blue)<br/>
+                    Chart-2: #22c55e (Success Green)<br/>
+                    Chart-3: #eab308 (Warning Yellow)<br/>
+                    Chart-4: #EF4444 (Error Red)<br/>
+                    Chart-5: #8B5CF6 (Purple Accent)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Position Color Options Inconsistencies */}
+            <div className="mb-8">
+              <h4 className="font-semibold mb-3 text-amber-800">Position Color Schemes - Brand Misalignment</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="p-4 border rounded-lg border-purple-300">
+                  <div className="font-medium text-purple-800">Option 1: Warm/Cool</div>
+                  <div className="text-sm text-purple-700 mt-2">
+                    Uses brand colors but many positions use non-brand colors like #ca8a04, #0891b2
+                  </div>
+                </div>
+                <div className="p-4 border rounded-lg border-purple-300">
+                  <div className="font-medium text-purple-800">Option 2: Analogous</div>
+                  <div className="text-sm text-purple-700 mt-2">
+                    Completely separate from brand palette - uses rose/pink/violet spectrum
+                  </div>
+                </div>
+                <div className="p-4 border rounded-lg border-purple-300">
+                  <div className="font-medium text-purple-800">Option 3: Triadic</div>
+                  <div className="text-sm text-purple-700 mt-2">
+                    Mixes brand colors with non-brand colors like #84cc16, #0891b2
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Colors Assessment */}
+            <div className="mb-8">
+              <h4 className="font-semibold mb-3 text-amber-800">Action Colors - Mixed Consistency</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="p-4 border rounded-lg border-green-300">
+                  <div className="font-medium text-green-800">✅ Consistent with Brand</div>
+                  <div className="text-sm text-green-700 mt-2">
+                    • Create/Add: #16a34a (close to Success Green)<br/>
+                    • Edit/Update: #3b82f6 (matches Primary Blue)<br/>
+                    • Delete/Remove: #dc2626 (close to Error Red)
+                  </div>
+                </div>
+                <div className="p-4 border rounded-lg border-orange-300">
+                  <div className="font-medium text-orange-800">⚠️ Off-Brand Colors</div>
+                  <div className="text-sm text-orange-700 mt-2">
+                    • View/Details: #6b7280 (matches Neutral Gray)<br/>
+                    • Manage/Settings: #ea580c (not in brand)<br/>
+                    • Export/Share: #7c3aed (close to Purple Accent)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary and Recommendations */}
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+              <h4 className="font-semibold text-red-800 mb-2">🚨 Critical Issues Summary</h4>
+              <ul className="text-sm text-red-700 space-y-1">
+                <li>• <strong>STAT_COLORS:</strong> 9/9 colors inconsistent (100% mismatch)</li>
+                <li>• <strong>AVATAR_COLORS:</strong> 4+ colors using wrong shades</li>
+                <li>• <strong>Position Schemes:</strong> Only Option 1 partially uses brand colors</li>
+                <li>• <strong>Chart Variables:</strong> Unknown values, likely inconsistent</li>
+                <li>• <strong>Component Usage:</strong> Mixed usage of brand vs non-brand colors</li>
+              </ul>
+              <div className="mt-3 p-3 bg-red-100 rounded">
+                <strong>Recommendation:</strong> Update STAT_COLORS as highest priority, then AVATAR_COLORS, then establish chart color standards.
+              </div>
+            </div>
+          </div>
           
         </section>
 
