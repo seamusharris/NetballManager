@@ -242,6 +242,96 @@ export default function GameResultCardReference() {
           </p>
         </div>
 
+        {/* Live Example Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Live Example</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Interactive examples showing different game states and layouts
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-green-700">Win Example</h4>
+                <GameResultCard 
+                  game={sampleGames[0]} 
+                  gameStats={sampleStats}
+                  currentTeamId={116}
+                  showLink={false}
+                />
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-red-700">Loss Example</h4>
+                <GameResultCard 
+                  game={sampleGames[1]} 
+                  gameStats={sampleStats}
+                  currentTeamId={116}
+                  showLink={false}
+                />
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-blue-700">Upcoming Game</h4>
+                <GameResultCard 
+                  game={sampleGames[2]} 
+                  gameStats={[]}
+                  currentTeamId={116}
+                  showLink={false}
+                />
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-gray-700">Bye Game</h4>
+                <GameResultCard 
+                  game={sampleGames[3]} 
+                  gameStats={[]}
+                  currentTeamId={116}
+                  showLink={false}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <h4 className="text-sm font-medium mb-3">Different Layouts</h4>
+              <div className="space-y-3">
+                <div>
+                  <h5 className="text-xs font-medium mb-1 text-gray-600">Wide Layout</h5>
+                  <WideGameResultCard 
+                    game={sampleGames[0]} 
+                    gameStats={sampleStats}
+                    currentTeamId={116}
+                    showLink={false}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <h5 className="text-xs font-medium mb-1 text-gray-600">Medium Layout</h5>
+                    <MediumGameResultCard 
+                      game={sampleGames[0]} 
+                      gameStats={sampleStats}
+                      currentTeamId={116}
+                      showLink={false}
+                    />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-medium mb-1 text-gray-600">Narrow Layout</h5>
+                    <NarrowGameResultCard 
+                      game={sampleGames[0]} 
+                      gameStats={sampleStats}
+                      currentTeamId={116}
+                      showLink={false}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Reference */}
         <Card>
           <CardHeader>
