@@ -10,51 +10,51 @@ import LiveScoreTracker from '@/components/ui/live-score-tracker';
 export default function LiveScoreTrackingExamples() {
   const [activeDesign, setActiveDesign] = useState('modern');
 
-  // Enhanced sample event data for all 4 quarters
+  // Sample event data for all 4 quarters with varied timestamps
   const sampleEvents = [
     // Quarter 1
-    { id: '1', quarter: 1, timestamp: new Date(Date.now() - 3600000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Perfect shot from under the post' },
-    { id: '2', quarter: 1, timestamp: new Date(Date.now() - 3580000), type: 'goal-against', description: 'Thunder Hawks early lead' },
-    { id: '3', quarter: 1, timestamp: new Date(Date.now() - 3560000), type: 'intercept', player: 'Lisa R', position: 'GD', description: 'Brilliant defensive play' },
-    { id: '4', quarter: 1, timestamp: new Date(Date.now() - 3540000), type: 'goal-for', player: 'Emma K', position: 'GA', description: 'Great positioning and shot' },
-    { id: '5', quarter: 1, timestamp: new Date(Date.now() - 3520000), type: 'miss', player: 'Sarah M', position: 'GS', description: 'Shot just wide of the post' },
-    { id: '6', quarter: 1, timestamp: new Date(Date.now() - 3500000), type: 'rebound', player: 'Emma K', position: 'GA', description: 'Secured offensive rebound' },
-    { id: '7', quarter: 1, timestamp: new Date(Date.now() - 3480000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Converted from rebound' },
-    { id: '8', quarter: 1, timestamp: new Date(Date.now() - 3460000), type: 'infringement', player: 'Amy S', position: 'WD', description: 'Contact penalty' },
+    { id: '1', quarter: 1, timestamp: new Date(Date.now() - 3600000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '2', quarter: 1, timestamp: new Date(Date.now() - 3547000), type: 'goal-against' },
+    { id: '3', quarter: 1, timestamp: new Date(Date.now() - 3523000), type: 'intercept', player: 'Lisa R', position: 'GD' },
+    { id: '4', quarter: 1, timestamp: new Date(Date.now() - 3488000), type: 'goal-for', player: 'Emma K', position: 'GA' },
+    { id: '5', quarter: 1, timestamp: new Date(Date.now() - 3465000), type: 'miss', player: 'Sarah M', position: 'GS' },
+    { id: '6', quarter: 1, timestamp: new Date(Date.now() - 3441000), type: 'rebound', player: 'Emma K', position: 'GA' },
+    { id: '7', quarter: 1, timestamp: new Date(Date.now() - 3427000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '8', quarter: 1, timestamp: new Date(Date.now() - 3403000), type: 'infringement', player: 'Amy S', position: 'WD' },
     
     // Quarter 2
-    { id: '9', quarter: 2, timestamp: new Date(Date.now() - 2700000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Strong start to Q2' },
-    { id: '10', quarter: 2, timestamp: new Date(Date.now() - 2680000), type: 'goal-against', description: 'Opposition responds quickly' },
-    { id: '11', quarter: 2, timestamp: new Date(Date.now() - 2660000), type: 'intercept', player: 'Jess T', position: 'GK', description: 'Crucial defensive turnover' },
-    { id: '12', quarter: 2, timestamp: new Date(Date.now() - 2640000), type: 'goal-for', player: 'Emma K', position: 'GA', description: 'Capitalizing on turnover' },
-    { id: '13', quarter: 2, timestamp: new Date(Date.now() - 2620000), type: 'goal-against', description: 'Thunder Hawks fighting back' },
-    { id: '14', quarter: 2, timestamp: new Date(Date.now() - 2600000), type: 'rebound', player: 'Lisa R', position: 'GD', description: 'Defensive rebound secured' },
-    { id: '15', quarter: 2, timestamp: new Date(Date.now() - 2580000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Extending the lead' },
-    { id: '16', quarter: 2, timestamp: new Date(Date.now() - 2560000), type: 'miss', player: 'Emma K', position: 'GA', description: 'Pressure shot missed' },
+    { id: '9', quarter: 2, timestamp: new Date(Date.now() - 2700000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '10', quarter: 2, timestamp: new Date(Date.now() - 2673000), type: 'goal-against' },
+    { id: '11', quarter: 2, timestamp: new Date(Date.now() - 2641000), type: 'intercept', player: 'Jess T', position: 'GK' },
+    { id: '12', quarter: 2, timestamp: new Date(Date.now() - 2619000), type: 'goal-for', player: 'Emma K', position: 'GA' },
+    { id: '13', quarter: 2, timestamp: new Date(Date.now() - 2594000), type: 'goal-against' },
+    { id: '14', quarter: 2, timestamp: new Date(Date.now() - 2567000), type: 'rebound', player: 'Lisa R', position: 'GD' },
+    { id: '15', quarter: 2, timestamp: new Date(Date.now() - 2543000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '16', quarter: 2, timestamp: new Date(Date.now() - 2516000), type: 'miss', player: 'Emma K', position: 'GA' },
     
     // Quarter 3
-    { id: '17', quarter: 3, timestamp: new Date(Date.now() - 1800000), type: 'goal-against', description: 'Opposition starts strong' },
-    { id: '18', quarter: 3, timestamp: new Date(Date.now() - 1780000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Immediate response' },
-    { id: '19', quarter: 3, timestamp: new Date(Date.now() - 1760000), type: 'infringement', player: 'Kate W', position: 'WA', description: 'Stepping violation' },
-    { id: '20', quarter: 3, timestamp: new Date(Date.now() - 1740000), type: 'goal-against', description: 'Penalty conversion' },
-    { id: '21', quarter: 3, timestamp: new Date(Date.now() - 1720000), type: 'intercept', player: 'Amy S', position: 'WD', description: 'Midcourt turnover' },
-    { id: '22', quarter: 3, timestamp: new Date(Date.now() - 1700000), type: 'goal-for', player: 'Emma K', position: 'GA', description: 'Quick transition score' },
-    { id: '23', quarter: 3, timestamp: new Date(Date.now() - 1680000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Maintaining momentum' },
-    { id: '24', quarter: 3, timestamp: new Date(Date.now() - 1660000), type: 'rebound', player: 'Lisa R', position: 'GD', description: 'Crucial defensive stop' },
-    { id: '25', quarter: 3, timestamp: new Date(Date.now() - 1640000), type: 'goal-for', player: 'Emma K', position: 'GA', description: 'Building the lead' },
+    { id: '17', quarter: 3, timestamp: new Date(Date.now() - 1800000), type: 'goal-against' },
+    { id: '18', quarter: 3, timestamp: new Date(Date.now() - 1776000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '19', quarter: 3, timestamp: new Date(Date.now() - 1751000), type: 'infringement', player: 'Kate W', position: 'WA' },
+    { id: '20', quarter: 3, timestamp: new Date(Date.now() - 1728000), type: 'goal-against' },
+    { id: '21', quarter: 3, timestamp: new Date(Date.now() - 1703000), type: 'intercept', player: 'Amy S', position: 'WD' },
+    { id: '22', quarter: 3, timestamp: new Date(Date.now() - 1681000), type: 'goal-for', player: 'Emma K', position: 'GA' },
+    { id: '23', quarter: 3, timestamp: new Date(Date.now() - 1656000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '24', quarter: 3, timestamp: new Date(Date.now() - 1632000), type: 'rebound', player: 'Lisa R', position: 'GD' },
+    { id: '25', quarter: 3, timestamp: new Date(Date.now() - 1608000), type: 'goal-for', player: 'Emma K', position: 'GA' },
     
     // Quarter 4
-    { id: '26', quarter: 4, timestamp: new Date(Date.now() - 900000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Strong final quarter start' },
-    { id: '27', quarter: 4, timestamp: new Date(Date.now() - 880000), type: 'goal-against', description: 'Opposition pressure' },
-    { id: '28', quarter: 4, timestamp: new Date(Date.now() - 860000), type: 'goal-for', player: 'Emma K', position: 'GA', description: 'Answering the challenge' },
-    { id: '29', quarter: 4, timestamp: new Date(Date.now() - 840000), type: 'intercept', player: 'Jess T', position: 'GK', description: 'Defensive masterclass' },
-    { id: '30', quarter: 4, timestamp: new Date(Date.now() - 820000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Clinical finish' },
-    { id: '31', quarter: 4, timestamp: new Date(Date.now() - 800000), type: 'miss', player: 'Emma K', position: 'GA', description: 'Rushed shot under pressure' },
-    { id: '32', quarter: 4, timestamp: new Date(Date.now() - 780000), type: 'rebound', player: 'Sarah M', position: 'GS', description: 'Second chance opportunity' },
-    { id: '33', quarter: 4, timestamp: new Date(Date.now() - 760000), type: 'goal-for', player: 'Sarah M', position: 'GS', description: 'Converted second chance' },
-    { id: '34', quarter: 4, timestamp: new Date(Date.now() - 740000), type: 'goal-against', description: 'Late opposition goal' },
-    { id: '35', quarter: 4, timestamp: new Date(Date.now() - 720000), type: 'infringement', player: 'Kate W', position: 'WA', description: 'Time pressure penalty' },
-    { id: '36', quarter: 4, timestamp: new Date(Date.now() - 700000), type: 'goal-for', player: 'Emma K', position: 'GA', description: 'Sealing the victory' },
+    { id: '26', quarter: 4, timestamp: new Date(Date.now() - 900000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '27', quarter: 4, timestamp: new Date(Date.now() - 872000), type: 'goal-against' },
+    { id: '28', quarter: 4, timestamp: new Date(Date.now() - 847000), type: 'goal-for', player: 'Emma K', position: 'GA' },
+    { id: '29', quarter: 4, timestamp: new Date(Date.now() - 823000), type: 'intercept', player: 'Jess T', position: 'GK' },
+    { id: '30', quarter: 4, timestamp: new Date(Date.now() - 798000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '31', quarter: 4, timestamp: new Date(Date.now() - 774000), type: 'miss', player: 'Emma K', position: 'GA' },
+    { id: '32', quarter: 4, timestamp: new Date(Date.now() - 751000), type: 'rebound', player: 'Sarah M', position: 'GS' },
+    { id: '33', quarter: 4, timestamp: new Date(Date.now() - 727000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
+    { id: '34', quarter: 4, timestamp: new Date(Date.now() - 703000), type: 'goal-against' },
+    { id: '35', quarter: 4, timestamp: new Date(Date.now() - 679000), type: 'infringement', player: 'Kate W', position: 'WA' },
+    { id: '36', quarter: 4, timestamp: new Date(Date.now() - 656000), type: 'goal-for', player: 'Emma K', position: 'GA' },
   ];
 
   const getDualBorderEventBadge = (type: string, text: string) => {
@@ -179,9 +179,9 @@ export default function LiveScoreTrackingExamples() {
                       <div className="h-px bg-gray-300 flex-1"></div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {quarterEvents.map(event => (
-                        <div key={event.id} className="flex items-start gap-3 bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                        <div key={event.id} className="flex items-center gap-2 bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                           {getDualBorderEventBadge(event.type, {
                             'goal-for': 'GF',
                             'goal-against': 'GA',
@@ -190,15 +190,10 @@ export default function LiveScoreTrackingExamples() {
                             'rebound': 'R',
                             'infringement': 'INF'
                           }[event.type] || '?')}
-                          <div className="text-sm flex-1">
-                            <div className="font-medium mb-1">
+                          <div className="text-sm flex-1 min-w-0">
+                            <div className="font-medium truncate">
                               {event.player ? `${event.player} (${event.position})` : 'Thunder Hawks'}
                             </div>
-                            {event.description && (
-                              <div className="text-gray-600 mb-1 text-xs">
-                                {event.description}
-                              </div>
-                            )}
                             <div className="text-gray-500 text-xs">
                               {event.timestamp.toLocaleTimeString('en-AU', { hour12: false, hour: '2-digit', minute: '2-digit' })}
                             </div>
