@@ -14,7 +14,7 @@ export default function LiveScoreTrackingExamples() {
   const sampleEvents = [
     // Quarter 1
     { id: '1', quarter: 1, timestamp: new Date(Date.now() - 3600000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
-    { id: '2', quarter: 1, timestamp: new Date(Date.now() - 3547000), type: 'goal-against' },
+    { id: '2', quarter: 1, timestamp: new Date(Date.now() - 3547000), type: 'goal-against', player: 'Jess T', position: 'GK' },
     { id: '3', quarter: 1, timestamp: new Date(Date.now() - 3523000), type: 'intercept', player: 'Lisa R', position: 'GD' },
     { id: '4', quarter: 1, timestamp: new Date(Date.now() - 3488000), type: 'goal-for', player: 'Emma K', position: 'GA' },
     { id: '5', quarter: 1, timestamp: new Date(Date.now() - 3465000), type: 'miss', player: 'Sarah M', position: 'GS' },
@@ -24,19 +24,19 @@ export default function LiveScoreTrackingExamples() {
     
     // Quarter 2
     { id: '9', quarter: 2, timestamp: new Date(Date.now() - 2700000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
-    { id: '10', quarter: 2, timestamp: new Date(Date.now() - 2673000), type: 'goal-against' },
+    { id: '10', quarter: 2, timestamp: new Date(Date.now() - 2673000), type: 'goal-against', player: 'Lisa R', position: 'GD' },
     { id: '11', quarter: 2, timestamp: new Date(Date.now() - 2641000), type: 'intercept', player: 'Jess T', position: 'GK' },
     { id: '12', quarter: 2, timestamp: new Date(Date.now() - 2619000), type: 'goal-for', player: 'Emma K', position: 'GA' },
-    { id: '13', quarter: 2, timestamp: new Date(Date.now() - 2594000), type: 'goal-against' },
+    { id: '13', quarter: 2, timestamp: new Date(Date.now() - 2594000), type: 'goal-against', player: 'Jess T', position: 'GK' },
     { id: '14', quarter: 2, timestamp: new Date(Date.now() - 2567000), type: 'rebound', player: 'Lisa R', position: 'GD' },
     { id: '15', quarter: 2, timestamp: new Date(Date.now() - 2543000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
     { id: '16', quarter: 2, timestamp: new Date(Date.now() - 2516000), type: 'miss', player: 'Emma K', position: 'GA' },
     
     // Quarter 3
-    { id: '17', quarter: 3, timestamp: new Date(Date.now() - 1800000), type: 'goal-against' },
+    { id: '17', quarter: 3, timestamp: new Date(Date.now() - 1800000), type: 'goal-against', player: 'Amy S', position: 'WD' },
     { id: '18', quarter: 3, timestamp: new Date(Date.now() - 1776000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
     { id: '19', quarter: 3, timestamp: new Date(Date.now() - 1751000), type: 'infringement', player: 'Kate W', position: 'WA' },
-    { id: '20', quarter: 3, timestamp: new Date(Date.now() - 1728000), type: 'goal-against' },
+    { id: '20', quarter: 3, timestamp: new Date(Date.now() - 1728000), type: 'goal-against', player: 'Lisa R', position: 'GD' },
     { id: '21', quarter: 3, timestamp: new Date(Date.now() - 1703000), type: 'intercept', player: 'Amy S', position: 'WD' },
     { id: '22', quarter: 3, timestamp: new Date(Date.now() - 1681000), type: 'goal-for', player: 'Emma K', position: 'GA' },
     { id: '23', quarter: 3, timestamp: new Date(Date.now() - 1656000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
@@ -45,14 +45,14 @@ export default function LiveScoreTrackingExamples() {
     
     // Quarter 4
     { id: '26', quarter: 4, timestamp: new Date(Date.now() - 900000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
-    { id: '27', quarter: 4, timestamp: new Date(Date.now() - 872000), type: 'goal-against' },
+    { id: '27', quarter: 4, timestamp: new Date(Date.now() - 872000), type: 'goal-against', player: 'Jess T', position: 'GK' },
     { id: '28', quarter: 4, timestamp: new Date(Date.now() - 847000), type: 'goal-for', player: 'Emma K', position: 'GA' },
     { id: '29', quarter: 4, timestamp: new Date(Date.now() - 823000), type: 'intercept', player: 'Jess T', position: 'GK' },
     { id: '30', quarter: 4, timestamp: new Date(Date.now() - 798000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
     { id: '31', quarter: 4, timestamp: new Date(Date.now() - 774000), type: 'miss', player: 'Emma K', position: 'GA' },
     { id: '32', quarter: 4, timestamp: new Date(Date.now() - 751000), type: 'rebound', player: 'Sarah M', position: 'GS' },
     { id: '33', quarter: 4, timestamp: new Date(Date.now() - 727000), type: 'goal-for', player: 'Sarah M', position: 'GS' },
-    { id: '34', quarter: 4, timestamp: new Date(Date.now() - 703000), type: 'goal-against' },
+    { id: '34', quarter: 4, timestamp: new Date(Date.now() - 703000), type: 'goal-against', player: 'Lisa R', position: 'GD' },
     { id: '35', quarter: 4, timestamp: new Date(Date.now() - 679000), type: 'infringement', player: 'Kate W', position: 'WA' },
     { id: '36', quarter: 4, timestamp: new Date(Date.now() - 656000), type: 'goal-for', player: 'Emma K', position: 'GA' },
   ];
@@ -192,7 +192,7 @@ export default function LiveScoreTrackingExamples() {
                           }[event.type] || '?')}
                           <div className="text-sm flex-1 min-w-0">
                             <div className="font-medium truncate">
-                              {event.player ? `${event.player} (${event.position})` : 'Thunder Hawks'}
+                              {event.player && `${event.player} (${event.position})`}
                             </div>
                             <div className="text-gray-500 text-xs">
                               {event.timestamp.toLocaleTimeString('en-AU', { hour12: false, hour: '2-digit', minute: '2-digit' })}
@@ -401,7 +401,7 @@ export default function LiveScoreTrackingExamples() {
                       </div>
                       {event.player && (
                         <div className="text-sm text-gray-600">
-                          {event.player} ({event.position})
+                          {event.type === 'goal-against' ? `Scored on ${event.player} (${event.position})` : `${event.player} (${event.position})`}
                         </div>
                       )}
                     </div>
