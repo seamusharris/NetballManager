@@ -453,7 +453,7 @@ export default function GameResultCard({
       : `/game/${game.id}`;
 
     return (
-      <Link href={gameUrl}>
+      <Link href={gameUrl} className="block">
         <CardContent />
       </Link>
     );
