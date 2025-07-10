@@ -40,6 +40,14 @@ const referenceItems: ReferenceItem[] = [
     category: 'Components',
     status: 'Complete'
   },
+  {
+    title: 'GameResultCard Component',
+    description: 'Comprehensive game result display component with score tracking, team information, and multiple layout variants.',
+    path: '/reference/game-result-card-component',
+    icon: <Activity className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
   // Add more reference items here as they are created
 ];
 

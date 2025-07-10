@@ -235,6 +235,18 @@ function Router() {
             </ErrorBoundary>
           )}
         </Route>
+        <Route path="/reference/game-result-card-component">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading GameResultCard Reference..." />}>
+                {(() => {
+                  const GameResultCardReference = lazy(() => import('./pages/GameResultCardReference'));
+                  return <GameResultCardReference />;
+                })()}
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />
