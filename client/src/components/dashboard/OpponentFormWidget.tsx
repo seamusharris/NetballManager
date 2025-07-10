@@ -1,4 +1,3 @@
-
 import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import { useNextGame } from '@/hooks/use-next-game';
 
@@ -53,7 +52,7 @@ export function OpponentFormWidget({
     const opponentName = nextGame.homeTeamId === currentTeamId 
       ? nextGame.awayTeamName 
       : nextGame.homeTeamName;
-      
+
     return (
       <div className={`bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg p-8 text-center ${className}`}>
         <h3 className="text-xl font-semibold mb-4">Opponent Form vs {opponentName}</h3>

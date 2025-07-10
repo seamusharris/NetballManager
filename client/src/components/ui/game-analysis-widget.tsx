@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { calculateTeamWinRate } from '@/lib/winRateCalculator';
 import GameResultCard from '@/components/ui/game-result-card';
+import { GamesContainer } from '@/components/ui/games-container';
 import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
 import QuarterPerformanceAnalysis from '@/components/ui/quarter-performance-analysis';
 import { hasPositionStats } from '@/lib/positionStats';
@@ -89,7 +90,7 @@ export function GameAnalysisWidget({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="space-y-3">
+        <GamesContainer spacing="normal">
           {historicalGames.slice(0, maxGames === undefined ? historicalGames.length : maxGames || 5).map((game, index) => {
             // Check for special status games (e.g., forfeit, bye)
             const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
@@ -145,7 +146,7 @@ export function GameAnalysisWidget({
               />
             );
           })}
-        </div>
+        </GamesContainer>
 
         {/* Quarter Average Performance Analysis */}
         {showAnalytics && (
