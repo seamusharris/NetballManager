@@ -313,7 +313,7 @@ function Router() {
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
         <Route path="/examples/game-results" element={<GameResultExamples />} />
             <Route path="/examples/score-progression" element={<ScoreProgressionExamples />} />
-            <Route path="/examples/live-score-tracking" element={<LiveScoreTrackingExamples />} />
+            <Route path="/live-score-tracking-examples" component={LiveScoreTrackingExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
