@@ -21,7 +21,7 @@ import TopPlayersWidget from '@/components/dashboard/TopPlayersWidget';
 import TeamPerformance from '@/components/dashboard/TeamPerformance';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
 import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisWidget';
-import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import GameAnalysisWidget from '@/components/ui/previous-games-display';
 import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
 import { cacheKeys } from '@/lib/cacheKeys';
@@ -292,7 +292,7 @@ export default function Dashboard() {
                 {/* Two-column layout for Upcoming and Recent Games */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Upcoming Games - Left Column */}
-                  <PreviousGamesDisplay
+                  <GameAnalysisWidget
                     historicalGames={games?.filter(game => {
                       const currentDate = new Date().toISOString().split('T')[0];
                       return game.date >= currentDate && 
@@ -311,7 +311,7 @@ export default function Dashboard() {
                   />
 
                   {/* Recent Games - Right Column */}
-                  <PreviousGamesDisplay
+                  <GameAnalysisWidget
                     historicalGames={games?.filter(game => 
                       game.statusIsCompleted
                     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || []}

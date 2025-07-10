@@ -1,5 +1,5 @@
 
-import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import { useNextGame } from '@/hooks/use-next-game';
 
 interface OpponentFormWidgetProps {
@@ -67,7 +67,7 @@ export function OpponentFormWidget({
     : nextGame.homeTeamName;
 
   return (
-    <PreviousGamesDisplay
+    <GameAnalysisWidget
       historicalGames={recentOpponentGames}
       currentTeamId={currentTeamId}
       currentClubId={currentClubId}

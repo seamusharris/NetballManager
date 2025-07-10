@@ -1,5 +1,5 @@
 import React from 'react';
-import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 
 interface SeasonGamesDisplayProps {
   seasonGames: any[];
@@ -41,7 +41,7 @@ export default function SeasonGamesDisplay({
   }
 
   return (
-    <PreviousGamesDisplay
+    <GameAnalysisWidget
       historicalGames={seasonGames}
       currentTeamId={currentTeamId || 0}
       currentClubId={0} // Not needed for season view

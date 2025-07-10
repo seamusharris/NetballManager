@@ -1,4 +1,4 @@
-import PreviousGamesDisplay from '@/components/ui/previous-games-display';
+import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import { hasPositionStats } from '@/lib/positionStats';
 
 interface RecentFormWidgetProps {
@@ -33,7 +33,7 @@ export function RecentFormWidget({
   if (recentGames.length === 0) return null;
 
   return (
-    <PreviousGamesDisplay
+    <GameAnalysisWidget
         historicalGames={recentGames}
         currentTeamId={currentTeamId}
         currentClubId={currentClubId}
