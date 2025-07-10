@@ -71,14 +71,7 @@ const examples: ExampleSection[] = [
     category: 'Components',
     status: 'Complete'
   },
-  {
-    title: 'Result Badges',
-    description: 'Standardized win/loss/draw result badges with consistent colors and sizing.',
-    path: '/result-badge-examples',
-    icon: <Trophy className="h-5 w-5" />,
-    category: 'Components',
-    status: 'Complete'
-  },
+  
   {
     title: 'Action Buttons',
     description: 'Consistent action button patterns that work with various color schemes and contexts.',
@@ -247,14 +240,7 @@ const examples: ExampleSection[] = [
     category: 'States',
     status: 'Complete'
   },
-  {
-    title: 'Result Badge Examples',
-    description: 'Win/loss/draw badges with consistent styling and colors.',
-    path: '/result-badge-examples',
-    icon: <Target className="h-5 w-5" />,
-    category: 'States',
-    status: 'Complete'
-  },
+  
 
   // Patterns
   {
