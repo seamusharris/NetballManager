@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTemplate from '@/components/layout/PageTemplate';
+import { ResultBadge } from '@/components/ui/result-badge';
 import { Link } from 'wouter';
 import { 
   Trophy,
@@ -162,6 +163,19 @@ export default function Reference() {
                     <p className="text-gray-600 text-sm mb-4">
                       {item.description}
                     </p>
+
+                    {/* Live Example for Result Badge Component */}
+                    {item.title === 'Result Badge Component' && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-xs font-medium text-gray-600 mb-2">Live Example:</div>
+                        <div className="flex items-center gap-2">
+                          <ResultBadge result="Win" size="sm" />
+                          <ResultBadge result="Loss" size="sm" />
+                          <ResultBadge result="Draw" size="sm" />
+                          <ResultBadge result="Bye" size="sm" />
+                        </div>
+                      </div>
+                    )}
 
                     {item.status === 'Complete' ? (
                       <Link href={item.path}>
