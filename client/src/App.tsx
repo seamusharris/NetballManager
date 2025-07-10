@@ -211,8 +211,30 @@ function Router() {
         <Route path="/error-examples" component={ErrorExamples} />
         <Route path="/toast-examples" component={ToastExamples} />
         <Route path="/reference" component={Reference} />
-        <Route path="/reference/result-badge-component" component={lazy(() => import('./pages/ResultBadgeExamples'))} />
-        <Route path="/reference/playerbox-component" component={lazy(() => import('./pages/PlayerBoxReference'))} />
+        <Route path="/reference/result-badge-component">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Result Badge Reference..." />}>
+                {(() => {
+                  const ResultBadgeExamples = lazy(() => import('./pages/ResultBadgeExamples'));
+                  return <ResultBadgeExamples />;
+                })()}
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route path="/reference/playerbox-component">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading PlayerBox Reference..." />}>
+                {(() => {
+                  const PlayerBoxReference = lazy(() => import('./pages/PlayerBoxReference'));
+                  return <PlayerBoxReference />;
+                })()}
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />
