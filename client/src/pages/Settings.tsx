@@ -29,10 +29,26 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { TEAM_NAME, TEAM_SHORT_NAME, TIMEZONE, COMMON_TIMEZONES } from '@/lib/settings';
 import BackButton from '@/components/ui/back-button';
-import { Download, Upload, Database, FileText, AlertCircle, CheckCircle, Trash2 } from "lucide-react";
+import { 
+  Download, 
+  Upload, 
+  Database, 
+  FileText, 
+  AlertCircle, 
+  CheckCircle, 
+  Trash2,
+  BarChart3,
+  TrendingUp,
+  Clock,
+  Target,
+  Calendar,
+  Users
+} from "lucide-react";
 import { exportAllData, importData } from "@/lib/dataExportImport";
+import { createFlourishExporter, downloadCSV } from '@/lib/flourishDataExporter';
 import { queryClient } from '@/lib/queryClient';
 import { GameStatusManager } from "@/components/settings/GameStatusManager";
+import { useClub } from '@/contexts/ClubContext';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -57,6 +73,7 @@ export default function Settings() {
     playerAvailabilityImported?: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { currentClubId, currentTeamId, currentTeamName } = useClub();
 
   // Get current browser timezone
   const getBrowserTimezone = () => {
@@ -302,6 +319,269 @@ export default function Settings() {
     }
   };
 
+  const handleExportPlayers = async () => {
+    if (!currentClubId) {
+      toast({
+        title: "Error",
+        description: "No club selected",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+      const playersResponse = await fetch(`/api/clubs/${currentClubId}/players`);
+      if (!playersResponse.ok) {
+        throw new Error('Failed to fetch players');
+      }
+      const players = await playersResponse.json();
+
+      const csvContent = [
+        ['Name', 'First Name', 'Last Name', 'Display Name', 'Avatar Color', 'Active'],
+        ...players.map((player: any) => [
+          player.name || '',
+          player.firstName || '',
+          player.lastName || '',
+          player.displayName || '',
+          player.avatarColor || '',
+          player.active ? 'Yes' : 'No'
+        ])
+      ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `players-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: "Players exported successfully"
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "An error occurred during export",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const getFlourishData = async () => {
+    if (!currentClubId || !currentTeamId) {
+      throw new Error('No club or team selected');
+    }
+
+    // Fetch all required data
+    const [gamesResponse, playersResponse, statsResponse, scoresResponse, rostersResponse] = await Promise.all([
+      fetch(`/api/teams/${currentTeamId}/games`),
+      fetch(`/api/clubs/${currentClubId}/players`),
+      fetch(`/api/clubs/${currentClubId}/games/stats/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameIds: [] }) // Will be populated by server
+      }),
+      fetch(`/api/clubs/${currentClubId}/games/scores/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameIds: [] }) // Will be populated by server
+      }),
+      fetch(`/api/clubs/${currentClubId}/games/rosters/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameIds: [] }) // Will be populated by server
+      })
+    ]);
+
+    if (!gamesResponse.ok || !playersResponse.ok || !statsResponse.ok || !scoresResponse.ok || !rostersResponse.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const games = await gamesResponse.json();
+    const players = await playersResponse.json();
+    const stats = await statsResponse.json();
+    const scores = await scoresResponse.json();
+    const rosters = await rostersResponse.json();
+
+    return { games, players, stats, scores, rosters };
+  };
+
+  const handleExportTeamPerformance = async () => {
+    try {
+      setIsExporting(true);
+      const { games, players, stats, scores, rosters } = await getFlourishData();
+
+      const exporter = createFlourishExporter({
+        games,
+        stats,
+        scores,
+        players,
+        rosters,
+        teamName: currentTeamName || 'Team',
+        currentTeamId: currentTeamId!
+      });
+
+      const csvContent = exporter.exportTeamPerformanceOverTime();
+      downloadCSV(csvContent, `${currentTeamName || 'team'}-performance-timeline.csv`);
+
+      toast({
+        title: "Success",
+        description: "Team performance data exported for Flourish bar chart race"
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "An error occurred during export",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportQuarterAnalysis = async () => {
+    try {
+      setIsExporting(true);
+      const { games, players, stats, scores, rosters } = await getFlourishData();
+
+      const exporter = createFlourishExporter({
+        games,
+        stats,
+        scores,
+        players,
+        rosters,
+        teamName: currentTeamName || 'Team',
+        currentTeamId: currentTeamId!
+      });
+
+      const csvContent = exporter.exportQuarterPerformanceHeatmap();
+      downloadCSV(csvContent, `${currentTeamName || 'team'}-quarter-analysis.csv`);
+
+      toast({
+        title: "Success",
+        description: "Quarter analysis data exported for Flourish heatmap"
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "An error occurred during export",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPositionData = async () => {
+    try {
+      setIsExporting(true);
+      const { games, players, stats, scores, rosters } = await getFlourishData();
+
+      const exporter = createFlourishExporter({
+        games,
+        stats,
+        scores,
+        players,
+        rosters,
+        teamName: currentTeamName || 'Team',
+        currentTeamId: currentTeamId!
+      });
+
+      const csvContent = exporter.exportPositionPerformance();
+      downloadCSV(csvContent, `${currentTeamName || 'team'}-position-performance.csv`);
+
+      toast({
+        title: "Success",
+        description: "Position performance data exported for Flourish radar chart"
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "An error occurred during export",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPlayerNetwork = async () => {
+    try {
+      setIsExporting(true);
+      const { games, players, stats, scores, rosters } = await getFlourishData();
+
+      const exporter = createFlourishExporter({
+        games,
+        stats,
+        scores,
+        players,
+        rosters,
+        teamName: currentTeamName || 'Team',
+        currentTeamId: currentTeamId!
+      });
+
+      const csvContent = exporter.exportPlayerNetworkData();
+      downloadCSV(csvContent, `${currentTeamName || 'team'}-player-network.csv`);
+
+      toast({
+        title: "Success",
+        description: "Player network data exported for Flourish network diagram"
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "An error occurred during export",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportGameTimeline = async () => {
+    try {
+      setIsExporting(true);
+      const { games, players, stats, scores, rosters } = await getFlourishData();
+
+      const exporter = createFlourishExporter({
+        games,
+        stats,
+        scores,
+        players,
+        rosters,
+        teamName: currentTeamName || 'Team',
+        currentTeamId: currentTeamId!
+      });
+
+      const csvContent = exporter.exportGameTimeline();
+      downloadCSV(csvContent, `${currentTeamName || 'team'}-game-timeline.csv`);
+
+      toast({
+        title: "Success",
+        description: "Game timeline data exported for Flourish timeline chart"
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "An error occurred during export",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="container py-8 mx-auto">
       <Helmet>
@@ -481,6 +761,91 @@ export default function Settings() {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <Download className="h-5 w-5 text-blue-600" />
+              <h3 className="text-lg font-medium">Export Data</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={handleExportData}
+                disabled={isExporting}
+                className="flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>{isExporting ? 'Exporting...' : 'Export All Data'}</span>
+              </Button>
+              <Button
+                onClick={handleExportPlayers}
+                disabled={isExporting}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>Export Players Only</span>
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <BarChart3 className="h-5 w-5 text-purple-600" />
+              <h3 className="text-lg font-medium">Flourish Chart Data</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Export team data in CSV format for use with Flourish charts. Each export is optimized for specific chart types.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={handleExportTeamPerformance}
+                disabled={isExporting}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Team Performance (Bar Race)</span>
+              </Button>
+              <Button
+                onClick={handleExportQuarterAnalysis}
+                disabled={isExporting}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Clock className="h-4 w-4" />
+                <span>Quarter Analysis (Heatmap)</span>
+              </Button>
+              <Button
+                onClick={handleExportPositionData}
+                disabled={isExporting}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Target className="h-4 w-4" />
+                <span>Position Performance</span>
+              </Button>
+              <Button
+                onClick={handleExportPlayerNetwork}
+                disabled={isExporting}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>Player Network</span>
+              </Button>
+              <Button
+                onClick={handleExportGameTimeline}
+                disabled={isExporting}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Game Timeline</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
