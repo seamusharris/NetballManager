@@ -97,18 +97,18 @@ export default function ColorStyleGuide() {
     { code: "GK", name: "Goal Keeper", color: "#4338ca", bgClass: "bg-indigo-600", description: "Deep indigo - ultimate defense" }
   ];
 
-  // Statistics Color Scheme - Logical flow-based colors following game progression
+  // Statistics Color Scheme - Logical grouping of positive, neutral, and negative actions
   const statCategories = [
-    { name: "Intercepts", color: "#dc2626", bgClass: "bg-red-600", icon: <Zap className="h-4 w-4" />, description: "Deep red for high-impact defensive wins of possession" },
-    { name: "Deflections", color: "#ea580c", bgClass: "bg-orange-600", icon: <Activity className="h-4 w-4" />, description: "Orange for disruptive defensive actions that often lead to gains" },
-    { name: "Gains", color: "#059669", bgClass: "bg-emerald-600", icon: <Award className="h-4 w-4" />, description: "Emerald for broader possession wins following defensive actions" },
-    { name: "Receives", color: "#2563eb", bgClass: "bg-blue-600", icon: <Target className="h-4 w-4" />, description: "Blue for positive ball movement and successful passing" },
-    { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <TrendingUp className="h-4 w-4" />, description: "Classic green for positive scoring outcomes" },
-    { name: "Goals Against", color: "#b91c1c", bgClass: "bg-red-700", icon: <Shield className="h-4 w-4" />, description: "Dark red for goals conceded by our defense" },
-    { name: "Missed Goals", color: "#d97706", bgClass: "bg-amber-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Amber for missed scoring opportunities requiring attention" },
-    { name: "Rebounds", color: "#ca8a04", bgClass: "bg-yellow-600", icon: <RefreshCw className="h-4 w-4" />, description: "Yellow for ball recovery actions after missed shots" },
-    { name: "Turnovers", color: "#ef4444", bgClass: "bg-red-500", icon: <AlertCircle className="h-4 w-4" />, description: "Red for direct losses of possession due to errors" },
-    { name: "Penalties", color: "#7c3aed", bgClass: "bg-violet-600", icon: <Ban className="h-4 w-4" />, description: "Purple for rule infractions that concede possession or advantage" }
+    { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <TrendingUp className="h-4 w-4" />, description: "Classic green for successful scoring - the ultimate positive outcome" },
+    { name: "Intercepts", color: "#059669", bgClass: "bg-emerald-600", icon: <Zap className="h-4 w-4" />, description: "Emerald green for high-impact defensive wins - positive possession gains" },
+    { name: "Gains", color: "#10b981", bgClass: "bg-emerald-500", icon: <Award className="h-4 w-4" />, description: "Light emerald for general possession recoveries - positive ball wins" },
+    { name: "Deflections", color: "#0d9488", bgClass: "bg-teal-600", icon: <Activity className="h-4 w-4" />, description: "Teal for disruptive defensive actions that create opportunities" },
+    { name: "Rebounds", color: "#0891b2", bgClass: "bg-cyan-600", icon: <RefreshCw className="h-4 w-4" />, description: "Cyan for ball recovery actions - similar to deflections in creating second chances" },
+    { name: "Receives", color: "#2563eb", bgClass: "bg-blue-600", icon: <Target className="h-4 w-4" />, description: "Blue for successful ball movement and accurate passing" },
+    { name: "Missed Goals", color: "#f59e0b", bgClass: "bg-amber-500", icon: <AlertTriangle className="h-4 w-4" />, description: "Amber for missed scoring opportunities - neutral/attention needed" },
+    { name: "Penalties", color: "#ea580c", bgClass: "bg-orange-600", icon: <Ban className="h-4 w-4" />, description: "Orange for rule infractions - attention required but not critical" },
+    { name: "Turnovers", color: "#ef4444", bgClass: "bg-red-500", icon: <AlertCircle className="h-4 w-4" />, description: "Red for direct losses of possession - negative team actions" },
+    { name: "Goals Against", color: "#dc2626", bgClass: "bg-red-600", icon: <Shield className="h-4 w-4" />, description: "Deep red for goals conceded - the most negative outcome" }
   ];
 
   // Game Status Color Schemes - Multiple Options
@@ -192,7 +192,6 @@ export default function ColorStyleGuide() {
           {positions.map(position => (
             <div key={position.code} className="text-center">
               <PositionBadge position={position} size="sm" />
-              <div className="text-xs font-medium mt-1">{position.code}</div>
             </div>
           ))}
         </div>
