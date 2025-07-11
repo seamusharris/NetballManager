@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { ResultBadge } from '@/components/ui/result-badge';
@@ -13,6 +12,8 @@ import {
   Activity,
   ChevronRight
 } from 'lucide-react';
+import GameResultCard from '@/components/ui/game-result-card';
+import { Game } from '@shared/schema';
 
 interface ReferenceItem {
   title: string;
@@ -86,6 +87,165 @@ const getCategoryColor = (category: string) => {
 };
 
 export default function Reference() {
+  // Position color scheme from the style guide
+  const positions = [
+    { code: "GS", name: "Goal Shooter", color: "#dc2626" },
+    { code: "GA", name: "Goal Attack", color: "#ea580c" },
+    { code: "WA", name: "Wing Attack", color: "#f59e0b" },
+    { code: "C", name: "Centre", color: "#10b981" },
+    { code: "WD", name: "Wing Defence", color: "#0891b2" },
+    { code: "GD", name: "Goal Defence", color: "#2563eb" },
+    { code: "GK", name: "Goal Keeper", color: "#4338ca" }
+  ];
+
+  // Sample game data for GameResultCard examples
+  const sampleGames: Game[] = [
+    {
+      id: 1,
+      date: '2024-06-15',
+      time: '14:00',
+      homeTeamId: 116,
+      awayTeamId: 117,
+      homeTeamName: 'WNC Dingoes',
+      awayTeamName: 'Emeralds',
+      round: 5,
+      statusIsCompleted: true,
+      statusName: 'completed',
+      statusId: 3,
+      seasonId: 1,
+      clubId: 54,
+      venue: 'Court 1',
+      isBye: false,
+      statusTeamGoals: 45,
+      statusOpponentGoals: 38,
+      statusDisplayName: 'Completed',
+      statusAllowsStatistics: true,
+      seasonName: 'Autumn 2025',
+      seasonStartDate: '2025-01-01',
+      seasonEndDate: '2025-06-29',
+      seasonIsActive: true,
+      homeTeamDivision: '15U/1s',
+      homeClubId: 54,
+      homeClubName: 'Warrandyte Netball Club',
+      homeClubCode: 'WNC',
+      awayTeamDivision: '15U/1s',
+      awayClubId: 15,
+      awayClubName: 'East Doncaster',
+      awayClubCode: 'EDNC',
+      isInterClub: false,
+      notes: null,
+      awardWinnerId: null
+    },
+    {
+      id: 2,
+      date: '2024-06-22',
+      time: '16:00',
+      homeTeamId: 118,
+      awayTeamId: 116,
+      homeTeamName: 'Cobras',
+      awayTeamName: 'WNC Dingoes',
+      round: 6,
+      statusIsCompleted: true,
+      statusName: 'completed',
+      statusId: 3,
+      seasonId: 1,
+      clubId: 54,
+      venue: 'Away',
+      isBye: false,
+      statusTeamGoals: 28,
+      statusOpponentGoals: 35,
+      statusDisplayName: 'Completed',
+      statusAllowsStatistics: true,
+      seasonName: 'Autumn 2025',
+      seasonStartDate: '2025-01-01',
+      seasonEndDate: '2025-06-29',
+      seasonIsActive: true,
+      homeTeamDivision: '15U/1s',
+      homeClubId: 15,
+      homeClubName: 'East Doncaster',
+      homeClubCode: 'EDNC',
+      awayTeamDivision: '15U/1s',
+      awayClubId: 54,
+      awayClubName: 'Warrandyte Netball Club',
+      awayClubCode: 'WNC',
+      isInterClub: false,
+      notes: null,
+      awardWinnerId: null
+    },
+    {
+      id: 3,
+      date: '2024-07-15',
+      time: '12:00',
+      homeTeamId: 116,
+      awayTeamId: 119,
+      homeTeamName: 'WNC Dingoes',
+      awayTeamName: 'Thunder Jets',
+      round: 8,
+      statusIsCompleted: false,
+      statusName: 'upcoming',
+      statusId: 1,
+      seasonId: 1,
+      clubId: 54,
+      venue: 'Court 2',
+      isBye: false,
+      statusTeamGoals: null,
+      statusOpponentGoals: null,
+      statusDisplayName: 'Upcoming',
+      statusAllowsStatistics: false,
+      seasonName: 'Autumn 2025',
+      seasonStartDate: '2025-01-01',
+      seasonEndDate: '2025-06-29',
+      seasonIsActive: true,
+      homeTeamDivision: '15U/1s',
+      homeClubId: 54,
+      homeClubName: 'Warrandyte Netball Club',
+      homeClubCode: 'WNC',
+      awayTeamDivision: '15U/1s',
+      awayClubId: 16,
+      awayClubName: 'Thunder Sports',
+      awayClubCode: 'TS',
+      isInterClub: false,
+      notes: null,
+      awardWinnerId: null
+    },
+    {
+      id: 4,
+      date: '2024-06-08',
+      time: '10:00',
+      homeTeamId: 116,
+      awayTeamId: null,
+      homeTeamName: 'WNC Dingoes',
+      awayTeamName: null,
+      round: 4,
+      statusIsCompleted: true,
+      statusName: 'bye',
+      statusId: 6,
+      seasonId: 1,
+      clubId: 54,
+      venue: null,
+      isBye: true,
+      statusTeamGoals: null,
+      statusOpponentGoals: null,
+      statusDisplayName: 'Bye',
+      statusAllowsStatistics: false,
+      seasonName: 'Autumn 2025',
+      seasonStartDate: '2025-01-01',
+      seasonEndDate: '2025-06-29',
+      seasonIsActive: true,
+      homeTeamDivision: '15U/1s',
+      homeClubId: 54,
+      homeClubName: 'Warrandyte Netball Club',
+      homeClubCode: 'WNC',
+      awayTeamDivision: null,
+      awayClubId: null,
+      awayClubName: null,
+      awayClubCode: null,
+      isInterClub: false,
+      notes: null,
+      awardWinnerId: null
+    }
+  ];
+
   const groupedReferences = referenceItems.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];
@@ -244,6 +404,55 @@ export default function Reference() {
                               </div>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Live Example for GameResultCard Component */}
+                    {item.title === 'GameResultCard Component' && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-xs font-medium text-gray-600 mb-2">Live Example:</div>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <div className="text-xs font-medium mb-1 text-green-700">Win Example</div>
+                              <GameResultCard 
+                                game={sampleGames[0]} 
+                                currentTeamId={116}
+                                layout="medium"
+                                showLink={false}
+                              />
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium mb-1 text-red-700">Loss Example</div>
+                              <GameResultCard 
+                                game={sampleGames[1]} 
+                                currentTeamId={116}
+                                layout="medium"
+                                showLink={false}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <div className="text-xs font-medium mb-1 text-blue-700">Upcoming Game</div>
+                              <GameResultCard 
+                                game={sampleGames[2]} 
+                                currentTeamId={116}
+                                layout="medium"
+                                showLink={false}
+                              />
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium mb-1 text-gray-700">Bye Game</div>
+                              <GameResultCard 
+                                game={sampleGames[3]} 
+                                currentTeamId={116}
+                                layout="medium"
+                                showLink={false}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
