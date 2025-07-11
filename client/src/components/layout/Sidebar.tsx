@@ -3,8 +3,8 @@ import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useNextGame } from '@/hooks/use-next-game';
 import { 
-  X, Menu, Home, Users, ClipboardList, Calendar, CalendarRange, 
-  BarChart, Database, SettingsIcon, Zap, Trophy, Building2, Target
+  Building2, Home, Users, Calendar, ClipboardList, Trophy, 
+  CalendarRange, Settings as SettingsIcon, Zap, Target, Download 
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';

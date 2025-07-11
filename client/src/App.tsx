@@ -21,7 +21,9 @@ import Teams from "@/pages/Teams";
 import ClubManagement from "./pages/ClubManagement";
 import LiveStats from "@/pages/LiveStats";
 import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
-import Settings from "@/pages/Settings";
+import Settings from '@/pages/Settings';
+import FixtureScraper from '@/pages/FixtureScraper';
+import ComponentExamples from '@/pages/ComponentExamples';
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
 import { useClub } from '@/contexts/ClubContext';
@@ -151,7 +153,9 @@ function Router() {
 
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
-        <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
+        <Route path="/settings" component={Settings} />
+        <Route path="/fixture-scraper" component={FixtureScraper} />
+        <Route path="/component-examples" component={ComponentExamples} />
         <Route path="/seasons" component={withErrorBoundary(Seasons, 'Seasons')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
         <Route path="/game/:id/details" component={withErrorBoundary(LiveStats, 'LiveStats')} />
