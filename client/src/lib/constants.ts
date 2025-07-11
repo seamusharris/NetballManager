@@ -69,18 +69,32 @@ export const VALIDATION = {
   MAX_STAT_VALUE: 999
 };
 
-// Stat category labels
+// Stat category labels - using centralized ordering
 export const STAT_LABELS: Record<string, string> = {
-  'goals': 'Goals',
-  'goalsFor': 'Goal',
-  'missedGoals': 'Missed Goals',
+  // Attacking stats
+  'goalsFor': 'Goals',
+  'missedGoals': 'Misses', 
+  
+  // Defending stats
   'goalsAgainst': 'Goals Against',
+  
+  // Universal stats (shared)
   'rebounds': 'Rebounds',
   'intercepts': 'Intercepts',
-  'pickUp': 'Pick Ups',
+  'deflections': 'Deflections',
+  'gains': 'Gains',
+  'receives': 'Receives', 
+  'turnovers': 'Turnovers',
+  'penalties': 'Penalties',
+  
+  // Legacy stats (backward compatibility)
   'badPass': 'Bad Passes',
   'handlingError': 'Handling Errors',
-  'infringement': 'Infringements'
+  'pickUp': 'Pick Ups',
+  'infringement': 'Infringements',
+  
+  // Alternative keys
+  'goals': 'Goals'
 };
 
 // Stat colors for UI components
@@ -104,20 +118,95 @@ export type StatType =
   | 'missedGoals' 
   | 'rebounds' 
   | 'intercepts' 
+  | 'deflections'
+  | 'turnovers'
+  | 'gains'
+  | 'receives'
+  | 'penalties'
   | 'badPass' 
   | 'handlingError' 
   | 'pickUp' 
   | 'infringement';
 
 export type StatCategory = 
-  | 'goals' 
-  | 'missedGoals' 
-  | 'rebounds' 
-  | 'intercepts' 
-  | 'pickUp' 
-  | 'badPass' 
-  | 'handlingError' 
-  | 'infringement';
+  | 'attacking'
+  | 'defending'
+  | 'universal'
+  | 'legacy';
+
+// Centralized Stat Ordering Configuration
+export const STAT_ORDER_CONFIG = {
+  // Attacking stats - for offensive positions
+  attacking: [
+    { key: 'goalsFor', label: 'Goals', category: 'attacking' },
+    { key: 'missedGoals', label: 'Misses', category: 'attacking' },
+    { key: 'rebounds', label: 'Rebounds', category: 'attacking' }
+  ],
+  
+  // Defending stats - for defensive positions  
+  defending: [
+    { key: 'goalsAgainst', label: 'Goals Against', category: 'defending' },
+    { key: 'rebounds', label: 'Rebounds', category: 'defending' }
+  ],
+  
+  // Universal stats - for all positions
+  universal: [
+    { key: 'intercepts', label: 'Intercepts', category: 'universal' },
+    { key: 'deflections', label: 'Deflections', category: 'universal' },
+    { key: 'gains', label: 'Gains', category: 'universal' },
+    { key: 'receives', label: 'Receives', category: 'universal' },
+    { key: 'turnovers', label: 'Turnovers', category: 'universal' },
+    { key: 'penalties', label: 'Penalties', category: 'universal' }
+  ],
+  
+  // Legacy stats (kept for backward compatibility)
+  legacy: [
+    { key: 'badPass', label: 'Bad Pass', category: 'legacy' },
+    { key: 'handlingError', label: 'Handling Error', category: 'legacy' },
+    { key: 'pickUp', label: 'Pick Up', category: 'legacy' },
+    { key: 'infringement', label: 'Infringement', category: 'legacy' }
+  ]
+} as const;
+
+// Helper functions for stat ordering
+export const getOrderedStatsForPosition = (position: string): Array<{key: string, label: string, category: string}> => {
+  const attackingPositions = ['GS', 'GA'];
+  const defendingPositions = ['GD', 'GK'];
+  
+  let orderedStats: Array<{key: string, label: string, category: string}> = [];
+  
+  // Add position-specific stats first
+  if (attackingPositions.includes(position)) {
+    orderedStats.push(...STAT_ORDER_CONFIG.attacking);
+  }
+  
+  if (defendingPositions.includes(position)) {
+    orderedStats.push(...STAT_ORDER_CONFIG.defending);
+  }
+  
+  // Add universal stats for all positions
+  orderedStats.push(...STAT_ORDER_CONFIG.universal);
+  
+  return orderedStats;
+};
+
+export const getAllOrderedStats = (): Array<{key: string, label: string, category: string}> => {
+  return [
+    ...STAT_ORDER_CONFIG.attacking,
+    ...STAT_ORDER_CONFIG.defending,
+    ...STAT_ORDER_CONFIG.universal,
+    ...STAT_ORDER_CONFIG.legacy
+  ];
+};
+
+export const getStatsByCategory = (category: StatCategory): Array<{key: string, label: string, category: string}> => {
+  return STAT_ORDER_CONFIG[category] || [];
+};
+
+// Create ordered stat keys arrays for backward compatibility
+export const ATTACKING_STAT_ORDER = STAT_ORDER_CONFIG.attacking.map(s => s.key);
+export const DEFENDING_STAT_ORDER = STAT_ORDER_CONFIG.defending.map(s => s.key);
+export const UNIVERSAL_STAT_ORDER = STAT_ORDER_CONFIG.universal.map(s => s.key);
 
 // Unified Statistics Configuration
 export const STATISTICS_CONFIG = {

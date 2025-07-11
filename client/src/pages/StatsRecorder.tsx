@@ -74,6 +74,13 @@ const getPositionColor = (position: Position | ''): string => {
 };
 
 // Different stat availabilities by position
+import { getPositionOrderedStats, isStatRelevantForPosition } from '@/lib/statOrderUtils';
+
+// Use centralized stat ordering instead of hardcoded config
+const getRelevantStatsForPosition = (position: Position): string[] => {
+  return getPositionOrderedStats(position).map(stat => stat.key);
+};
+
 const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
   'GS': {
     goalsFor: true,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getPositionOrderedStats } from '@/lib/statOrderUtils';
 
 interface StatItemBoxProps {
   label: string;
