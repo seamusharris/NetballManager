@@ -8,7 +8,7 @@ import {
   StatCategory 
 } from './constants';
 import { Position } from '@shared/schema';
-import { Target, Shield, RotateCcw, ArrowUp, Ban, Play, Zap, RefreshCw, Users, Coffee } from 'lucide-react';
+import { STAT_ICONS } from './constants';
 
 /**
  * Utility functions for consistent stat ordering across the application
@@ -121,71 +121,71 @@ export const STAT_CONFIG = {
   goalsFor: { 
     key: 'goalsFor', 
     label: 'Goal', 
-    icon: Target, 
+    icon: STAT_ICONS.goalsFor, 
     color: 'bg-green-100 hover:bg-green-200 border-green-300',
     category: 'attacking'
   },
   goalsAgainst: { 
     key: 'goalsAgainst', 
     label: 'Against', 
-    icon: Shield, 
+    icon: STAT_ICONS.goalsAgainst, 
     color: 'bg-red-100 hover:bg-red-200 border-red-300',
     category: 'defending'
   },
   missedGoals: { 
     key: 'missedGoals', 
     label: 'Miss', 
-    icon: RotateCcw, 
-    color: 'bg-orange-100 hover:bg-orange-200 border-orange-300',
+    icon: STAT_ICONS.missedGoals, 
+    color: 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300',
     category: 'attacking'
   },
   rebounds: { 
     key: 'rebounds', 
     label: 'Rebound', 
-    icon: ArrowUp, 
-    color: 'bg-purple-100 hover:bg-purple-200 border-purple-300',
+    icon: STAT_ICONS.rebounds, 
+    color: 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300',
     category: 'attacking'
   },
   intercepts: { 
     key: 'intercepts', 
     label: 'Intercept', 
-    icon: Zap, 
+    icon: STAT_ICONS.intercepts, 
     color: 'bg-blue-100 hover:bg-blue-200 border-blue-300',
     category: 'all'
   },
   deflections: { 
     key: 'deflections', 
     label: 'Deflection', 
-    icon: RefreshCw, 
+    icon: STAT_ICONS.deflections, 
     color: 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300',
     category: 'all'
   },
   turnovers: { 
     key: 'turnovers', 
     label: 'Turnover', 
-    icon: Ban, 
-    color: 'bg-red-100 hover:bg-red-200 border-red-300',
+    icon: STAT_ICONS.turnovers, 
+    color: 'bg-orange-100 hover:bg-orange-200 border-orange-300',
     category: 'all'
   },
   gains: { 
     key: 'gains', 
     label: 'Gain', 
-    icon: Play, 
+    icon: STAT_ICONS.gains, 
     color: 'bg-green-100 hover:bg-green-200 border-green-300',
     category: 'all'
   },
   receives: { 
     key: 'receives', 
     label: 'Receive', 
-    icon: Users, 
-    color: 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300',
+    icon: STAT_ICONS.receives, 
+    color: 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300',
     category: 'all'
   },
   penalties: { 
     key: 'penalties', 
     label: 'Penalty', 
-    icon: Coffee, 
-    color: 'bg-amber-100 hover:bg-amber-200 border-amber-300',
+    icon: STAT_ICONS.penalties, 
+    color: 'bg-purple-100 hover:bg-purple-200 border-purple-300',
     category: 'all'
   }
 } as const;

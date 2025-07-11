@@ -15,6 +15,7 @@ import {
   Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
   RefreshCw, Users, Coffee, Clock, Timer
 } from 'lucide-react';
+import { STAT_COLORS, STAT_ICONS } from '@/lib/constants';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -592,32 +593,24 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     const [longPressTriggered, setLongPressTriggered] = useState(false);
     const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
-    // Map stats to their icons directly
-    const statIconMap = {
-      'goalsFor': Target,
-      'goalsAgainst': Shield, 
-      'missedGoals': RotateCcw,
-      'rebounds': ArrowUp,
-      'intercepts': Zap,
-      'deflections': RefreshCw,
-      'turnovers': Ban,
-      'gains': Play,
-      'receives': Users,
-      'penalties': Coffee
-    };
+    // Use centralized stat icons
+    const statIconMap = STAT_ICONS;
 
-    // Map stats to their colors
-    const statColorMap = {
-      'goalsFor': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
-      'goalsAgainst': 'bg-red-100 hover:bg-red-200 border-red-300 text-red-700',
-      'missedGoals': 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700',
-      'rebounds': 'bg-purple-100 hover:bg-purple-200 border-purple-300 text-purple-700',
-      'intercepts': 'bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-700',
-      'deflections': 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300 text-cyan-700',
-      'turnovers': 'bg-red-100 hover:bg-red-200 border-red-300 text-red-700',
-      'gains': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
-      'receives': 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-700',
-      'penalties': 'bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700'
+    // Convert hex colors to Tailwind classes for UI components
+    const getStatColorClasses = (stat: string) => {
+      const colorMap: Record<string, string> = {
+        'goalsFor': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
+        'goalsAgainst': 'bg-red-100 hover:bg-red-200 border-red-300 text-red-700',
+        'missedGoals': 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-700',
+        'rebounds': 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-700',
+        'intercepts': 'bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-700',
+        'deflections': 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300 text-cyan-700',
+        'turnovers': 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700',
+        'gains': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
+        'receives': 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300 text-cyan-700',
+        'penalties': 'bg-purple-100 hover:bg-purple-200 border-purple-300 text-purple-700'
+      };
+      return colorMap[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300';
     };
 
     // Map stats to their labels (singular form)
@@ -635,7 +628,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     };
 
     const StatIcon = statIconMap[stat] || Target;
-    const statColor = statColorMap[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300';
+    const statColor = getStatColorClasses(stat);
     const statLabel = statLabelMap[stat] || stat;
 
     // Handle touch events for long press - single decrement per press cycle

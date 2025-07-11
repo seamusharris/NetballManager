@@ -111,6 +111,25 @@ export const STAT_COLORS: Record<string, string> = {
   infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
 };
 
+// Stat icons - consistent with Statistics Color Scheme from Color Style Guide
+import { 
+  Target, Shield, AlertTriangle, TrendingUp, Zap, Activity, 
+  AlertCircle, Award, Users, Ban, Play, RefreshCw, Coffee 
+} from 'lucide-react';
+
+export const STAT_ICONS: Record<string, any> = {
+  goalsFor: Target,         // Target icon for scoring goals
+  goalsAgainst: Shield,     // Shield icon for goals conceded  
+  missedGoals: AlertTriangle, // Alert triangle for missed opportunities
+  rebounds: TrendingUp,     // Trending up for ball recovery actions
+  intercepts: Zap,          // Zap icon for active defensive plays
+  deflections: Activity,    // Activity icon for ball disruption plays
+  turnovers: AlertCircle,   // Alert circle for possession losses
+  gains: Award,             // Award icon for possession recoveries
+  receives: Users,          // Users icon for successful ball handling
+  penalties: AlertTriangle  // Alert triangle for rule infractions
+};
+
 // Statistics Types and Categories
 export type StatType = 
   | 'goalsFor' 
