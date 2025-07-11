@@ -499,6 +499,12 @@ export default function ColorStyleGuide() {
               usage="Win indicators, success messages, positive metrics"
             />
             <ColorSwatch
+              name="Alternative Green"
+              hex="#059669"
+              description="Alternative green option for comparison"
+              usage="Currently used in CSS variables - compare with Success Green"
+            />
+            <ColorSwatch
               name="Warning Yellow"
               hex="#eab308"
               description="Attention needed, caution, mixed results"
