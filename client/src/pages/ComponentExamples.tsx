@@ -71,7 +71,7 @@ const examples: ExampleSection[] = [
     category: 'Components',
     status: 'Complete'
   },
-  
+
   {
     title: 'Action Buttons',
     description: 'Consistent action button patterns that work with various color schemes and contexts.',
@@ -248,7 +248,7 @@ const examples: ExampleSection[] = [
     category: 'States',
     status: 'Complete'
   },
-  
+
 
   // Patterns
   {
