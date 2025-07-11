@@ -11,20 +11,21 @@ import { useToast } from '@/hooks/use-toast';
 import { Download, Globe, AlertCircle, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-interface ScrapedGame {
+interface ScrapedFixture {
   date: string;
   time: string;
   homeTeam: string;
   awayTeam: string;
-  venue: string;
-  division: string;
+  venue?: string;
+  round?: string;
 }
 
 export default function FixtureScraper() {
   const [url, setUrl] = useState('https://registration.netballconnect.com/livescoreSeasonFixture?organisationKey=383c3e85-6160-4657-8e7d-665a81491f1e&competitionUniqueKey=4166e02b-43fa-4ed7-bcae-bd151c0251e3&yearId=7&divisionId=26122');
   const [isLoading, setIsLoading] = useState(false);
-  const [scrapedData, setScrapedData] = useState<ScrapedGame[]>([]);
+  const [scrapedData, setScrapedData] = useState<ScrapedFixture[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { toast } = useToast();
 
   const handleScrape = async () => {
@@ -56,11 +57,12 @@ export default function FixtureScraper() {
 
       const data = await response.json();
       
-      if (data.success) {
-        setScrapedData(data.games || []);
+      if (data.fixtures) {
+        setScrapedData(data.fixtures || []);
+        setShowConfirmation(true);
         toast({
-          title: "Success",
-          description: `Successfully scraped ${data.games?.length || 0} games`,
+          title: "Preview Ready",
+          description: `Found ${data.fixtures?.length || 0} fixtures to review`,
         });
       } else {
         throw new Error(data.error || 'Failed to scrape data');
@@ -113,6 +115,7 @@ export default function FixtureScraper() {
       });
       
       setScrapedData([]);
+      setShowConfirmation(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Import failed';
       toast({
@@ -190,40 +193,79 @@ export default function FixtureScraper() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  Scraped Data
-                  <Badge variant="secondary">{scrapedData.length} games</Badge>
+                  Preview Fixtures
+                  <Badge variant="secondary">{scrapedData.length} fixtures</Badge>
                 </CardTitle>
-                <Button onClick={handleImportGames} variant="default">
-                  Import All Games
-                </Button>
+                {!showConfirmation && (
+                  <Button onClick={() => setShowConfirmation(true)} variant="outline">
+                    Review & Import
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="max-h-96 overflow-y-auto">
                   <div className="grid gap-2">
-                    {scrapedData.map((game, index) => (
+                    {scrapedData.map((fixture, index) => (
                       <div key={index} className="border rounded-lg p-3 bg-gray-50">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                           <div>
-                            <span className="font-medium">Date:</span> {game.date}
+                            <span className="font-medium">Date:</span> {fixture.date || 'Not specified'}
                           </div>
                           <div>
-                            <span className="font-medium">Time:</span> {game.time}
+                            <span className="font-medium">Time:</span> {fixture.time || 'Not specified'}
                           </div>
                           <div>
-                            <span className="font-medium">Division:</span> {game.division}
+                            <span className="font-medium">Round:</span> {fixture.round || 'Not specified'}
                           </div>
                           <div className="md:col-span-2">
-                            <span className="font-medium">Teams:</span> {game.homeTeam} vs {game.awayTeam}
+                            <span className="font-medium">Teams:</span> {fixture.homeTeam} vs {fixture.awayTeam}
                           </div>
                           <div>
-                            <span className="font-medium">Venue:</span> {game.venue}
+                            <span className="font-medium">Venue:</span> {fixture.venue || 'Not specified'}
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Confirmation Dialog */}
+        {showConfirmation && scrapedData.length > 0 && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-800">
+                <AlertCircle className="h-5 w-5" />
+                Confirm Import
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-orange-700">
+                  You're about to import <strong>{scrapedData.length} fixtures</strong> into your system. 
+                  This action cannot be undone. Please review the fixtures above and confirm if you want to proceed.
+                </p>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleImportGames} 
+                    variant="default"
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Yes, Import All Fixtures
+                  </Button>
+                  <Button 
+                    onClick={() => setShowConfirmation(false)} 
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -241,7 +283,9 @@ export default function FixtureScraper() {
               <li>Copy the full URL from your browser's address bar</li>
               <li>Paste the URL into the input field above</li>
               <li>Click "Scrape Fixtures" to extract the fixture data</li>
-              <li>Review the scraped games and click "Import All Games" to add them to your system</li>
+              <li>Review the scraped fixtures in the preview section</li>
+              <li>Click "Review & Import" to confirm the import</li>
+              <li>Click "Yes, Import All Fixtures" to add them to your system</li>
             </ol>
             
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
