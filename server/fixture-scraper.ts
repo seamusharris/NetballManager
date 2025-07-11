@@ -104,89 +104,161 @@ export class NetballConnectScraper {
     
     // Wait for content to load - NetballConnect specific approach
     console.log('Waiting for NetballConnect content to load...');
-    await this.page.waitForTimeout(8000); // Wait 8 seconds for React app to load
+    await this.page.waitForTimeout(12000); // Increased wait time for React app to load
     
-    // Look for fixture data by searching for common patterns
+    // Try to wait for specific NetballConnect elements
+    try {
+      await this.page.waitForSelector('table, .fixture, .game, [class*="fixture"], [class*="game"]', { timeout: 10000 });
+      console.log('Found fixture-related elements on page');
+    } catch (error) {
+      console.log('No specific fixture elements found, proceeding with generic extraction');
+    }
+    
+    // Enhanced fixture extraction for NetballConnect
     const fixtures = await this.page.evaluate(() => {
       const foundFixtures: any[] = [];
       
-      // Look for table rows with fixture data
-      const tables = document.querySelectorAll('table');
-      tables.forEach(table => {
-        const rows = table.querySelectorAll('tr');
-        rows.forEach(row => {
-          const cells = row.querySelectorAll('td, th');
-          if (cells.length >= 2) {
-            const cellTexts = Array.from(cells).map(cell => cell.textContent?.trim() || '');
-            const rowText = cellTexts.join(' | ');
+      console.log('=== PUPPETEER PAGE ANALYSIS ===');
+      console.log('Page title:', document.title);
+      console.log('Page URL:', window.location.href);
+      console.log('Body classes:', document.body.className);
+      console.log('Available tables:', document.querySelectorAll('table').length);
+      console.log('Available divs:', document.querySelectorAll('div').length);
+      console.log('Available spans:', document.querySelectorAll('span').length);
+      
+      // Log page content sample
+      const bodyText = document.body.textContent || '';
+      console.log('Body text sample (first 500 chars):', bodyText.substring(0, 500));
+      
+      // NetballConnect specific selectors
+      const netballConnectSelectors = [
+        'table tr',
+        '.fixture-row',
+        '.game-row',
+        '.match-row',
+        '[class*="fixture"]',
+        '[class*="game"]',
+        '[class*="match"]',
+        '[class*="livescore"]',
+        '[data-fixture]',
+        '[data-game]',
+        'tbody tr',
+        '.table-row',
+        '.data-row'
+      ];
+      
+      // Try each selector pattern
+      netballConnectSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        console.log(`Selector "${selector}" found ${elements.length} elements`);
+        
+        elements.forEach((element, index) => {
+          const text = element.textContent?.trim() || '';
+          if (text.length > 10 && text.length < 500) {
+            console.log(`${selector}[${index}] text:`, text.substring(0, 150));
             
-            // Look for team vs team patterns
-            const vsPattern = /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$)/i;
-            const match = rowText.match(vsPattern);
+            // Enhanced team matching patterns for NetballConnect
+            const teamPatterns = [
+              // Standard vs patterns
+              /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s+(?:\d{1,2}[\/\-]|\d{1,2}:|\d{4}|Round|Week|Game|$))/i,
+              // Team names separated by various delimiters
+              /^([A-Za-z\s]{3,30})\s+(?:v|vs|versus|playing)\s+([A-Za-z\s]{3,30})(?:\s|$)/i,
+              // NetballConnect specific patterns
+              /([A-Za-z\s]{3,30})\s+v\s+([A-Za-z\s]{3,30})/i,
+              // Table cell patterns (team names in separate cells)
+              /^([A-Za-z\s]{3,30}).*?([A-Za-z\s]{3,30})$/i
+            ];
             
-            if (match && match[1] && match[2]) {
-              const homeTeam = match[1].trim();
-              const awayTeam = match[2].trim();
-              
-              // Basic validation
-              if (homeTeam.length > 1 && awayTeam.length > 1 && 
-                  homeTeam !== awayTeam && 
-                  !homeTeam.includes('Date') && !homeTeam.includes('Time') &&
-                  !awayTeam.includes('Date') && !awayTeam.includes('Time')) {
+            for (const pattern of teamPatterns) {
+              const match = text.match(pattern);
+              if (match && match[1] && match[2]) {
+                const homeTeam = match[1].trim();
+                const awayTeam = match[2].trim();
                 
-                // Extract additional info from the row
-                const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-                const timeMatch = rowText.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
-                const roundMatch = rowText.match(/(?:Round|Week|Game)\s*(\d+)/i);
+                // Enhanced validation
+                const isValidTeam = (name: string) => {
+                  return name.length >= 3 && 
+                         name.length <= 40 && 
+                         /[A-Za-z]/.test(name) && 
+                         !['Date', 'Time', 'Venue', 'Round', 'Week', 'Game', 'vs', 'v'].includes(name) &&
+                         !/^\d+$/.test(name);
+                };
                 
-                foundFixtures.push({
-                  homeTeam,
-                  awayTeam,
-                  date: dateMatch ? dateMatch[1] : '',
-                  time: timeMatch ? timeMatch[1] : '',
-                  round: roundMatch ? `Round ${roundMatch[1]}` : '',
-                  venue: ''
-                });
+                if (isValidTeam(homeTeam) && isValidTeam(awayTeam) && homeTeam !== awayTeam) {
+                  // Extract additional information
+                  const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                  const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
+                  const roundMatch = text.match(/(?:Round|Week|Game)\s*(\d+)/i);
+                  const venueMatch = text.match(/(?:at|@)\s+([^,\d]+?)(?:\s|,|$)/i);
+                  
+                  const fixture = {
+                    homeTeam,
+                    awayTeam,
+                    date: dateMatch ? dateMatch[1] : '',
+                    time: timeMatch ? timeMatch[1] : '',
+                    round: roundMatch ? `Round ${roundMatch[1]}` : '',
+                    venue: venueMatch ? venueMatch[1].trim() : ''
+                  };
+                  
+                  // Check for duplicates
+                  const isDuplicate = foundFixtures.some(f => 
+                    f.homeTeam.toLowerCase() === fixture.homeTeam.toLowerCase() && 
+                    f.awayTeam.toLowerCase() === fixture.awayTeam.toLowerCase()
+                  );
+                  
+                  if (!isDuplicate) {
+                    foundFixtures.push(fixture);
+                    console.log(`✓ Found fixture: ${homeTeam} vs ${awayTeam}`);
+                    break; // Stop trying other patterns for this element
+                  }
+                }
               }
             }
           }
         });
       });
       
-      // Also look for div-based fixtures
-      const divs = document.querySelectorAll('div');
-      divs.forEach(div => {
-        const text = div.textContent?.trim() || '';
-        if (text.length > 5 && text.length < 200) {
-          const vsPattern = /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$)/i;
-          const match = text.match(vsPattern);
-          
-          if (match && match[1] && match[2]) {
-            const homeTeam = match[1].trim();
-            const awayTeam = match[2].trim();
+      // If still no fixtures, try a more aggressive text-based approach
+      if (foundFixtures.length === 0) {
+        console.log('No fixtures found with selectors, trying aggressive text search...');
+        
+        // Get all text content and split by common separators
+        const allText = document.body.textContent || '';
+        const lines = allText.split(/[\n\r]+/).map(line => line.trim()).filter(line => line.length > 5);
+        
+        lines.forEach((line, index) => {
+          if (line.length < 200 && /\s+v\s+|\s+vs\s+/i.test(line)) {
+            console.log(`Text line ${index}:`, line);
             
-            if (homeTeam.length > 1 && awayTeam.length > 1 && 
-                homeTeam !== awayTeam && 
-                !homeTeam.includes('Date') && !homeTeam.includes('Time') &&
-                !awayTeam.includes('Date') && !awayTeam.includes('Time')) {
+            const vsMatch = line.match(/([A-Za-z\s]{3,30})\s+(?:v|vs)\s+([A-Za-z\s]{3,30})/i);
+            if (vsMatch) {
+              const homeTeam = vsMatch[1].trim();
+              const awayTeam = vsMatch[2].trim();
               
-              const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-              const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
-              const roundMatch = text.match(/(?:Round|Week|Game)\s*(\d+)/i);
-              
-              foundFixtures.push({
-                homeTeam,
-                awayTeam,
-                date: dateMatch ? dateMatch[1] : '',
-                time: timeMatch ? timeMatch[1] : '',
-                round: roundMatch ? `Round ${roundMatch[1]}` : '',
-                venue: ''
-              });
+              if (homeTeam.length >= 3 && awayTeam.length >= 3 && homeTeam !== awayTeam) {
+                const isDuplicate = foundFixtures.some(f => 
+                  f.homeTeam.toLowerCase() === homeTeam.toLowerCase() && 
+                  f.awayTeam.toLowerCase() === awayTeam.toLowerCase()
+                );
+                
+                if (!isDuplicate) {
+                  foundFixtures.push({
+                    homeTeam,
+                    awayTeam,
+                    date: '',
+                    time: '',
+                    round: '',
+                    venue: ''
+                  });
+                  console.log(`✓ Found fixture from text: ${homeTeam} vs ${awayTeam}`);
+                }
+              }
             }
           }
-        }
-      });
+        });
+      }
       
+      console.log(`=== FINAL RESULT: ${foundFixtures.length} fixtures found ===`);
       return foundFixtures;
     });
     
