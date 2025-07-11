@@ -291,12 +291,24 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         Object.values(statsByPositionAndQuarter).forEach((stat: GameStat) => {
           const key = `${stat.position}-${stat.quarter}`;
 
-          const statKeys: StatType[] = ['goalsFor', 'goalsAgainst', 'missedGoals', 'rebounds', 'intercepts', 'deflections', 'turnovers', 'gains', 'receives', 'penalties'];
+          // Map database field names to component field names
+          const fieldMapping = {
+            goalsFor: 'goalsFor',
+            goalsAgainst: 'goalsAgainst', 
+            missedGoals: 'missedGoals',
+            rebounds: 'rebounds',
+            intercepts: 'intercepts',
+            deflections: 'badPass', // Database uses badPass
+            turnovers: 'handlingError', // Database uses handlingError
+            gains: 'pickUp', // Database uses pickUp
+            receives: 'infringement', // Database uses infringement
+            penalties: 'penalties'
+          };
 
-          statKeys.forEach(statKey => {
-            if (stat[statKey] !== undefined && stat[statKey] !== null) {
-              const value = Number(stat[statKey]) || 0;
-              initialStats[key][statKey] = value;
+          Object.entries(fieldMapping).forEach(([componentField, dbField]) => {
+            if (stat[dbField] !== undefined && stat[dbField] !== null) {
+              const value = Number(stat[dbField]) || 0;
+              initialStats[key][componentField as StatType] = value;
             }
           });
 
@@ -480,10 +492,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             missedGoals: stats.missedGoals || 0,
             rebounds: stats.rebounds || 0,
             intercepts: stats.intercepts || 0,
-            deflections: stats.deflections || 0,
-            turnovers: stats.turnovers || 0,
-            gains: stats.gains || 0,
-            receives: stats.receives || 0,
+            badPass: stats.deflections || 0, // Map to database field
+            handlingError: stats.turnovers || 0, // Map to database field
+            pickUp: stats.gains || 0, // Map to database field
+            infringement: stats.receives || 0, // Map to database field
             penalties: stats.penalties || 0,
             rating: stats.rating
           });
@@ -501,10 +513,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               missedGoals: stats.missedGoals || 0,
               rebounds: stats.rebounds || 0,
               intercepts: stats.intercepts || 0,
-              deflections: stats.deflections || 0,
-              turnovers: stats.turnovers || 0,
-              gains: stats.gains || 0,
-              receives: stats.receives || 0,
+              badPass: stats.deflections || 0, // Map to database field
+              handlingError: stats.turnovers || 0, // Map to database field
+              pickUp: stats.gains || 0, // Map to database field
+              infringement: stats.receives || 0, // Map to database field
               penalties: stats.penalties || 0,
               rating: stats.rating
             });
