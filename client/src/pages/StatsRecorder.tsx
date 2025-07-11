@@ -564,10 +564,12 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     return total;
   };
 
-  // Quick tap stat button - single tap to increment, long press to edit
+  // Quick tap stat button - single tap to increment, long press to decrement once
   const QuickStatButton = ({ position, stat, important = false }) => {
     const key = getPositionQuarterKey(position, currentQuarter);
     const currentValue = positionStats[key]?.[stat] || 0;
+    const [longPressTriggered, setLongPressTriggered] = useState(false);
+    const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
     // Map stats to their icons directly
     const statIconMap = {
@@ -615,10 +617,47 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     const statColor = statColorMap[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300';
     const statLabel = statLabelMap[stat] || stat;
 
-    const handleLongPress = (e: React.MouseEvent) => {
+    // Handle touch events for long press - single decrement per press cycle
+    const handleTouchStart = (e: React.TouchEvent) => {
       e.preventDefault();
-      // For now, decrease stat on right-click
-      if (e.type === 'contextmenu') {
+      if (longPressTriggered) return; // Prevent multiple triggers during same press
+
+      const timer = setTimeout(() => {
+        if (currentValue > 0) {
+          recordStat(position, stat, -1);
+          setLongPressTriggered(true); // Mark as triggered for this press cycle
+        }
+      }, 500); // 500ms long press threshold
+      setLongPressTimer(timer);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        setLongPressTimer(null);
+      }
+      
+      // If long press wasn't triggered, this is a normal tap to increment
+      if (!longPressTriggered) {
+        recordStat(position, stat, 1);
+      }
+      
+      // Reset for next press cycle
+      setLongPressTriggered(false);
+    };
+
+    const handleTouchCancel = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        setLongPressTimer(null);
+      }
+      setLongPressTriggered(false);
+    };
+
+    // Handle mouse events for desktop right-click fallback
+    const handleContextMenu = (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (currentValue > 0) {
         recordStat(position, stat, -1);
       }
     };
@@ -627,8 +666,16 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       <Button
         variant="outline"
         className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-102 active:scale-95`}
-        onClick={() => recordStat(position, stat, 1)}
-        onContextMenu={handleLongPress}
+        onClick={(e) => {
+          // Only handle click if not in touch context
+          if (e.type === 'click' && !longPressTriggered) {
+            recordStat(position, stat, 1);
+          }
+        }}
+        onContextMenu={handleContextMenu}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
       >
         <StatIcon className={important ? 'h-5 w-5' : 'h-4 w-4'} />
         <span className={`${important ? 'text-sm' : 'text-xs'} font-medium`}>{statLabel}</span>
