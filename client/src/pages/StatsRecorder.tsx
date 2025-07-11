@@ -240,16 +240,28 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
   // Filter to only show players assigned to the current team
   const players = useMemo(() => {
-    if (!allPlayers || !currentTeamId) return [];
+    if (!allPlayers || !currentTeamId) {
+      console.log('players: Missing allPlayers or currentTeamId', { allPlayersLength: allPlayers?.length, currentTeamId });
+      return [];
+    }
 
     const teamPlayerIds = new Set();
     if (rosters) {
         rosters.forEach((r: any) => teamPlayerIds.add(r.playerId));
     }
 
-    return allPlayers.filter((player: any) => 
+    const filteredPlayers = allPlayers.filter((player: any) => 
       player.active && teamPlayerIds.has(player.id)
     );
+
+    console.log('players: Filtered players', {
+      allPlayersCount: allPlayers.length,
+      teamPlayerIds: Array.from(teamPlayerIds),
+      filteredPlayersCount: filteredPlayers.length,
+      filteredPlayerNames: filteredPlayers.map(p => `${p.id}: ${p.displayName}`)
+    });
+
+    return filteredPlayers;
   }, [allPlayers, currentTeamId, rosters]);
 
   // Check if game is completed
@@ -327,16 +339,24 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Initialize current positions from roster data
   useEffect(() => {
     if (rosters && rosters.length > 0) {
+      console.log(`Setting up positions for quarter ${currentQuarter} from ${rosters.length} roster entries`);
+      
       const latestPositions: Record<Position, number | null> = {
         'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null
       };
 
-      rosters.forEach((entry: any) => {
-        if (entry.quarter === currentQuarter) {
-          latestPositions[entry.position] = entry.playerId;
+      // Find roster entries for the current quarter
+      const currentQuarterRosters = rosters.filter((entry: any) => entry.quarter === currentQuarter);
+      console.log(`Found ${currentQuarterRosters.length} roster entries for quarter ${currentQuarter}:`, currentQuarterRosters);
+
+      currentQuarterRosters.forEach((entry: any) => {
+        if (entry.position && allPositions.includes(entry.position as Position)) {
+          latestPositions[entry.position as Position] = entry.playerId;
+          console.log(`Mapped Q${currentQuarter} ${entry.position} to player ${entry.playerId}`);
         }
       });
 
+      console.log(`Final position mapping for Q${currentQuarter}:`, latestPositions);
       setCurrentPositions(latestPositions);
     }
   }, [rosters, currentQuarter]);
@@ -348,6 +368,19 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
   // Get current position for a player in the specified quarter
   const getPlayerForPosition = (position: Position, quarter: number): Player | undefined => {
+    // For the current quarter, use the currentPositions state
+    if (quarter === currentQuarter) {
+      const playerId = currentPositions[position];
+      if (playerId) {
+        const player = getPlayer(playerId);
+        console.log(`getPlayerForPosition: Q${quarter} ${position} -> Player ${playerId} (${player?.displayName || 'Unknown'})`);
+        return player;
+      }
+      console.log(`getPlayerForPosition: Q${quarter} ${position} -> No player assigned`);
+      return undefined;
+    }
+
+    // For other quarters, look up from roster data
     if (!rosters) return undefined;
 
     const roster = rosters.find((r: any) => 
