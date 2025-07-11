@@ -281,6 +281,17 @@ export function registerGameStatsRoutes(app: Express) {
 
       console.log(`Team-based stats API: Team ${teamId} verified for game ${gameId}`);
 
+      // First, let's see what stats exist for this game regardless of team
+      const allGameStats = await db.select()
+        .from(gameStats)
+        .where(eq(gameStats.gameId, gameId));
+
+      console.log(`Team-based stats API: Found ${allGameStats.length} total stats for game ${gameId}`);
+      allGameStats.forEach(stat => {
+        console.log(`  - Stat ID ${stat.id}: team=${stat.teamId}, position=${stat.position}, quarter=${stat.quarter}`);
+      });
+
+      // Now get stats for the specific team
       const stats = await db.select()
         .from(gameStats)
         .where(and(
@@ -289,6 +300,12 @@ export function registerGameStatsRoutes(app: Express) {
         ));
 
       console.log(`Team-based stats API: Found ${stats.length} stats for game ${gameId}, team ${teamId}`);
+      
+      if (stats.length === 0) {
+        console.log(`Team-based stats API: No stats found for team ${teamId}. Available teams in this game:`, 
+          [...new Set(allGameStats.map(s => s.teamId))]);
+      }
+      
       res.json(stats);
     } catch (error) {
       console.error('Error fetching team-based game stats:', error);
