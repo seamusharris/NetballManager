@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +71,7 @@ export default function PositionComponentReference() {
     </div>
   );
 };`,
-    
+
     withTooltip: `const PositionBadgeWithTooltip = ({ position, size = 'default' }) => {
   return (
     <div className="group relative">
@@ -116,9 +115,9 @@ export default function PositionComponentReference() {
         {/* Live Examples */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Live Examples</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
+
             {/* Size Variants */}
             <Card>
               <CardHeader>
@@ -184,9 +183,9 @@ export default function PositionComponentReference() {
         {/* Implementation Guide */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Implementation Guide</h2>
-          
+
           <div className="space-y-6">
-            
+
             {/* Basic Component */}
             <Card>
               <CardHeader>
@@ -267,7 +266,7 @@ export default function PositionComponentReference() {
         {/* Props Specification */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Props Specification</h2>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="overflow-x-auto">
@@ -301,7 +300,7 @@ export default function PositionComponentReference() {
                     </tr>
                     <tr className="border-b">
                       <td className="p-3 font-mono text-sm">onClick</td>
-                      <td className="p-3">() => void</td>
+                      <td className="p-3">{'() => void'}</td>
                       <td className="p-3">undefined</td>
                       <td className="p-3">Optional click handler</td>
                     </tr>
@@ -315,7 +314,7 @@ export default function PositionComponentReference() {
         {/* Type Definitions */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Type Definitions</h2>
-          
+
           <Card>
             <CardContent className="pt-6">
               <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
@@ -339,7 +338,7 @@ interface PositionBadgeProps {
         {/* Usage Guidelines */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Usage Guidelines</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
