@@ -187,13 +187,16 @@ export default function ColorStyleGuide() {
           ))}
         </div>
         
-        <div className="grid grid-cols-7 gap-2 p-4 bg-muted/20 rounded-lg">
-          <div className="text-xs font-semibold text-center mb-2 col-span-7">Color Flow Visualization</div>
-          {positions.map(position => (
-            <div key={position.code} className="text-center">
-              <PositionBadge position={position} size="sm" />
-            </div>
-          ))}
+        <div className="flex flex-col items-center p-6 bg-muted/20 rounded-lg">
+          <div className="text-sm font-semibold text-center mb-4">Color Flow Visualization</div>
+          <div className="flex gap-4 justify-center">
+            {positions.map(position => (
+              <div key={position.code} className="text-center">
+                <PositionBadge position={position} size="default" />
+              </div>
+            ))}
+          </div>
+        </div>
         </div>
       </CardContent>
     </Card>

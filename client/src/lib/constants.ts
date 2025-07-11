@@ -69,42 +69,54 @@ export const VALIDATION = {
   MAX_STAT_VALUE: 999
 };
 
-// Stat category labels - using centralized ordering
+// Stat category labels - using centralized ordering with finalized terminology
 export const STAT_LABELS: Record<string, string> = {
   // Attacking stats
-  'goalsFor': 'Goal',
-  'missedGoals': 'Miss', 
+  'goalsFor': 'Goals For',
+  'goals': 'Goals',
+  'missedGoals': 'Missed Goals', 
 
   // Defending stats
-  'goalsAgainst': 'Goal Against',
+  'goalsAgainst': 'Goals Against',
 
-  // Universal stats (shared)
-  'rebounds': 'Rebound',
-  'intercepts': 'Intercept',
-  'deflections': 'Deflection',
-  'gains': 'Gain',
-  'receives': 'Receive', 
-  'turnovers': 'Turnover',
-  'penalties': 'Penalty',
+  // Universal stats (shared) - ordered by game flow
+  'intercepts': 'Intercepts',
+  'deflections': 'Deflections',
+  'gains': 'Gains',
+  'receives': 'Receives',
+  'rebounds': 'Rebounds',
+  'turnovers': 'Turnovers',
+  'penalties': 'Penalties',
 
   // Legacy stats (backward compatibility)
   'badPass': 'Bad Pass',
   'handlingError': 'Handling Error',
   'pickUp': 'Pick Up',
-  'infringement': 'Infringement',
-
-  // Alternative keys
-  'goals': 'Goals'
+  'infringement': 'Infringement'
 };
 
-// Stat colors for UI components
+// Stat colors for UI components - Based on Color Style Guide Statistics Color Scheme
 export const STAT_COLORS: Record<string, string> = {
+  // Positive stats - Green family
   goals: 'bg-green-100 hover:bg-green-200 text-green-700',
   goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
-  missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
+  intercepts: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700',
+  gains: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600',
+  deflections: 'bg-teal-100 hover:bg-teal-200 text-teal-700',
+  
+  // Neutral/Recovery stats - Blue/Cyan family
+  rebounds: 'bg-cyan-100 hover:bg-cyan-200 text-cyan-700',
+  receives: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
+  
+  // Attention needed - Amber family
+  missedGoals: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
+  
+  // Negative stats - Orange/Red family
+  penalties: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
+  turnovers: 'bg-red-100 hover:bg-red-200 text-red-600',
   goalsAgainst: 'bg-red-100 hover:bg-red-200 text-red-700',
-  rebounds: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
-  intercepts: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
+  
+  // Legacy stats - Maintaining existing colors for backward compatibility
   pickUp: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
   badPass: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
   handlingError: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
@@ -116,6 +128,33 @@ import {
   Target, Shield, AlertTriangle, TrendingUp, Zap, Activity, 
   AlertCircle, Award, Users, Ban, Play, RefreshCw, Coffee 
 } from 'lucide-react';
+
+// Comprehensive stat color configuration with hex values for charts and visualizations
+export const STAT_HEX_COLORS: Record<string, string> = {
+  // Positive actions - Green family
+  goalsFor: '#16a34a',      // Classic green for successful scoring
+  intercepts: '#059669',    // Emerald green for high-impact defensive wins
+  gains: '#10b981',         // Light emerald for general possession recoveries
+  deflections: '#0d9488',   // Teal for disruptive defensive actions
+  
+  // Neutral/Recovery actions - Blue/Cyan family
+  rebounds: '#0891b2',      // Cyan for ball recovery actions
+  receives: '#2563eb',      // Blue for successful ball movement
+  
+  // Attention needed - Amber family
+  missedGoals: '#f59e0b',   // Amber for missed scoring opportunities
+  
+  // Negative actions - Orange/Red family
+  penalties: '#ea580c',     // Orange for rule infractions
+  turnovers: '#ef4444',     // Red for direct losses of possession
+  goalsAgainst: '#dc2626',  // Deep red for goals conceded
+  
+  // Legacy stats for backward compatibility
+  pickUp: '#8b5cf6',        // Purple
+  badPass: '#f59e0b',       // Amber
+  handlingError: '#ec4899', // Pink
+  infringement: '#f43f5e'   // Rose
+};
 
 export const STAT_ICONS: Record<string, any> = {
   goalsFor: Target,         // Target icon for scoring goals - perfect semantic match
@@ -153,37 +192,37 @@ export type StatCategory =
   | 'universal'
   | 'legacy';
 
-// Centralized Stat Ordering Configuration
+// Centralized Stat Ordering Configuration - Following game flow and logical grouping
 export const STAT_ORDER_CONFIG = {
-  // Attacking stats - for offensive positions
+  // Attacking stats - for offensive positions (GS, GA)
   attacking: [
-    { key: 'goalsFor', label: 'Goals', category: 'attacking' },
-    { key: 'missedGoals', label: 'Misses', category: 'attacking' },
-    { key: 'rebounds', label: 'Rebounds', category: 'attacking' }
+    { key: 'goalsFor', label: 'Goals For', category: 'attacking', color: '#16a34a' },
+    { key: 'missedGoals', label: 'Missed Goals', category: 'attacking', color: '#f59e0b' },
+    { key: 'rebounds', label: 'Rebounds', category: 'attacking', color: '#0891b2' }
   ],
 
-  // Defending stats - for defensive positions  
+  // Defending stats - for defensive positions (GD, GK)
   defending: [
-    { key: 'goalsAgainst', label: 'Goals Against', category: 'defending' },
-    { key: 'rebounds', label: 'Rebounds', category: 'defending' }
+    { key: 'goalsAgainst', label: 'Goals Against', category: 'defending', color: '#dc2626' },
+    { key: 'rebounds', label: 'Rebounds', category: 'defending', color: '#0891b2' }
   ],
 
-  // Universal stats - for all positions
+  // Universal stats - for all positions (following the recommended flow of play order)
   universal: [
-    { key: 'intercepts', label: 'Intercepts', category: 'universal' },
-    { key: 'deflections', label: 'Deflections', category: 'universal' },
-    { key: 'gains', label: 'Gains', category: 'universal' },
-    { key: 'receives', label: 'Receives', category: 'universal' },
-    { key: 'turnovers', label: 'Turnovers', category: 'universal' },
-    { key: 'penalties', label: 'Penalties', category: 'universal' }
+    { key: 'intercepts', label: 'Intercepts', category: 'universal', color: '#059669' },
+    { key: 'deflections', label: 'Deflections', category: 'universal', color: '#0d9488' },
+    { key: 'gains', label: 'Gains', category: 'universal', color: '#10b981' },
+    { key: 'receives', label: 'Receives', category: 'universal', color: '#2563eb' },
+    { key: 'turnovers', label: 'Turnovers', category: 'universal', color: '#ef4444' },
+    { key: 'penalties', label: 'Penalties', category: 'universal', color: '#ea580c' }
   ],
 
   // Legacy stats (kept for backward compatibility)
   legacy: [
-    { key: 'badPass', label: 'Bad Pass', category: 'legacy' },
-    { key: 'handlingError', label: 'Handling Error', category: 'legacy' },
-    { key: 'pickUp', label: 'Pick Up', category: 'legacy' },
-    { key: 'infringement', label: 'Infringement', category: 'legacy' }
+    { key: 'badPass', label: 'Bad Pass', category: 'legacy', color: '#f59e0b' },
+    { key: 'handlingError', label: 'Handling Error', category: 'legacy', color: '#ec4899' },
+    { key: 'pickUp', label: 'Pick Up', category: 'legacy', color: '#8b5cf6' },
+    { key: 'infringement', label: 'Infringement', category: 'legacy', color: '#f43f5e' }
   ]
 } as const;
 
