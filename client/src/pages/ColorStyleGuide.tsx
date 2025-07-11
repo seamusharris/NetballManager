@@ -146,11 +146,17 @@ export default function ColorStyleGuide() {
           {positions.map(position => (
             <div key={position.code} className="p-4 border rounded-lg">
               <div className="flex items-center gap-3 mb-3">
-                <div 
-                  className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center font-bold position-button-white-text"
-                  style={{ backgroundColor: position.color }}
-                >
-                  {position.code}
+                <div className="relative">
+                  <div 
+                    className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-white relative overflow-hidden"
+                    style={{ backgroundColor: position.color }}
+                  >
+                    <div 
+                      className="absolute inset-1 rounded-md border-2 border-white/30"
+                      style={{ borderColor: `${position.color}40` }}
+                    />
+                    <span className="relative z-10 text-white font-bold">{position.code}</span>
+                  </div>
                 </div>
                 <div>
                   <div className="font-medium">{position.name}</div>
