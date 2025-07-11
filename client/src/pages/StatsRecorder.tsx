@@ -805,7 +805,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                       {[1, 2, 3, 4].map(quarter => (
                         <Button
                           key={quarter}
-                          variant={quarter === currentQuarter ? "default" : `"outline"}
+                          variant={quarter === currentQuarter ? "default" : "outline"}
                           size="sm"
                           onClick={() => setCurrentQuarter(quarter)}
                           className="h-8 touch-manipulation"
