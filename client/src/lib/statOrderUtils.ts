@@ -127,7 +127,7 @@ export const STAT_CONFIG = {
   },
   goalsAgainst: { 
     key: 'goalsAgainst', 
-    label: 'Goal Against', 
+    label: 'Against', 
     icon: Shield, 
     color: 'bg-red-100 hover:bg-red-200 border-red-300',
     category: 'defending'

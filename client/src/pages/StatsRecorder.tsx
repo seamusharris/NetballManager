@@ -109,6 +109,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+  const [quarterLength, setQuarterLength] = useState<number>(15); // minutes
 
   // Determine team context - use the teamId from URL params or current team
   const currentTeamId = teamId || currentTeam?.id;
@@ -143,10 +144,12 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   };
 
   const formatElapsedTime = (): string => {
-    if (!gameStartTime) return '00:00';
+    if (!gameStartTime) return `${quarterLength.toString().padStart(2, '0')}:00`;
     const elapsed = Math.floor((currentTime.getTime() - gameStartTime.getTime()) / 1000);
-    const minutes = Math.floor(elapsed / 60);
-    const seconds = elapsed % 60;
+    const totalQuarterSeconds = quarterLength * 60;
+    const remaining = Math.max(0, totalQuarterSeconds - elapsed);
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
@@ -602,7 +605,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     // Map stats to their labels (singular form)
     const statLabelMap = {
       'goalsFor': 'Goal',
-      'goalsAgainst': 'Goal Against',
+      'goalsAgainst': 'Against',
       'missedGoals': 'Miss',
       'rebounds': 'Rebound',
       'intercepts': 'Intercept',
@@ -760,6 +763,22 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             <div className="text-center space-y-3">
               <div className="text-sm font-semibold">Game Time</div>
               <div className="text-3xl font-mono font-bold">{formatElapsedTime()}</div>
+              
+              {/* Quarter Length Dropdown */}
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">Quarter Length</div>
+                <select 
+                  value={quarterLength}
+                  onChange={(e) => setQuarterLength(parseInt(e.target.value))}
+                  className="w-full h-7 px-2 text-xs border border-gray-300 rounded touch-manipulation"
+                >
+                  <option value="15">15 minutes</option>
+                  <option value="12">12 minutes</option>
+                  <option value="10">10 minutes</option>
+                  <option value="8">8 minutes</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-3 gap-1">
                 <Button
                   variant="outline" 
@@ -812,8 +831,16 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                 </div>
               </div>
               <div className="border-t pt-2">
-                <p className="text-xs text-muted-foreground mb-1">Quarter {currentQuarter}</p>
-                <p className="text-xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
+                <div className="text-sm font-semibold">Quarter {currentQuarter} Score</div>
+                <div className="grid grid-cols-3 gap-2 items-center">
+                  <div>
+                    <p className="text-xl font-bold">{getQuarterTotal('goalsFor')}</p>
+                  </div>
+                  <div className="text-lg font-bold">-</div>
+                  <div>
+                    <p className="text-xl font-bold">{getQuarterTotal('goalsAgainst')}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -839,17 +866,6 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                     </Button>
                   ))}
                 </div>
-              </div>
-
-              {/* Quarter Length Dropdown */}
-              <div className="text-center">
-                <div className="text-sm font-semibold mb-2">Quarter Length</div>
-                <select className="w-full h-8 px-2 text-sm border border-gray-300 rounded touch-manipulation">
-                  <option value="15">15 minutes</option>
-                  <option value="12">12 minutes</option>
-                  <option value="10">10 minutes</option>
-                  <option value="8">8 minutes</option>
-                </select>
               </div>
 
               {/* Action Controls */}
@@ -912,7 +928,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           return (
             <Card key={position} className="overflow-hidden">
               <CardHeader className="py-2 pb-2">
-                <div className={`flex items-center gap-3 ${isMidcourt ? 'justify-center' : ''}`}>
+                <div className={`flex items-center gap-3 ${isMidcourt ? 'justify-center' : 'justify-start'}`}>
                   {/* Position Identity */}
                   <div 
                     className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
