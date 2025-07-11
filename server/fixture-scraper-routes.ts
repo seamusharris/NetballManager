@@ -20,9 +20,19 @@ router.post('/api/fixtures/preview', async (req, res) => {
     res.json({ fixtures, count: fixtures.length });
   } catch (error) {
     console.error('Error previewing fixtures:', error);
+    
+    let errorMessage = 'Failed to scrape fixtures';
+    let details = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Check for common browser launch issues
+    if (details.includes('Failed to launch the browser process')) {
+      errorMessage = 'Browser launch failed - missing system dependencies';
+      details = 'The web scraper requires Chrome to be properly installed. This may be a system configuration issue.';
+    }
+    
     res.status(500).json({ 
-      error: 'Failed to scrape fixtures',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: errorMessage,
+      details: details
     });
   } finally {
     await scraper.close();
