@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useNextGame } from '@/hooks/use-next-game';
 import { 
   Building2, Home, Users, Calendar, ClipboardList, Trophy, 
-  CalendarRange, Settings as SettingsIcon, Zap, Target, Download 
+  CalendarRange, Settings as SettingsIcon, Zap, Target, Download, X 
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
