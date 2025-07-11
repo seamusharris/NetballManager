@@ -298,10 +298,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             missedGoals: 'missedGoals',
             rebounds: 'rebounds',
             intercepts: 'intercepts',
-            deflections: 'badPass', // Database uses badPass
-            turnovers: 'handlingError', // Database uses handlingError
-            gains: 'pickUp', // Database uses pickUp
-            receives: 'infringement', // Database uses infringement
+            deflections: 'deflections', // Database now uses deflections
+            turnovers: 'turnovers', // Database now uses turnovers
+            gains: 'gains', // Database now uses gains
+            receives: 'receives', // Database now uses receives
             penalties: 'penalties'
           };
 
@@ -492,10 +492,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             missedGoals: stats.missedGoals || 0,
             rebounds: stats.rebounds || 0,
             intercepts: stats.intercepts || 0,
-            badPass: stats.deflections || 0, // Map to database field
-            handlingError: stats.turnovers || 0, // Map to database field
-            pickUp: stats.gains || 0, // Map to database field
-            infringement: stats.receives || 0, // Map to database field
+            deflections: stats.deflections || 0, // Database now uses deflections
+            turnovers: stats.turnovers || 0, // Database now uses turnovers
+            gains: stats.gains || 0, // Database now uses gains
+            receives: stats.receives || 0, // Database now uses receives
             penalties: stats.penalties || 0,
             rating: stats.rating
           });
@@ -513,10 +513,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               missedGoals: stats.missedGoals || 0,
               rebounds: stats.rebounds || 0,
               intercepts: stats.intercepts || 0,
-              badPass: stats.deflections || 0, // Map to database field
-              handlingError: stats.turnovers || 0, // Map to database field
-              pickUp: stats.gains || 0, // Map to database field
-              infringement: stats.receives || 0, // Map to database field
+              deflections: stats.deflections || 0, // Database now uses deflections
+              turnovers: stats.turnovers || 0, // Database now uses turnovers
+              gains: stats.gains || 0, // Database now uses gains
+              receives: stats.receives || 0, // Database now uses receives
               penalties: stats.penalties || 0,
               rating: stats.rating
             });
