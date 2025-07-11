@@ -1242,6 +1242,74 @@ export default function ChartExamples() {
           </Card>
         </section>
 
+        {/* Flourish Charts */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Flourish Interactive Charts</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Sample Flourish Bar Race */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart className="h-5 w-5" />
+                  <span>Team Performance Race</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flourish-embed flourish-bar-chart-race" data-src="visualisation/example123">
+                  <iframe 
+                    src="https://flo.uri.sh/visualisation/example123/embed"
+                    title="Team Performance Over Season"
+                    className="w-full border-0"
+                    style={{ height: "400px" }}
+                    frameBorder="0"
+                    scrolling="no"
+                  />
+                </div>
+                <div className="mt-4 text-sm text-gray-600">
+                  Interactive bar chart race showing team rankings over time
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sample Flourish Network */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="h-5 w-5" />
+                  <span>Player Connections</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flourish-embed flourish-network" data-src="visualisation/example456">
+                  <iframe 
+                    src="https://flo.uri.sh/visualisation/example456/embed"
+                    title="Player Pass Network"
+                    className="w-full border-0"
+                    style={{ height: "400px" }}
+                    frameBorder="0"
+                    scrolling="no"
+                  />
+                </div>
+                <div className="mt-4 text-sm text-gray-600">
+                  Network visualization showing passing connections between players
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-semibold mb-2">Flourish Chart Benefits</h4>
+            <ul className="text-sm space-y-1 text-gray-700">
+              <li>• Interactive hover effects and animations</li>
+              <li>• Built-in responsive design</li>
+              <li>• Easy data updates via API</li>
+              <li>• Professional sports visualization templates</li>
+              <li>• Export capabilities (PNG, SVG, GIF)</li>
+            </ul>
+          </div>
+        </section>
+
         {/* Small Metric Displays */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Compact Metric Displays</h2>
