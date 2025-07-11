@@ -163,12 +163,13 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     }
   }, [quarterLength, isTimerRunning]);
 
-  // Reset timer when quarter changes
+  // Only reset timer when quarter length changes and timer is not running
+  // Quarter changes should not automatically reset the timer
   useEffect(() => {
-    setQuarterStartTime(null);
-    setTimeRemaining(quarterLength * 60);
-    setIsTimerRunning(false);
-  }, [currentQuarter, quarterLength]);
+    if (!isTimerRunning) {
+      setTimeRemaining(quarterLength * 60);
+    }
+  }, [quarterLength, isTimerRunning]);
 
   const formatTimeRemaining = (): string => {
     const minutes = Math.floor(timeRemaining / 60);
