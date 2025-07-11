@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { NetballConnectScraper } from './fixture-scraper';
+import { NetballConnectScraper } from './fixture-scraper-simple.js';
 
 const router = Router();
 
