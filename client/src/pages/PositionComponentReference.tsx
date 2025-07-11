@@ -33,17 +33,14 @@ export default function PositionComponentReference() {
     };
 
     return (
-      <div className="relative">
-        <div 
-          className={`${sizeClasses[size]} rounded-lg flex items-center justify-center font-bold text-white relative overflow-hidden`}
-          style={{ backgroundColor: position.color }}
-        >
-          <div 
-            className="absolute inset-1 rounded-md border-2 border-white/30"
-            style={{ borderColor: `${position.color}40` }}
-          />
-          <span className="relative z-10 text-white font-bold">{position.code}</span>
-        </div>
+      <div 
+        className={`${sizeClasses[size]} rounded-lg flex items-center justify-center font-bold text-white border border-white`}
+        style={{ 
+          backgroundColor: position.color,
+          boxShadow: `0 0 0 1px ${position.color}`
+        }}
+      >
+        <span className="text-white font-bold">{position.code}</span>
       </div>
     );
   };
