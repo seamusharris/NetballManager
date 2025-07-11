@@ -784,6 +784,15 @@ button.touch-manipulation .absolute[class*="rounded-full"] {
   z-index: 20 !important;
 }
 
+/* Position button white text override */
+.position-button-white-text {
+  color: white !important;
+}
+
+.position-button-white-text span {
+  color: white !important;
+}
+
 /* Enhanced tooltips */
 [title] {
   position: relative;
