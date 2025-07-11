@@ -15,7 +15,7 @@ import {
   Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
   RefreshCw, Users, Coffee, Clock, Timer
 } from 'lucide-react';
-import { STAT_COLORS, STAT_ICONS } from '@/lib/constants';
+import { STAT_LABELS, STAT_COLORS, POSITIONS, getAllOrderedStats, STAT_ICONS } from '@/lib/constants';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -650,12 +650,12 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         clearTimeout(longPressTimer);
         setLongPressTimer(null);
       }
-      
+
       // If long press wasn't triggered, this is a normal tap to increment
       if (!longPressTriggered) {
         recordStat(position, stat, 1);
       }
-      
+
       // Reset for next press cycle
       setLongPressTriggered(false);
     };
@@ -774,7 +774,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             <div className="text-center space-y-3">
               <div className="text-sm font-semibold">Game Time</div>
               <div className="text-3xl font-mono font-bold">{formatTimeRemaining()}</div>
-              
+
               {/* Quarter Length Dropdown */}
               <div className="text-center">
                 <div className="text-xs text-muted-foreground mb-1">Quarter Length</div>
@@ -933,7 +933,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           const assignedPlayerId = currentPositions[position];
           const assignedPlayer = players?.find(p => p.id === assignedPlayerId);
           const { common, specific } = getRelevantStatsForPosition(position);
-          
+
           // Check if this is a midcourt position for center alignment
           const isMidcourt = ['WA', 'C', 'WD'].includes(position);
 
