@@ -1221,6 +1221,60 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
                 
+                {/* Example Chart: Team vs Team Comparison */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Head-to-Head Comparison (Complementary Split)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Grid lines */}
+                      {[0, 10, 20, 30, 40].map(y => (
+                        <line key={y} x1="50" y1={180 - (y * 4)} x2="450" y2={180 - (y * 4)} 
+                              stroke="#e5e7eb" strokeWidth="1" />
+                      ))}
+                      
+                      {/* Team comparison data */}
+                      {[
+                        { metric: 'Goals', ourTeam: 35, opponent: 28, color1: '#2563eb', color2: '#ea580c' },
+                        { metric: 'Intercepts', ourTeam: 18, opponent: 22, color1: '#0891b2', color2: '#dc2626' },
+                        { metric: 'Turnovers', ourTeam: 12, opponent: 15, color1: '#7c3aed', color2: '#7c3aed' }
+                      ].map((data, i) => (
+                        <g key={data.metric}>
+                          {/* Our team bar */}
+                          <rect
+                            x={80 + (i * 120)}
+                            y={180 - (data.ourTeam * 4)}
+                            width="40"
+                            height={data.ourTeam * 4}
+                            fill={data.color1}
+                            rx="3"
+                          />
+                          {/* Opponent bar */}
+                          <rect
+                            x={130 + (i * 120)}
+                            y={180 - (data.opponent * 4)}
+                            width="40"
+                            height={data.opponent * 4}
+                            fill={data.color2}
+                            rx="3"
+                          />
+                          {/* Metric label */}
+                          <text x={125 + (i * 120)} y="195" fontSize="12" fill="#6b7280" textAnchor="middle">
+                            {data.metric}
+                          </text>
+                        </g>
+                      ))}
+                      
+                      {/* Legend */}
+                      <g>
+                        <rect x="50" y="20" width="15" height="15" fill="#2563eb" rx="2" />
+                        <text x="70" y="30" fontSize="12" fill="#374151">Our Team</text>
+                        <rect x="150" y="20" width="15" height="15" fill="#ea580c" rx="2" />
+                        <text x="170" y="30" fontSize="12" fill="#374151">Opponent</text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+                
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> High-impact dashboards, competitive analysis, data that needs maximum visual separation.
                 </div>
@@ -1274,6 +1328,43 @@ export default function ColorStyleGuide() {
                       <div className="text-xs font-medium">C{index + 1}</div>
                     </div>
                   ))}
+                </div>
+                
+                {/* Example Chart: Performance Alerts Dashboard */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Performance Alert Dashboard (Triadic)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-3 gap-4 h-full">
+                      {[
+                        { title: 'Critical Issues', count: 3, color: '#dc2626', items: ['Goal Accuracy', 'Turnovers', 'Penalties'] },
+                        { title: 'Stable Metrics', count: 8, color: '#2563eb', items: ['Intercepts', 'Passes', 'Court Coverage'] },
+                        { title: 'Watch Areas', count: 2, color: '#ca8a04', items: ['Fatigue Levels', 'Position Rotation'] }
+                      ].map((section, i) => (
+                        <div key={section.title} className="flex flex-col">
+                          <div className="text-center mb-2">
+                            <div 
+                              className="w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold text-xl"
+                              style={{ backgroundColor: section.color }}
+                            >
+                              {section.count}
+                            </div>
+                            <div className="text-sm font-medium">{section.title}</div>
+                          </div>
+                          <div className="space-y-1 flex-1">
+                            {section.items.map((item, itemIndex) => (
+                              <div 
+                                key={item} 
+                                className="text-xs p-2 rounded text-white text-center"
+                                style={{ backgroundColor: section.color, opacity: 0.8 - (itemIndex * 0.2) }}
+                              >
+                                {item}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
@@ -1331,6 +1422,104 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
                 
+                {/* Example Chart: Progressive Performance Metrics */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Progressive Performance Metrics (Monochromatic)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Grid lines */}
+                      {[0, 20, 40, 60, 80, 100].map(y => (
+                        <line key={y} x1="50" y1={180 - (y * 1.3)} x2="450" y2={180 - (y * 1.3)} 
+                              stroke="#e5e7eb" strokeWidth="1" />
+                      ))}
+                      
+                      {/* Stacked area chart */}
+                      {[
+                        { label: 'Foundation', values: [20, 22, 25, 28, 30, 32, 35], color: '#1e3a8a' },
+                        { label: 'Standard', values: [15, 18, 20, 22, 25, 28, 30], color: '#3b82f6' },
+                        { label: 'Advanced', values: [10, 12, 15, 18, 20, 22, 25], color: '#0ea5e9' },
+                        { label: 'Elite', values: [5, 8, 10, 12, 15, 18, 20], color: '#06b6d4' }
+                      ].map((series, seriesIndex) => {
+                        let cumulativeValues = new Array(7).fill(0);
+                        
+                        // Calculate cumulative values for stacking
+                        for (let i = 0; i <= seriesIndex; i++) {
+                          const prevSeries = [
+                            { values: [20, 22, 25, 28, 30, 32, 35] },
+                            { values: [15, 18, 20, 22, 25, 28, 30] },
+                            { values: [10, 12, 15, 18, 20, 22, 25] },
+                            { values: [5, 8, 10, 12, 15, 18, 20] }
+                          ][i];
+                          
+                          for (let j = 0; j < 7; j++) {
+                            cumulativeValues[j] += prevSeries.values[j];
+                          }
+                        }
+                        
+                        // Create path for area
+                        const points = cumulativeValues.map((value, i) => {
+                          const x = 80 + (i * 55);
+                          const y = 180 - (value * 1.3);
+                          return `${x},${y}`;
+                        });
+                        
+                        const prevCumulativeValues = new Array(7).fill(0);
+                        if (seriesIndex > 0) {
+                          for (let i = 0; i < seriesIndex; i++) {
+                            const prevSeries = [
+                              { values: [20, 22, 25, 28, 30, 32, 35] },
+                              { values: [15, 18, 20, 22, 25, 28, 30] },
+                              { values: [10, 12, 15, 18, 20, 22, 25] },
+                              { values: [5, 8, 10, 12, 15, 18, 20] }
+                            ][i];
+                            
+                            for (let j = 0; j < 7; j++) {
+                              prevCumulativeValues[j] += prevSeries.values[j];
+                            }
+                          }
+                        }
+                        
+                        const bottomPoints = prevCumulativeValues.map((value, i) => {
+                          const x = 80 + (i * 55);
+                          const y = 180 - (value * 1.3);
+                          return `${x},${y}`;
+                        }).reverse();
+                        
+                        return (
+                          <polygon
+                            key={series.label}
+                            points={points.join(' ') + ' ' + bottomPoints.join(' ')}
+                            fill={series.color}
+                            fillOpacity="0.7"
+                          />
+                        );
+                      })}
+                      
+                      {/* X-axis labels */}
+                      {['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7'].map((quarter, i) => (
+                        <text key={quarter} x={80 + (i * 55)} y="195" fontSize="10" fill="#6b7280" textAnchor="middle">
+                          {quarter}
+                        </text>
+                      ))}
+                      
+                      {/* Legend */}
+                      <g>
+                        {[
+                          { label: 'Foundation', color: '#1e3a8a' },
+                          { label: 'Standard', color: '#3b82f6' },
+                          { label: 'Advanced', color: '#0ea5e9' },
+                          { label: 'Elite', color: '#06b6d4' }
+                        ].map((item, i) => (
+                          <g key={item.label}>
+                            <rect x={50 + (i * 80)} y="15" width="12" height="12" fill={item.color} rx="2" />
+                            <text x={65 + (i * 80)} y="24" fontSize="10" fill="#374151">{item.label}</text>
+                          </g>
+                        ))}
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+                
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Corporate presentations, professional reports, data requiring subtle differentiation.
                 </div>
@@ -1384,6 +1573,83 @@ export default function ColorStyleGuide() {
                       <div className="text-xs font-medium">C{index + 1}</div>
                     </div>
                   ))}
+                </div>
+                
+                {/* Example Chart: Energy and Activity Tracker */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example: Team Energy & Activity Levels (Analogous Warm)</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Background gradient */}
+                      <defs>
+                        <linearGradient id="warmGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#dc143c" stopOpacity="0.1" />
+                          <stop offset="25%" stopColor="#ff6b35" stopOpacity="0.1" />
+                          <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.1" />
+                          <stop offset="75%" stopColor="#d97706" stopOpacity="0.1" />
+                          <stop offset="100%" stopColor="#ff7f7f" stopOpacity="0.1" />
+                        </linearGradient>
+                      </defs>
+                      <rect x="50" y="20" width="400" height="160" fill="url(#warmGradient)" />
+                      
+                      {/* Activity intensity bars */}
+                      {[
+                        { time: '10m', intensity: 85, alerts: 2, color: '#dc143c' },
+                        { time: '20m', intensity: 90, alerts: 1, color: '#ff6b35' },
+                        { time: '30m', intensity: 75, alerts: 0, color: '#f59e0b' },
+                        { time: '40m', intensity: 95, alerts: 3, color: '#dc143c' },
+                        { time: '50m', intensity: 80, alerts: 1, color: '#d97706' },
+                        { time: '60m', intensity: 70, alerts: 0, color: '#ff7f7f' }
+                      ].map((data, i) => (
+                        <g key={data.time}>
+                          {/* Intensity bar */}
+                          <rect
+                            x={80 + (i * 60)}
+                            y={180 - (data.intensity * 1.5)}
+                            width="35"
+                            height={data.intensity * 1.5}
+                            fill={data.color}
+                            rx="3"
+                          />
+                          
+                          {/* Alert indicators */}
+                          {Array.from({ length: data.alerts }).map((_, alertIndex) => (
+                            <circle
+                              key={alertIndex}
+                              cx={97.5 + (i * 60)}
+                              cy={25 + (alertIndex * 15)}
+                              r="4"
+                              fill={data.color}
+                            />
+                          ))}
+                          
+                          {/* Time label */}
+                          <text x={97.5 + (i * 60)} y="195" fontSize="10" fill="#6b7280" textAnchor="middle">
+                            {data.time}
+                          </text>
+                          
+                          {/* Intensity value */}
+                          <text 
+                            x={97.5 + (i * 60)} 
+                            y={175 - (data.intensity * 1.5)} 
+                            fontSize="10" 
+                            fill="white" 
+                            textAnchor="middle"
+                            fontWeight="bold"
+                          >
+                            {data.intensity}%
+                          </text>
+                        </g>
+                      ))}
+                      
+                      {/* Legend */}
+                      <g>
+                        <text x="60" y="15" fontSize="11" fill="#374151" fontWeight="bold">Activity Intensity</text>
+                        <circle cx="300" cy="15" r="4" fill="#dc143c" />
+                        <text x="310" y="18" fontSize="10" fill="#374151">Alert</text>
+                      </g>
+                    </svg>
+                  </div>
                 </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
