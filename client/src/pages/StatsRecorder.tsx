@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
@@ -55,11 +55,16 @@ interface PositionStats {
 // Interface for tracking undo/redo history
 type HistoryRecord = PositionStats;
 
-export default function StatsRecorder() {
+interface StatsRecorderProps {
+  gameId?: number;
+  teamId?: number;
+}
+
+export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }: StatsRecorderProps = {}) {
   // Route params - NEW: Extract both gameId and teamId from URL
   const { gameId: gameIdParam, teamId: teamIdParam } = useParams<{ gameId: string; teamId: string }>();
-  const gameId = parseInt(gameIdParam);
-  const teamId = parseInt(teamIdParam);
+  const gameId = propGameId || parseInt(gameIdParam || '0', 10);
+  const teamId = propTeamId || parseInt(teamIdParam || '0', 10);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -74,7 +79,7 @@ export default function StatsRecorder() {
     console.log(`  - Stats fetch: /api/game/${gameId}/team/${teamId}/stats`);
     console.log(`  - Stats save: /api/game/${gameId}/team/${teamId}/stats`);
     console.log(`  - Rosters: /api/game/${gameId}/team/${teamId}/rosters`);
-    
+
     if (!gameId || !teamId || isNaN(gameId) || isNaN(teamId)) {
       console.error('StatsRecorder: Invalid game ID or team ID parameters');
     }
@@ -128,7 +133,7 @@ export default function StatsRecorder() {
   useEffect(() => {
     if (existingStats.length > 0) {
       const initialStats: PositionStats = {};
-      
+
       existingStats.forEach(stat => {
         if (!initialStats[stat.position]) {
           initialStats[stat.position] = {};
@@ -136,7 +141,7 @@ export default function StatsRecorder() {
         if (!initialStats[stat.position][stat.quarter]) {
           initialStats[stat.position][stat.quarter] = { ...emptyPositionStats };
         }
-        
+
         // Map stat fields to our interface
         initialStats[stat.position][stat.quarter] = {
           goalsFor: stat.goalsFor || 0,
@@ -150,7 +155,7 @@ export default function StatsRecorder() {
           infringement: stat.infringement || 0
         };
       });
-      
+
       setStats(initialStats);
     }
   }, [existingStats]);
@@ -160,19 +165,19 @@ export default function StatsRecorder() {
     mutationFn: async (statsData: PositionStats) => {
       console.log('StatsRecorder: Starting save operation with NEW game-centric API');
       console.log(`StatsRecorder: Using NEW endpoint /api/game/${gameId}/team/${teamId}/stats`);
-      
+
       const statsArray = [];
-      
+
       // Convert PositionStats to GameStat array
       for (const position of Object.keys(statsData)) {
         for (const quarter of Object.keys(statsData[position])) {
           const quarterStats = statsData[position][quarter];
-          
+
           // Check if this stat entry already exists
           const existingStat = existingStats.find(s => 
             s.position === position && s.quarter === parseInt(quarter)
           );
-          
+
           statsArray.push({
             id: existingStat?.id,
             gameId,
@@ -192,36 +197,36 @@ export default function StatsRecorder() {
           });
         }
       }
-      
+
       console.log(`StatsRecorder: Saving ${statsArray.length} stats via NEW game-centric endpoint`);
       console.log('StatsRecorder: This will use POST /api/game/' + gameId + '/team/' + teamId + '/stats');
-      
+
       // Use the NEW game-centric endpoint with team context
       const response = await apiClient.post(`/api/game/${gameId}/team/${teamId}/stats`, { stats: statsArray });
-      
+
       console.log('StatsRecorder: Successfully saved stats via NEW game-centric API');
       return response;
     },
     onSuccess: (data) => {
       console.log('StatsRecorder: Save successful, invalidating caches...');
-      
+
       // Comprehensive cache invalidation for both old and new patterns
       const cacheInvalidationPromises = [
         // Primary game-centric cache key
         queryClient.invalidateQueries({ 
           queryKey: ['/api/game', gameId, 'team', teamId, 'stats'] 
         }),
-        
+
         // Legacy cache keys for backward compatibility
         queryClient.invalidateQueries({ 
           queryKey: ['/api/games', gameId, 'stats'] 
         }),
-        
+
         // Game data itself may need updating
         queryClient.invalidateQueries({ 
           queryKey: ['/api/game', gameId, 'team', teamId] 
         }),
-        
+
         // Dashboard and summary queries
         queryClient.invalidateQueries({ 
           predicate: (query) => {
@@ -231,7 +236,7 @@ export default function StatsRecorder() {
                    (key?.includes('game') && key?.includes(gameId.toString()));
           }
         }),
-        
+
         // Batch stats queries that might include this game
         queryClient.invalidateQueries({
           predicate: (query) => {
@@ -240,14 +245,14 @@ export default function StatsRecorder() {
           }
         })
       ];
-      
+
       // Execute all cache invalidations
       Promise.all(cacheInvalidationPromises).then(() => {
         console.log('StatsRecorder: All cache invalidations completed');
       }).catch((err) => {
         console.warn('StatsRecorder: Some cache invalidations failed:', err);
       });
-      
+
       toast({
         title: "Stats Saved",
         description: "Game statistics have been saved successfully using the new API.",
@@ -255,7 +260,7 @@ export default function StatsRecorder() {
     },
     onError: (error) => {
       console.error('StatsRecorder: Error saving stats via game-centric API:', error);
-      
+
       toast({
         title: "Save Failed",
         description: "Failed to save statistics. Please try again.",
@@ -271,14 +276,14 @@ export default function StatsRecorder() {
 
   const updatePositionStat = (position: Position, quarter: number, statType: StatType, delta: number) => {
     if (saveInProgress) return;
-    
+
     const currentValue = getPositionStats(position, quarter)[statType];
     const newValue = Math.max(0, currentValue + delta);
-    
+
     // Save current state for undo
     setUndoStack(prev => [...prev, { ...stats }]);
     setRedoStack([]); // Clear redo stack when making new changes
-    
+
     setStats(prev => ({
       ...prev,
       [position]: {
@@ -300,7 +305,7 @@ export default function StatsRecorder() {
 
   const handleUndo = () => {
     if (undoStack.length === 0) return;
-    
+
     const previousState = undoStack[undoStack.length - 1];
     setRedoStack(prev => [stats, ...prev]);
     setStats(previousState);
@@ -309,7 +314,7 @@ export default function StatsRecorder() {
 
   const handleRedo = () => {
     if (redoStack.length === 0) return;
-    
+
     const nextState = redoStack[0];
     setUndoStack(prev => [...prev, stats]);
     setStats(nextState);
@@ -368,7 +373,7 @@ export default function StatsRecorder() {
             {teamName} vs {opponentName || 'BYE'} - Round {game.round}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
@@ -395,7 +400,7 @@ export default function StatsRecorder() {
       </div>
 
       {/* Quarter Selection */}
-      <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+      <Tabs value={currentQuarter.toString()} onValueChange={(value) => startTransition(() => setCurrentQuarter(parseInt(value)))}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="1">Quarter 1</TabsTrigger>
           <TabsTrigger value="2">Quarter 2</TabsTrigger>
@@ -410,7 +415,7 @@ export default function StatsRecorder() {
               {allPositions.map(position => {
                 const positionStats = getPositionStats(position, quarter);
                 const specificStats = positionSpecificStats[position];
-                
+
                 return (
                   <Card key={position} className="bg-card">
                     <CardHeader className="pb-3">
@@ -446,7 +451,7 @@ export default function StatsRecorder() {
                           </div>
                         </div>
                       ))}
-                      
+
                       {/* Position-specific stats */}
                       {specificStats.length > 0 && (
                         <>

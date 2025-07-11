@@ -30,8 +30,9 @@ import { apiClient } from '@/lib/apiClient';
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
 
-// Lazy load components
+// Lazy load components with startTransition wrapper
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
+const StatsRecorder = lazy(() => import("./pages/StatsRecorder"));
 import OpponentPreparation from '@/pages/OpponentPreparation';
 import GameResultExamples from '@/pages/GameResultExamples';
 import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
@@ -155,7 +156,15 @@ function Router() {
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
         <Route path="/game/:id/details" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
-        <Route path="/game/:gameId/team/:teamId/stats/record" component={lazy(() => import('./pages/StatsRecorder'))} />
+        <Route path="/game/:gameId/team/:teamId/stats/record">
+          {(params) => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading stats recorder..." />}>
+                <StatsRecorder gameId={parseInt(params.gameId, 10)} teamId={parseInt(params.teamId, 10)} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
         <Route path="/game/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/livestats-legacy" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/stats-debug">
