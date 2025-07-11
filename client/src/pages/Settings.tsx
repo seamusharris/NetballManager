@@ -47,6 +47,7 @@ import {
 import { exportAllData, importData } from "@/lib/dataExportImport";
 import { createFlourishExporter, downloadCSV } from '@/lib/flourishDataExporter';
 import { queryClient } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { GameStatusManager } from "@/components/settings/GameStatusManager";
 import { useClub } from '@/contexts/ClubContext';
 
@@ -344,11 +345,7 @@ export default function Settings() {
 
     try {
       setIsExporting(true);
-      const playersResponse = await fetch(`/api/clubs/${currentClubId}/players`);
-      if (!playersResponse.ok) {
-        throw new Error('Failed to fetch players');
-      }
-      const players = await playersResponse.json();
+      const players = await apiClient.get(`/api/clubs/${currentClubId}/players`);
 
       const csvContent = [
         ['Name', 'First Name', 'Last Name', 'Display Name', 'Avatar Color', 'Active'],
@@ -391,36 +388,14 @@ export default function Settings() {
       throw new Error('No club or team selected');
     }
 
-    // Fetch all required data
-    const [gamesResponse, playersResponse, statsResponse, scoresResponse, rostersResponse] = await Promise.all([
-      fetch(`/api/teams/${currentTeamId}/games`),
-      fetch(`/api/clubs/${currentClubId}/players`),
-      fetch(`/api/clubs/${currentClubId}/games/stats/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameIds: [] }) // Will be populated by server
-      }),
-      fetch(`/api/clubs/${currentClubId}/games/scores/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameIds: [] }) // Will be populated by server
-      }),
-      fetch(`/api/clubs/${currentClubId}/games/rosters/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameIds: [] }) // Will be populated by server
-      })
+    // Fetch all required data using apiClient
+    const [games, players, stats, scores, rosters] = await Promise.all([
+      apiClient.get(`/api/teams/${currentTeamId}/games`),
+      apiClient.get(`/api/clubs/${currentClubId}/players`),
+      apiClient.post(`/api/clubs/${currentClubId}/games/stats/batch`, { gameIds: [] }),
+      apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds: [] }),
+      apiClient.post(`/api/clubs/${currentClubId}/games/rosters/batch`, { gameIds: [] })
     ]);
-
-    if (!gamesResponse.ok || !playersResponse.ok || !statsResponse.ok || !scoresResponse.ok || !rostersResponse.ok) {
-      throw new Error('Failed to fetch data');
-    }
-
-    const games = await gamesResponse.json();
-    const players = await playersResponse.json();
-    const stats = await statsResponse.json();
-    const scores = await scoresResponse.json();
-    const rosters = await rostersResponse.json();
 
     return { games, players, stats, scores, rosters };
   };

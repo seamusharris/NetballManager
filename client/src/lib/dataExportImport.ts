@@ -1,5 +1,6 @@
 import { Player, Opponent, Game, Roster, GameStat } from '@shared/schema';
 import { apiRequest } from './queryClient';
+import { apiClient } from './apiClient';
 import { formatDate } from './utils';
 
 interface ExportResult {
@@ -41,44 +42,17 @@ export async function exportAllData(): Promise<ExportResult> {
 
     // Fetch all clubs
     console.log("Fetching clubs...");
-    const clubsResponse = await fetch('/api/user/clubs', {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!clubsResponse.ok) {
-      const errorText = await clubsResponse.text();
-      throw new Error(`Failed to fetch clubs (${clubsResponse.status}): ${errorText}`);
-    }
-    const clubs = await clubsResponse.json();
+    const clubs = await apiClient.get('/api/user/clubs');
     console.log(`Exported ${clubs.length} clubs`);
 
     // Fetch all seasons
     console.log("Fetching seasons...");
-    const seasonsResponse = await fetch('/api/seasons', {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!seasonsResponse.ok) {
-      const errorText = await seasonsResponse.text();
-      throw new Error(`Failed to fetch seasons (${seasonsResponse.status}): ${errorText}`);
-    }
-    const seasons = await seasonsResponse.json();
+    const seasons = await apiClient.get('/api/seasons');
     console.log(`Exported ${seasons.length} seasons`);
 
     // Fetch all game statuses
     console.log("Fetching game statuses...");
-    const gameStatusesResponse = await fetch('/api/game-statuses', {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!gameStatusesResponse.ok) {
-      const errorText = await gameStatusesResponse.text();
-      throw new Error(`Failed to fetch game statuses (${gameStatusesResponse.status}): ${errorText}`);
-    }
-    const gameStatuses = await gameStatusesResponse.json();
+    const gameStatuses = await apiClient.get('/api/game-statuses');
     console.log(`Exported ${gameStatuses.length} game statuses`);
 
     // Fetch all teams for all clubs
@@ -86,12 +60,9 @@ export async function exportAllData(): Promise<ExportResult> {
     let allTeams: any[] = [];
     for (const club of clubs) {
       try {
-        const teamsResponse = await fetch(`/api/clubs/${club.clubId}/teams`);
-        if (teamsResponse.ok) {
-          const teams = await teamsResponse.json();
-          allTeams = [...allTeams, ...teams];
-          console.log(`Exported ${teams.length} teams for club ${club.clubName}`);
-        }
+        const teams = await apiClient.get(`/api/clubs/${club.clubId}/teams`);
+        allTeams = [...allTeams, ...teams];
+        console.log(`Exported ${teams.length} teams for club ${club.clubName}`);
       } catch (error) {
         console.warn(`Failed to fetch teams for club ${club.clubId}:`, error);
       }
@@ -99,20 +70,12 @@ export async function exportAllData(): Promise<ExportResult> {
 
     // Fetch all players
     console.log("Fetching players...");
-    const playersResponse = await fetch('/api/players');
-    if (!playersResponse.ok) {
-      throw new Error(`Failed to fetch players: ${playersResponse.statusText}`);
-    }
-    const players = await playersResponse.json() as Player[];
+    const players = await apiClient.get('/api/players') as Player[];
     console.log(`Exported ${players.length} players with their avatar colors`);
 
     // Fetch all opponents
     console.log("Fetching opponents...");
-    const opponentsResponse = await fetch('/api/opponents');
-    if (!opponentsResponse.ok) {
-      throw new Error(`Failed to fetch opponents: ${opponentsResponse.statusText}`);
-    }
-    const opponents = await opponentsResponse.json() as Opponent[];
+    const opponents = await apiClient.get('/api/opponents') as Opponent[];
     console.log(`Exported ${opponents.length} opponents`);
 
     // Fetch all games for all clubs
@@ -120,12 +83,9 @@ export async function exportAllData(): Promise<ExportResult> {
     let allGames: Game[] = [];
     for (const club of clubs) {
       try {
-        const gamesResponse = await fetch(`/api/clubs/${club.clubId}/games`);
-        if (gamesResponse.ok) {
-          const games = await gamesResponse.json() as Game[];
-          allGames = [...allGames, ...games];
-          console.log(`Exported ${games.length} games for club ${club.clubName}`);
-        }
+        const games = await apiClient.get(`/api/clubs/${club.clubId}/games`) as Game[];
+        allGames = [...allGames, ...games];
+        console.log(`Exported ${games.length} games for club ${club.clubName}`);
       } catch (error) {
         console.warn(`Failed to fetch games for club ${club.clubId}:`, error);
       }
@@ -140,36 +100,27 @@ export async function exportAllData(): Promise<ExportResult> {
     for (const game of allGames) {
       // Get rosters for this game
       try {
-        const rosterResponse = await fetch(`/api/games/${game.id}/rosters`);
-        if (rosterResponse.ok) {
-          const rosters = await rosterResponse.json() as Roster[];
-          allRosters = [...allRosters, ...rosters];
-          console.log(`Exported ${rosters.length} roster entries for game ${game.id}`);
-        }
+        const rosters = await apiClient.get(`/api/games/${game.id}/rosters`) as Roster[];
+        allRosters = [...allRosters, ...rosters];
+        console.log(`Exported ${rosters.length} roster entries for game ${game.id}`);
       } catch (error) {
         console.error(`Failed to fetch rosters for game ${game.id}:`, error);
       }
 
       // Get game stats for this game
       try {
-        const statsResponse = await fetch(`/api/games/${game.id}/stats`);
-        if (statsResponse.ok) {
-          const stats = await statsResponse.json() as GameStat[];
-          allGameStats = [...allGameStats, ...stats];
-          console.log(`Exported ${stats.length} stat entries for game ${game.id}`);
-        }
+        const stats = await apiClient.get(`/api/games/${game.id}/stats`) as GameStat[];
+        allGameStats = [...allGameStats, ...stats];
+        console.log(`Exported ${stats.length} stat entries for game ${game.id}`);
       } catch (error) {
         console.error(`Failed to fetch stats for game ${game.id}:`, error);
       }
 
       // Get game scores for this game
       try {
-        const scoresResponse = await fetch(`/api/games/${game.id}/scores`);
-        if (scoresResponse.ok) {
-          const scores = await scoresResponse.json();
-          allGameScores = [...allGameScores, ...scores];
-          console.log(`Exported ${scores.length} score entries for game ${game.id}`);
-        }
+        const scores = await apiClient.get(`/api/games/${game.id}/scores`);
+        allGameScores = [...allGameScores, ...scores];
+        console.log(`Exported ${scores.length} score entries for game ${game.id}`);
       } catch (error) {
         console.error(`Failed to fetch scores for game ${game.id}:`, error);
       }
@@ -184,21 +135,15 @@ export async function exportAllData(): Promise<ExportResult> {
     for (const club of clubs) {
       try {
         // Get club-player relationships
-        const clubPlayersResponse = await fetch(`/api/clubs/${club.clubId}/players`);
-        if (clubPlayersResponse.ok) {
-          const clubPlayers = await clubPlayersResponse.json();
-          allClubPlayers = [...allClubPlayers, ...clubPlayers.map((p: any) => ({ ...p, clubId: club.clubId }))];
-        }
+        const clubPlayers = await apiClient.get(`/api/clubs/${club.clubId}/players`);
+        allClubPlayers = [...allClubPlayers, ...clubPlayers.map((p: any) => ({ ...p, clubId: club.clubId }))];
 
         // Get team-player relationships for each team in this club
         const clubTeams = allTeams.filter(t => t.clubId === club.clubId);
         for (const team of clubTeams) {
           try {
-            const teamPlayersResponse = await fetch(`/api/teams/${team.id}/players`);
-            if (teamPlayersResponse.ok) {
-              const teamPlayers = await teamPlayersResponse.json();
-              allTeamPlayers = [...allTeamPlayers, ...teamPlayers.map((p: any) => ({ ...p, teamId: team.id }))];
-            }
+            const teamPlayers = await apiClient.get(`/api/teams/${team.id}/players`);
+            allTeamPlayers = [...allTeamPlayers, ...teamPlayers.map((p: any) => ({ ...p, teamId: team.id }))];
           } catch (error) {
             console.warn(`Failed to fetch players for team ${team.id}:`, error);
           }
@@ -278,10 +223,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
 
     // First, clean the database to prevent ID conflicts
     console.log("Clearing existing data before import...");
-    await fetch('/api/clear-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
+    await apiClient.post('/api/clear-data');
 
     // Count successful imports
     let clubsImported = 0;
@@ -301,33 +243,21 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     console.log("Importing data in bulk...");
 
     try {
-      const response = await fetch('/api/bulk-import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: jsonData // Send the entire JSON data as is
-      });
-
-      if (response.ok) {
-        const result = await response.json();
+      const result = await apiClient.post('/api/bulk-import', JSON.parse(jsonData));
         clubsImported = result.clubsImported || 0;
-        seasonsImported = result.seasonsImported || 0;
-        gameStatusesImported = result.gameStatusesImported || 0;
-        teamsImported = result.teamsImported || 0;
-        playersImported = result.playersImported || 0;
-        opponentsImported = result.opponentsImported || 0;
-        gamesImported = result.gamesImported || 0;
-        rostersImported = result.rostersImported || 0;
-        statsImported = result.statsImported || 0;
-        clubPlayersImported = result.clubPlayersImported || 0;
-        teamPlayersImported = result.teamPlayersImported || 0;
-        playerAvailabilityImported = result.playerAvailabilityImported || 0;
+      seasonsImported = result.seasonsImported || 0;
+      gameStatusesImported = result.gameStatusesImported || 0;
+      teamsImported = result.teamsImported || 0;
+      playersImported = result.playersImported || 0;
+      opponentsImported = result.opponentsImported || 0;
+      gamesImported = result.gamesImported || 0;
+      rostersImported = result.rostersImported || 0;
+      statsImported = result.statsImported || 0;
+      clubPlayersImported = result.clubPlayersImported || 0;
+      teamPlayersImported = result.teamPlayersImported || 0;
+      playerAvailabilityImported = result.playerAvailabilityImported || 0;
 
-        console.log(`Import completed successfully: ${clubsImported} clubs, ${seasonsImported} seasons, ${gameStatusesImported} game statuses, ${teamsImported} teams, ${playersImported} players, ${opponentsImported} opponents, ${gamesImported} games, ${rostersImported} roster entries, ${statsImported} stats, ${clubPlayersImported} club-player relationships, ${teamPlayersImported} team-player relationships, ${playerAvailabilityImported} availability records`);
-      } else {
-        const errorText = await response.text();
-        console.error("Import API error:", errorText);
-        throw new Error(`Import failed: ${errorText || 'Unknown error'}`);
-      }
+      console.log(`Import completed successfully: ${clubsImported} clubs, ${seasonsImported} seasons, ${gameStatusesImported} game statuses, ${teamsImported} teams, ${playersImported} players, ${opponentsImported} opponents, ${gamesImported} games, ${rostersImported} roster entries, ${statsImported} stats, ${clubPlayersImported} club-player relationships, ${teamPlayersImported} team-player relationships, ${playerAvailabilityImported} availability records`);
     } catch (importError) {
       console.error("Failed during bulk import:", importError);
       throw importError;
