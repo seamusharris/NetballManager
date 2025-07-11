@@ -273,9 +273,10 @@ export class NetballConnectScraper {
   }
 
   private parseHtmlForFixtures(html: string): ScrapedFixture[] {
-    // Comprehensive HTML structure logging
-    console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
-    console.log('HTML sample (last 1000 chars):', html.substring(Math.max(0, html.length - 1000)));
+    try {
+      // Comprehensive HTML structure logging
+      console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
+      console.log('HTML sample (last 1000 chars):', html.substring(Math.max(0, html.length - 1000)));
       
       // Look for JavaScript content that might contain fixture data
       const scriptMatches = html.match(/<script[^>]*>(.*?)<\/script>/gis);
