@@ -11,7 +11,7 @@ import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { 
   Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
-  Save, Undo, Redo, AlertTriangle, CheckCircle, Zap 
+  Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus 
 } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
