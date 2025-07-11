@@ -231,12 +231,22 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     refetchOnWindowFocus: true
   });
 
-  // Fetch players for the team
+  // Fetch players directly for the team - much simpler approach
   const { data: allPlayers, isLoading: allPlayersLoading } = useQuery({
-    queryKey: ['/api/clubs', currentTeam?.clubId, 'players'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentTeam?.clubId}/players`),
-    enabled: !!currentTeam?.clubId
+    queryKey: ['/api/teams', currentTeamId, 'players'],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
+    enabled: !!currentTeamId
   });
+
+  console.log('StatsRecorder players query:', {
+    gameId,
+    teamId,
+    currentTeamId,
+    allPlayersLength: allPlayers?.length,
+    enabled: !!currentTeamId
+  });
+
+  // Players are already filtered by team from the API
 
   // Filter to only show players assigned to the current team
   const players = useMemo(() => {
@@ -340,7 +350,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   useEffect(() => {
     if (rosters && rosters.length > 0) {
       console.log(`Setting up positions for quarter ${currentQuarter} from ${rosters.length} roster entries`);
-      
+
       const latestPositions: Record<Position, number | null> = {
         'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null
       };
