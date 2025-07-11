@@ -44,12 +44,12 @@ export class NetballConnectScraper {
 
       // Try with regular fetch first
       const fixtures = await this.scrapeWithFetch(url);
-      
+
       if (fixtures.length === 0) {
         console.log('No fixtures found with HTTP fetch. JavaScript-rendered content detected.');
         console.log('Note: NetballConnect pages require JavaScript to load fixture data.');
         console.log('For best results, consider using the fixture data from the page source or API endpoints.');
-        
+
         // Check if this is a NetballConnect page and provide specific guidance
         if (url.includes('netballconnect.com')) {
           console.log('NetballConnect page detected - fixtures are loaded dynamically.');
@@ -58,11 +58,11 @@ export class NetballConnectScraper {
           console.log('2. Use NetballConnect API if available');
           console.log('3. Copy fixture data manually from the loaded page');
         }
-        
+
         // Return empty result with informative message instead of failing
         return [];
       }
-      
+
       return fixtures;
     } catch (error) {
       console.error('Scraping error:', error);
@@ -85,7 +85,7 @@ export class NetballConnectScraper {
 
     const html = await response.text();
     console.log(`Successfully fetched ${html.length} characters of HTML`);
-    
+
     return this.parseHtmlForFixtures(html);
   }
 
@@ -94,7 +94,7 @@ export class NetballConnectScraper {
     const fixtures: ScrapedFixture[] = [];
 
     console.log('Parsing HTML for fixtures...');
-    
+
     // Log HTML structure for debugging NetballConnect pages
     console.log('HTML title:', $('title').text());
     console.log('HTML body length:', $('body').text().length);
@@ -105,12 +105,12 @@ export class NetballConnectScraper {
       spans: $('span').length,
       inputs: $('input').length
     });
-    
+
     // Check for NetballConnect specific patterns
     const bodyText = $('body').text();
     if (bodyText.includes('NetballConnect') || bodyText.includes('livescore')) {
       console.log('NetballConnect page detected');
-      
+
       // Look for any embedded JSON data
       $('script').each((index, script) => {
         const scriptContent = $(script).html() || '';
@@ -119,35 +119,35 @@ export class NetballConnectScraper {
         }
       });
     }
-    
+
     // Look for common fixture patterns in tables
     $('table tr').each((index, row) => {
       const $row = $(row);
       const cells = $row.find('td, th');
-      
+
       if (cells.length >= 2) {
         const cellTexts = cells.map((i, cell) => $(cell).text().trim()).get();
         const rowText = cellTexts.join(' | ');
-        
+
         // Look for team vs team patterns
         const vsPattern = /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$)/i;
         const match = rowText.match(vsPattern);
-        
+
         if (match && match[1] && match[2]) {
           const homeTeam = match[1].trim();
           const awayTeam = match[2].trim();
-          
+
           // Basic validation
           if (homeTeam.length > 1 && awayTeam.length > 1 && 
               homeTeam !== awayTeam && 
               !homeTeam.includes('Date') && !homeTeam.includes('Time') &&
               !awayTeam.includes('Date') && !awayTeam.includes('Time')) {
-            
+
             // Extract additional info
             const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
             const timeMatch = rowText.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
             const roundMatch = rowText.match(/(?:Round|Week|Game)\s*(\d+)/i);
-            
+
             const fixture = {
               homeTeam,
               awayTeam,
@@ -156,13 +156,13 @@ export class NetballConnectScraper {
               round: roundMatch ? `Round ${roundMatch[1]}` : '',
               venue: ''
             };
-            
+
             // Check for duplicates
             const isDuplicate = fixtures.some(f => 
               f.homeTeam.toLowerCase() === fixture.homeTeam.toLowerCase() && 
               f.awayTeam.toLowerCase() === fixture.awayTeam.toLowerCase()
             );
-            
+
             if (!isDuplicate) {
               fixtures.push(fixture);
             }
@@ -175,24 +175,24 @@ export class NetballConnectScraper {
     $('div').each((index, div) => {
       const $div = $(div);
       const text = $div.text().trim();
-      
+
       if (text.length > 5 && text.length < 200) {
         const vsPattern = /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$)/i;
         const match = text.match(vsPattern);
-        
+
         if (match && match[1] && match[2]) {
           const homeTeam = match[1].trim();
           const awayTeam = match[2].trim();
-          
+
           if (homeTeam.length > 1 && awayTeam.length > 1 && 
               homeTeam !== awayTeam && 
               !homeTeam.includes('Date') && !homeTeam.includes('Time') &&
               !awayTeam.includes('Date') && !awayTeam.includes('Time')) {
-            
+
             const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
             const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
             const roundMatch = text.match(/(?:Round|Week|Game)\s*(\d+)/i);
-            
+
             const fixture = {
               homeTeam,
               awayTeam,
@@ -201,13 +201,13 @@ export class NetballConnectScraper {
               round: roundMatch ? `Round ${roundMatch[1]}` : '',
               venue: ''
             };
-            
+
             // Check for duplicates
             const isDuplicate = fixtures.some(f => 
               f.homeTeam.toLowerCase() === fixture.homeTeam.toLowerCase() && 
               f.awayTeam.toLowerCase() === fixture.awayTeam.toLowerCase()
             );
-            
+
             if (!isDuplicate) {
               fixtures.push(fixture);
             }
@@ -224,7 +224,7 @@ export class NetballConnectScraper {
         console.log(`Found potential fixture data in input[${index}]:`, value);
       }
     });
-    
+
     // Look for elements with data attributes
     $('[data-fixture], [data-game], [data-match]').each((index, element) => {
       const $element = $(element);
