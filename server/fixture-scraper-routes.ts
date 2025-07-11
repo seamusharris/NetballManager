@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import { NetballConnectScraper } from './fixture-scraper.js';
 
@@ -58,6 +59,8 @@ router.post('/api/fixtures/import', async (req, res) => {
       error: 'Failed to import fixtures',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
+  } finally {
+    await scraper.close();
   }
 });
 
