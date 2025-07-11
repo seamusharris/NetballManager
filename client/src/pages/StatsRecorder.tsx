@@ -596,21 +596,9 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     // Use centralized stat icons
     const statIconMap = STAT_ICONS;
 
-    // Convert hex colors to Tailwind classes for UI components
+    // Use centralized stat colors from constants
     const getStatColorClasses = (stat: string) => {
-      const colorMap: Record<string, string> = {
-        'goalsFor': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
-        'goalsAgainst': 'bg-red-100 hover:bg-red-200 border-red-300 text-red-700',
-        'missedGoals': 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-700',
-        'rebounds': 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-700',
-        'intercepts': 'bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-700',
-        'deflections': 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300 text-cyan-700',
-        'turnovers': 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700',
-        'gains': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
-        'receives': 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300 text-cyan-700',
-        'penalties': 'bg-purple-100 hover:bg-purple-200 border-purple-300 text-purple-700'
-      };
-      return colorMap[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300';
+      return STAT_COLORS[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-600';
     };
 
     // Map stats to their labels (singular form)
