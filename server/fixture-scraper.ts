@@ -1,7 +1,7 @@
 
 import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
-import puppeteer from 'puppeteer';
+import { chromium } from 'playwright';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -27,7 +27,7 @@ export class NetballConnectScraper {
   private page: any = null;
 
   constructor() {
-    console.log('NetballConnectScraper: Using Puppeteer for JavaScript-rendered content');
+    console.log('NetballConnectScraper: Using Playwright for JavaScript-rendered content');
   }
 
   async close() {
@@ -47,8 +47,8 @@ export class NetballConnectScraper {
       const fixtures = await this.scrapeWithFetch(url);
       
       if (fixtures.length === 0) {
-        console.log('No fixtures found with HTTP fetch, trying Puppeteer for JavaScript-rendered content...');
-        return await this.scrapeWithPuppeteer(url);
+        console.log('No fixtures found with HTTP fetch, trying Playwright for JavaScript-rendered content...');
+        return await this.scrapeWithPlaywright(url);
       }
       
       return fixtures;
@@ -83,10 +83,10 @@ export class NetballConnectScraper {
     return this.parseHtmlForFixtures(html);
   }
 
-  private async scrapeWithPuppeteer(url: string): Promise<ScrapedFixture[]> {
-    console.log('Launching Puppeteer browser...');
+  private async scrapeWithPlaywright(url: string): Promise<ScrapedFixture[]> {
+    console.log('Launching Playwright browser...');
     
-    this.browser = await puppeteer.launch({
+    this.browser = await chromium.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
@@ -95,12 +95,12 @@ export class NetballConnectScraper {
     
     // Set user agent and viewport
     await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    await this.page.setViewport({ width: 1920, height: 1080 });
+    await this.page.setViewportSize({ width: 1920, height: 1080 });
     
     console.log('Navigating to page and waiting for content...');
     
     // Navigate to the page
-    await this.page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    await this.page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
     
     // Wait for content to load - NetballConnect specific approach
     console.log('Waiting for NetballConnect content to load...');
@@ -118,7 +118,7 @@ export class NetballConnectScraper {
     const fixtures = await this.page.evaluate(() => {
       const foundFixtures: any[] = [];
       
-      console.log('=== PUPPETEER PAGE ANALYSIS ===');
+      console.log('=== PLAYWRIGHT PAGE ANALYSIS ===');
       console.log('Page title:', document.title);
       console.log('Page URL:', window.location.href);
       console.log('Body classes:', document.body.className);
@@ -262,7 +262,7 @@ export class NetballConnectScraper {
       return foundFixtures;
     });
     
-    console.log(`Found ${fixtures.length} fixtures with Puppeteer`);
+    console.log(`Found ${fixtures.length} fixtures with Playwright`);
     
     // Remove duplicates
     const uniqueFixtures = fixtures.filter((fixture, index, self) => 
