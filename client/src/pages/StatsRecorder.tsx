@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
@@ -10,7 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
-import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw, AlertTriangle } from 'lucide-react';
+import { 
+  Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
+  Save, Undo, Redo, AlertTriangle, CheckCircle, Zap 
+} from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -20,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
-                'intercepts' | 'badPass' | 'handlingError' | 'pickUp' | 'infringement';
+                'intercepts' | 'deflections' | 'turnovers' | 'gains' | 'receives' | 'penalties';
 
 // Quarter stats including both regular stats and position info
 interface QuarterStats {
@@ -29,10 +31,11 @@ interface QuarterStats {
   missedGoals: number;
   rebounds: number;
   intercepts: number;
-  badPass: number;
-  handlingError: number;
-  pickUp: number;
-  infringement: number;
+  deflections: number;
+  turnovers: number;
+  gains: number;
+  receives: number;
+  penalties: number;
   rating: number | null;
 }
 
@@ -45,13 +48,14 @@ interface PositionStats {
 const emptyQuarterStats = {
   goalsFor: 0,
   goalsAgainst: 0,
-  missedGoals: 0,
-  rebounds: 0,
   intercepts: 0,
-  badPass: 0,
-  handlingError: 0,
-  pickUp: 0,
-  infringement: 0,
+  deflections: 0,
+  rebounds: 0,
+  turnovers: 0,
+  gains: 0,
+  receives: 0,
+  penalties: 0,
+  centrePass: 0,
   rating: 5 as number
 };
 
@@ -77,10 +81,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: true,
     rebounds: true,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   },
   'GA': {
     goalsFor: true,
@@ -88,10 +93,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: true,
     rebounds: true,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   },
   'WA': {
     goalsFor: false,
@@ -99,10 +105,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: false,
     rebounds: false,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   },
   'C': {
     goalsFor: false,
@@ -110,10 +117,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: false,
     rebounds: false,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   },
   'WD': {
     goalsFor: false,
@@ -121,10 +129,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: false,
     rebounds: false,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   },
   'GD': {
     goalsFor: false,
@@ -132,10 +141,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: false,
     rebounds: true,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   },
   'GK': {
     goalsFor: false,
@@ -143,10 +153,11 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
     missedGoals: false,
     rebounds: true,
     intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
+    deflections: true,
+    turnovers: true,
+    gains: true,
+    receives: true,
+    penalties: true
   }
 };
 
@@ -156,10 +167,11 @@ const statLabels: Record<StatType, string> = {
   goalsAgainst: 'Goal Against',
   rebounds: 'Rebound',
   intercepts: 'Intercept',
-  pickUp: 'Pick Up',
-  badPass: 'Bad Pass',
-  handlingError: 'Handling Error',
-  infringement: 'Infringement'
+  deflections: 'Deflection',
+  turnovers: 'Turnover',
+  gains: 'Gain',
+  receives: 'Receive',
+  penalties: 'Penalty'
 };
 
 interface StatsRecorderProps {
@@ -279,7 +291,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         Object.values(statsByPositionAndQuarter).forEach((stat: GameStat) => {
           const key = `${stat.position}-${stat.quarter}`;
 
-          const statKeys: StatType[] = ['goalsFor', 'goalsAgainst', 'missedGoals', 'rebounds', 'intercepts', 'badPass', 'handlingError', 'pickUp', 'infringement'];
+          const statKeys: StatType[] = ['goalsFor', 'goalsAgainst', 'missedGoals', 'rebounds', 'intercepts', 'deflections', 'turnovers', 'gains', 'receives', 'penalties'];
 
           statKeys.forEach(statKey => {
             if (stat[statKey] !== undefined && stat[statKey] !== null) {
@@ -468,10 +480,11 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             missedGoals: stats.missedGoals || 0,
             rebounds: stats.rebounds || 0,
             intercepts: stats.intercepts || 0,
-            badPass: stats.badPass || 0,
-            handlingError: stats.handlingError || 0,
-            pickUp: stats.pickUp || 0,
-            infringement: stats.infringement || 0,
+            deflections: stats.deflections || 0,
+            turnovers: stats.turnovers || 0,
+            gains: stats.gains || 0,
+            receives: stats.receives || 0,
+            penalties: stats.penalties || 0,
             rating: stats.rating
           });
           updates.push(updatePromise);
@@ -488,10 +501,11 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               missedGoals: stats.missedGoals || 0,
               rebounds: stats.rebounds || 0,
               intercepts: stats.intercepts || 0,
-              badPass: stats.badPass || 0,
-              handlingError: stats.handlingError || 0,
-              pickUp: stats.pickUp || 0,
-              infringement: stats.infringement || 0,
+              deflections: stats.deflections || 0,
+              turnovers: stats.turnovers || 0,
+              gains: stats.gains || 0,
+              receives: stats.receives || 0,
+              penalties: stats.penalties || 0,
               rating: stats.rating
             });
             updates.push(createPromise);
@@ -507,7 +521,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     },
     onSuccess: () => {
       clearGameCache(gameId);
-      
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['/api/teams', currentTeamId, 'games', gameId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
@@ -572,7 +586,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   };
 
   // Common stats to show in the top row
-  const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+  const commonStats: StatType[] = ['intercepts', 'deflections', 'turnovers', 'gains', 'receives', 'penalties'];
 
   // Render a stat counter button for a position
   const renderStatCounter = (
@@ -667,7 +681,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           </AlertDescription>
         </Alert>
       )}
-      
+
       <Button
         variant="outline"
         size="sm"
@@ -686,7 +700,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       >
         <Undo className="h-4 w-4" />
       </Button>
-      
+
       <Button
         variant="outline"
         size="sm"
