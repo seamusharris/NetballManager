@@ -3,6 +3,8 @@ import { createGameScoresTable } from './migrations/createGameScoresTable';
 import { migrateToTeamBasedScoring } from './migrations/migrateToTeamBasedScoring';
 import { createTeamGameNotesTable } from './migrations/createTeamGameNotesTable';
 import { migrateGameNotesToTeamNotes } from './migrations/migrateGameNotesToTeamNotes';
+import { addNewStatisticsColumns } from './migrations/addNewStatisticsColumns';
+import { removeOldStatisticsColumns } from './migrations/removeOldStatisticsColumns';
 
 // Define an array of migration objects, each containing a name and a function to execute
 const migrations = [
@@ -10,10 +12,33 @@ const migrations = [
   { name: 'migrateToTeamBasedScoring', fn: migrateToTeamBasedScoring },
   { name: 'createTeamGameNotesTable', fn: createTeamGameNotesTable },
   { name: 'migrateGameNotesToTeamNotes', fn: migrateGameNotesToTeamNotes },
+  { name: 'addNewStatisticsColumns', fn: addNewStatisticsColumns },
+  { name: 'removeOldStatisticsColumns', fn: removeOldStatisticsColumns },
 ];
 
-// Log a message to the console indicating that all migrations have been completed
-console.log('All migrations have been completed. No migrations to run.');
+// Run migrations function
+async function runMigrations() {
+  try {
+    console.log('Starting migration process...');
+    
+    for (const migration of migrations) {
+      console.log(`Running migration: ${migration.name}`);
+      const success = await migration.fn();
+      if (success) {
+        console.log(`✅ ${migration.name} completed successfully`);
+      } else {
+        console.log(`❌ ${migration.name} failed`);
+        process.exit(1);
+      }
+    }
+    
+    console.log('✅ All migrations completed successfully!');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Migration process failed:', error);
+    process.exit(1);
+  }
+}
 
-// Exit the current process with an exit code of 0, indicating success
-process.exit(0);
+// Run the migrations
+runMigrations();
