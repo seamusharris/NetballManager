@@ -96,6 +96,53 @@ export function registerGameStatsRoutes(app: Express) {
     }
   });
 
+  // Update individual stat for a specific game and team
+  app.patch('/api/game/:gameId/team/:teamId/stats/:statId', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const teamId = parseInt(req.params.teamId);
+      const statId = parseInt(req.params.statId);
+
+      if (isNaN(gameId) || isNaN(teamId) || isNaN(statId)) {
+        return res.status(400).json({ error: 'Invalid game ID, team ID, or stat ID' });
+      }
+
+      // Verify team participates in game
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ${gameId} 
+        AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found or team not participating' });
+      }
+
+      // Update the stat
+      const [updated] = await db.update(gameStats)
+        .set({
+          ...req.body,
+          gameId,
+          teamId
+        })
+        .where(and(
+          eq(gameStats.id, statId),
+          eq(gameStats.gameId, gameId),
+          eq(gameStats.teamId, teamId)
+        ))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ error: 'Stat not found' });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating game stat:', error);
+      res.status(500).json({ error: 'Failed to update game stat' });
+    }
+  });
+
   // Create/update stats for a specific game and team
   app.post('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {

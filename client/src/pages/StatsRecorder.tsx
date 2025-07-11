@@ -529,42 +529,40 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         );
 
         if (existingStat) {
-          const updatePromise = apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, {
+          // Use game-centric endpoint for updates too
+          const updatePromise = apiClient.patch(`/api/game/${gameId}/team/${currentTeamId}/stats/${existingStat.id}`, {
             goalsFor: stats.goalsFor || 0,
             goalsAgainst: stats.goalsAgainst || 0,
             missedGoals: stats.missedGoals || 0,
             rebounds: stats.rebounds || 0,
             intercepts: stats.intercepts || 0,
-            deflections: stats.deflections || 0, // Database now uses deflections
-            turnovers: stats.turnovers || 0, // Database now uses turnovers
-            gains: stats.gains || 0, // Database now uses gains
-            receives: stats.receives || 0, // Database now uses receives
+            deflections: stats.deflections || 0,
+            turnovers: stats.turnovers || 0,
+            gains: stats.gains || 0,
+            receives: stats.receives || 0,
             penalties: stats.penalties || 0,
             rating: stats.rating
           });
           updates.push(updatePromise);
         } else {
-          const hasNonZeroStats = Object.values(stats).some(value => value > 0);
-          if (hasNonZeroStats) {
-            const createPromise = apiClient.post(`/api/game/${gameId}/team/${currentTeamId}/stats`, {
-              gameId: parseInt(gameId),
-              teamId: currentTeamId,
-              position: position,
-              quarter: quarter,
-              goalsFor: stats.goalsFor || 0,
-              goalsAgainst: stats.goalsAgainst || 0,
-              missedGoals: stats.missedGoals || 0,
-              rebounds: stats.rebounds || 0,
-              intercepts: stats.intercepts || 0,
-              deflections: stats.deflections || 0, // Database now uses deflections
-              turnovers: stats.turnovers || 0, // Database now uses turnovers
-              gains: stats.gains || 0, // Database now uses gains
-              receives: stats.receives || 0, // Database now uses receives
-              penalties: stats.penalties || 0,
-              rating: stats.rating
-            });
-            updates.push(createPromise);
-          }
+          const createPromise = apiClient.post(`/api/game/${gameId}/team/${currentTeamId}/stats`, {
+            gameId: parseInt(gameId),
+            teamId: currentTeamId,
+            position: position,
+            quarter: quarter,
+            goalsFor: stats.goalsFor || 0,
+            goalsAgainst: stats.goalsAgainst || 0,
+            missedGoals: stats.missedGoals || 0,
+            rebounds: stats.rebounds || 0,
+            intercepts: stats.intercepts || 0,
+            deflections: stats.deflections || 0,
+            turnovers: stats.turnovers || 0,
+            gains: stats.gains || 0,
+            receives: stats.receives || 0,
+            penalties: stats.penalties || 0,
+            rating: stats.rating
+          });
+          updates.push(createPromise);
         }
       });
 
