@@ -617,6 +617,10 @@ input[type=number] {
   @apply bg-green-200 border-green-300 text-green-800;
 }
 
+.touch-manipulation.bg-emerald-100:hover {
+  @apply bg-emerald-200 border-emerald-300 text-emerald-800;
+}
+
 .touch-manipulation.bg-orange-100:hover {
   @apply bg-orange-200 border-orange-300 text-orange-800;
 }
@@ -627,6 +631,10 @@ input[type=number] {
 
 .touch-manipulation.bg-blue-100:hover {
   @apply bg-blue-200 border-blue-300 text-blue-800;
+}
+
+.touch-manipulation.bg-cyan-100:hover {
+  @apply bg-cyan-200 border-cyan-300 text-cyan-800;
 }
 
 .touch-manipulation.bg-purple-100:hover {
@@ -643,6 +651,14 @@ input[type=number] {
 
 .touch-manipulation.bg-teal-100:hover {
   @apply bg-teal-200 border-teal-300 text-teal-800;
+}
+
+.touch-manipulation.bg-rose-100:hover {
+  @apply bg-rose-200 border-rose-300 text-rose-800;
+}
+
+.touch-manipulation.bg-gray-100:hover {
+  @apply bg-gray-200 border-gray-300 text-gray-800;
 }
 
 .touch-manipulation.bg-rose-100:hover {
