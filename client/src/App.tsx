@@ -44,7 +44,6 @@ import PlayerBoxTestPage from '@/pages/PlayerBoxTestPage';
 import TeamBoxExamples from './pages/TeamBoxExamples';
 import ActionButtonExamples from './pages/ActionButtonExamples';
 import AllPlayersDesignExamples from './pages/AllPlayersDesignExamples';
-import ComponentExamples from '@/pages/ComponentExamples';
 import DashboardExamples from '@/pages/DashboardExamples';
 import WidgetExamples from './pages/WidgetExamples';
 import FormExamples from './pages/FormExamples';
