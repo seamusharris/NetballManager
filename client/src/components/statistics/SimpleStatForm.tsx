@@ -25,16 +25,16 @@ export default function SimpleStatForm({
 }: SimpleStatFormProps) {
   // Local state to track form values
   const [statValues, setStatValues] = useState<Record<number, Record<string, string>>>({});
-  
+
   // Find players in the roster for this quarter
   const playersInRoster = Object.entries(rosters)
     .filter(([_, playerId]) => playerId !== null)
     .map(([_, playerId]) => playerId as number);
-  
+
   // Initialize form with empty values
   useEffect(() => {
     const initialValues: Record<number, Record<string, string>> = {};
-    
+
     playersInRoster.forEach(playerId => {
       initialValues[playerId] = {
         goalsFor: '0',
@@ -47,15 +47,15 @@ export default function SimpleStatForm({
         infringement: '0'
       };
     });
-    
+
     setStatValues(initialValues);
   }, [playersInRoster]);
-  
+
   // Handle input change
   const handleChange = (playerId: number, field: string, value: string) => {
     // Only allow numbers and empty string
     if (value !== '' && !/^\d+$/.test(value)) return;
-    
+
     setStatValues(prev => ({
       ...prev,
       [playerId]: {
@@ -64,36 +64,36 @@ export default function SimpleStatForm({
       }
     }));
   };
-  
+
   // Handle form submission
   const handleSubmit = () => {
     // Convert string values to numbers
     const numericValues: Record<number, Record<string, number>> = {};
-    
+
     Object.entries(statValues).forEach(([playerIdStr, fields]) => {
       const playerId = Number(playerIdStr);
       numericValues[playerId] = {};
-      
+
       Object.entries(fields).forEach(([field, value]) => {
         numericValues[playerId][field] = value === '' ? 0 : Number(value);
       });
     });
-    
+
     onSaveStats(numericValues);
   };
-  
+
   // Get player details
   const getPlayerName = (playerId: number) => {
     const player = players.find(p => p.id === playerId);
     return player ? player.displayName : 'Unknown';
   };
-  
+
   // Get position for player
   const getPlayerPosition = (playerId: number) => {
     const position = Object.entries(rosters).find(([_, id]) => id === playerId);
     return position ? position[0] : '';
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end mb-4">
@@ -105,7 +105,7 @@ export default function SimpleStatForm({
           <Save className="w-4 h-4 mr-1" /> Save Stats
         </Button>
       </div>
-      
+
       {playersInRoster.length === 0 ? (
         <Card>
           <CardContent className="p-4 text-center text-gray-500">
@@ -126,7 +126,7 @@ export default function SimpleStatForm({
                     <p className="text-sm text-gray-500">{getPlayerPosition(playerId)}</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatField 
                     label="Goals For" 

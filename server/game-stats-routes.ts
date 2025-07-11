@@ -124,6 +124,11 @@ export function registerGameStatsRoutes(app: Express) {
           teamId
         };
 
+        const statColumns = [
+          'goals_for', 'goals_against', 'missed_goals', 'rebounds', 'intercepts',
+          'deflections', 'turnovers', 'gains', 'receives', 'penalties', 'rating'
+        ];
+
         if (stat.id) {
           // Update existing stat
           const [updated] = await db.update(gameStats)
