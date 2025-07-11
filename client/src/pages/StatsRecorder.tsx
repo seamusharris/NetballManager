@@ -783,35 +783,37 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-1">
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  onClick={startTimer}
-                  disabled={isTimerRunning}
-                  className="touch-manipulation"
-                >
-                  <Play className="h-3 w-3 mr-1" />
-                  Start
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={pauseTimer}
-                  disabled={!isTimerRunning}
-                  className="touch-manipulation"
-                >
-                  <Pause className="h-3 w-3 mr-1" />
-                  Pause
-                </Button>
+              <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-1">
+                  <Button
+                    variant="outline" 
+                    size="sm"
+                    onClick={startTimer}
+                    disabled={isTimerRunning}
+                    className="touch-manipulation"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    Start
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={pauseTimer}
+                    disabled={!isTimerRunning}
+                    className="touch-manipulation"
+                  >
+                    <Pause className="h-3 w-3 mr-1" />
+                    Pause
+                  </Button>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={resetTimer}
-                  className="touch-manipulation"
+                  className="w-full touch-manipulation border-amber-500 text-amber-700 hover:bg-amber-50"
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />
-                  Reset
+                  Reset Timer
                 </Button>
               </div>
             </div>
