@@ -14,6 +14,30 @@ import {
   MapPin, Clock, Trophy, Play, Pause, Square
 } from 'lucide-react';
 
+// Position Badge Component
+const PositionBadge = ({ position, size = 'default' }: { 
+  position: { code: string; color: string }; 
+  size?: 'sm' | 'default' | 'lg' 
+}) => {
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-xs',
+    default: 'w-12 h-12 text-sm',
+    lg: 'w-16 h-16 text-base'
+  };
+
+  return (
+    <div 
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold text-white border border-white`}
+      style={{ 
+        backgroundColor: position.color,
+        boxShadow: `0 0 0 1px ${position.color}`
+      }}
+    >
+      <span className="text-white font-bold">{position.code}</span>
+    </div>
+  );
+};
+
 export default function ColorStyleGuide() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -146,18 +170,7 @@ export default function ColorStyleGuide() {
           {positions.map(position => (
             <div key={position.code} className="p-4 border rounded-lg">
               <div className="flex items-center gap-3 mb-3">
-                <div className="relative">
-                  <div 
-                    className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-white relative overflow-hidden"
-                    style={{ backgroundColor: position.color }}
-                  >
-                    <div 
-                      className="absolute inset-1 rounded-md border-2 border-white/30"
-                      style={{ borderColor: `${position.color}40` }}
-                    />
-                    <span className="relative z-10 text-white font-bold">{position.code}</span>
-                  </div>
-                </div>
+                <PositionBadge position={position} />
                 <div>
                   <div className="font-medium">{position.name}</div>
                   <div className="text-sm text-muted-foreground">{position.color}</div>
@@ -165,9 +178,6 @@ export default function ColorStyleGuide() {
               </div>
               <p className="text-sm mb-3">{position.description}</p>
               <div className="flex gap-2">
-                <Badge className={`${position.bgClass} hover:${position.bgClass}/90`}>
-                  {position.code}
-                </Badge>
                 <Badge variant="outline" style={{ borderColor: position.color, color: position.color }}>
                   {position.name}
                 </Badge>
@@ -180,11 +190,8 @@ export default function ColorStyleGuide() {
           <div className="text-xs font-semibold text-center mb-2 col-span-7">Color Flow Visualization</div>
           {positions.map(position => (
             <div key={position.code} className="text-center">
-              <div 
-                className="w-8 h-8 rounded-full mx-auto mb-1"
-                style={{ backgroundColor: position.color }}
-              />
-              <div className="text-xs font-medium">{position.code}</div>
+              <PositionBadge position={position} size="sm" />
+              <div className="text-xs font-medium mt-1">{position.code}</div>
             </div>
           ))}
         </div>
