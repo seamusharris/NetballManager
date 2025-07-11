@@ -388,13 +388,25 @@ export default function Settings() {
       throw new Error('No club or team selected');
     }
 
-    // Fetch all required data using apiClient
-    const [games, players, stats, scores, rosters] = await Promise.all([
+    // First fetch games and players
+    const [games, players] = await Promise.all([
       apiClient.get(`/api/teams/${currentTeamId}/games`),
-      apiClient.get(`/api/clubs/${currentClubId}/players`),
-      apiClient.post(`/api/clubs/${currentClubId}/games/stats/batch`, { gameIds: [] }),
-      apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds: [] }),
-      apiClient.post(`/api/clubs/${currentClubId}/games/rosters/batch`, { gameIds: [] })
+      apiClient.get(`/api/clubs/${currentClubId}/players`)
+    ]);
+
+    // Extract game IDs from the games data
+    const gameIds = games.map((game: any) => game.id);
+
+    // Only fetch batch data if we have game IDs
+    if (gameIds.length === 0) {
+      return { games, players, stats: {}, scores: {}, rosters: {} };
+    }
+
+    // Now fetch batch data with actual game IDs
+    const [stats, scores, rosters] = await Promise.all([
+      apiClient.post(`/api/clubs/${currentClubId}/games/stats/batch`, { gameIds }),
+      apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds }),
+      apiClient.post(`/api/clubs/${currentClubId}/games/rosters/batch`, { gameIds })
     ]);
 
     return { games, players, stats, scores, rosters };
