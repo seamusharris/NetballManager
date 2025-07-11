@@ -73,10 +73,11 @@ class UnifiedStatisticsService {
           missedGoals: 0,
           rebounds: 0,
           intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0,
+          deflections: 0,
+          turnovers: 0,
+          gains: 0,
+          receives: 0,
+          penalties: 0,
           totalRating: 0,
           ratingCount: 0
         };
@@ -88,10 +89,11 @@ class UnifiedStatisticsService {
       quarterStats.missedGoals += stat.missedGoals || 0;
       quarterStats.rebounds += stat.rebounds || 0;
       quarterStats.intercepts += stat.intercepts || 0;
-      quarterStats.badPass += stat.badPass || 0;
-      quarterStats.handlingError += stat.handlingError || 0;
-      quarterStats.pickUp += stat.pickUp || 0;
-      quarterStats.infringement += stat.infringement || 0;
+      quarterStats.deflections += stat.deflections || 0;
+      quarterStats.turnovers += stat.turnovers || 0;
+      quarterStats.gains += stat.gains || 0;
+      quarterStats.receives += stat.receives || 0;
+      quarterStats.penalties += stat.penalties || 0;
 
       if (stat.rating !== null && stat.rating !== undefined) {
         quarterStats.totalRating += stat.rating;
@@ -697,10 +699,11 @@ export interface PositionStat {
   missedGoals: number;
   rebounds: number;
   intercepts: number;
-  badPass: number;
-  handlingError: number;
-  pickUp: number;
-  infringement: number;
+  deflections: number;
+  turnovers: number;
+  gains: number;
+  receives: number;
+  penalties: number;
   rating: number | null;
 }
 
@@ -712,10 +715,11 @@ export interface PlayerPerformance {
   missedGoals: number;
   rebounds: number;
   intercepts: number;
-  badPass: number;
-  handlingError: number;
-  pickUp: number;
-  infringement: number;
+  deflections: number;
+  turnovers: number;
+  gains: number;
+  receives: number;
+  penalties: number;
   rating: number;
   quartersByPosition: Record<Position, number>;
 }

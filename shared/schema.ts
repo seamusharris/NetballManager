@@ -129,10 +129,6 @@ export const gameStats = pgTable("game_stats", {
   missedGoals: integer("missed_goals").notNull().default(0),
   rebounds: integer("rebounds").notNull().default(0),
   intercepts: integer("intercepts").notNull().default(0),
-  badPass: integer("bad_pass").notNull().default(0),
-  handlingError: integer("handling_error").notNull().default(0),
-  pickUp: integer("pick_up").notNull().default(0),
-  infringement: integer("infringement").notNull().default(0),
   // New statistics columns
   deflections: integer("deflections").notNull().default(0),
   turnovers: integer("turnovers").notNull().default(0),
