@@ -12,7 +12,8 @@ import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { 
   Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
-  Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus 
+  Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
+  Goal, TrendingUp, RefreshCw, Users, Coffee, Slash, Award
 } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
@@ -532,9 +533,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
     if (!statInfo) return null;
 
-    const StatIcon = statInfo.icon;
-    const statColor = statInfo.color;
-    const statLabel = statInfo.label;
+    // Fallback icon handling - use a default icon if statInfo.icon is undefined
+    const StatIcon = statInfo.icon || Target;
+    const statColor = statInfo.color || 'bg-gray-100';
+    const statLabel = statInfo.label || stat;
 
     return (
       <Button
