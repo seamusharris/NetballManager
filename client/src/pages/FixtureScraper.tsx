@@ -294,6 +294,23 @@ export default function FixtureScraper() {
                 Make sure you have the correct permissions to scrape the data and that it complies with the website's terms of service.
               </p>
             </div>
+
+            {/* NetballConnect specific guidance */}
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <h4 className="font-semibold text-yellow-800 mb-2">NetballConnect Limitations</h4>
+              <p className="text-sm text-yellow-700 mb-3">
+                NetballConnect pages use JavaScript to load fixture data dynamically, which cannot be scraped directly with this tool.
+              </p>
+              <div className="text-sm text-yellow-700">
+                <p className="font-semibold mb-1">Alternative options for NetballConnect:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Export fixture data from NetballConnect as CSV/Excel file</li>
+                  <li>Use NetballConnect API if your organization has access</li>
+                  <li>Copy fixture data manually from the loaded page</li>
+                  <li>Contact NetballConnect support for data export options</li>
+                </ul>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

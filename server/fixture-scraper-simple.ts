@@ -47,8 +47,17 @@ export class NetballConnectScraper {
       
       if (fixtures.length === 0) {
         console.log('No fixtures found with HTTP fetch. JavaScript-rendered content detected.');
-        console.log('Note: NetballConnect pages may require JavaScript to load fixture data.');
+        console.log('Note: NetballConnect pages require JavaScript to load fixture data.');
         console.log('For best results, consider using the fixture data from the page source or API endpoints.');
+        
+        // Check if this is a NetballConnect page and provide specific guidance
+        if (url.includes('netballconnect.com')) {
+          console.log('NetballConnect page detected - fixtures are loaded dynamically.');
+          console.log('Alternative options:');
+          console.log('1. Export fixture data from NetballConnect as CSV/Excel');
+          console.log('2. Use NetballConnect API if available');
+          console.log('3. Copy fixture data manually from the loaded page');
+        }
         
         // Return empty result with informative message instead of failing
         return [];
@@ -85,6 +94,31 @@ export class NetballConnectScraper {
     const fixtures: ScrapedFixture[] = [];
 
     console.log('Parsing HTML for fixtures...');
+    
+    // Log HTML structure for debugging NetballConnect pages
+    console.log('HTML title:', $('title').text());
+    console.log('HTML body length:', $('body').text().length);
+    console.log('Script tags found:', $('script').length);
+    console.log('Available elements:', {
+      divs: $('div').length,
+      tables: $('table').length,
+      spans: $('span').length,
+      inputs: $('input').length
+    });
+    
+    // Check for NetballConnect specific patterns
+    const bodyText = $('body').text();
+    if (bodyText.includes('NetballConnect') || bodyText.includes('livescore')) {
+      console.log('NetballConnect page detected');
+      
+      // Look for any embedded JSON data
+      $('script').each((index, script) => {
+        const scriptContent = $(script).html() || '';
+        if (scriptContent.includes('fixture') || scriptContent.includes('game') || scriptContent.includes('team')) {
+          console.log(`Script ${index} contains potential fixture data:`, scriptContent.substring(0, 200));
+        }
+      });
+    }
     
     // Look for common fixture patterns in tables
     $('table tr').each((index, row) => {
@@ -179,6 +213,15 @@ export class NetballConnectScraper {
             }
           }
         }
+      }
+    });
+
+    // NetballConnect specific: Look for data in input fields or hidden elements
+    $('input[type="hidden"], input[data-*]').each((index, input) => {
+      const $input = $(input);
+      const value = $input.val() || $input.attr('data-value') || '';
+      if (typeof value === 'string' && (value.includes('vs') || value.includes('v '))) {
+        console.log(`Found potential fixture data in input[${index}]:`, value);
       }
     });
 
