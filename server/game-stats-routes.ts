@@ -174,7 +174,7 @@ export function registerGameStatsRoutes(app: Express) {
       }
 
       const result = await db.execute(sql`
-        SELECT r.*, p.first_name, p.last_name, p.preferred_name
+        SELECT r.*, p.first_name, p.last_name, p.display_name
         FROM rosters r
         LEFT JOIN players p ON r.player_id = p.id
         WHERE r.game_id = ${gameId} AND r.team_id = ${teamId}
