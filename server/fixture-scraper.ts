@@ -46,145 +46,154 @@ export class NetballConnectScraper {
       }
 
       const html = await response.text();
+      console.log(`Fetched HTML content, length: ${html.length} characters`);
+      
       const $ = cheerio.load(html);
       const fixtures: ScrapedFixture[] = [];
 
-      console.log('Looking for fixture data in HTML...');
+      // Look for NetballConnect specific patterns
+      console.log('Looking for NetballConnect fixture data...');
       
-      // Look for table rows containing fixture data
-      const tableRows = $('table tr, tbody tr');
-      console.log(`Found ${tableRows.length} table rows to check`);
-      
-      tableRows.each((index, row) => {
-        try {
-          const $row = $(row);
-          const cells = $row.find('td');
-          const rowText = $row.text().trim();
-          
-          // Skip empty rows or header rows
-          if (!rowText || rowText.toLowerCase().includes('round') || rowText.toLowerCase().includes('date')) {
-            return;
-          }
-          
-          // Look for rows that contain team matchups (vs, v, etc.)
-          if (rowText.match(/\b\w+.*?\s+(?:vs?\.?|v)\s+.*?\w+/i)) {
-            console.log(`Processing potential fixture row: ${rowText.substring(0, 100)}...`);
+      // Try multiple selectors for NetballConnect fixture tables
+      const tableSelectors = [
+        'table[class*="fixture"]',
+        'table[class*="season"]',
+        'table[class*="match"]',
+        '.fixture-table',
+        '.season-fixture',
+        'table:contains("Round")',
+        'table:contains("vs")',
+        'table tbody tr',
+        'table tr'
+      ];
+
+      let foundFixtures = false;
+
+      for (const selector of tableSelectors) {
+        if (foundFixtures) break;
+        
+        const rows = $(selector);
+        console.log(`Trying selector "${selector}" - found ${rows.length} elements`);
+        
+        rows.each((index, row) => {
+          try {
+            const $row = $(row);
+            const rowText = $row.text().trim();
             
-            let date = '';
-            let time = '';
+            // Skip empty rows, headers, or very short text
+            if (!rowText || rowText.length < 10) return;
+            
+            // Look for team vs team patterns
+            const teamPatterns = [
+              /(.+?)\s+(?:vs?\.?|v)\s+(.+)/i,
+              /(.+?)\s+v\s+(.+)/i,
+              /(.+?)\s+-\s+(.+)/i
+            ];
+            
             let homeTeam = '';
             let awayTeam = '';
-            let venue = '';
-            let round = '';
             
-            // Try to extract from individual cells first
-            if (cells.length >= 3) {
-              cells.each((cellIndex, cell) => {
-                const cellText = $(cell).text().trim();
-                
-                // Check for date patterns
-                const dateMatch = cellText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-                if (dateMatch && !date) {
-                  date = this.normalizeDate(dateMatch[1]);
-                }
-                
-                // Check for time patterns
-                const timeMatch = cellText.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
-                if (timeMatch && !time) {
-                  time = this.normalizeTime(timeMatch[1]);
-                }
-                
-                // Check for team matchups
-                const teamMatch = cellText.match(/^(.+?)\s+(?:vs?\.?|v)\s+(.+?)$/i);
-                if (teamMatch && !homeTeam && !awayTeam) {
-                  homeTeam = teamMatch[1].trim();
-                  awayTeam = teamMatch[2].trim();
-                }
-                
-                // Check for venue (text that doesn't match other patterns)
-                if (cellText.length > 3 && 
-                    !dateMatch && 
-                    !timeMatch && 
-                    !teamMatch && 
-                    !venue &&
-                    !cellText.match(/round|r\d+/i)) {
-                  venue = cellText;
-                }
-                
-                // Check for round
-                const roundMatch = cellText.match(/(round\s*\d+|r\d+)/i);
-                if (roundMatch && !round) {
-                  round = roundMatch[1];
-                }
-              });
-            }
-            
-            // Fallback: try to extract from the entire row text
-            if (!homeTeam || !awayTeam) {
-              const teamMatch = rowText.match(/(.+?)\s+(?:vs?\.?|v)\s+(.+?)(?:\s|$)/i);
-              if (teamMatch) {
-                homeTeam = teamMatch[1].trim();
-                awayTeam = teamMatch[2].trim();
+            for (const pattern of teamPatterns) {
+              const match = rowText.match(pattern);
+              if (match) {
+                homeTeam = match[1].trim();
+                awayTeam = match[2].trim();
+                break;
               }
             }
             
-            if (!date) {
-              const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-              if (dateMatch) date = this.normalizeDate(dateMatch[1]);
-            }
-            
-            if (!time) {
-              const timeMatch = rowText.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
-              if (timeMatch) time = this.normalizeTime(timeMatch[1]);
-            }
-            
-            // Add fixture if we have team names
             if (homeTeam && awayTeam) {
-              fixtures.push({
-                date: date || '',
-                time: time || '',
-                homeTeam: homeTeam,
-                awayTeam: awayTeam,
-                venue: venue || undefined,
-                round: round || undefined
-              });
-              console.log(`Added fixture: ${homeTeam} vs ${awayTeam} on ${date} at ${time}`);
-            }
-          }
-        } catch (error) {
-          console.warn(`Error parsing row ${index}:`, error);
-        }
-      });
-
-      // If no fixtures found in tables, try looking for div-based layouts
-      if (fixtures.length === 0) {
-        console.log('No table fixtures found, trying div-based approach...');
-        const divs = $('.fixture, .game, .match, [class*="fixture"], [class*="game"], [class*="match"]');
-        
-        divs.each((index, div) => {
-          try {
-            const $div = $(div);
-            const text = $div.text().trim();
-            
-            const teamMatch = text.match(/(.+?)\s+(?:vs?\.?|v)\s+(.+?)(?:\s|$)/i);
-            if (teamMatch) {
-              const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-              const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
+              // Extract additional info
+              const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+              const timeMatch = rowText.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
+              const roundMatch = rowText.match(/(round\s*\d+|r\d+)/i);
               
-              fixtures.push({
-                date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
-                time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
-                homeTeam: teamMatch[1].trim(),
-                awayTeam: teamMatch[2].trim()
-              });
+              // Clean up team names (remove extra text that might be venue/time info)
+              homeTeam = homeTeam.replace(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}).*/, '').trim();
+              awayTeam = awayTeam.replace(/(\d{1,2}:\d{2}).*/, '').trim();
+              
+              if (homeTeam.length > 0 && awayTeam.length > 0) {
+                fixtures.push({
+                  date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
+                  time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
+                  homeTeam: homeTeam,
+                  awayTeam: awayTeam,
+                  venue: '',
+                  round: roundMatch ? roundMatch[1] : ''
+                });
+                
+                foundFixtures = true;
+                console.log(`Found fixture: ${homeTeam} vs ${awayTeam}`);
+              }
             }
           } catch (error) {
-            console.warn(`Error parsing div ${index}:`, error);
+            console.warn(`Error parsing row ${index}:`, error);
           }
         });
       }
 
+      // If still no fixtures found, try div-based approach
+      if (!foundFixtures) {
+        console.log('No table fixtures found, trying div-based approach...');
+        
+        const divSelectors = [
+          '.fixture',
+          '.game',
+          '.match',
+          '[class*="fixture"]',
+          '[class*="game"]',
+          '[class*="match"]',
+          'div:contains("vs")',
+          'div:contains(" v ")'
+        ];
+        
+        for (const selector of divSelectors) {
+          const divs = $(selector);
+          console.log(`Trying div selector "${selector}" - found ${divs.length} elements`);
+          
+          divs.each((index, div) => {
+            try {
+              const $div = $(div);
+              const text = $div.text().trim();
+              
+              const teamMatch = text.match(/(.+?)\s+(?:vs?\.?|v)\s+(.+?)(?:\s|$)/i);
+              if (teamMatch) {
+                const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
+                
+                fixtures.push({
+                  date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
+                  time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
+                  homeTeam: teamMatch[1].trim(),
+                  awayTeam: teamMatch[2].trim(),
+                  venue: '',
+                  round: ''
+                });
+                
+                foundFixtures = true;
+                console.log(`Found fixture in div: ${teamMatch[1].trim()} vs ${teamMatch[2].trim()}`);
+              }
+            } catch (error) {
+              console.warn(`Error parsing div ${index}:`, error);
+            }
+          });
+          
+          if (foundFixtures) break;
+        }
+      }
+
       console.log(`Successfully scraped ${fixtures.length} fixtures`);
+      
+      // If no fixtures found, log some debugging info
+      if (fixtures.length === 0) {
+        console.log('No fixtures found. Page content preview:');
+        console.log(html.substring(0, 500) + '...');
+        
+        // Look for any text that might indicate this is the right page
+        const pageIndicators = $('title').text() + ' ' + $('h1, h2, h3').text();
+        console.log('Page indicators:', pageIndicators);
+      }
+      
       return fixtures;
     } catch (error) {
       console.error('Error scraping fixtures:', error);
