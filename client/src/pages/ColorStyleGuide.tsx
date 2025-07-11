@@ -72,16 +72,18 @@ export default function ColorStyleGuide() {
     { code: "GK", name: "Goal Keeper", color: "#4338ca", bgClass: "bg-indigo-600", description: "Deep indigo - ultimate defense" }
   ];
 
-  // Statistics Color Scheme
+  // Statistics Color Scheme - Updated to match current app statistics
   const statCategories = [
-    { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <Target className="h-4 w-4" />, description: "Classic green for positive outcomes" },
-    { name: "Goals Against", color: "#dc2626", bgClass: "bg-red-600", icon: <Shield className="h-4 w-4" />, description: "Traditional red for defensive stats" },
+    { name: "Goals For", color: "#16a34a", bgClass: "bg-green-600", icon: <Target className="h-4 w-4" />, description: "Classic green for positive scoring outcomes" },
+    { name: "Goals Against", color: "#dc2626", bgClass: "bg-red-600", icon: <Shield className="h-4 w-4" />, description: "Traditional red for goals conceded" },
+    { name: "Missed Goals", color: "#ea580c", bgClass: "bg-orange-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Orange for missed scoring opportunities" },
+    { name: "Rebounds", color: "#ca8a04", bgClass: "bg-yellow-600", icon: <TrendingUp className="h-4 w-4" />, description: "Yellow for ball recovery actions" },
     { name: "Intercepts", color: "#2563eb", bgClass: "bg-blue-600", icon: <Zap className="h-4 w-4" />, description: "Blue for active defensive plays" },
-    { name: "Rebounds", color: "#ca8a04", bgClass: "bg-yellow-600", icon: <TrendingUp className="h-4 w-4" />, description: "Yellow for recovery actions" },
-    { name: "Turnovers", color: "#ea580c", bgClass: "bg-orange-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Orange for concerning events" },
-    { name: "Penalties", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertCircle className="h-4 w-4" />, description: "Purple for rule infractions" },
-    { name: "Centre Pass", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Play className="h-4 w-4" />, description: "Cyan for neutral possession" },
-    { name: "Rating", color: "#059669", bgClass: "bg-emerald-600", icon: <Star className="h-4 w-4" />, description: "Emerald for overall performance" }
+    { name: "Deflections", color: "#0891b2", bgClass: "bg-cyan-600", icon: <Activity className="h-4 w-4" />, description: "Cyan for ball disruption plays" },
+    { name: "Turnovers", color: "#ef4444", bgClass: "bg-red-500", icon: <AlertCircle className="h-4 w-4" />, description: "Red for possession losses" },
+    { name: "Gains", color: "#059669", bgClass: "bg-emerald-600", icon: <Award className="h-4 w-4" />, description: "Emerald for possession recoveries" },
+    { name: "Receives", color: "#8b5cf6", bgClass: "bg-violet-500", icon: <Users className="h-4 w-4" />, description: "Violet for successful ball handling" },
+    { name: "Penalties", color: "#7c3aed", bgClass: "bg-violet-600", icon: <AlertTriangle className="h-4 w-4" />, description: "Purple for rule infractions" }
   ];
 
   // Game Status Color Schemes - Multiple Options
@@ -539,65 +541,71 @@ export default function ColorStyleGuide() {
             
             {/* STAT_COLORS Inconsistencies */}
             <div className="mb-8">
-              <h4 className="font-semibold mb-3">STAT_COLORS (constants.ts) - Major Inconsistencies</h4>
+              <h4 className="font-semibold mb-3">Current Statistics Colors - Inconsistency Analysis</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <ColorSwatch
-                  name="Goals (Current)"
-                  hex="#15803d"
-                  description="Using green-700 instead of brand Success Green"
-                  usage="Should use #22c55e (Success Green)"
-                />
-                <ColorSwatch
-                  name="Missed Goals (Current)"
-                  hex="#c2410c"
-                  description="Using orange-700 instead of brand Warning Yellow"
-                  usage="Should use #eab308 (Warning Yellow)"
+                  name="Goals For (Current)"
+                  hex="#22c55e"
+                  description="Uses green-500 - close to Success Green ✓"
+                  usage="Recommended: #16a34a (Success Green-600)"
                 />
                 <ColorSwatch
                   name="Goals Against (Current)"
-                  hex="#b91c1c"
-                  description="Using red-700 instead of brand Error Red"
-                  usage="Should use #EF4444 (Error Red)"
+                  hex="#ef4444"
+                  description="Uses red-500 - close to Error Red ✓"
+                  usage="Recommended: #dc2626 (Error Red-600)"
+                />
+                <ColorSwatch
+                  name="Missed Goals (Current)"
+                  hex="#f97316"
+                  description="Uses orange-500 - not aligned with Warning Yellow"
+                  usage="Recommended: #ea580c (Orange-600)"
                 />
                 <ColorSwatch
                   name="Rebounds (Current)"
-                  hex="#1e40af"
-                  description="Using blue-800 instead of brand Primary Blue"
-                  usage="Should use #3b82f6 (Primary Blue)"
+                  hex="#a855f7"
+                  description="Uses purple-500 - not in brand palette"
+                  usage="Recommended: #ca8a04 (Yellow-600)"
                 />
                 <ColorSwatch
                   name="Intercepts (Current)"
-                  hex="#3730a3"
-                  description="Using indigo-800 - not in brand palette"
-                  usage="Should use #3b82f6 (Primary Blue) or #8B5CF6 (Purple Accent)"
+                  hex="#3b82f6"
+                  description="Uses blue-500 - matches Primary Blue ✓"
+                  usage="Recommended: #2563eb (Primary Blue-600)"
                 />
                 <ColorSwatch
-                  name="Pick Up (Current)"
-                  hex="#581c87"
-                  description="Using purple-900 - not in brand palette"
-                  usage="Should use #8B5CF6 (Purple Accent)"
+                  name="Deflections (Current)"
+                  hex="#06b6d4"
+                  description="Uses cyan-500 - reasonable choice"
+                  usage="Recommended: #0891b2 (Cyan-600)"
                 />
                 <ColorSwatch
-                  name="Bad Pass (Current)"
-                  hex="#92400e"
-                  description="Using amber-800 instead of brand Warning Yellow"
-                  usage="Should use #eab308 (Warning Yellow)"
+                  name="Turnovers (Current)"
+                  hex="#ef4444"
+                  description="Uses red-500 - appropriate for negative stat"
+                  usage="Recommended: Keep as is or use #ef4444"
                 />
                 <ColorSwatch
-                  name="Handling Error (Current)"
-                  hex="#be185d"
-                  description="Using pink-700 - not in brand palette"
-                  usage="Should use #EF4444 (Error Red)"
+                  name="Gains (Current)"
+                  hex="#22c55e"
+                  description="Uses green-500 - appropriate for positive stat"
+                  usage="Recommended: #059669 (Emerald-600)"
                 />
                 <ColorSwatch
-                  name="Infringement (Current)"
-                  hex="#881337"
-                  description="Using rose-900 - not in brand palette"
-                  usage="Should use #EF4444 (Error Red)"
+                  name="Receives (Current)"
+                  hex="#eab308"
+                  description="Uses yellow-500 - reasonable neutral choice"
+                  usage="Recommended: #8b5cf6 (Violet-500)"
+                />
+                <ColorSwatch
+                  name="Penalties (Current)"
+                  hex="#d97706"
+                  description="Uses amber-600 - should be more serious color"
+                  usage="Recommended: #7c3aed (Violet-600)"
                 />
               </div>
               <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
-                <strong>Impact:</strong> All 9 stat colors are inconsistent with brand palette. Creates visual confusion and undermines brand consistency.
+                <strong>Current Status:</strong> Mixed consistency - some stats align well with brand colors, others need updating. Goals For/Against and Intercepts are well-aligned. Rebounds, Receives, and Penalties need the most attention.
               </div>
             </div>
 
