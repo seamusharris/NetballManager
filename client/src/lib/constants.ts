@@ -118,16 +118,16 @@ import {
 } from 'lucide-react';
 
 export const STAT_ICONS: Record<string, any> = {
-  goalsFor: Target,         // Target icon for scoring goals
-  goalsAgainst: Shield,     // Shield icon for goals conceded  
-  missedGoals: AlertTriangle, // Alert triangle for missed opportunities
-  rebounds: TrendingUp,     // Trending up for ball recovery actions
+  goalsFor: Target,         // Target icon for scoring goals - perfect semantic match
+  goalsAgainst: Shield,     // Shield icon for goals conceded by our defense
+  missedGoals: AlertTriangle, // Alert triangle for missed scoring opportunities
+  rebounds: RefreshCw,      // Refresh/cycle icon for ball recovery actions
   intercepts: Zap,          // Zap icon for active defensive plays
   deflections: Activity,    // Activity icon for ball disruption plays
   turnovers: AlertCircle,   // Alert circle for possession losses
   gains: Award,             // Award icon for possession recoveries
   receives: Users,          // Users icon for successful ball handling
-  penalties: AlertTriangle  // Alert triangle for rule infractions
+  penalties: Ban            // Ban icon for rule infractions
 };
 
 // Statistics Types and Categories
