@@ -1,4 +1,3 @@
-
 import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
@@ -45,12 +44,12 @@ export class NetballConnectScraper {
 
       // First try with regular HTTP fetch
       const fixtures = await this.scrapeWithFetch(url);
-      
+
       if (fixtures.length === 0) {
         console.log('No fixtures found with HTTP fetch, trying Playwright for JavaScript-rendered content...');
         return await this.scrapeWithPlaywright(url);
       }
-      
+
       return fixtures;
     } catch (error) {
       console.error('Scraping error:', error);
@@ -73,7 +72,7 @@ export class NetballConnectScraper {
 
     const html = await response.text();
     console.log(`Successfully fetched ${html.length} characters of HTML`);
-    
+
     // Check if this is a JavaScript-rendered page
     if (html.includes('id="root"') && html.includes('Loading...')) {
       console.log('Detected JavaScript-rendered page, returning empty for fallback to Playwright');
@@ -85,28 +84,29 @@ export class NetballConnectScraper {
 
   private async scrapeWithPlaywright(url: string): Promise<ScrapedFixture[]> {
     console.log('Launching Playwright browser...');
-    
+
     this.browser = await chromium.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
-    
+
     this.page = await this.browser.newPage();
-    
+
     // Set user agent and viewport
     await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     await this.page.setViewportSize({ width: 1920, height: 1080 });
-    
+
     console.log('Navigating to page and waiting for content...');
-    
+
     try {
       // Navigate to the page with longer timeout
       await this.page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
-      
-      // Wait for content to load - NetballConnect specific approach
-      console.log('Waiting for NetballConnect content to load...');
-      await this.page.waitForTimeout(15000); // Wait for React app to fully load
-    
+
+    } catch (navigationError) {
+      console.error('Playwright navigation failed:', navigationError);
+      throw new Error(`Failed to navigate to ${url}: ${navigationError instanceof Error ? navigationError.message : 'Unknown error'}`);
+    }
+
     // Try to wait for specific NetballConnect elements
     try {
       await this.page.waitForSelector('table, .fixture, .game, [class*="fixture"], [class*="game"]', { timeout: 10000 });
@@ -114,11 +114,11 @@ export class NetballConnectScraper {
     } catch (error) {
       console.log('No specific fixture elements found, proceeding with generic extraction');
     }
-    
+
     // Enhanced fixture extraction for NetballConnect
     const fixtures = await this.page.evaluate(() => {
       const foundFixtures: any[] = [];
-      
+
       console.log('=== PLAYWRIGHT PAGE ANALYSIS ===');
       console.log('Page title:', document.title);
       console.log('Page URL:', window.location.href);
@@ -126,11 +126,11 @@ export class NetballConnectScraper {
       console.log('Available tables:', document.querySelectorAll('table').length);
       console.log('Available divs:', document.querySelectorAll('div').length);
       console.log('Available spans:', document.querySelectorAll('span').length);
-      
+
       // Log page content sample
       const bodyText = document.body.textContent || '';
       console.log('Body text sample (first 500 chars):', bodyText.substring(0, 500));
-      
+
       // NetballConnect specific selectors
       const netballConnectSelectors = [
         'table tr',
@@ -147,17 +147,17 @@ export class NetballConnectScraper {
         '.table-row',
         '.data-row'
       ];
-      
+
       // Try each selector pattern
       netballConnectSelectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         console.log(`Selector "${selector}" found ${elements.length} elements`);
-        
+
         elements.forEach((element, index) => {
           const text = element.textContent?.trim() || '';
           if (text.length > 10 && text.length < 500) {
             console.log(`${selector}[${index}] text:`, text.substring(0, 150));
-            
+
             // Enhanced team matching patterns for NetballConnect
             const teamPatterns = [
               // Standard vs patterns
@@ -169,13 +169,13 @@ export class NetballConnectScraper {
               // Table cell patterns (team names in separate cells)
               /^([A-Za-z\s]{3,30}).*?([A-Za-z\s]{3,30})$/i
             ];
-            
+
             for (const pattern of teamPatterns) {
               const match = text.match(pattern);
               if (match && match[1] && match[2]) {
                 const homeTeam = match[1].trim();
                 const awayTeam = match[2].trim();
-                
+
                 // Enhanced validation
                 const isValidTeam = (name: string) => {
                   return name.length >= 3 && 
@@ -184,14 +184,14 @@ export class NetballConnectScraper {
                          !['Date', 'Time', 'Venue', 'Round', 'Week', 'Game', 'vs', 'v'].includes(name) &&
                          !/^\d+$/.test(name);
                 };
-                
+
                 if (isValidTeam(homeTeam) && isValidTeam(awayTeam) && homeTeam !== awayTeam) {
                   // Extract additional information
                   const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
                   const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
                   const roundMatch = text.match(/(?:Round|Week|Game)\s*(\d+)/i);
                   const venueMatch = text.match(/(?:at|@)\s+([^,\d]+?)(?:\s|,|$)/i);
-                  
+
                   const fixture = {
                     homeTeam,
                     awayTeam,
@@ -200,13 +200,13 @@ export class NetballConnectScraper {
                     round: roundMatch ? `Round ${roundMatch[1]}` : '',
                     venue: venueMatch ? venueMatch[1].trim() : ''
                   };
-                  
+
                   // Check for duplicates
                   const isDuplicate = foundFixtures.some(f => 
                     f.homeTeam.toLowerCase() === fixture.homeTeam.toLowerCase() && 
                     f.awayTeam.toLowerCase() === fixture.awayTeam.toLowerCase()
                   );
-                  
+
                   if (!isDuplicate) {
                     foundFixtures.push(fixture);
                     console.log(`✓ Found fixture: ${homeTeam} vs ${awayTeam}`);
@@ -218,30 +218,30 @@ export class NetballConnectScraper {
           }
         });
       });
-      
+
       // If still no fixtures, try a more aggressive text-based approach
       if (foundFixtures.length === 0) {
         console.log('No fixtures found with selectors, trying aggressive text search...');
-        
+
         // Get all text content and split by common separators
         const allText = document.body.textContent || '';
         const lines = allText.split(/[\n\r]+/).map(line => line.trim()).filter(line => line.length > 5);
-        
+
         lines.forEach((line, index) => {
           if (line.length < 200 && /\s+v\s+|\s+vs\s+/i.test(line)) {
             console.log(`Text line ${index}:`, line);
-            
+
             const vsMatch = line.match(/([A-Za-z\s]{3,30})\s+(?:v|vs)\s+([A-Za-z\s]{3,30})/i);
             if (vsMatch) {
               const homeTeam = vsMatch[1].trim();
               const awayTeam = vsMatch[2].trim();
-              
+
               if (homeTeam.length >= 3 && awayTeam.length >= 3 && homeTeam !== awayTeam) {
                 const isDuplicate = foundFixtures.some(f => 
                   f.homeTeam.toLowerCase() === homeTeam.toLowerCase() && 
                   f.awayTeam.toLowerCase() === awayTeam.toLowerCase()
                 );
-                
+
                 if (!isDuplicate) {
                   foundFixtures.push({
                     homeTeam,
@@ -258,18 +258,18 @@ export class NetballConnectScraper {
           }
         });
       }
-      
+
       console.log(`=== FINAL RESULT: ${foundFixtures.length} fixtures found ===`);
       return foundFixtures;
     });
-    
+
     console.log(`Found ${fixtures.length} fixtures with Playwright`);
-    
+
     // Remove duplicates
     const uniqueFixtures = fixtures.filter((fixture, index, self) => 
       index === self.findIndex(f => f.homeTeam === fixture.homeTeam && f.awayTeam === fixture.awayTeam)
     );
-    
+
     return uniqueFixtures;
   }
 
@@ -278,7 +278,7 @@ export class NetballConnectScraper {
       // Comprehensive HTML structure logging
       console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
       console.log('HTML sample (last 1000 chars):', html.substring(Math.max(0, html.length - 1000)));
-      
+
       // Look for JavaScript content that might contain fixture data
       const scriptMatches = html.match(/<script[^>]*>(.*?)<\/script>/gis);
       if (scriptMatches) {
@@ -289,13 +289,13 @@ export class NetballConnectScraper {
           }
         });
       }
-      
+
       // Look for data attributes or JSON that might contain fixtures
       const dataMatches = html.match(/data-[^=]*=["'][^"']*["']/gi);
       if (dataMatches) {
         console.log('Data attributes found:', dataMatches.slice(0, 10));
       }
-      
+
       // Check for potential API endpoints or AJAX calls
       const apiMatches = html.match(/\/api\/[^"'\s]+/gi);
       if (apiMatches) {
@@ -307,16 +307,16 @@ export class NetballConnectScraper {
 
       // NetballConnect specific selectors and enhanced parsing
       console.log('Looking for NetballConnect fixture data...');
-      
+
       // Log page structure for debugging
       console.log('Available divs:', $('div').length);
       console.log('Available tables:', $('table').length);
       console.log('Available spans:', $('span').length);
       console.log('Page title:', $('title').text());
       console.log('Available IDs:', $('[id]').map((i, el) => $(el).attr('id')).get().slice(0, 10));
-      
+
       // NetballConnect specific approaches
-      
+
       // Approach 1: Look for NetballConnect specific elements
       const netballConnectSelectors = [
         '.fixture-row',
@@ -334,12 +334,12 @@ export class NetballConnectScraper {
       for (const selector of netballConnectSelectors) {
         const elements = $(selector);
         console.log(`Selector "${selector}" found ${elements.length} elements`);
-        
+
         elements.each((index, element) => {
           const $element = $(element);
           const text = $element.text().trim();
           console.log(`${selector}[${index}]:`, text.substring(0, 150));
-          
+
           const fixture = this.extractFixtureFromText(text);
           if (fixture && !this.isDuplicateFixture(fixtures, fixture)) {
             fixtures.push(fixture);
@@ -351,33 +351,33 @@ export class NetballConnectScraper {
       // Approach 2: Look for tables with fixture data
       if (fixtures.length === 0) {
         console.log('Analyzing tables for fixture data...');
-        
+
         $('table').each((tableIndex, table) => {
           const $table = $(table);
           const tableClass = $table.attr('class') || '';
           const tableId = $table.attr('id') || '';
-          
+
           console.log(`Table ${tableIndex}: class="${tableClass}", id="${tableId}"`);
-          
+
           // Look for fixture-related table classes/ids
           if (tableClass.toLowerCase().includes('fixture') || 
               tableClass.toLowerCase().includes('game') ||
               tableClass.toLowerCase().includes('livescore') ||
               tableId.toLowerCase().includes('fixture') ||
               tableId.toLowerCase().includes('game')) {
-            
+
             console.log(`Found potential fixture table: ${tableClass || tableId}`);
-            
+
             $table.find('tr').each((rowIndex, row) => {
               const $row = $(row);
               const cells = $row.find('td, th');
-              
+
               if (cells.length >= 2) {
                 const cellTexts = cells.map((i, cell) => $(cell).text().trim()).get();
                 const rowText = cellTexts.join(' | ');
-                
+
                 console.log(`Table row ${rowIndex}:`, rowText);
-                
+
                 // Try to extract from individual cells first
                 for (let i = 0; i < cellTexts.length - 1; i++) {
                   const combinedText = cellTexts[i] + ' ' + cellTexts[i + 1];
@@ -388,7 +388,7 @@ export class NetballConnectScraper {
                     break;
                   }
                 }
-                
+
                 // Then try the full row
                 if (fixtures.length === 0) {
                   const fixture = this.extractFixtureFromText(rowText);
@@ -406,22 +406,22 @@ export class NetballConnectScraper {
       // Approach 3: Deep dive into all text content
       if (fixtures.length === 0) {
         console.log('Performing deep text analysis...');
-        
+
         // Get all text-containing elements
         const textElements = $('*').filter(function() {
           return $(this).children().length === 0 && $(this).text().trim().length > 5;
         });
-        
+
         console.log(`Found ${textElements.length} text elements to analyze`);
-        
+
         textElements.each((index, element) => {
           const $element = $(element);
           const text = $element.text().trim();
-          
+
           // Look for team vs team patterns
           if (text.length > 10 && text.length < 300 && this.containsTeamPattern(text)) {
             console.log(`Analyzing text element ${index}:`, text);
-            
+
             const fixture = this.extractFixtureFromText(text);
             if (fixture && !this.isDuplicateFixture(fixtures, fixture)) {
               fixtures.push(fixture);
@@ -434,14 +434,14 @@ export class NetballConnectScraper {
       // Approach 4: Enhanced JavaScript data extraction
       if (fixtures.length === 0) {
         console.log('Searching for JavaScript data...');
-        
+
         $('script').each((index, script) => {
           const scriptContent = $(script).html() || '';
-          
+
           if (scriptContent.length < 50) return; // Skip tiny scripts
-          
+
           console.log(`Analyzing script ${index} (${scriptContent.length} chars)`);
-          
+
           // Look for JSON data structures
           const jsonPatterns = [
             /\{[^}]*"(?:home|away|team)"[^}]*\}/gi,
@@ -452,14 +452,14 @@ export class NetballConnectScraper {
             /data\s*[:=]\s*(\{.*?\})/gi,
             /window\.[^=]*=\s*(\{.*?\})/gi
           ];
-          
+
           jsonPatterns.forEach((pattern, patternIndex) => {
             const matches = scriptContent.match(pattern);
             if (matches) {
               console.log(`Script ${index}, JSON Pattern ${patternIndex}: Found ${matches.length} matches`);
               matches.forEach((match, matchIndex) => {
                 console.log(`JSON Match ${matchIndex}:`, match.substring(0, 300));
-                
+
                 // Try to parse as JSON
                 try {
                   // Extract just the JSON part
@@ -467,7 +467,7 @@ export class NetballConnectScraper {
                   if (jsonMatch) {
                     const jsonData = JSON.parse(jsonMatch[1]);
                     console.log('Parsed JSON data:', JSON.stringify(jsonData).substring(0, 200));
-                    
+
                     // Recursively search for team names in the parsed data
                     const extractedFixtures = this.extractFixturesFromJSON(jsonData);
                     extractedFixtures.forEach(fixture => {
@@ -488,18 +488,18 @@ export class NetballConnectScraper {
               });
             }
           });
-          
+
           // Look for specific NetballConnect patterns
           if (scriptContent.includes('netball') || scriptContent.includes('livescore') || scriptContent.includes('fixture')) {
             console.log(`Script ${index} contains netball-related content, analyzing...`);
-            
+
             // Look for team names in any format
             const teamNamePatterns = [
               /["']([A-Za-z\s]{3,25})["']\s*(?:vs?|versus|playing|against)\s*["']([A-Za-z\s]{3,25})["']/gi,
               /team["']?\s*[:=]\s*["']([A-Za-z\s]{3,25})["']/gi,
               /name["']?\s*[:=]\s*["']([A-Za-z\s]{3,25})["']/gi
             ];
-            
+
             teamNamePatterns.forEach(pattern => {
               const matches = scriptContent.match(pattern);
               if (matches) {
@@ -511,14 +511,14 @@ export class NetballConnectScraper {
       }
 
       console.log(`Total fixtures found: ${fixtures.length}`);
-      
+
       if (fixtures.length === 0) {
         // Log more debugging info
         console.log('No fixtures found. Page structure:');
         console.log('Body text sample:', $('body').text().substring(0, 1000));
         console.log('All text content:', $.text().substring(0, 1000));
       }
-      
+
       return fixtures;
 
     } catch (error) {
@@ -543,39 +543,39 @@ export class NetballConnectScraper {
       /\bplaying\s+/i,
       /\bagainst\s+/i
     ];
-    
+
     return teamPatterns.some(pattern => pattern.test(text));
   }
 
   private extractFixtureFromText(text: string): ScrapedFixture | null {
     // Clean the text first
     const cleanText = text.replace(/\s+/g, ' ').trim();
-    
+
     // Enhanced team matching patterns for NetballConnect
     const teamPatterns = [
       // Standard vs patterns
       /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s+(?:\d{1,2}[\/\-]|\d{1,2}:|\d{4}|$))/i,
       /(.+?)\s+vs?\s+(.+?)(?:\s+(?:\d{1,2}[\/\-]|\d{1,2}:|\d{4}|$))/i,
-      
+
       // Dash separated
       /(.+?)\s+-\s+(.+?)(?:\s+(?:\d{1,2}[\/\-]|\d{1,2}:|\d{4}|$))/i,
-      
+
       // Pipe separated
       /(.+?)\s+\|\s+(.+?)(?:\s+(?:\d{1,2}[\/\-]|\d{1,2}:|\d{4}|$))/i,
-      
+
       // Playing/Against patterns
       /(.+?)\s+(?:playing|against)\s+(.+?)(?:\s+(?:\d{1,2}[\/\-]|\d{1,2}:|\d{4}|$))/i,
-      
+
       // NetballConnect specific patterns
       /(.+?)\s+v\s+(.+?)(?:\s+(?:Round|Week|Game|\d))/i,
-      
+
       // Team names in quotes or brackets
       /"(.+?)"\s+(?:v|vs)\s+"(.+?)"/i,
       /\((.+?)\)\s+(?:v|vs)\s+\((.+?)\)/i,
-      
+
       // More flexible patterns
       /^(.+?)\s+(?:v|vs|versus|playing)\s+(.+?)$/i,
-      
+
       // Split by common separators and look for team names
       /(.+?)\s*[:-]\s*(.+?)(?:\s+\d|\s*$)/i
     ];
@@ -585,16 +585,16 @@ export class NetballConnectScraper {
       if (teamMatch && teamMatch[1] && teamMatch[2]) {
         let homeTeam = this.cleanTeamName(teamMatch[1]);
         let awayTeam = this.cleanTeamName(teamMatch[2]);
-        
+
         // Validate team names
         if (this.isValidTeamName(homeTeam) && this.isValidTeamName(awayTeam)) {
-          
+
           // Extract additional information
           const dateMatch = cleanText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
           const timeMatch = cleanText.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
           const roundMatch = cleanText.match(/(?:Round|Week|Game)\s*(\d+)/i);
           const venueMatch = cleanText.match(/(?:at|@)\s+([^,\d]+?)(?:\s|,|$)/i);
-          
+
           return {
             date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
             time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
@@ -606,7 +606,7 @@ export class NetballConnectScraper {
         }
       }
     }
-    
+
     return null;
   }
 
@@ -622,17 +622,17 @@ export class NetballConnectScraper {
   private isValidTeamName(name: string): boolean {
     // Must be reasonable length
     if (name.length < 2 || name.length > 50) return false;
-    
+
     // Must not be just numbers
     if (/^\d+$/.test(name)) return false;
-    
+
     // Must not be common date/time/venue words
     const excludeWords = ['am', 'pm', 'time', 'date', 'venue', 'round', 'week', 'game', 'court', 'field'];
     if (excludeWords.includes(name.toLowerCase())) return false;
-    
+
     // Must contain at least some letters
     if (!/[a-zA-Z]/.test(name)) return false;
-    
+
     return true;
   }
 
@@ -737,7 +737,7 @@ export class NetballConnectScraper {
 
   private extractFixturesFromJSON(data: any): ScrapedFixture[] {
     const fixtures: ScrapedFixture[] = [];
-    
+
     // Recursive function to search through nested objects/arrays
     const searchForFixtures = (obj: any, path: string = '') => {
       if (typeof obj === 'object' && obj !== null) {
@@ -749,21 +749,21 @@ export class NetballConnectScraper {
           const hasHomeTeam = keys.some(k => k.toLowerCase().includes('home'));
           const hasAwayTeam = keys.some(k => k.toLowerCase().includes('away'));
           const hasTeams = keys.some(k => k.toLowerCase().includes('team'));
-          
+
           if ((hasHomeTeam && hasAwayTeam) || hasTeams) {
             console.log(`Found potential fixture object at ${path}:`, obj);
-            
+
             // Extract team names
             let homeTeam = '';
             let awayTeam = '';
             let date = '';
             let time = '';
             let venue = '';
-            
+
             for (const [key, value] of Object.entries(obj)) {
               const lowerKey = key.toLowerCase();
               const strValue = typeof value === 'string' ? value : '';
-              
+
               if (lowerKey.includes('home') && lowerKey.includes('team')) homeTeam = strValue;
               else if (lowerKey.includes('away') && lowerKey.includes('team')) awayTeam = strValue;
               else if (lowerKey.includes('team1')) homeTeam = strValue;
@@ -772,7 +772,7 @@ export class NetballConnectScraper {
               else if (lowerKey.includes('time')) time = strValue;
               else if (lowerKey.includes('venue')) venue = strValue;
             }
-            
+
             if (this.isValidTeamName(homeTeam) && this.isValidTeamName(awayTeam)) {
               fixtures.push({
                 homeTeam: this.cleanTeamName(homeTeam),
@@ -784,15 +784,16 @@ export class NetballConnectScraper {
               });
             }
           }
-          
+
           // Continue searching nested objects
           for (const value of Object.values(obj)) {
             searchForFixtures(value, `${path}.${Object.keys(obj).find(k => obj[k] === value)}`);
           }
+        ```
         }
       }
     };
-    
+
     searchForFixtures(data);
     return fixtures;
   }
