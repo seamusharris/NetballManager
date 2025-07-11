@@ -13,7 +13,8 @@ import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor
 import { 
   Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
   Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
-  Goal, TrendingUp, RefreshCw, Users, Coffee, Slash, Award
+  Goal, TrendingUp, RefreshCw, Users, Coffee, Slash, Award, Clock,
+  Timer
 } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
@@ -104,9 +105,51 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   const [redoStack, setRedoStack] = useState<PositionStats[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
   const [pendingStatChange, setPendingStatChange] = useState<any>(null);
+  
+  // Timer state
+  const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
 
   // Determine team context - use the teamId from URL params or current team
   const currentTeamId = teamId || currentTeam?.id;
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTimerRunning]);
+
+  // Timer functions
+  const startTimer = () => {
+    setGameStartTime(new Date());
+    setIsTimerRunning(true);
+  };
+
+  const stopTimer = () => {
+    setIsTimerRunning(false);
+  };
+
+  const resetTimer = () => {
+    setGameStartTime(null);
+    setCurrentTime(new Date());
+    setIsTimerRunning(false);
+  };
+
+  const formatElapsedTime = (): string => {
+    if (!gameStartTime) return '00:00';
+    const elapsed = Math.floor((currentTime.getTime() - gameStartTime.getTime()) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   console.log(`StatsRecorder: Initialized with gameId=${gameId}, teamId=${teamId}, currentTeamId=${currentTeamId}`);
 
@@ -522,7 +565,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     return total;
   };
 
-  // Quick tap stat button - single tap to increment
+  // Quick tap stat button - single tap to increment, long press to edit
   const QuickStatButton = ({ position, stat, important = false }) => {
     const key = getPositionQuarterKey(position, currentQuarter);
     const currentValue = positionStats[key]?.[stat] || 0;
@@ -533,16 +576,25 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
     if (!statInfo) return null;
 
-    // Fallback icon handling - use a default icon if statInfo.icon is undefined
-    const StatIcon = statInfo.icon || Target;
+    // Properly handle icon component
+    const StatIcon = statInfo.icon;
     const statColor = statInfo.color || 'bg-gray-100';
     const statLabel = statInfo.label || stat;
+
+    const handleLongPress = (e: React.MouseEvent) => {
+      e.preventDefault();
+      // For now, decrease stat on right-click
+      if (e.type === 'contextmenu') {
+        recordStat(position, stat, -1);
+      }
+    };
 
     return (
       <Button
         variant="outline"
         className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-102 active:scale-95`}
         onClick={() => recordStat(position, stat, 1)}
+        onContextMenu={handleLongPress}
       >
         <StatIcon className={important ? 'h-5 w-5' : 'h-4 w-4'} />
         <span className={`${important ? 'text-sm' : 'text-xs'} font-medium`}>{statLabel}</span>
@@ -675,6 +727,43 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             <Card>
               <CardContent className="py-4">
                 <div className="space-y-3">
+                  {/* Game Timer */}
+                  <div className="text-center">
+                    <div className="text-sm font-semibold mb-2">Game Time</div>
+                    <div className="text-2xl font-mono font-bold mb-2">{formatElapsedTime()}</div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <Button
+                        variant="outline" 
+                        size="sm"
+                        onClick={startTimer}
+                        disabled={isTimerRunning}
+                        className="touch-manipulation"
+                      >
+                        <Play className="h-3 w-3 mr-1" />
+                        Start
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={stopTimer}
+                        disabled={!isTimerRunning}
+                        className="touch-manipulation"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Stop
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetTimer}
+                        className="touch-manipulation"
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+
                   {/* Quarter Selector */}
                   <div className="text-center">
                     <div className="text-sm font-semibold mb-2">Quarter</div>

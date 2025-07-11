@@ -72,27 +72,27 @@ export const VALIDATION = {
 // Stat category labels - using centralized ordering
 export const STAT_LABELS: Record<string, string> = {
   // Attacking stats
-  'goalsFor': 'Goals',
-  'missedGoals': 'Misses', 
-  
+  'goalsFor': 'Goal',
+  'missedGoals': 'Miss', 
+
   // Defending stats
-  'goalsAgainst': 'Goals Against',
-  
+  'goalsAgainst': 'Goal Against',
+
   // Universal stats (shared)
-  'rebounds': 'Rebounds',
-  'intercepts': 'Intercepts',
-  'deflections': 'Deflections',
-  'gains': 'Gains',
-  'receives': 'Receives', 
-  'turnovers': 'Turnovers',
-  'penalties': 'Penalties',
-  
+  'rebounds': 'Rebound',
+  'intercepts': 'Intercept',
+  'deflections': 'Deflection',
+  'gains': 'Gain',
+  'receives': 'Receive', 
+  'turnovers': 'Turnover',
+  'penalties': 'Penalty',
+
   // Legacy stats (backward compatibility)
-  'badPass': 'Bad Passes',
-  'handlingError': 'Handling Errors',
-  'pickUp': 'Pick Ups',
-  'infringement': 'Infringements',
-  
+  'badPass': 'Bad Pass',
+  'handlingError': 'Handling Error',
+  'pickUp': 'Pick Up',
+  'infringement': 'Infringement',
+
   // Alternative keys
   'goals': 'Goals'
 };
@@ -142,13 +142,13 @@ export const STAT_ORDER_CONFIG = {
     { key: 'missedGoals', label: 'Misses', category: 'attacking' },
     { key: 'rebounds', label: 'Rebounds', category: 'attacking' }
   ],
-  
+
   // Defending stats - for defensive positions  
   defending: [
     { key: 'goalsAgainst', label: 'Goals Against', category: 'defending' },
     { key: 'rebounds', label: 'Rebounds', category: 'defending' }
   ],
-  
+
   // Universal stats - for all positions
   universal: [
     { key: 'intercepts', label: 'Intercepts', category: 'universal' },
@@ -158,7 +158,7 @@ export const STAT_ORDER_CONFIG = {
     { key: 'turnovers', label: 'Turnovers', category: 'universal' },
     { key: 'penalties', label: 'Penalties', category: 'universal' }
   ],
-  
+
   // Legacy stats (kept for backward compatibility)
   legacy: [
     { key: 'badPass', label: 'Bad Pass', category: 'legacy' },
@@ -172,21 +172,21 @@ export const STAT_ORDER_CONFIG = {
 export const getOrderedStatsForPosition = (position: string): Array<{key: string, label: string, category: string}> => {
   const attackingPositions = ['GS', 'GA'];
   const defendingPositions = ['GD', 'GK'];
-  
+
   let orderedStats: Array<{key: string, label: string, category: string}> = [];
-  
+
   // Add position-specific stats first
   if (attackingPositions.includes(position)) {
     orderedStats.push(...STAT_ORDER_CONFIG.attacking);
   }
-  
+
   if (defendingPositions.includes(position)) {
     orderedStats.push(...STAT_ORDER_CONFIG.defending);
   }
-  
+
   // Add universal stats for all positions
   orderedStats.push(...STAT_ORDER_CONFIG.universal);
-  
+
   return orderedStats;
 };
 
