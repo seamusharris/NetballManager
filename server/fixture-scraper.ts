@@ -1,6 +1,7 @@
 
 import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
+import puppeteer from 'puppeteer';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -22,34 +23,187 @@ export interface ImportResult {
 }
 
 export class NetballConnectScraper {
+  private browser: any = null;
+  private page: any = null;
+
   constructor() {
-    console.log('NetballConnectScraper: Using lightweight HTML parser (cheerio + node-fetch)');
+    console.log('NetballConnectScraper: Using Puppeteer for JavaScript-rendered content');
   }
 
   async close() {
-    // No cleanup needed for HTTP-based scraper
+    if (this.page) {
+      await this.page.close();
+    }
+    if (this.browser) {
+      await this.browser.close();
+    }
   }
 
   async scrapeFixtures(url: string): Promise<ScrapedFixture[]> {
     try {
-      console.log(`Fetching HTML from: ${url}`);
+      console.log(`Scraping fixtures from: ${url}`);
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      // First try with regular HTTP fetch
+      const fixtures = await this.scrapeWithFetch(url);
+      
+      if (fixtures.length === 0) {
+        console.log('No fixtures found with HTTP fetch, trying Puppeteer for JavaScript-rendered content...');
+        return await this.scrapeWithPuppeteer(url);
+      }
+      
+      return fixtures;
+    } catch (error) {
+      console.error('Scraping error:', error);
+      throw new Error(`Failed to scrape fixtures: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private async scrapeWithFetch(url: string): Promise<ScrapedFixture[]> {
+    console.log(`Fetching HTML from: ${url}`);
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    console.log(`Successfully fetched ${html.length} characters of HTML`);
+    
+    // Check if this is a JavaScript-rendered page
+    if (html.includes('id="root"') && html.includes('Loading...')) {
+      console.log('Detected JavaScript-rendered page, returning empty for fallback to Puppeteer');
+      return [];
+    }
+
+    return this.parseHtmlForFixtures(html);
+  }
+
+  private async scrapeWithPuppeteer(url: string): Promise<ScrapedFixture[]> {
+    console.log('Launching Puppeteer browser...');
+    
+    this.browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
+    this.page = await this.browser.newPage();
+    
+    // Set user agent and viewport
+    await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    await this.page.setViewport({ width: 1920, height: 1080 });
+    
+    console.log('Navigating to page and waiting for content...');
+    
+    // Navigate to the page
+    await this.page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    
+    // Wait for content to load - NetballConnect specific approach
+    console.log('Waiting for NetballConnect content to load...');
+    await this.page.waitForTimeout(8000); // Wait 8 seconds for React app to load
+    
+    // Look for fixture data by searching for common patterns
+    const fixtures = await this.page.evaluate(() => {
+      const foundFixtures: any[] = [];
+      
+      // Look for table rows with fixture data
+      const tables = document.querySelectorAll('table');
+      tables.forEach(table => {
+        const rows = table.querySelectorAll('tr');
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('td, th');
+          if (cells.length >= 2) {
+            const cellTexts = Array.from(cells).map(cell => cell.textContent?.trim() || '');
+            const rowText = cellTexts.join(' | ');
+            
+            // Look for team vs team patterns
+            const vsPattern = /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$)/i;
+            const match = rowText.match(vsPattern);
+            
+            if (match && match[1] && match[2]) {
+              const homeTeam = match[1].trim();
+              const awayTeam = match[2].trim();
+              
+              // Basic validation
+              if (homeTeam.length > 1 && awayTeam.length > 1 && 
+                  homeTeam !== awayTeam && 
+                  !homeTeam.includes('Date') && !homeTeam.includes('Time') &&
+                  !awayTeam.includes('Date') && !awayTeam.includes('Time')) {
+                
+                // Extract additional info from the row
+                const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                const timeMatch = rowText.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
+                const roundMatch = rowText.match(/(?:Round|Week|Game)\s*(\d+)/i);
+                
+                foundFixtures.push({
+                  homeTeam,
+                  awayTeam,
+                  date: dateMatch ? dateMatch[1] : '',
+                  time: timeMatch ? timeMatch[1] : '',
+                  round: roundMatch ? `Round ${roundMatch[1]}` : '',
+                  venue: ''
+                });
+              }
+            }
+          }
+        });
+      });
+      
+      // Also look for div-based fixtures
+      const divs = document.querySelectorAll('div');
+      divs.forEach(div => {
+        const text = div.textContent?.trim() || '';
+        if (text.length > 5 && text.length < 200) {
+          const vsPattern = /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$)/i;
+          const match = text.match(vsPattern);
+          
+          if (match && match[1] && match[2]) {
+            const homeTeam = match[1].trim();
+            const awayTeam = match[2].trim();
+            
+            if (homeTeam.length > 1 && awayTeam.length > 1 && 
+                homeTeam !== awayTeam && 
+                !homeTeam.includes('Date') && !homeTeam.includes('Time') &&
+                !awayTeam.includes('Date') && !awayTeam.includes('Time')) {
+              
+              const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+              const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
+              const roundMatch = text.match(/(?:Round|Week|Game)\s*(\d+)/i);
+              
+              foundFixtures.push({
+                homeTeam,
+                awayTeam,
+                date: dateMatch ? dateMatch[1] : '',
+                time: timeMatch ? timeMatch[1] : '',
+                round: roundMatch ? `Round ${roundMatch[1]}` : '',
+                venue: ''
+              });
+            }
+          }
         }
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const html = await response.text();
-      console.log(`Successfully fetched ${html.length} characters of HTML`);
       
-      // Comprehensive HTML structure logging
-      console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
-      console.log('HTML sample (last 1000 chars):', html.substring(Math.max(0, html.length - 1000)));
+      return foundFixtures;
+    });
+    
+    console.log(`Found ${fixtures.length} fixtures with Puppeteer`);
+    
+    // Remove duplicates
+    const uniqueFixtures = fixtures.filter((fixture, index, self) => 
+      index === self.findIndex(f => f.homeTeam === fixture.homeTeam && f.awayTeam === fixture.awayTeam)
+    );
+    
+    return uniqueFixtures;
+  }
+
+  private parseHtmlForFixtures(html: string): ScrapedFixture[] {
+    // Comprehensive HTML structure logging
+    console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
+    console.log('HTML sample (last 1000 chars):', html.substring(Math.max(0, html.length - 1000)));
       
       // Look for JavaScript content that might contain fixture data
       const scriptMatches = html.match(/<script[^>]*>(.*?)<\/script>/gis);
