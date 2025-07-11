@@ -11,7 +11,8 @@ import {
   Palette, Eye, Copy, CheckCircle, AlertCircle, 
   Info, AlertTriangle, Zap, Star, Heart, Target,
   Shield, Users, TrendingUp, Activity, Award,
-  MapPin, Clock, Trophy, Play, Pause, Square
+  MapPin, Clock, Trophy, Play, Pause, Square,
+  RefreshCw, Ban
 } from 'lucide-react';
 
 // Position Badge Component
