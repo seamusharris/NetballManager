@@ -147,8 +147,12 @@ export default function ColorStyleGuide() {
             <div key={position.code} className="p-4 border rounded-lg">
               <div className="flex items-center gap-3 mb-3">
                 <div 
-                  className={`w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center font-bold`}
-                  style={{ backgroundColor: position.color, color: '#ffffff !important' }}
+                  className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center font-bold"
+                  style={{ 
+                    backgroundColor: position.color, 
+                    color: '#ffffff',
+                    '--tw-text-opacity': '1'
+                  } as React.CSSProperties}
                 >
                   {position.code}
                 </div>
