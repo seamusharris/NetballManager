@@ -874,9 +874,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
 
-                {/* Example Chart: Quarter Performance */}
+                {/* Example Chart 1: Quarter Performance */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Quarter Performance (Brand-Based Colors)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Quarter Performance (Brand-Based Colors)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <svg className="w-full h-full" viewBox="0 0 500 200">
                       {/* Grid lines */}
@@ -924,6 +924,96 @@ export default function ColorStyleGuide() {
                         <text x="70" y="30" fontSize="12" fill="#374151">Our Team</text>
                         <rect x="150" y="20" width="15" height="15" fill="#ef4444" rx="2" />
                         <text x="170" y="30" fontSize="12" fill="#374151">Opponent</text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Example Chart 2: Performance Metrics Dashboard */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Performance Metrics Dashboard</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-5 gap-4 h-full">
+                      {[
+                        { metric: 'Goals Scored', value: 85, color: '#22c55e', status: 'positive' },
+                        { metric: 'Accuracy %', value: 78, color: '#3b82f6', status: 'primary' },
+                        { metric: 'Attention Areas', value: 3, color: '#eab308', status: 'warning' },
+                        { metric: 'Critical Issues', value: 1, color: '#ef4444', status: 'negative' },
+                        { metric: 'Special Awards', value: 2, color: '#8b5cf6', status: 'accent' }
+                      ].map((item, i) => (
+                        <div key={item.metric} className="flex flex-col items-center">
+                          <div 
+                            className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2"
+                            style={{ backgroundColor: item.color }}
+                          >
+                            {item.value}
+                          </div>
+                          <div className="text-xs text-center font-medium">{item.metric}</div>
+                          <div className="text-xs text-muted-foreground text-center">{item.status}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Win/Loss Trend Line */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Win/Loss Trend Analysis</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Grid lines */}
+                      {[0, 25, 50, 75, 100].map(y => (
+                        <line key={y} x1="50" y1={180 - (y * 1.3)} x2="450" y2={180 - (y * 1.3)} 
+                              stroke="#e5e7eb" strokeWidth="1" />
+                      ))}
+                      
+                      {/* Trend data */}
+                      {[
+                        { game: 1, winRate: 100, result: 'win' },
+                        { game: 2, winRate: 50, result: 'loss' },
+                        { game: 3, winRate: 67, result: 'win' },
+                        { game: 4, winRate: 75, result: 'win' },
+                        { game: 5, winRate: 60, result: 'loss' },
+                        { game: 6, winRate: 67, result: 'win' },
+                        { game: 7, winRate: 71, result: 'win' }
+                      ].map((point, i) => {
+                        const x = 80 + (i * 55);
+                        const y = 180 - (point.winRate * 1.3);
+                        const color = point.result === 'win' ? '#22c55e' : '#ef4444';
+                        
+                        return (
+                          <g key={i}>
+                            {/* Win rate line */}
+                            {i > 0 && (
+                              <line
+                                x1={80 + ((i-1) * 55)}
+                                y1={180 - ([100, 50, 67, 75, 60, 67, 71][i-1] * 1.3)}
+                                x2={x}
+                                y2={y}
+                                stroke="#3b82f6"
+                                strokeWidth="3"
+                              />
+                            )}
+                            
+                            {/* Result point */}
+                            <circle cx={x} cy={y} r="5" fill={color} stroke="#3b82f6" strokeWidth="2" />
+                            
+                            {/* Game labels */}
+                            <text x={x} y="195" fontSize="10" fill="#6b7280" textAnchor="middle">
+                              G{point.game}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      
+                      {/* Legend */}
+                      <g>
+                        <line x1="60" y1="25" x2="75" y2="25" stroke="#3b82f6" strokeWidth="3" />
+                        <text x="80" y="29" fontSize="11" fill="#374151">Win Rate Trend</text>
+                        <circle cx="170" cy="25" r="4" fill="#22c55e" />
+                        <text x="180" y="29" fontSize="11" fill="#374151">Win</text>
+                        <circle cx="210" cy="25" r="4" fill="#ef4444" />
+                        <text x="220" y="29" fontSize="11" fill="#374151">Loss</text>
                       </g>
                     </svg>
                   </div>
@@ -984,9 +1074,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
 
-                {/* Example Chart: Season Progress Line Chart */}
+                {/* Example Chart 1: Season Progress Line Chart */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Season Win Rate Progress (Harmonious Spectrum)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Season Win Rate Progress (Harmonious Spectrum)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <svg className="w-full h-full" viewBox="0 0 500 200">
                       {/* Grid lines */}
@@ -1073,6 +1163,116 @@ export default function ColorStyleGuide() {
                     </svg>
                   </div>
                 </div>
+
+                {/* Example Chart 2: Player Performance Comparison */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Player Performance Radar</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-5 gap-2 h-full">
+                      {[
+                        { player: 'Sarah M', rating: 85, color: '#1e40af', stats: [85, 90, 78, 82, 88] },
+                        { player: 'Emma K', rating: 92, color: '#0891b2', stats: [92, 85, 95, 89, 91] },
+                        { player: 'Lisa P', rating: 78, color: '#0d9488', stats: [78, 82, 75, 80, 79] },
+                        { player: 'Amy R', rating: 88, color: '#059669', stats: [88, 87, 90, 85, 89] },
+                        { player: 'Kate B', rating: 81, color: '#166534', stats: [81, 79, 83, 84, 80] }
+                      ].map((player, i) => (
+                        <div key={player.player} className="flex flex-col items-center">
+                          <div 
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm mb-2"
+                            style={{ backgroundColor: player.color }}
+                          >
+                            {player.rating}
+                          </div>
+                          <div className="text-xs font-medium text-center mb-2">{player.player}</div>
+                          <div className="flex flex-col space-y-1">
+                            {player.stats.map((stat, j) => (
+                              <div key={j} className="flex items-center space-x-1">
+                                <div 
+                                  className="w-4 h-1 rounded"
+                                  style={{ 
+                                    backgroundColor: player.color, 
+                                    opacity: 0.3 + (stat / 100) * 0.7 
+                                  }}
+                                />
+                                <span className="text-xs">{stat}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Team Depth Analysis */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Team Depth & Rotation Analysis</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Grid lines */}
+                      {[0, 20, 40, 60, 80, 100].map(y => (
+                        <line key={y} x1="50" y1={180 - (y * 1.3)} x2="450" y2={180 - (y * 1.3)} 
+                              stroke="#e5e7eb" strokeWidth="1" />
+                      ))}
+                      
+                      {/* Position depth data */}
+                      {[
+                        { position: 'GS', starter: 90, backup: 75, depth: 65, x: 80 },
+                        { position: 'GA', starter: 88, backup: 80, depth: 70, x: 140 },
+                        { position: 'WA', starter: 85, backup: 78, depth: 68, x: 200 },
+                        { position: 'C', starter: 92, backup: 85, depth: 75, x: 260 },
+                        { position: 'WD', starter: 87, backup: 82, depth: 72, x: 320 },
+                        { position: 'GD', starter: 89, backup: 84, depth: 74, x: 380 },
+                        { position: 'GK', starter: 91, backup: 86, depth: 76, x: 440 }
+                      ].map((pos, i) => (
+                        <g key={pos.position}>
+                          {/* Starter bar */}
+                          <rect
+                            x={pos.x - 15}
+                            y={180 - (pos.starter * 1.3)}
+                            width="12"
+                            height={pos.starter * 1.3}
+                            fill="#1e40af"
+                            rx="2"
+                          />
+                          {/* Backup bar */}
+                          <rect
+                            x={pos.x - 2}
+                            y={180 - (pos.backup * 1.3)}
+                            width="12"
+                            height={pos.backup * 1.3}
+                            fill="#0891b2"
+                            rx="2"
+                          />
+                          {/* Depth bar */}
+                          <rect
+                            x={pos.x + 11}
+                            y={180 - (pos.depth * 1.3)}
+                            width="12"
+                            height={pos.depth * 1.3}
+                            fill="#0d9488"
+                            rx="2"
+                          />
+                          
+                          {/* Position label */}
+                          <text x={pos.x} y="195" fontSize="11" fill="#6b7280" textAnchor="middle">
+                            {pos.position}
+                          </text>
+                        </g>
+                      ))}
+                      
+                      {/* Legend */}
+                      <g>
+                        <rect x="60" y="20" width="12" height="12" fill="#1e40af" rx="2" />
+                        <text x="75" y="29" fontSize="11" fill="#374151">Starter</text>
+                        <rect x="120" y="20" width="12" height="12" fill="#0891b2" rx="2" />
+                        <text x="135" y="29" fontSize="11" fill="#374151">Backup</text>
+                        <rect x="180" y="20" width="12" height="12" fill="#0d9488" rx="2" />
+                        <text x="195" y="29" fontSize="11" fill="#374151">Depth</text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Multi-series line charts, team comparisons, neutral data where no semantic meaning is needed.
@@ -1129,9 +1329,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
 
-                {/* Example Chart: Position Performance Matrix */}
+                {/* Example Chart 1: Position Performance Matrix */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Position Performance Matrix (Vibrant Categorical)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Position Performance Matrix (Vibrant Categorical)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <div className="space-y-2">
                       {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map((position, posIndex) => (
@@ -1160,6 +1360,143 @@ export default function ColorStyleGuide() {
                           <span key={metric} className="w-8 text-xs text-center" style={{ color: ['#4338ca', '#f97316', '#10b981', '#e11d48', '#d97706'][i] }}>
                             {metric.slice(0,4)}
                           </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 2: Multi-Team Tournament Bracket */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Multi-Team Tournament Bracket</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-3 gap-4 h-full">
+                      <div className="space-y-3">
+                        <div className="text-xs font-semibold text-center">Quarter Finals</div>
+                        {[
+                          { team1: 'Eagles', team2: 'Hawks', winner: 'Eagles', color1: '#4338ca', color2: '#f97316' },
+                          { team1: 'Lions', team2: 'Tigers', winner: 'Tigers', color1: '#10b981', color2: '#e11d48' }
+                        ].map((match, i) => (
+                          <div key={i} className="space-y-1">
+                            <div className="flex space-x-1">
+                              <div 
+                                className={`flex-1 p-2 rounded text-xs text-white text-center font-medium ${match.winner === match.team1 ? 'ring-2 ring-yellow-400' : ''}`}
+                                style={{ backgroundColor: match.color1 }}
+                              >
+                                {match.team1}
+                              </div>
+                              <div 
+                                className={`flex-1 p-2 rounded text-xs text-white text-center font-medium ${match.winner === match.team2 ? 'ring-2 ring-yellow-400' : ''}`}
+                                style={{ backgroundColor: match.color2 }}
+                              >
+                                {match.team2}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="text-xs font-semibold text-center">Semi Final</div>
+                        <div className="space-y-1">
+                          <div className="flex space-x-1">
+                            <div 
+                              className="flex-1 p-2 rounded text-xs text-white text-center font-medium ring-2 ring-yellow-400"
+                              style={{ backgroundColor: '#4338ca' }}
+                            >
+                              Eagles
+                            </div>
+                            <div 
+                              className="flex-1 p-2 rounded text-xs text-white text-center font-medium"
+                              style={{ backgroundColor: '#e11d48' }}
+                            >
+                              Tigers
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="text-xs font-semibold text-center">Champion</div>
+                        <div 
+                          className="p-3 rounded text-sm text-white text-center font-bold ring-4 ring-yellow-400"
+                          style={{ backgroundColor: '#4338ca' }}
+                        >
+                          🏆 Eagles
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Category Performance Donut */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Performance Category Breakdown</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-center h-full">
+                      <div className="relative">
+                        <svg width="160" height="160" viewBox="0 0 160 160">
+                          {/* Donut segments */}
+                          {[
+                            { category: 'Attack', value: 30, color: '#4338ca', startAngle: 0 },
+                            { category: 'Defense', value: 25, color: '#f97316', startAngle: 108 },
+                            { category: 'Accuracy', value: 20, color: '#10b981', startAngle: 198 },
+                            { category: 'Movement', value: 15, color: '#e11d48', startAngle: 270 },
+                            { category: 'Leadership', value: 10, color: '#d97706', startAngle: 324 }
+                          ].map((segment, i) => {
+                            const centerX = 80;
+                            const centerY = 80;
+                            const radius = 60;
+                            const innerRadius = 35;
+                            const angle = (segment.value / 100) * 360;
+                            const startAngleRad = (segment.startAngle * Math.PI) / 180;
+                            const endAngleRad = ((segment.startAngle + angle) * Math.PI) / 180;
+                            
+                            const x1 = centerX + radius * Math.cos(startAngleRad);
+                            const y1 = centerY + radius * Math.sin(startAngleRad);
+                            const x2 = centerX + radius * Math.cos(endAngleRad);
+                            const y2 = centerY + radius * Math.sin(endAngleRad);
+                            const x3 = centerX + innerRadius * Math.cos(endAngleRad);
+                            const y3 = centerY + innerRadius * Math.sin(endAngleRad);
+                            const x4 = centerX + innerRadius * Math.cos(startAngleRad);
+                            const y4 = centerY + innerRadius * Math.sin(startAngleRad);
+                            
+                            const largeArcFlag = angle > 180 ? 1 : 0;
+                            
+                            return (
+                              <path
+                                key={segment.category}
+                                d={`M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4} Z`}
+                                fill={segment.color}
+                                stroke="white"
+                                strokeWidth="2"
+                              />
+                            );
+                          })}
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-lg font-bold">Team</div>
+                            <div className="text-sm text-muted-foreground">Performance</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="ml-6 space-y-2">
+                        {[
+                          { category: 'Attack', value: 30, color: '#4338ca' },
+                          { category: 'Defense', value: 25, color: '#f97316' },
+                          { category: 'Accuracy', value: 20, color: '#10b981' },
+                          { category: 'Movement', value: 15, color: '#e11d48' },
+                          { category: 'Leadership', value: 10, color: '#d97706' }
+                        ].map((item) => (
+                          <div key={item.category} className="flex items-center space-x-2">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <span className="text-sm">{item.category}</span>
+                            <span className="text-sm font-medium">{item.value}%</span>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -1221,9 +1558,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
                 
-                {/* Example Chart: Team vs Team Comparison */}
+                {/* Example Chart 1: Team vs Team Comparison */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Head-to-Head Comparison (Complementary Split)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Head-to-Head Comparison (Complementary Split)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <svg className="w-full h-full" viewBox="0 0 500 200">
                       {/* Grid lines */}
@@ -1270,6 +1607,143 @@ export default function ColorStyleGuide() {
                         <text x="70" y="30" fontSize="12" fill="#374151">Our Team</text>
                         <rect x="150" y="20" width="15" height="15" fill="#ea580c" rx="2" />
                         <text x="170" y="30" fontSize="12" fill="#374151">Opponent</text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Example Chart 2: Performance Contrast Analysis */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Strengths vs Weaknesses Analysis</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-6 h-full">
+                      <div className="space-y-3">
+                        <div className="text-center font-semibold text-blue-600 mb-4">Team Strengths</div>
+                        {[
+                          { area: 'Goal Accuracy', score: 95, color: '#2563eb' },
+                          { area: 'Court Coverage', score: 88, color: '#0891b2' },
+                          { area: 'Team Defense', score: 92, color: '#7c3aed' }
+                        ].map((strength, i) => (
+                          <div key={strength.area} className="flex items-center space-x-3">
+                            <div className="w-20 text-sm font-medium">{strength.area}</div>
+                            <div className="flex-1 bg-gray-200 rounded-full h-4 relative">
+                              <div 
+                                className="h-4 rounded-full flex items-center justify-end pr-2"
+                                style={{ 
+                                  backgroundColor: strength.color, 
+                                  width: `${strength.score}%` 
+                                }}
+                              >
+                                <span className="text-xs text-white font-bold">{strength.score}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="text-center font-semibold text-orange-600 mb-4">Improvement Areas</div>
+                        {[
+                          { area: 'Turnover Rate', score: 25, color: '#ea580c' },
+                          { area: 'Penalty Count', score: 35, color: '#dc2626' },
+                          { area: 'Substitution Timing', score: 40, color: '#ea580c' }
+                        ].map((weakness, i) => (
+                          <div key={weakness.area} className="flex items-center space-x-3">
+                            <div className="w-20 text-sm font-medium">{weakness.area}</div>
+                            <div className="flex-1 bg-gray-200 rounded-full h-4 relative">
+                              <div 
+                                className="h-4 rounded-full flex items-center justify-end pr-2"
+                                style={{ 
+                                  backgroundColor: weakness.color, 
+                                  width: `${weakness.score}%` 
+                                }}
+                              >
+                                <span className="text-xs text-white font-bold">{weakness.score}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Season Momentum Tracker */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Season Momentum Visualization</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Center line */}
+                      <line x1="50" y1="100" x2="450" y2="100" stroke="#6b7280" strokeWidth="2" strokeDasharray="5,5" />
+                      
+                      {/* Positive momentum area */}
+                      <text x="60" y="85" fontSize="12" fill="#2563eb" fontWeight="bold">Positive Momentum</text>
+                      <text x="60" y="125" fontSize="12" fill="#ea580c" fontWeight="bold">Negative Momentum</text>
+                      
+                      {/* Momentum data points */}
+                      {[
+                        { week: 1, momentum: 20, result: 'win' },
+                        { week: 2, momentum: -15, result: 'loss' },
+                        { week: 3, momentum: 35, result: 'win' },
+                        { week: 4, momentum: 45, result: 'win' },
+                        { week: 5, momentum: -25, result: 'loss' },
+                        { week: 6, momentum: 10, result: 'win' },
+                        { week: 7, momentum: 55, result: 'win' },
+                        { week: 8, momentum: 40, result: 'win' }
+                      ].map((point, i) => {
+                        const x = 80 + (i * 45);
+                        const y = 100 - point.momentum;
+                        const color = point.momentum > 0 ? '#2563eb' : '#ea580c';
+                        const strokeColor = point.momentum > 0 ? '#0891b2' : '#dc2626';
+                        
+                        return (
+                          <g key={point.week}>
+                            {/* Momentum line to center */}
+                            <line
+                              x1={x}
+                              y1="100"
+                              x2={x}
+                              y2={y}
+                              stroke={strokeColor}
+                              strokeWidth="3"
+                            />
+                            
+                            {/* Momentum point */}
+                            <circle
+                              cx={x}
+                              cy={y}
+                              r="6"
+                              fill={color}
+                              stroke="white"
+                              strokeWidth="2"
+                            />
+                            
+                            {/* Week label */}
+                            <text x={x} y="195" fontSize="10" fill="#6b7280" textAnchor="middle">
+                              W{point.week}
+                            </text>
+                            
+                            {/* Momentum value */}
+                            <text 
+                              x={x} 
+                              y={y + (point.momentum > 0 ? -12 : 18)} 
+                              fontSize="10" 
+                              fill={color} 
+                              textAnchor="middle"
+                              fontWeight="bold"
+                            >
+                              {Math.abs(point.momentum)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      
+                      {/* Legend */}
+                      <g>
+                        <circle cx="300" cy="25" r="4" fill="#2563eb" />
+                        <text x="310" y="29" fontSize="11" fill="#374151">High Performance</text>
+                        <circle cx="300" cy="45" r="4" fill="#ea580c" />
+                        <text x="310" y="49" fontSize="11" fill="#374151">Needs Improvement</text>
                       </g>
                     </svg>
                   </div>
@@ -1330,9 +1804,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
                 
-                {/* Example Chart: Performance Alerts Dashboard */}
+                {/* Example Chart 1: Performance Alerts Dashboard */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Performance Alert Dashboard (Triadic)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Performance Alert Dashboard (Triadic)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <div className="grid grid-cols-3 gap-4 h-full">
                       {[
@@ -1363,6 +1837,178 @@ export default function ColorStyleGuide() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 2: Strategic Risk Assessment */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Strategic Risk Assessment Matrix</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="relative h-full">
+                      <svg className="w-full h-full" viewBox="0 0 400 180">
+                        {/* Grid */}
+                        <defs>
+                          <pattern id="grid" width="40" height="36" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 36" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+                          </pattern>
+                        </defs>
+                        <rect width="400" height="180" fill="url(#grid)" />
+                        
+                        {/* Axes labels */}
+                        <text x="200" y="175" fontSize="12" fill="#6b7280" textAnchor="middle" fontWeight="bold">Impact Level</text>
+                        <text x="15" y="90" fontSize="12" fill="#6b7280" textAnchor="middle" transform="rotate(-90 15 90)" fontWeight="bold">Probability</text>
+                        
+                        {/* Risk points */}
+                        {[
+                          { risk: 'Injury Risk', impact: 85, probability: 75, color: '#dc2626', size: 8 },
+                          { risk: 'Performance Drop', impact: 70, probability: 40, color: '#ca8a04', size: 6 },
+                          { risk: 'Team Chemistry', impact: 60, probability: 30, color: '#2563eb', size: 7 },
+                          { risk: 'Equipment Issues', impact: 45, probability: 20, color: '#ca8a04', size: 4 },
+                          { risk: 'Weather Delays', impact: 30, probability: 60, color: '#2563eb', size: 5 },
+                          { risk: 'Travel Problems', impact: 55, probability: 25, color: '#be185d', size: 5 },
+                          { risk: 'Referee Decisions', impact: 40, probability: 70, color: '#059669', size: 6 }
+                        ].map((risk, i) => {
+                          const x = 40 + (risk.impact / 100) * 320;
+                          const y = 160 - (risk.probability / 100) * 140;
+                          
+                          return (
+                            <g key={risk.risk}>
+                              <circle
+                                cx={x}
+                                cy={y}
+                                r={risk.size}
+                                fill={risk.color}
+                                stroke="white"
+                                strokeWidth="2"
+                                opacity="0.8"
+                              />
+                              <text
+                                x={x}
+                                y={y - risk.size - 5}
+                                fontSize="9"
+                                fill={risk.color}
+                                textAnchor="middle"
+                                fontWeight="bold"
+                              >
+                                {risk.risk.split(' ')[0]}
+                              </text>
+                            </g>
+                          );
+                        })}
+                        
+                        {/* Risk zones */}
+                        <text x="320" y="40" fontSize="11" fill="#dc2626" fontWeight="bold">High Risk</text>
+                        <text x="80" y="40" fontSize="11" fill="#ca8a04" fontWeight="bold">Medium Risk</text>
+                        <text x="80" y="160" fontSize="11" fill="#2563eb" fontWeight="bold">Low Risk</text>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Resource Allocation Sunburst */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Team Resource Allocation</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-center h-full">
+                      <div className="relative">
+                        <svg width="200" height="200" viewBox="0 0 200 200">
+                          {/* Inner circle - Primary resources */}
+                          {[
+                            { category: 'Training', value: 40, color: '#2563eb', startAngle: 0 },
+                            { category: 'Strategy', value: 35, color: '#dc2626', startAngle: 144 },
+                            { category: 'Recovery', value: 25, color: '#ca8a04', startAngle: 270 }
+                          ].map((segment, i) => {
+                            const centerX = 100;
+                            const centerY = 100;
+                            const radius = 50;
+                            const angle = (segment.value / 100) * 360;
+                            const startAngleRad = (segment.startAngle * Math.PI) / 180;
+                            const endAngleRad = ((segment.startAngle + angle) * Math.PI) / 180;
+                            
+                            const x1 = centerX + radius * Math.cos(startAngleRad);
+                            const y1 = centerY + radius * Math.sin(startAngleRad);
+                            const x2 = centerX + radius * Math.cos(endAngleRad);
+                            const y2 = centerY + radius * Math.sin(endAngleRad);
+                            
+                            const largeArcFlag = angle > 180 ? 1 : 0;
+                            
+                            return (
+                              <path
+                                key={segment.category}
+                                d={`M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                                fill={segment.color}
+                                stroke="white"
+                                strokeWidth="2"
+                                opacity="0.9"
+                              />
+                            );
+                          })}
+                          
+                          {/* Outer ring - Detailed allocation */}
+                          {[
+                            { category: 'Skills', value: 15, color: '#2563eb', startAngle: 0, parentRadius: 50 },
+                            { category: 'Fitness', value: 15, color: '#2563eb', startAngle: 54, parentRadius: 50 },
+                            { category: 'Drills', value: 10, color: '#2563eb', startAngle: 108, parentRadius: 50 },
+                            { category: 'Analysis', value: 20, color: '#dc2626', startAngle: 144, parentRadius: 50 },
+                            { category: 'Planning', value: 15, color: '#dc2626', startAngle: 216, parentRadius: 50 },
+                            { category: 'Rest', value: 15, color: '#ca8a04', startAngle: 270, parentRadius: 50 },
+                            { category: 'Nutrition', value: 10, color: '#ca8a04', startAngle: 324, parentRadius: 50 }
+                          ].map((segment, i) => {
+                            const centerX = 100;
+                            const centerY = 100;
+                            const innerRadius = 55;
+                            const outerRadius = 80;
+                            const angle = (segment.value / 100) * 360;
+                            const startAngleRad = (segment.startAngle * Math.PI) / 180;
+                            const endAngleRad = ((segment.startAngle + angle) * Math.PI) / 180;
+                            
+                            const x1 = centerX + innerRadius * Math.cos(startAngleRad);
+                            const y1 = centerY + innerRadius * Math.sin(startAngleRad);
+                            const x2 = centerX + outerRadius * Math.cos(startAngleRad);
+                            const y2 = centerY + outerRadius * Math.sin(startAngleRad);
+                            const x3 = centerX + outerRadius * Math.cos(endAngleRad);
+                            const y3 = centerY + outerRadius * Math.sin(endAngleRad);
+                            const x4 = centerX + innerRadius * Math.cos(endAngleRad);
+                            const y4 = centerY + innerRadius * Math.sin(endAngleRad);
+                            
+                            const largeArcFlag = angle > 180 ? 1 : 0;
+                            
+                            return (
+                              <path
+                                key={segment.category}
+                                d={`M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1} Z`}
+                                fill={segment.color}
+                                stroke="white"
+                                strokeWidth="1"
+                                opacity="0.7"
+                              />
+                            );
+                          })}
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-sm font-bold">Team</div>
+                            <div className="text-xs text-muted-foreground">Resources</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="ml-6 space-y-2">
+                        {[
+                          { category: 'Training', value: '40%', color: '#2563eb' },
+                          { category: 'Strategy', value: '35%', color: '#dc2626' },
+                          { category: 'Recovery', value: '25%', color: '#ca8a04' }
+                        ].map((item) => (
+                          <div key={item.category} className="flex items-center space-x-2">
+                            <div 
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <span className="text-sm font-medium">{item.category}</span>
+                            <span className="text-sm">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1422,9 +2068,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
                 
-                {/* Example Chart: Progressive Performance Metrics */}
+                {/* Example Chart 1: Progressive Performance Metrics */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Progressive Performance Metrics (Monochromatic)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Progressive Performance Metrics (Monochromatic)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <svg className="w-full h-full" viewBox="0 0 500 200">
                       {/* Grid lines */}
@@ -1519,6 +2165,171 @@ export default function ColorStyleGuide() {
                     </svg>
                   </div>
                 </div>
+
+                {/* Example Chart 2: Corporate Performance Dashboard */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Executive Performance Dashboard</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-4 gap-4 h-full">
+                      {[
+                        { 
+                          title: 'Team Efficiency', 
+                          value: 87, 
+                          trend: '+5%', 
+                          color: '#1e3a8a',
+                          metrics: ['Process', 'Output', 'Quality'] 
+                        },
+                        { 
+                          title: 'Strategic Goals', 
+                          value: 92, 
+                          trend: '+8%', 
+                          color: '#3b82f6',
+                          metrics: ['Objectives', 'Milestones', 'KPIs'] 
+                        },
+                        { 
+                          title: 'Resource Utilization', 
+                          value: 78, 
+                          trend: '+2%', 
+                          color: '#0ea5e9',
+                          metrics: ['Personnel', 'Equipment', 'Budget'] 
+                        },
+                        { 
+                          title: 'Innovation Index', 
+                          value: 84, 
+                          trend: '+12%', 
+                          color: '#06b6d4',
+                          metrics: ['Ideas', 'Implementation', 'Impact'] 
+                        }
+                      ].map((kpi, i) => (
+                        <div key={kpi.title} className="flex flex-col h-full">
+                          <div className="text-center mb-3">
+                            <div 
+                              className="w-16 h-16 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold text-lg"
+                              style={{ backgroundColor: kpi.color }}
+                            >
+                              {kpi.value}
+                            </div>
+                            <div className="text-sm font-medium">{kpi.title}</div>
+                            <div className="text-xs text-green-600 font-medium">{kpi.trend}</div>
+                          </div>
+                          <div className="space-y-1 flex-1">
+                            {kpi.metrics.map((metric, j) => (
+                              <div key={metric} className="flex items-center justify-between">
+                                <span className="text-xs">{metric}</span>
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ 
+                                    backgroundColor: kpi.color, 
+                                    opacity: 0.4 + (j * 0.3) 
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Professional Timeline Visualization */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Season Development Timeline</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <svg className="w-full h-full" viewBox="0 0 500 200">
+                      {/* Timeline base */}
+                      <line x1="60" y1="100" x2="440" y2="100" stroke="#475569" strokeWidth="3" />
+                      
+                      {/* Timeline phases */}
+                      {[
+                        { phase: 'Foundation', start: 60, end: 140, color: '#1e3a8a', milestones: ['Team Formation', 'Basic Skills'] },
+                        { phase: 'Development', start: 140, end: 260, color: '#3b82f6', milestones: ['Strategy Training', 'Position Mastery'] },
+                        { phase: 'Competitive', start: 260, end: 360, color: '#0ea5e9', milestones: ['Game Readiness', 'Peak Performance'] },
+                        { phase: 'Championship', start: 360, end: 440, color: '#06b6d4', milestones: ['Finals Prep', 'Title Run'] }
+                      ].map((phase, i) => {
+                        const width = phase.end - phase.start;
+                        const centerX = phase.start + (width / 2);
+                        
+                        return (
+                          <g key={phase.phase}>
+                            {/* Phase bar */}
+                            <rect
+                              x={phase.start}
+                              y="85"
+                              width={width}
+                              height="30"
+                              fill={phase.color}
+                              rx="4"
+                              opacity="0.8"
+                            />
+                            
+                            {/* Phase label */}
+                            <text
+                              x={centerX}
+                              y="102"
+                              fontSize="11"
+                              fill="white"
+                              textAnchor="middle"
+                              fontWeight="bold"
+                            >
+                              {phase.phase}
+                            </text>
+                            
+                            {/* Milestone indicators */}
+                            {phase.milestones.map((milestone, j) => {
+                              const milestoneX = phase.start + ((j + 1) * width / (phase.milestones.length + 1));
+                              return (
+                                <g key={milestone}>
+                                  {/* Milestone point */}
+                                  <circle
+                                    cx={milestoneX}
+                                    cy="100"
+                                    r="4"
+                                    fill="white"
+                                    stroke={phase.color}
+                                    strokeWidth="3"
+                                  />
+                                  
+                                  {/* Milestone label */}
+                                  <text
+                                    x={milestoneX}
+                                    y={j % 2 === 0 ? "75" : "135"}
+                                    fontSize="9"
+                                    fill={phase.color}
+                                    textAnchor="middle"
+                                    fontWeight="medium"
+                                  >
+                                    {milestone}
+                                  </text>
+                                  
+                                  {/* Connection line */}
+                                  <line
+                                    x1={milestoneX}
+                                    y1="96"
+                                    x2={milestoneX}
+                                    y2={j % 2 === 0 ? "80" : "125"}
+                                    stroke={phase.color}
+                                    strokeWidth="1"
+                                    strokeDasharray="2,2"
+                                  />
+                                </g>
+                              );
+                            })}
+                          </g>
+                        );
+                      })}
+                      
+                      {/* Timeline markers */}
+                      <text x="60" y="175" fontSize="11" fill="#6b7280" textAnchor="middle">Jan</text>
+                      <text x="200" y="175" fontSize="11" fill="#6b7280" textAnchor="middle">Apr</text>
+                      <text x="310" y="175" fontSize="11" fill="#6b7280" textAnchor="middle">Jul</text>
+                      <text x="440" y="175" fontSize="11" fill="#6b7280" textAnchor="middle">Oct</text>
+                      
+                      {/* Title */}
+                      <text x="250" y="25" fontSize="14" fill="#1e3a8a" textAnchor="middle" fontWeight="bold">Season Development Phases</text>
+                    </svg>
+                  </div>
+                </div>
                 
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Best for:</strong> Corporate presentations, professional reports, data requiring subtle differentiation.
@@ -1575,9 +2386,9 @@ export default function ColorStyleGuide() {
                   ))}
                 </div>
                 
-                {/* Example Chart: Energy and Activity Tracker */}
+                {/* Example Chart 1: Energy and Activity Tracker */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3">Example: Team Energy & Activity Levels (Analogous Warm)</h4>
+                  <h4 className="font-semibold mb-3">Example 1: Team Energy & Activity Levels (Analogous Warm)</h4>
                   <div className="h-48 bg-gray-50 rounded-lg p-4">
                     <svg className="w-full h-full" viewBox="0 0 500 200">
                       {/* Background gradient */}
@@ -1649,6 +2460,129 @@ export default function ColorStyleGuide() {
                         <text x="310" y="18" fontSize="10" fill="#374151">Alert</text>
                       </g>
                     </svg>
+                  </div>
+                </div>
+
+                {/* Example Chart 2: Motivation and Engagement Heatmap */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 2: Player Motivation & Engagement Heatmap</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="space-y-2">
+                      {[
+                        { player: 'Sarah M', metrics: [95, 88, 92, 87, 90] },
+                        { player: 'Emma K', metrics: [85, 92, 89, 94, 87] },
+                        { player: 'Lisa P', metrics: [78, 85, 82, 89, 91] },
+                        { player: 'Amy R', metrics: [92, 78, 88, 85, 89] },
+                        { player: 'Kate B', metrics: [87, 90, 85, 91, 88] }
+                      ].map((player, playerIndex) => (
+                        <div key={player.player} className="flex items-center space-x-2">
+                          <span className="w-16 text-sm font-medium">{player.player}</span>
+                          <div className="flex space-x-1">
+                            {['Energy', 'Focus', 'Team Spirit', 'Confidence', 'Drive'].map((metric, metricIndex) => {
+                              const value = player.metrics[metricIndex];
+                              const colors = ['#dc143c', '#ff6b35', '#f59e0b', '#d97706', '#ff7f7f'];
+                              const intensity = value / 100;
+                              
+                              return (
+                                <div 
+                                  key={metric} 
+                                  className="w-12 h-8 rounded flex items-center justify-center text-white text-xs font-bold relative group"
+                                  style={{ 
+                                    backgroundColor: colors[metricIndex],
+                                    opacity: 0.3 + (intensity * 0.7)
+                                  }}
+                                >
+                                  {value}
+                                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                    {metric}: {value}%
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-center space-x-2 mt-4 pt-2 border-t">
+                        <span className="w-16 text-xs font-bold">Metrics:</span>
+                        {['Energy', 'Focus', 'Team Spirit', 'Confidence', 'Drive'].map((metric, i) => (
+                          <div key={metric} className="w-12 text-xs text-center" style={{ color: ['#dc143c', '#ff6b35', '#f59e0b', '#d97706', '#ff7f7f'][i] }}>
+                            {metric}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example Chart 3: Dynamic Performance Temperature Gauge */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Example 3: Dynamic Performance Temperature</h4>
+                  <div className="h-48 bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-center h-full space-x-8">
+                      {/* Temperature gauges */}
+                      {[
+                        { category: 'Attack Intensity', temp: 85, color: '#dc143c', icon: '🔥' },
+                        { category: 'Team Chemistry', temp: 78, color: '#ff6b35', icon: '⚡' },
+                        { category: 'Mental Focus', temp: 92, color: '#f59e0b', icon: '🎯' },
+                        { category: 'Physical Energy', temp: 88, color: '#d97706', icon: '💪' }
+                      ].map((gauge, i) => (
+                        <div key={gauge.category} className="flex flex-col items-center">
+                          {/* Gauge container */}
+                          <div className="relative w-20 h-20 mb-3">
+                            {/* Background circle */}
+                            <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
+                              <circle
+                                cx="40"
+                                cy="40"
+                                r="30"
+                                stroke="#e5e7eb"
+                                strokeWidth="8"
+                                fill="none"
+                              />
+                              {/* Temperature arc */}
+                              <circle
+                                cx="40"
+                                cy="40"
+                                r="30"
+                                stroke={gauge.color}
+                                strokeWidth="8"
+                                fill="none"
+                                strokeDasharray={`${(gauge.temp / 100) * 188.5} 188.5`}
+                                strokeLinecap="round"
+                                style={{ 
+                                  filter: `drop-shadow(0 0 4px ${gauge.color}40)` 
+                                }}
+                              />
+                            </svg>
+                            
+                            {/* Temperature value */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="text-lg">{gauge.icon}</div>
+                                <div className="text-xs font-bold" style={{ color: gauge.color }}>
+                                  {gauge.temp}°
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Category label */}
+                          <div className="text-xs font-medium text-center max-w-20">
+                            {gauge.category}
+                          </div>
+                          
+                          {/* Temperature status */}
+                          <div className="text-xs text-center mt-1">
+                            <span 
+                              className="px-2 py-1 rounded-full text-white font-medium"
+                              style={{ backgroundColor: gauge.color }}
+                            >
+                              {gauge.temp >= 90 ? 'HOT' : gauge.temp >= 70 ? 'WARM' : 'COOL'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
