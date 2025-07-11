@@ -13,8 +13,7 @@ import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor
 import { 
   Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
   Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
-  Goal, TrendingUp, RefreshCw, Users, Coffee, Slash, Award, Clock,
-  Timer
+  RefreshCw, Users, Coffee, Clock, Timer
 } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
@@ -105,7 +104,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   const [redoStack, setRedoStack] = useState<PositionStats[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
   const [pendingStatChange, setPendingStatChange] = useState<any>(null);
-  
+
   // Timer state
   const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -570,16 +569,51 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     const key = getPositionQuarterKey(position, currentQuarter);
     const currentValue = positionStats[key]?.[stat] || 0;
 
-    // Find stat info from centralized ordering
-    const orderedStats = getPositionOrderedStats(position);
-    const statInfo = orderedStats.find(s => s.key === stat);
+    // Map stats to their icons directly
+    const statIconMap = {
+      'goalsFor': Target,
+      'goalsAgainst': Shield, 
+      'missedGoals': RotateCcw,
+      'rebounds': ArrowUp,
+      'intercepts': Zap,
+      'deflections': RefreshCw,
+      'turnovers': Ban,
+      'gains': Play,
+      'receives': Users,
+      'penalties': Coffee
+    };
 
-    if (!statInfo) return null;
+    // Map stats to their colors
+    const statColorMap = {
+      'goalsFor': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
+      'goalsAgainst': 'bg-red-100 hover:bg-red-200 border-red-300 text-red-700',
+      'missedGoals': 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700',
+      'rebounds': 'bg-purple-100 hover:bg-purple-200 border-purple-300 text-purple-700',
+      'intercepts': 'bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-700',
+      'deflections': 'bg-cyan-100 hover:bg-cyan-200 border-cyan-300 text-cyan-700',
+      'turnovers': 'bg-red-100 hover:bg-red-200 border-red-300 text-red-700',
+      'gains': 'bg-green-100 hover:bg-green-200 border-green-300 text-green-700',
+      'receives': 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-700',
+      'penalties': 'bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700'
+    };
 
-    // Properly handle icon component
-    const StatIcon = statInfo.icon;
-    const statColor = statInfo.color || 'bg-gray-100';
-    const statLabel = statInfo.label || stat;
+    // Map stats to their labels (singular form)
+    const statLabelMap = {
+      'goalsFor': 'Goal',
+      'goalsAgainst': 'Goal Against',
+      'missedGoals': 'Miss',
+      'rebounds': 'Rebound',
+      'intercepts': 'Intercept',
+      'deflections': 'Deflection',
+      'turnovers': 'Turnover',
+      'gains': 'Gain',
+      'receives': 'Receive',
+      'penalties': 'Penalty'
+    };
+
+    const StatIcon = statIconMap[stat] || Target;
+    const statColor = statColorMap[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300';
+    const statLabel = statLabelMap[stat] || stat;
 
     const handleLongPress = (e: React.MouseEvent) => {
       e.preventDefault();
@@ -771,7 +805,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                       {[1, 2, 3, 4].map(quarter => (
                         <Button
                           key={quarter}
-                          variant={quarter === currentQuarter ? "default" : "outline"}
+                          variant={quarter === currentQuarter ? "default" : `"outline"}
                           size="sm"
                           onClick={() => setCurrentQuarter(quarter)}
                           className="h-8 touch-manipulation"
