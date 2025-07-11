@@ -257,6 +257,18 @@ function Router() {
             </ErrorBoundary>
           )}
         </Route>
+        <Route path="/reference/position-component">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Position Component Reference..." />}>
+                {(() => {
+                  const PositionComponentReference = lazy(() => import('./pages/PositionComponentReference'));
+                  return <PositionComponentReference />;
+                })()}
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
         <Route path="/split-view-examples" component={SplitViewExamples} />
         <Route path="/grid-examples" component={GridExamples} />
         <Route path="/card-collection-examples" component={CardCollectionExamples} />

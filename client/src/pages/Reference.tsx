@@ -48,6 +48,14 @@ const referenceItems: ReferenceItem[] = [
     category: 'Components',
     status: 'Complete'
   },
+  {
+    title: 'Position Component',
+    description: 'Netball position badges with dual border styling, standardized colors, and size variants for consistent position display.',
+    path: '/reference/position-component',
+    icon: <Target className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
   // Add more reference items here as they are created
 ];
 
@@ -209,6 +217,33 @@ export default function Reference() {
                             }}
                             size="sm"
                           />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Live Example for Position Component */}
+                    {item.title === 'Position Component' && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-xs font-medium text-gray-600 mb-2">Live Example:</div>
+                        <div className="flex items-center gap-2">
+                          {[
+                            { code: "GS", name: "Goal Shooter", color: "#dc2626" },
+                            { code: "C", name: "Centre", color: "#10b981" },
+                            { code: "GK", name: "Goal Keeper", color: "#4338ca" }
+                          ].map((position) => (
+                            <div key={position.code} className="relative">
+                              <div 
+                                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white relative overflow-hidden"
+                                style={{ backgroundColor: position.color }}
+                              >
+                                <div 
+                                  className="absolute inset-1 rounded-md border-2 border-white/30"
+                                  style={{ borderColor: `${position.color}40` }}
+                                />
+                                <span className="relative z-10 text-white font-bold text-xs">{position.code}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
