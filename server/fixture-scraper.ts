@@ -49,13 +49,9 @@ export class NetballConnectScraper {
       const $ = cheerio.load(html);
       const fixtures: ScrapedFixture[] = [];
 
-      // Look for Netball Connect specific selectors first
-      console.log('Looking for Netball Connect fixture data...');
+      console.log('Looking for fixture data in HTML...');
       
-      // Try multiple approaches for Netball Connect
-      let foundFixtures = false;
-      
-      // Approach 1: Look for table rows with fixture data
+      // Look for table rows containing fixture data
       const tableRows = $('table tr, tbody tr');
       console.log(`Found ${tableRows.length} table rows to check`);
       
@@ -63,16 +59,16 @@ export class NetballConnectScraper {
         try {
           const $row = $(row);
           const cells = $row.find('td');
-          const rowText = $row.text();
+          const rowText = $row.text().trim();
           
-          // Skip header rows
-          if (rowText.toLowerCase().includes('date') || rowText.toLowerCase().includes('time') || rowText.toLowerCase().includes('home') || rowText.toLowerCase().includes('away')) {
+          // Skip empty rows or header rows
+          if (!rowText || rowText.toLowerCase().includes('round') || rowText.toLowerCase().includes('date')) {
             return;
           }
           
-          // Look for rows that contain team names (usually have "vs" or similar)
-          if (rowText.includes(' v ') || rowText.includes(' vs ') || rowText.includes(' V ')) {
-            console.log(`Processing row ${index}: ${rowText.substring(0, 100)}...`);
+          // Look for rows that contain team matchups (vs, v, etc.)
+          if (rowText.match(/\b\w+.*?\s+(?:vs?\.?|v)\s+.*?\w+/i)) {
+            console.log(`Processing potential fixture row: ${rowText.substring(0, 100)}...`);
             
             let date = '';
             let time = '';
@@ -81,63 +77,77 @@ export class NetballConnectScraper {
             let venue = '';
             let round = '';
             
-            // Extract from individual cells if available
-            if (cells.length >= 4) {
+            // Try to extract from individual cells first
+            if (cells.length >= 3) {
               cells.each((cellIndex, cell) => {
                 const cellText = $(cell).text().trim();
                 
-                // Check if this cell contains a date
-                if (cellText.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/)) {
-                  date = this.normalizeDate(cellText);
+                // Check for date patterns
+                const dateMatch = cellText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                if (dateMatch && !date) {
+                  date = this.normalizeDate(dateMatch[1]);
                 }
                 
-                // Check if this cell contains a time
-                if (cellText.match(/\d{1,2}:\d{2}/)) {
-                  time = this.normalizeTime(cellText);
+                // Check for time patterns
+                const timeMatch = cellText.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
+                if (timeMatch && !time) {
+                  time = this.normalizeTime(timeMatch[1]);
                 }
                 
-                // Check if this cell contains team matchup
-                if (cellText.includes(' v ') || cellText.includes(' vs ') || cellText.includes(' V ')) {
-                  const teamMatch = cellText.match(/(.+?)\s+(?:v|vs|V)\s+(.+)/);
-                  if (teamMatch) {
-                    homeTeam = teamMatch[1].trim();
-                    awayTeam = teamMatch[2].trim();
-                  }
+                // Check for team matchups
+                const teamMatch = cellText.match(/^(.+?)\s+(?:vs?\.?|v)\s+(.+?)$/i);
+                if (teamMatch && !homeTeam && !awayTeam) {
+                  homeTeam = teamMatch[1].trim();
+                  awayTeam = teamMatch[2].trim();
                 }
                 
-                // Check if this cell contains venue
-                if (cellText.length > 5 && !cellText.match(/\d{1,2}[\/\-]\d{1,2}/) && !cellText.match(/\d{1,2}:\d{2}/) && !cellText.includes(' v ')) {
-                  if (cellText.toLowerCase().includes('court') || cellText.toLowerCase().includes('centre') || cellText.toLowerCase().includes('stadium')) {
-                    venue = cellText;
-                  }
+                // Check for venue (text that doesn't match other patterns)
+                if (cellText.length > 3 && 
+                    !dateMatch && 
+                    !timeMatch && 
+                    !teamMatch && 
+                    !venue &&
+                    !cellText.match(/round|r\d+/i)) {
+                  venue = cellText;
+                }
+                
+                // Check for round
+                const roundMatch = cellText.match(/(round\s*\d+|r\d+)/i);
+                if (roundMatch && !round) {
+                  round = roundMatch[1];
                 }
               });
-            } else {
-              // Fallback: extract from the entire row text
-              const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-              if (dateMatch) date = this.normalizeDate(dateMatch[1]);
-              
-              const timeMatch = rowText.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
-              if (timeMatch) time = this.normalizeTime(timeMatch[1]);
-              
-              const teamMatch = rowText.match(/([^,\n]+?)\s+(?:v|vs|V)\s+([^,\n]+)/i);
+            }
+            
+            // Fallback: try to extract from the entire row text
+            if (!homeTeam || !awayTeam) {
+              const teamMatch = rowText.match(/(.+?)\s+(?:vs?\.?|v)\s+(.+?)(?:\s|$)/i);
               if (teamMatch) {
                 homeTeam = teamMatch[1].trim();
                 awayTeam = teamMatch[2].trim();
               }
             }
             
+            if (!date) {
+              const dateMatch = rowText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+              if (dateMatch) date = this.normalizeDate(dateMatch[1]);
+            }
+            
+            if (!time) {
+              const timeMatch = rowText.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
+              if (timeMatch) time = this.normalizeTime(timeMatch[1]);
+            }
+            
             // Add fixture if we have team names
             if (homeTeam && awayTeam) {
               fixtures.push({
-                date,
-                time,
-                homeTeam,
-                awayTeam,
+                date: date || '',
+                time: time || '',
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
                 venue: venue || undefined,
                 round: round || undefined
               });
-              foundFixtures = true;
               console.log(`Added fixture: ${homeTeam} vs ${awayTeam} on ${date} at ${time}`);
             }
           }
@@ -146,64 +156,30 @@ export class NetballConnectScraper {
         }
       });
 
-      // Approach 2: Look for div-based layouts if no table found
-      if (!foundFixtures) {
+      // If no fixtures found in tables, try looking for div-based layouts
+      if (fixtures.length === 0) {
         console.log('No table fixtures found, trying div-based approach...');
         const divs = $('.fixture, .game, .match, [class*="fixture"], [class*="game"], [class*="match"]');
         
         divs.each((index, div) => {
           try {
             const $div = $(div);
-            const text = $div.text();
+            const text = $div.text().trim();
             
-            if (text.includes(' v ') || text.includes(' vs ') || text.includes(' V ')) {
+            const teamMatch = text.match(/(.+?)\s+(?:vs?\.?|v)\s+(.+?)(?:\s|$)/i);
+            if (teamMatch) {
               const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-              const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
-              const teamMatch = text.match(/([^,\n]+?)\s+(?:v|vs|V)\s+([^,\n]+)/i);
+              const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:[AP]M)?)/i);
               
-              if (teamMatch) {
-                fixtures.push({
-                  date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
-                  time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
-                  homeTeam: teamMatch[1].trim(),
-                  awayTeam: teamMatch[2].trim()
-                });
-                foundFixtures = true;
-              }
+              fixtures.push({
+                date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
+                time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
+                homeTeam: teamMatch[1].trim(),
+                awayTeam: teamMatch[2].trim()
+              });
             }
           } catch (error) {
             console.warn(`Error parsing div ${index}:`, error);
-          }
-        });
-      }
-
-      // If no fixtures found with table approach, try alternative selectors
-      if (fixtures.length === 0) {
-        console.log('No fixtures found with table approach, trying alternative selectors...');
-        
-        // Look for any text containing team matchups
-        const allText = $('body').text();
-        const lines = allText.split('\n');
-        
-        lines.forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed.includes(' vs ') || trimmed.includes(' v ')) {
-            try {
-              const dateMatch = trimmed.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-              const timeMatch = trimmed.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
-              const teamMatch = trimmed.match(/([^,\n]+?)\s+(?:vs?\.?)\s+([^,\n]+)/i);
-              
-              if (teamMatch) {
-                fixtures.push({
-                  date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
-                  time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
-                  homeTeam: teamMatch[1].trim(),
-                  awayTeam: teamMatch[2].trim()
-                });
-              }
-            } catch (error) {
-              // Ignore parsing errors for individual lines
-            }
           }
         });
       }
@@ -233,7 +209,7 @@ export class NetballConnectScraper {
         return result;
       }
 
-      // Get or create teams and import fixtures
+      // Import each fixture
       for (const fixture of fixtures) {
         try {
           // Find or create home team
@@ -303,11 +279,21 @@ export class NetballConnectScraper {
   private normalizeDate(dateStr: string): string {
     try {
       // Handle various date formats
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        return '';
+      const parts = dateStr.split(/[\/\-]/);
+      if (parts.length === 3) {
+        // Assume DD/MM/YYYY or MM/DD/YYYY format
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+        
+        // If year is 2-digit, convert to 4-digit
+        const fullYear = year < 100 ? 2000 + year : year;
+        
+        // Create date (month is 0-indexed in JS Date)
+        const date = new Date(fullYear, month - 1, day);
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
       }
-      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      return '';
     } catch {
       return '';
     }
