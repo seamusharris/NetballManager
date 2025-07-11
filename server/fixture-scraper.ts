@@ -46,113 +46,180 @@ export class NetballConnectScraper {
 
       const html = await response.text();
       console.log(`Successfully fetched ${html.length} characters of HTML`);
+      
+      // Log a sample of the HTML to help debug structure
+      console.log('HTML sample (first 500 chars):', html.substring(0, 500));
+      console.log('HTML sample (last 500 chars):', html.substring(Math.max(0, html.length - 500)));
 
       const $ = cheerio.load(html);
       const fixtures: ScrapedFixture[] = [];
 
-      // Log what we're looking for
-      console.log('Looking for fixture tables...');
-      const tableCount = $('table').length;
-      console.log(`Found ${tableCount} tables to analyze`);
+      // NetballConnect specific selectors
+      console.log('Looking for NetballConnect fixture data...');
+      
+      // Log all available elements to understand structure
+      console.log('Available divs:', $('div').length);
+      console.log('Available tables:', $('table').length);
+      console.log('Available spans:', $('span').length);
+      console.log('Available classes:', $('[class]').map((i, el) => $(el).attr('class')).get().slice(0, 20));
 
-      // Look for table rows with fixture data
-      $('table tr').each((index, row) => {
-        const $row = $(row);
-        const cells = $row.find('td');
+      // Try multiple approaches for NetballConnect
 
-        if (cells.length >= 3) {
-          const cellTexts = cells.map((i, cell) => $(cell).text().trim()).get();
-          console.log(`Row ${index} cells:`, cellTexts);
+      // Approach 1: Look for fixture-specific containers
+      const fixtureContainers = $('.fixture, .game, .match, [class*="fixture"], [class*="game"], [class*="match"]');
+      console.log(`Found ${fixtureContainers.length} potential fixture containers`);
 
-          // Look for team matchup patterns
-          let homeTeam = '';
-          let awayTeam = '';
-          let date = '';
-          let time = '';
-          let venue = '';
-
-          for (const cellText of cellTexts) {
-            // Check for team vs team pattern
-            const teamMatch = cellText.match(/(.+?)\s+(?:v\s+|vs\s+|V\s+)(.+)/i);
-            if (teamMatch && !homeTeam) {
-              homeTeam = teamMatch[1].trim();
-              awayTeam = teamMatch[2].trim();
-              console.log(`Found teams: ${homeTeam} vs ${awayTeam}`);
-            }
-
-            // Check for date pattern
-            const dateMatch = cellText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-            if (dateMatch && !date) {
-              date = this.normalizeDate(dateMatch[1]);
-              console.log(`Found date: ${date}`);
-            }
-
-            // Check for time pattern
-            const timeMatch = cellText.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
-            if (timeMatch && !time) {
-              time = this.normalizeTime(timeMatch[1]);
-              console.log(`Found time: ${time}`);
-            }
-
-            // Venue detection
-            if (cellText.length > 0 && !cellText.match(/\d/) && cellText.length < 50 && !venue && !cellText.includes('v ')) {
-              venue = cellText;
-              console.log(`Found venue: ${venue}`);
-            }
-          }
-
-          if (homeTeam && awayTeam) {
-            fixtures.push({
-              date: date || '',
-              time: time || '',
-              homeTeam,
-              awayTeam,
-              venue: venue || '',
-              round: ''
-            });
-
-            console.log(`✓ Added fixture: ${homeTeam} vs ${awayTeam}`);
-          }
+      fixtureContainers.each((index, container) => {
+        const $container = $(container);
+        const containerText = $container.text().trim();
+        console.log(`Container ${index}:`, containerText.substring(0, 100));
+        
+        // Try to extract fixture data from container
+        const fixture = this.extractFixtureFromText(containerText);
+        if (fixture) {
+          fixtures.push(fixture);
+          console.log(`✓ Added fixture from container: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
         }
       });
 
-      // Fallback: look for any text containing team vs team patterns
+      // Approach 2: Look for data in divs with specific patterns
       if (fixtures.length === 0) {
-        console.log('No table fixtures found, trying text-based approach...');
-
-        $('*').each((i, elem) => {
-          const text = $(elem).text().trim();
-          const teamMatch = text.match(/(.+?)\s+(?:v\s+|vs\s+|V\s+)(.+?)(?:\s|$)/i);
-
-          if (teamMatch && teamMatch[1].length < 50 && teamMatch[2].length < 50) {
-            const homeTeam = teamMatch[1].trim();
-            const awayTeam = teamMatch[2].trim();
-            
-            // Avoid duplicates
-            const exists = fixtures.some(f => f.homeTeam === homeTeam && f.awayTeam === awayTeam);
-            if (!exists) {
-              fixtures.push({
-                date: '',
-                time: '',
-                homeTeam,
-                awayTeam,
-                venue: '',
-                round: ''
-              });
-
-              console.log(`✓ Added text fixture: ${homeTeam} vs ${awayTeam}`);
+        console.log('Trying div-based extraction...');
+        
+        $('div').each((index, div) => {
+          const $div = $(div);
+          const text = $div.text().trim();
+          
+          // Look for fixture patterns in div text
+          if (text.length > 10 && text.length < 200) {
+            const fixture = this.extractFixtureFromText(text);
+            if (fixture) {
+              // Check for duplicates
+              const exists = fixtures.some(f => 
+                f.homeTeam === fixture.homeTeam && 
+                f.awayTeam === fixture.awayTeam
+              );
+              if (!exists) {
+                fixtures.push(fixture);
+                console.log(`✓ Added fixture from div: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
+              }
             }
           }
         });
       }
 
+      // Approach 3: Look in tables more thoroughly
+      if (fixtures.length === 0) {
+        console.log('Trying enhanced table extraction...');
+        
+        $('table').each((tableIndex, table) => {
+          const $table = $(table);
+          console.log(`Analyzing table ${tableIndex}...`);
+          
+          $table.find('tr').each((rowIndex, row) => {
+            const $row = $(row);
+            const cells = $row.find('td, th');
+            
+            if (cells.length >= 2) {
+              const cellTexts = cells.map((i, cell) => $(cell).text().trim()).get();
+              const rowText = cellTexts.join(' ');
+              
+              console.log(`Table ${tableIndex}, Row ${rowIndex}:`, rowText);
+              
+              const fixture = this.extractFixtureFromText(rowText);
+              if (fixture) {
+                const exists = fixtures.some(f => 
+                  f.homeTeam === fixture.homeTeam && 
+                  f.awayTeam === fixture.awayTeam
+                );
+                if (!exists) {
+                  fixtures.push(fixture);
+                  console.log(`✓ Added fixture from table: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
+                }
+              }
+            }
+          });
+        });
+      }
+
+      // Approach 4: Look for JSON data embedded in script tags
+      if (fixtures.length === 0) {
+        console.log('Looking for embedded JSON data...');
+        
+        $('script').each((index, script) => {
+          const scriptContent = $(script).html() || '';
+          
+          // Look for fixture-related JSON patterns
+          const jsonMatches = scriptContent.match(/\{[^}]*(?:fixture|game|match)[^}]*\}/gi);
+          if (jsonMatches) {
+            console.log(`Found ${jsonMatches.length} potential JSON fixtures in script ${index}`);
+            
+            jsonMatches.forEach((match, matchIndex) => {
+              try {
+                const data = JSON.parse(match);
+                console.log(`JSON match ${matchIndex}:`, data);
+                // Extract fixture data from JSON if structure matches
+              } catch (e) {
+                // Not valid JSON, continue
+              }
+            });
+          }
+        });
+      }
+
       console.log(`Total fixtures found: ${fixtures.length}`);
+      
+      if (fixtures.length === 0) {
+        // Log more debugging info
+        console.log('No fixtures found. Page structure:');
+        console.log('Body text sample:', $('body').text().substring(0, 1000));
+        console.log('All text content:', $.text().substring(0, 1000));
+      }
+      
       return fixtures;
 
     } catch (error) {
       console.error('Scraping error:', error);
       throw new Error(`Failed to scrape fixtures: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  private extractFixtureFromText(text: string): ScrapedFixture | null {
+    // Multiple team matching patterns
+    const teamPatterns = [
+      /(.+?)\s+(?:v\s+|vs\s+|V\s+|versus\s+)(.+?)(?:\s|$|\d)/i,
+      /(.+?)\s+vs?\s+(.+?)(?:\s|$|\d)/i,
+      /(.+?)\s+-\s+(.+?)(?:\s|$|\d)/i
+    ];
+
+    for (const pattern of teamPatterns) {
+      const teamMatch = text.match(pattern);
+      if (teamMatch && teamMatch[1] && teamMatch[2]) {
+        const homeTeam = teamMatch[1].trim();
+        const awayTeam = teamMatch[2].trim();
+        
+        // Validate team names (reasonable length, not just numbers)
+        if (homeTeam.length > 2 && homeTeam.length < 50 && 
+            awayTeam.length > 2 && awayTeam.length < 50 &&
+            !homeTeam.match(/^\d+$/) && !awayTeam.match(/^\d+$/)) {
+          
+          // Extract date and time from the same text
+          const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+          const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
+          
+          return {
+            date: dateMatch ? this.normalizeDate(dateMatch[1]) : '',
+            time: timeMatch ? this.normalizeTime(timeMatch[1]) : '',
+            homeTeam,
+            awayTeam,
+            venue: '',
+            round: ''
+          };
+        }
+      }
+    }
+    
+    return null;
   }
 
   async importFixtures(url: string, clubId: number, seasonId: number): Promise<ImportResult> {
