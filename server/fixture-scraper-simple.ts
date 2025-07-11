@@ -21,7 +21,7 @@ export interface ImportResult {
   errors: string[];
 }
 
-export class NetballConnectScraper {
+export class NetballConnectScraperSimple {
   private browser: any = null;
   private page: any = null;
 
