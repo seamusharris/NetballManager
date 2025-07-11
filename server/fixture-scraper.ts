@@ -1,5 +1,6 @@
 
-import puppeteer from 'puppeteer';
+import fetch from 'node-fetch';
+import * as cheerio from 'cheerio';
 import { db } from './db.js';
 import { games, teams, gameStatuses } from '../shared/schema.js';
 import { eq, and } from 'drizzle-orm';
@@ -15,83 +16,79 @@ export interface ScrapedFixture {
 }
 
 export class NetballConnectScraper {
-  private browser: puppeteer.Browser | null = null;
-
-  async init() {
-    this.browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    });
-  }
-
-  async close() {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-    }
-  }
-
   async scrapeFixtures(url: string): Promise<ScrapedFixture[]> {
-    if (!this.browser) {
-      throw new Error('Scraper not initialized. Call init() first.');
-    }
-
-    const page = await this.browser.newPage();
-    
     try {
-      // Navigate to the fixtures page
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+      // Fetch the HTML content
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
 
-      // Wait for fixture content to load
-      await page.waitForSelector('.fixture-row, .game-row, table tbody tr', { timeout: 10000 });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // Extract fixture data
-      const fixtures = await page.evaluate(() => {
-        const fixtures: ScrapedFixture[] = [];
-        
-        // Try multiple selectors as NetballConnect might use different layouts
-        const rows = document.querySelectorAll('.fixture-row, .game-row, table tbody tr');
-        
-        rows.forEach(row => {
-          try {
-            // Extract data from each row - this will need adjustment based on actual HTML structure
-            const dateElement = row.querySelector('.date, .fixture-date, td:nth-child(1)');
-            const timeElement = row.querySelector('.time, .fixture-time, td:nth-child(2)');
-            const homeTeamElement = row.querySelector('.home-team, td:nth-child(3)');
-            const awayTeamElement = row.querySelector('.away-team, td:nth-child(4)');
-            const venueElement = row.querySelector('.venue, td:nth-child(5)');
-            const roundElement = row.querySelector('.round, td:nth-child(6)');
+      const html = await response.text();
+      const $ = cheerio.load(html);
 
-            if (dateElement && homeTeamElement && awayTeamElement) {
-              fixtures.push({
-                date: dateElement.textContent?.trim() || '',
-                time: timeElement?.textContent?.trim() || '',
-                homeTeam: homeTeamElement.textContent?.trim() || '',
-                awayTeam: awayTeamElement.textContent?.trim() || '',
-                venue: venueElement?.textContent?.trim(),
-                round: roundElement?.textContent?.trim()
-              });
+      const fixtures: ScrapedFixture[] = [];
+      
+      // Try multiple selectors as NetballConnect might use different layouts
+      const rows = $('.fixture-row, .game-row, table tbody tr, .fixture-item, .match-row');
+      
+      rows.each((index, element) => {
+        try {
+          const $row = $(element);
+          
+          // Extract data from each row - this will need adjustment based on actual HTML structure
+          const dateElement = $row.find('.date, .fixture-date, td:nth-child(1), .match-date').first();
+          const timeElement = $row.find('.time, .fixture-time, td:nth-child(2), .match-time').first();
+          const homeTeamElement = $row.find('.home-team, td:nth-child(3), .team-home').first();
+          const awayTeamElement = $row.find('.away-team, td:nth-child(4), .team-away').first();
+          const venueElement = $row.find('.venue, td:nth-child(5), .match-venue').first();
+          const roundElement = $row.find('.round, td:nth-child(6), .match-round').first();
+
+          // Also try finding teams in combined elements
+          if (!homeTeamElement.length || !awayTeamElement.length) {
+            const teamsText = $row.find('.teams, .match-teams').text();
+            const vsMatch = teamsText.match(/(.+)\s+v\s+(.+)/i);
+            if (vsMatch) {
+              const homeTeam = vsMatch[1].trim();
+              const awayTeam = vsMatch[2].trim();
+              
+              if (dateElement.length && homeTeam && awayTeam) {
+                fixtures.push({
+                  date: dateElement.text().trim(),
+                  time: timeElement.text().trim() || '',
+                  homeTeam: homeTeam,
+                  awayTeam: awayTeam,
+                  venue: venueElement.text().trim() || '',
+                  round: roundElement.text().trim() || ''
+                });
+              }
+              return;
             }
-          } catch (error) {
-            console.error('Error parsing fixture row:', error);
           }
-        });
 
-        return fixtures;
+          if (dateElement.length && homeTeamElement.length && awayTeamElement.length) {
+            fixtures.push({
+              date: dateElement.text().trim(),
+              time: timeElement.text().trim() || '',
+              homeTeam: homeTeamElement.text().trim(),
+              awayTeam: awayTeamElement.text().trim(),
+              venue: venueElement.text().trim() || '',
+              round: roundElement.text().trim() || ''
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing fixture row:', error);
+        }
       });
 
       return fixtures;
-    } finally {
-      await page.close();
+    } catch (error) {
+      throw new Error(`Failed to scrape fixtures: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

@@ -15,7 +15,6 @@ router.post('/api/fixtures/preview', async (req, res) => {
   const scraper = new NetballConnectScraper();
   
   try {
-    await scraper.init();
     const fixtures = await scraper.scrapeFixtures(url);
     res.json({ fixtures, count: fixtures.length });
   } catch (error) {
@@ -24,18 +23,10 @@ router.post('/api/fixtures/preview', async (req, res) => {
     let errorMessage = 'Failed to scrape fixtures';
     let details = error instanceof Error ? error.message : 'Unknown error';
     
-    // Check for common browser launch issues
-    if (details.includes('Failed to launch the browser process')) {
-      errorMessage = 'Browser launch failed - missing system dependencies';
-      details = 'The web scraper requires Chrome to be properly installed. This may be a system configuration issue.';
-    }
-    
     res.status(500).json({ 
       error: errorMessage,
       details: details
     });
-  } finally {
-    await scraper.close();
   }
 });
 
@@ -52,7 +43,6 @@ router.post('/api/fixtures/import', async (req, res) => {
   const scraper = new NetballConnectScraper();
   
   try {
-    await scraper.init();
     const results = await scraper.importFixtures(url, clubId, seasonId);
     res.json(results);
   } catch (error) {
@@ -61,8 +51,6 @@ router.post('/api/fixtures/import', async (req, res) => {
       error: 'Failed to import fixtures',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
-  } finally {
-    await scraper.close();
   }
 });
 
