@@ -133,6 +133,12 @@ export const gameStats = pgTable("game_stats", {
   handlingError: integer("handling_error").notNull().default(0),
   pickUp: integer("pick_up").notNull().default(0),
   infringement: integer("infringement").notNull().default(0),
+  // New statistics columns
+  deflections: integer("deflections").notNull().default(0),
+  turnovers: integer("turnovers").notNull().default(0),
+  gains: integer("gains").notNull().default(0),
+  receives: integer("receives").notNull().default(0),
+  penalties: integer("penalties").notNull().default(0),
   rating: integer("rating"), // Position performance rating from 0-10
 }, 
 // Add unique constraint to ensure we have exactly one stat record per team/position/quarter combo
