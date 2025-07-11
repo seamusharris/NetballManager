@@ -752,179 +752,167 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         <title>Record Stats | NetballManager</title>
       </Helmet>
 
-      {/* Game Header with Score */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                Quick Tap Stats
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {ourTeamDisplayName} vs {opponentDisplayName}
-              </p>
+      {/* Game Header with Score - Quick Tap Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Timer Section - Left */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="text-center space-y-3">
+              <div className="text-sm font-semibold">Game Time</div>
+              <div className="text-3xl font-mono font-bold">{formatElapsedTime()}</div>
+              <div className="grid grid-cols-3 gap-1">
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={startTimer}
+                  disabled={isTimerRunning}
+                  className="touch-manipulation"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  Start
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={stopTimer}
+                  disabled={!isTimerRunning}
+                  className="touch-manipulation"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Stop
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetTimer}
+                  className="touch-manipulation"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Reset
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardContent>
+        </Card>
 
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Game Score */}
-            <Card>
-              <CardContent className="py-4">
-                <div className="text-center space-y-2">
-                  <div className="text-sm font-semibold mb-3">Game Score</div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <div>
-                      <p className="text-xs text-muted-foreground">{ourTeamDisplayName}</p>
-                      <p className="text-2xl font-bold">{getGameTotal('goalsFor')}</p>
-                    </div>
-                    <div className="text-xl font-bold">-</div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{opponentDisplayName}</p>
-                      <p className="text-2xl font-bold">{getGameTotal('goalsAgainst')}</p>
-                    </div>
-                  </div>
+        {/* Scores Section - Center */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="text-center space-y-3">
+              <div className="text-sm font-semibold">Game Score</div>
+              <div className="grid grid-cols-3 gap-2 items-center">
+                <div>
+                  <p className="text-xs text-muted-foreground">{ourTeamDisplayName}</p>
+                  <p className="text-3xl font-bold">{getGameTotal('goalsFor')}</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quarter Score */}
-            <Card>
-              <CardContent className="py-4">
-                <div className="text-center space-y-2">
-                  <div className="text-sm font-semibold mb-3">Quarter {currentQuarter}</div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Quarter Score</p>
-                      <p className="text-xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
-                    </div>
-                  </div>
+                <div className="text-2xl font-bold">-</div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{opponentDisplayName}</p>
+                  <p className="text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="border-t pt-2">
+                <p className="text-xs text-muted-foreground mb-1">Quarter {currentQuarter}</p>
+                <p className="text-xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Quarter & Controls */}
-            <Card>
-              <CardContent className="py-4">
-                <div className="space-y-3">
-                  {/* Game Timer */}
-                  <div className="text-center">
-                    <div className="text-sm font-semibold mb-2">Game Time</div>
-                    <div className="text-2xl font-mono font-bold mb-2">{formatElapsedTime()}</div>
-                    <div className="grid grid-cols-3 gap-1">
-                      <Button
-                        variant="outline" 
-                        size="sm"
-                        onClick={startTimer}
-                        disabled={isTimerRunning}
-                        className="touch-manipulation"
-                      >
-                        <Play className="h-3 w-3 mr-1" />
-                        Start
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={stopTimer}
-                        disabled={!isTimerRunning}
-                        className="touch-manipulation"
-                      >
-                        <X className="h-3 w-3 mr-1" />
-                        Stop
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={resetTimer}
-                        className="touch-manipulation"
-                      >
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        Reset
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Quarter Selector */}
-                  <div className="text-center">
-                    <div className="text-sm font-semibold mb-2">Quarter</div>
-                    <div className="grid grid-cols-4 gap-1">
-                      {[1, 2, 3, 4].map(quarter => (
-                        <Button
-                          key={quarter}
-                          variant={quarter === currentQuarter ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentQuarter(quarter)}
-                          className="h-8 touch-manipulation"
-                        >
-                          {quarter}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Action Controls */}
-                  <div className="grid grid-cols-2 gap-1">
+        {/* Controls Section - Right */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="space-y-3">
+              {/* Quarter Selector */}
+              <div className="text-center">
+                <div className="text-sm font-semibold mb-2">Quarter</div>
+                <div className="grid grid-cols-4 gap-1">
+                  {[1, 2, 3, 4].map(quarter => (
                     <Button
-                      variant="outline" 
+                      key={quarter}
+                      variant={quarter === currentQuarter ? "default" : "outline"}
                       size="sm"
-                      onClick={handleUndo}
-                      disabled={undoStack.length === 0}
-                      className="touch-manipulation"
+                      onClick={() => setCurrentQuarter(quarter)}
+                      className="h-8 touch-manipulation"
                     >
-                      <Undo className="h-3 w-3 mr-1" />
-                      Undo
+                      {quarter}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRedo}
-                      disabled={redoStack.length === 0}
-                      className="touch-manipulation"
-                    >
-                      <Redo className="h-3 w-3 mr-1" />
-                      Redo
-                    </Button>
-                  </div>
-
-                  <Button 
-                    onClick={resetCurrentQuarter}
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-amber-500 text-amber-700 hover:bg-amber-50 touch-manipulation"
-                  >
-                    <RotateCcw className="h-3 w-3 mr-1" />
-                    Reset Q{currentQuarter}
-                  </Button>
-
-                  <Button
-                    onClick={saveAllStats}
-                    disabled={saveInProgress}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white touch-manipulation"
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    {saveInProgress ? 'Saving...' : 'Save All Stats'}
-                  </Button>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+
+              {/* Quarter Length Dropdown */}
+              <div className="text-center">
+                <div className="text-sm font-semibold mb-2">Quarter Length</div>
+                <select className="w-full h-8 px-2 text-sm border border-gray-300 rounded touch-manipulation">
+                  <option value="15">15 minutes</option>
+                  <option value="12">12 minutes</option>
+                  <option value="10">10 minutes</option>
+                  <option value="8">8 minutes</option>
+                </select>
+              </div>
+
+              {/* Action Controls */}
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleUndo}
+                  disabled={undoStack.length === 0}
+                  className="touch-manipulation"
+                >
+                  <Undo className="h-3 w-3 mr-1" />
+                  Undo
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  className="touch-manipulation"
+                >
+                  <Redo className="h-3 w-3 mr-1" />
+                  Redo
+                </Button>
+              </div>
+
+              <Button 
+                onClick={resetCurrentQuarter}
+                variant="outline"
+                size="sm"
+                className="w-full border-amber-500 text-amber-700 hover:bg-amber-50 touch-manipulation"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset Q{currentQuarter}
+              </Button>
+
+              <Button
+                onClick={saveAllStats}
+                disabled={saveInProgress}
+                className="w-full bg-green-600 hover:bg-green-700 text-white touch-manipulation"
+              >
+                <Save className="h-4 w-4 mr-1" />
+                {saveInProgress ? 'Saving...' : 'Save All Stats'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Position Cards with Quick Tap Interface */}
       <div className="space-y-3">
-        <h2 className="text-base font-semibold">Positions - Quarter {currentQuarter}</h2>
-
         {allPositions.map(position => {
           const assignedPlayerId = currentPositions[position];
           const assignedPlayer = players?.find(p => p.id === assignedPlayerId);
           const { common, specific } = getRelevantStatsForPosition(position);
+          
+          // Check if this is a midcourt position for center alignment
+          const isMidcourt = ['WA', 'C', 'WD'].includes(position);
 
           return (
             <Card key={position} className="overflow-hidden">
               <CardHeader className="py-2 pb-2">
-                <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-3 ${isMidcourt ? 'justify-center' : ''}`}>
                   {/* Position Identity */}
                   <div 
                     className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
