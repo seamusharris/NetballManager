@@ -48,7 +48,8 @@ import { exportAllData, importData } from "@/lib/dataExportImport";
 import { createFlourishExporter, downloadCSV } from '@/lib/flourishDataExporter';
 import { queryClient } from '@/lib/queryClient';
 import { apiClient } from '@/lib/apiClient';
-import { GameStatusManager } from "@/components/settings/GameStatusManager";
+import { GameStatusManager } from '@/components/settings/GameStatusManager';
+import { FixtureImporter } from '@/components/settings/FixtureImporter';
 import { useClub } from '@/contexts/ClubContext';
 
 export default function Settings() {
@@ -847,6 +848,12 @@ export default function Settings() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Fixture Importer Section - Full Width */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Fixture Importer</h2>
+        <FixtureImporter />
       </div>
 
       {/* Delete Confirmation Dialog */}
