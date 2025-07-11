@@ -192,11 +192,10 @@ export default function ColorStyleGuide() {
           <div className="flex gap-4 justify-center">
             {positions.map(position => (
               <div key={position.code} className="text-center">
-                <PositionBadge position={position} size="default" />
+                <PositionBadge position={position} size="lg" />
               </div>
             ))}
           </div>
-        </div>
         </div>
       </CardContent>
     </Card>
