@@ -1,3 +1,4 @@
+
 import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { db } from './db';
@@ -22,11 +23,11 @@ export interface ImportResult {
 
 export class NetballConnectScraper {
   constructor() {
-    // No browser needed - using cheerio for HTML parsing
+    console.log('NetballConnectScraper: Using lightweight HTML parser (cheerio + node-fetch)');
   }
 
   async close() {
-    // No cleanup needed
+    // No cleanup needed for HTTP-based scraper
   }
 
   async scrapeFixtures(url: string): Promise<ScrapedFixture[]> {
@@ -49,6 +50,11 @@ export class NetballConnectScraper {
       const $ = cheerio.load(html);
       const fixtures: ScrapedFixture[] = [];
 
+      // Log what we're looking for
+      console.log('Looking for fixture tables...');
+      const tableCount = $('table').length;
+      console.log(`Found ${tableCount} tables to analyze`);
+
       // Look for table rows with fixture data
       $('table tr').each((index, row) => {
         const $row = $(row);
@@ -56,6 +62,7 @@ export class NetballConnectScraper {
 
         if (cells.length >= 3) {
           const cellTexts = cells.map((i, cell) => $(cell).text().trim()).get();
+          console.log(`Row ${index} cells:`, cellTexts);
 
           // Look for team matchup patterns
           let homeTeam = '';
@@ -70,23 +77,27 @@ export class NetballConnectScraper {
             if (teamMatch && !homeTeam) {
               homeTeam = teamMatch[1].trim();
               awayTeam = teamMatch[2].trim();
+              console.log(`Found teams: ${homeTeam} vs ${awayTeam}`);
             }
 
             // Check for date pattern
             const dateMatch = cellText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
             if (dateMatch && !date) {
               date = this.normalizeDate(dateMatch[1]);
+              console.log(`Found date: ${date}`);
             }
 
             // Check for time pattern
             const timeMatch = cellText.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i);
             if (timeMatch && !time) {
               time = this.normalizeTime(timeMatch[1]);
+              console.log(`Found time: ${time}`);
             }
 
-            // Venue (text that doesn't contain numbers and isn't too long)
-            if (cellText.length > 0 && !cellText.match(/\d/) && cellText.length < 50 && !venue) {
+            // Venue detection
+            if (cellText.length > 0 && !cellText.match(/\d/) && cellText.length < 50 && !venue && !cellText.includes('v ')) {
               venue = cellText;
+              console.log(`Found venue: ${venue}`);
             }
           }
 
@@ -100,12 +111,12 @@ export class NetballConnectScraper {
               round: ''
             });
 
-            console.log(`Found fixture: ${homeTeam} vs ${awayTeam}`);
+            console.log(`✓ Added fixture: ${homeTeam} vs ${awayTeam}`);
           }
         }
       });
 
-      // Fallback: look for any text containing "v " or "vs "
+      // Fallback: look for any text containing team vs team patterns
       if (fixtures.length === 0) {
         console.log('No table fixtures found, trying text-based approach...');
 
@@ -114,16 +125,23 @@ export class NetballConnectScraper {
           const teamMatch = text.match(/(.+?)\s+(?:v\s+|vs\s+|V\s+)(.+?)(?:\s|$)/i);
 
           if (teamMatch && teamMatch[1].length < 50 && teamMatch[2].length < 50) {
-            fixtures.push({
-              date: '',
-              time: '',
-              homeTeam: teamMatch[1].trim(),
-              awayTeam: teamMatch[2].trim(),
-              venue: '',
-              round: ''
-            });
+            const homeTeam = teamMatch[1].trim();
+            const awayTeam = teamMatch[2].trim();
+            
+            // Avoid duplicates
+            const exists = fixtures.some(f => f.homeTeam === homeTeam && f.awayTeam === awayTeam);
+            if (!exists) {
+              fixtures.push({
+                date: '',
+                time: '',
+                homeTeam,
+                awayTeam,
+                venue: '',
+                round: ''
+              });
 
-            console.log(`Found text fixture: ${teamMatch[1].trim()} vs ${teamMatch[2].trim()}`);
+              console.log(`✓ Added text fixture: ${homeTeam} vs ${awayTeam}`);
+            }
           }
         });
       }
