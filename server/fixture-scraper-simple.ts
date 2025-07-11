@@ -217,11 +217,20 @@ export class NetballConnectScraper {
     });
 
     // NetballConnect specific: Look for data in input fields or hidden elements
-    $('input[type="hidden"], input[data-*]').each((index, input) => {
+    $('input[type="hidden"]').each((index, input) => {
       const $input = $(input);
-      const value = $input.val() || $input.attr('data-value') || '';
+      const value = $input.val() || '';
       if (typeof value === 'string' && (value.includes('vs') || value.includes('v '))) {
         console.log(`Found potential fixture data in input[${index}]:`, value);
+      }
+    });
+    
+    // Look for elements with data attributes
+    $('[data-fixture], [data-game], [data-match]').each((index, element) => {
+      const $element = $(element);
+      const text = $element.text() || $element.attr('data-fixture') || $element.attr('data-game') || $element.attr('data-match') || '';
+      if (typeof text === 'string' && (text.includes('vs') || text.includes('v '))) {
+        console.log(`Found potential fixture data in data attribute[${index}]:`, text);
       }
     });
 
