@@ -106,30 +106,38 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   const [pendingStatChange, setPendingStatChange] = useState<any>(null);
 
   // Timer state
-  const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [quarterStartTime, setQuarterStartTime] = useState<Date | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(15 * 60); // seconds remaining in quarter
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const [quarterLength, setQuarterLength] = useState<number>(15); // minutes
 
   // Determine team context - use the teamId from URL params or current team
   const currentTeamId = teamId || currentTeam?.id;
 
-  // Timer effect
+  // Timer effect - countdown timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isTimerRunning) {
+    if (isTimerRunning && timeRemaining > 0) {
       interval = setInterval(() => {
-        setCurrentTime(new Date());
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setIsTimerRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isTimerRunning]);
+  }, [isTimerRunning, timeRemaining]);
 
   // Timer functions
   const startTimer = () => {
-    setGameStartTime(new Date());
+    if (!quarterStartTime) {
+      setQuarterStartTime(new Date());
+    }
     setIsTimerRunning(true);
   };
 
@@ -138,18 +146,28 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   };
 
   const resetTimer = () => {
-    setGameStartTime(null);
-    setCurrentTime(new Date());
+    setQuarterStartTime(null);
+    setTimeRemaining(quarterLength * 60);
     setIsTimerRunning(false);
   };
 
-  const formatElapsedTime = (): string => {
-    if (!gameStartTime) return `${quarterLength.toString().padStart(2, '0')}:00`;
-    const elapsed = Math.floor((currentTime.getTime() - gameStartTime.getTime()) / 1000);
-    const totalQuarterSeconds = quarterLength * 60;
-    const remaining = Math.max(0, totalQuarterSeconds - elapsed);
-    const minutes = Math.floor(remaining / 60);
-    const seconds = remaining % 60;
+  // Reset timer when quarter length changes
+  useEffect(() => {
+    if (!isTimerRunning) {
+      setTimeRemaining(quarterLength * 60);
+    }
+  }, [quarterLength, isTimerRunning]);
+
+  // Reset timer when quarter changes
+  useEffect(() => {
+    setQuarterStartTime(null);
+    setTimeRemaining(quarterLength * 60);
+    setIsTimerRunning(false);
+  }, [currentQuarter, quarterLength]);
+
+  const formatTimeRemaining = (): string => {
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
@@ -762,7 +780,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           <CardContent className="py-4">
             <div className="text-center space-y-3">
               <div className="text-sm font-semibold">Game Time</div>
-              <div className="text-3xl font-mono font-bold">{formatElapsedTime()}</div>
+              <div className="text-3xl font-mono font-bold">{formatTimeRemaining()}</div>
               
               {/* Quarter Length Dropdown */}
               <div className="text-center">
@@ -771,6 +789,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                   value={quarterLength}
                   onChange={(e) => setQuarterLength(parseInt(e.target.value))}
                   className="w-full h-7 px-2 text-xs border border-gray-300 rounded touch-manipulation"
+                  disabled={isTimerRunning}
                 >
                   <option value="15">15 minutes</option>
                   <option value="12">12 minutes</option>
