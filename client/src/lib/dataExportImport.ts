@@ -41,27 +41,42 @@ export async function exportAllData(): Promise<ExportResult> {
 
     // Fetch all clubs
     console.log("Fetching clubs...");
-    const clubsResponse = await fetch('/api/user/clubs');
+    const clubsResponse = await fetch('/api/user/clubs', {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     if (!clubsResponse.ok) {
-      throw new Error(`Failed to fetch clubs: ${clubsResponse.statusText}`);
+      const errorText = await clubsResponse.text();
+      throw new Error(`Failed to fetch clubs (${clubsResponse.status}): ${errorText}`);
     }
     const clubs = await clubsResponse.json();
     console.log(`Exported ${clubs.length} clubs`);
 
     // Fetch all seasons
     console.log("Fetching seasons...");
-    const seasonsResponse = await fetch('/api/seasons');
+    const seasonsResponse = await fetch('/api/seasons', {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     if (!seasonsResponse.ok) {
-      throw new Error(`Failed to fetch seasons: ${seasonsResponse.statusText}`);
+      const errorText = await seasonsResponse.text();
+      throw new Error(`Failed to fetch seasons (${seasonsResponse.status}): ${errorText}`);
     }
     const seasons = await seasonsResponse.json();
     console.log(`Exported ${seasons.length} seasons`);
 
     // Fetch all game statuses
     console.log("Fetching game statuses...");
-    const gameStatusesResponse = await fetch('/api/game-statuses');
+    const gameStatusesResponse = await fetch('/api/game-statuses', {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     if (!gameStatusesResponse.ok) {
-      throw new Error(`Failed to fetch game statuses: ${gameStatusesResponse.statusText}`);
+      const errorText = await gameStatusesResponse.text();
+      throw new Error(`Failed to fetch game statuses (${gameStatusesResponse.status}): ${errorText}`);
     }
     const gameStatuses = await gameStatusesResponse.json();
     console.log(`Exported ${gameStatuses.length} game statuses`);

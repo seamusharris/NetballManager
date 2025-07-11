@@ -114,9 +114,20 @@ export default function Settings() {
   };
 
   const handleExport = async () => {
+    if (!currentClubId) {
+      toast({
+        title: "Export Failed",
+        description: "No club selected. Please select a club before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsExporting(true);
       setError(null);
+
+      console.log('Starting export for club:', currentClubId);
 
       // Export all data
       const { fileContents, filename } = await exportAllData();
@@ -130,6 +141,7 @@ export default function Settings() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Export Successful",
@@ -138,11 +150,12 @@ export default function Settings() {
       });
     } catch (err) {
       console.error('Export failed:', err);
-      setError(err instanceof Error ? err.message : 'Export failed due to an unknown error');
+      const errorMessage = err instanceof Error ? err.message : 'Export failed due to an unknown error';
+      setError(errorMessage);
 
       toast({
         title: "Export Failed",
-        description: "There was a problem exporting your data. Please try again.",
+        description: `There was a problem exporting your data: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
