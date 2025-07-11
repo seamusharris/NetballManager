@@ -23,10 +23,18 @@ router.post('/api/fixtures/preview', async (req, res) => {
     let errorMessage = 'Failed to scrape fixtures';
     let details = error instanceof Error ? error.message : 'Unknown error';
     
+    // Check for common browser launch issues
+    if (details.includes('Failed to launch the browser process')) {
+      errorMessage = 'Browser launch failed - using alternative scraping method';
+      details = 'The web scraper is now using a lightweight HTML parser instead of a browser. This may affect the ability to scrape dynamic content.';
+    }
+    
     res.status(500).json({ 
       error: errorMessage,
       details: details
     });
+  } finally {
+    await scraper.close();
   }
 });
 
