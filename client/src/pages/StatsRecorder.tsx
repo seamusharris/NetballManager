@@ -13,7 +13,7 @@ import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor
 import { 
   Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
   Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
-  RefreshCw, Users, Coffee, Clock, Timer
+  RefreshCw, Users, Coffee, Clock, Timer, Pause
 } from 'lucide-react';
 import { STAT_LABELS, STAT_COLORS, POSITIONS, getAllOrderedStats, STAT_ICONS } from '@/lib/constants';
 import { Helmet } from 'react-helmet';
@@ -140,6 +140,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       setQuarterStartTime(new Date());
     }
     setIsTimerRunning(true);
+  };
+
+  const pauseTimer = () => {
+    setIsTimerRunning(false);
   };
 
   const stopTimer = () => {
@@ -793,12 +797,12 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={stopTimer}
+                  onClick={pauseTimer}
                   disabled={!isTimerRunning}
                   className="touch-manipulation"
                 >
-                  <X className="h-3 w-3 mr-1" />
-                  Stop
+                  <Pause className="h-3 w-3 mr-1" />
+                  Pause
                 </Button>
                 <Button
                   variant="outline"
