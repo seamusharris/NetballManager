@@ -34,7 +34,7 @@ export default function PositionComponentReference() {
 
     return (
       <div 
-        className={`${sizeClasses[size]} rounded-lg flex items-center justify-center font-bold text-white border border-white`}
+        className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold text-white border border-white`}
         style={{ 
           backgroundColor: position.color,
           boxShadow: `0 0 0 1px ${position.color}`
