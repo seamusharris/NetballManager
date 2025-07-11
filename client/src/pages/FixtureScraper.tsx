@@ -42,7 +42,7 @@ export default function FixtureScraper() {
     setScrapedData([]);
 
     try {
-      const response = await fetch('/api/scrape-fixture', {
+      const response = await fetch('/api/fixtures/preview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,12 +89,16 @@ export default function FixtureScraper() {
     }
 
     try {
-      const response = await fetch('/api/import-scraped-games', {
+      const response = await fetch('/api/fixtures/import', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ games: scrapedData })
+        body: JSON.stringify({ 
+          url: url,
+          clubId: 54, // You may want to get this from club context
+          seasonId: 1  // You may want to get this from season context
+        })
       });
 
       if (!response.ok) {
