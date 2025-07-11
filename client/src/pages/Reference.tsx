@@ -385,25 +385,55 @@ export default function Reference() {
                     {item.title === 'Position Component' && (
                       <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                         <div className="text-xs font-medium text-gray-600 mb-2">Live Example:</div>
-                        <div className="flex items-center gap-2">
-                          {[
-                            { code: "GS", name: "Goal Shooter", color: "#dc2626" },
-                            { code: "C", name: "Centre", color: "#10b981" },
-                            { code: "GK", name: "Goal Keeper", color: "#4338ca" }
-                          ].map((position) => (
-                            <div key={position.code} className="relative">
-                              <div 
-                                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white relative overflow-hidden"
-                                style={{ backgroundColor: position.color }}
-                              >
-                                <div 
-                                  className="absolute inset-1 rounded-md border-2 border-white/30"
-                                  style={{ borderColor: `${position.color}40` }}
-                                />
-                                <span className="relative z-10 text-white font-bold text-xs">{position.code}</span>
-                              </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="text-center">
+                            <div 
+                              className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center mb-1 border border-white"
+                              style={{ 
+                                backgroundColor: '#dc2626',
+                                boxShadow: '0 0 0 1px #dc2626'
+                              }}
+                            >
+                              GS
                             </div>
-                          ))}
+                            <div className="text-xs">Goal Shooter</div>
+                          </div>
+                          <div className="text-center">
+                            <div 
+                              className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center mb-1 border border-white"
+                              style={{ 
+                                backgroundColor: '#ea580c',
+                                boxShadow: '0 0 0 1px #ea580c'
+                              }}
+                            >
+                              GA
+                            </div>
+                            <div className="text-xs">Goal Attack</div>
+                          </div>
+                          <div className="text-center">
+                            <div 
+                              className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center mb-1 border border-white"
+                              style={{ 
+                                backgroundColor: '#2563eb',
+                                boxShadow: '0 0 0 1px #2563eb'
+                              }}
+                            >
+                              GD
+                            </div>
+                            <div className="text-xs">Goal Defence</div>
+                          </div>
+                          <div className="text-center">
+                            <div 
+                              className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center mb-1 border border-white"
+                              style={{ 
+                                backgroundColor: '#4338ca',
+                                boxShadow: '0 0 0 1px #4338ca'
+                              }}
+                            >
+                              GK
+                            </div>
+                            <div className="text-xs">Goal Keeper</div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -413,45 +443,41 @@ export default function Reference() {
                       <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                         <div className="text-xs font-medium text-gray-600 mb-2">Live Example:</div>
                         <div className="space-y-3">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <div className="text-xs font-medium mb-1 text-green-700">Win Example</div>
-                              <GameResultCard 
-                                game={sampleGames[0]} 
-                                currentTeamId={116}
-                                layout="medium"
-                                showLink={false}
-                              />
-                            </div>
-                            <div>
-                              <div className="text-xs font-medium mb-1 text-red-700">Loss Example</div>
-                              <GameResultCard 
-                                game={sampleGames[1]} 
-                                currentTeamId={116}
-                                layout="medium"
-                                showLink={false}
-                              />
-                            </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1 text-green-700">Win Example</div>
+                            <GameResultCard 
+                              game={sampleGames[0]} 
+                              currentTeamId={116}
+                              layout="wide"
+                              showLink={false}
+                            />
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <div className="text-xs font-medium mb-1 text-blue-700">Upcoming Game</div>
-                              <GameResultCard 
-                                game={sampleGames[2]} 
-                                currentTeamId={116}
-                                layout="medium"
-                                showLink={false}
-                              />
-                            </div>
-                            <div>
-                              <div className="text-xs font-medium mb-1 text-gray-700">Bye Game</div>
-                              <GameResultCard 
-                                game={sampleGames[3]} 
-                                currentTeamId={116}
-                                layout="medium"
-                                showLink={false}
-                              />
-                            </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1 text-red-700">Loss Example</div>
+                            <GameResultCard 
+                              game={sampleGames[1]} 
+                              currentTeamId={116}
+                              layout="wide"
+                              showLink={false}
+                            />
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1 text-blue-700">Upcoming Example</div>
+                            <GameResultCard 
+                              game={sampleGames[2]} 
+                              currentTeamId={116}
+                              layout="wide"
+                              showLink={false}
+                            />
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1 text-gray-700">Bye Example</div>
+                            <GameResultCard 
+                              game={sampleGames[3]} 
+                              currentTeamId={116}
+                              layout="wide"
+                              showLink={false}
+                            />
                           </div>
                         </div>
                       </div>
