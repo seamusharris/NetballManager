@@ -76,7 +76,7 @@ export class NetballConnectScraper {
     
     // Check if this is a JavaScript-rendered page
     if (html.includes('id="root"') && html.includes('Loading...')) {
-      console.log('Detected JavaScript-rendered page, returning empty for fallback to Puppeteer');
+      console.log('Detected JavaScript-rendered page, returning empty for fallback to Playwright');
       return [];
     }
 
@@ -88,7 +88,7 @@ export class NetballConnectScraper {
     
     this.browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
     
     this.page = await this.browser.newPage();
@@ -99,12 +99,13 @@ export class NetballConnectScraper {
     
     console.log('Navigating to page and waiting for content...');
     
-    // Navigate to the page
-    await this.page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-    
-    // Wait for content to load - NetballConnect specific approach
-    console.log('Waiting for NetballConnect content to load...');
-    await this.page.waitForTimeout(12000); // Increased wait time for React app to load
+    try {
+      // Navigate to the page with longer timeout
+      await this.page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+      
+      // Wait for content to load - NetballConnect specific approach
+      console.log('Waiting for NetballConnect content to load...');
+      await this.page.waitForTimeout(15000); // Wait for React app to fully load
     
     // Try to wait for specific NetballConnect elements
     try {
