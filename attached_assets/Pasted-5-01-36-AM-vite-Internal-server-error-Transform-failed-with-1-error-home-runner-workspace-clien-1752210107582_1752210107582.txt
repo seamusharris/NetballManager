@@ -1,0 +1,23 @@
+5:01:36 AM [vite] Internal server error: Transform failed with 1 error:
+/home/runner/workspace/client/src/pages/PositionComponentReference.tsx:304:149: ERROR: The character ">" is not valid inside a JSX element
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/pages/PositionComponentReference.tsx:304:42
+  
+  The character ">" is not valid inside a JSX element
+  302|                      <tr data-replit-metadata="client/src/pages/PositionComponentReference.tsx:302:20" data-component-name="tr" className="border-b">
+  303|                        <td data-replit-metadata="client/src/pages/PositionComponentReference.tsx:303:22" data-component-name="td" className="p-3 font-mono text-sm">onClick</td>
+  304|                        <td data-replit-metadata="client/src/pages/PositionComponentReference.tsx:304:22" data-component-name="td" className="p-3">() => void</td>
+     |                                                                                                                                                       ^
+  305|                        <td data-replit-metadata="client/src/pages/PositionComponentReference.tsx:305:22" data-component-name="td" className="p-3">undefined</td>
+  306|                        <td data-replit-metadata="client/src/pages/PositionComponentReference.tsx:306:22" data-component-name="td" className="p-3">Optional click handler</td>
+  
+      at failureErrorWithLog (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15)
+      at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:755:50
+      at responseCallbacks.<computed> (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:622:9)
+      at handleIncomingPacket (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:677:12)
+      at Socket.readFromStdout (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:600:7)
+      at Socket.emit (node:events:518:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at Pipe.onStreamRead (node:internal/stream_base_commons:191:23)
