@@ -221,11 +221,11 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     enabled: !!gameId && !!currentTeamId && !isNaN(gameId) && !isNaN(currentTeamId)
   });
 
-  // Fetch existing stats for this game using team-based endpoint
+  // Fetch existing stats for this game using game-centric endpoint
   const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['/api/teams', currentTeamId, 'games', gameId, 'stats'],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}/stats`),
-    enabled: !!gameId && !!currentTeamId && !isNaN(gameId) && !isNaN(currentTeamId),
+    queryKey: ['game-team-stats', gameId, teamId],
+    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`),
+    enabled: !!gameId && !!teamId,
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true
@@ -503,7 +503,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         } else {
           const hasNonZeroStats = Object.values(stats).some(value => value > 0);
           if (hasNonZeroStats) {
-            const createPromise = apiClient.post(`/api/games/${gameId}/stats`, {
+            const createPromise = apiClient.post(`/api/game/${gameId}/team/${currentTeamId}/stats`, {
               gameId: parseInt(gameId),
               teamId: currentTeamId,
               position: position,
