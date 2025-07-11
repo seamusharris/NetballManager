@@ -6,7 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useClub } from '@/contexts/ClubContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { 
@@ -17,8 +18,10 @@ import { Helmet } from 'react-helmet';
 import { clearGameCache } from '@/lib/scoresCache';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+// Import centralized stat ordering
+import { getPositionOrderedStats, isStatRelevantForPosition } from '@/lib/statOrderUtils';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -55,7 +58,7 @@ const emptyQuarterStats = {
   gains: 0,
   receives: 0,
   penalties: 0,
-  centrePass: 0,
+  missedGoals: 0,
   rating: 5 as number
 };
 
@@ -71,114 +74,6 @@ const getPositionColor = (position: Position | ''): string => {
     case 'GK': return '#8b5cf6'; // Defense (purple)
     default:   return '#6b7280'; // Gray for unknown positions
   }
-};
-
-// Different stat availabilities by position
-import { getPositionOrderedStats, isStatRelevantForPosition } from '@/lib/statOrderUtils';
-
-// Use centralized stat ordering instead of hardcoded config
-const getRelevantStatsForPosition = (position: Position): string[] => {
-  return getPositionOrderedStats(position).map(stat => stat.key);
-};
-
-const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
-  'GS': {
-    goalsFor: true,
-    goalsAgainst: false,
-    missedGoals: true,
-    rebounds: true,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  },
-  'GA': {
-    goalsFor: true,
-    goalsAgainst: false,
-    missedGoals: true,
-    rebounds: true,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  },
-  'WA': {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: false,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  },
-  'C': {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: false,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  },
-  'WD': {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: false,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  },
-  'GD': {
-    goalsFor: false,
-    goalsAgainst: true,
-    missedGoals: false,
-    rebounds: true,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  },
-  'GK': {
-    goalsFor: false,
-    goalsAgainst: true,
-    missedGoals: false,
-    rebounds: true,
-    intercepts: true,
-    deflections: true,
-    turnovers: true,
-    gains: true,
-    receives: true,
-    penalties: true
-  }
-};
-
-const statLabels: Record<StatType, string> = {
-  goalsFor: 'Goal',
-  missedGoals: 'Miss',
-  goalsAgainst: 'Goal Against',
-  rebounds: 'Rebound',
-  intercepts: 'Intercept',
-  deflections: 'Deflection',
-  turnovers: 'Turnover',
-  gains: 'Gain',
-  receives: 'Receive',
-  penalties: 'Penalty'
 };
 
 interface StatsRecorderProps {
@@ -253,8 +148,6 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     enabled: !!currentTeamId
   });
 
-  // Players are already filtered by team from the API
-
   // Filter to only show players assigned to the current team
   const players = useMemo(() => {
     if (!allPlayers || !currentTeamId) {
@@ -327,10 +220,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             missedGoals: 'missedGoals',
             rebounds: 'rebounds',
             intercepts: 'intercepts',
-            deflections: 'deflections', // Database now uses deflections
-            turnovers: 'turnovers', // Database now uses turnovers
-            gains: 'gains', // Database now uses gains
-            receives: 'receives', // Database now uses receives
+            deflections: 'deflections',
+            turnovers: 'turnovers',
+            gains: 'gains',
+            receives: 'receives',
             penalties: 'penalties'
           };
 
@@ -420,23 +313,6 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     }
 
     executeStatChange(position, stat, value);
-  };
-
-  // Update player rating for a position in current quarter
-  const updateRating = (position: Position, rating: number | null) => {
-    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
-    setRedoStack([]);
-
-    const key = getPositionQuarterKey(position, currentQuarter);
-
-    setPositionStats(prev => {
-      const newStats = JSON.parse(JSON.stringify(prev));
-      if (!newStats[key]) {
-        newStats[key] = { ...emptyQuarterStats };
-      }
-      newStats[key].rating = rating;
-      return newStats;
-    });
   };
 
   const executeStatChange = (position: Position, stat: StatType, value: number = 1) => {
@@ -645,51 +521,35 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     return total;
   };
 
-  // Common stats to show in the top row
-  const commonStats: StatType[] = ['intercepts', 'deflections', 'turnovers', 'gains', 'receives', 'penalties'];
-
-  // Render a stat counter button for a position
-  const renderStatCounter = (
-    position: Position, 
-    stat: StatType, 
-    compact: boolean = false, 
-    important: boolean = false
-  ) => {
+  // Quick tap stat button - single tap to increment
+  const QuickStatButton = ({ position, stat, important = false }) => {
     const key = getPositionQuarterKey(position, currentQuarter);
     const currentValue = positionStats[key]?.[stat] || 0;
 
-    const handleStatChange = (change: number) => {
-        recordStat(position, stat, change);
-    };
+    // Find stat info from centralized ordering
+    const orderedStats = getPositionOrderedStats(position);
+    const statInfo = orderedStats.find(s => s.key === stat);
+
+    if (!statInfo) return null;
+
+    const StatIcon = statInfo.icon;
+    const statColor = statInfo.color;
+    const statLabel = statInfo.label;
 
     return (
-      <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border`}>
-        <p className={`${important ? 'text-sm font-semibold' : 'text-xs font-medium'} mb-1`}>{statLabels[stat]}</p>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0`}
-            onClick={() => handleStatChange(-1)}
-            disabled={currentValue <= 0}
-          >
-            <Minus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
-          </Button>
-
-          <span className={`${compact ? 'w-6' : 'w-8'} text-center font-semibold ${important ? 'text-base' : ''}`}>
+      <Button
+        variant="outline"
+        className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-102 active:scale-95`}
+        onClick={() => recordStat(position, stat, 1)}
+      >
+        <StatIcon className={important ? 'h-5 w-5' : 'h-4 w-4'} />
+        <span className={`${important ? 'text-sm' : 'text-xs'} font-medium`}>{statLabel}</span>
+        {currentValue > 0 && (
+          <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">
             {currentValue}
-          </span>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0`}
-            onClick={() => handleStatChange(1)}
-          >
-            <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
-          </Button>
-        </div>
-      </div>
+          </Badge>
+        )}
+      </Button>
     );
   };
 
@@ -730,65 +590,23 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     { label: 'Record Stats' }
   ];
 
-  // Page actions
-  const pageActions = (
-    <div className="flex space-x-2">
-      {isGameCompleted && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            <strong>Warning:</strong> This game is marked as completed. Editing statistics will require confirmation.
-          </AlertDescription>
-        </Alert>
-      )}
+  // Get all relevant stats for a position based on centralized ordering
+  const getRelevantStatsForPosition = (position: Position): { common: string[], specific: string[] } => {
+    const orderedStats = getPositionOrderedStats(position);
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={resetCurrentQuarter}
-        className="border-amber-500 text-amber-700 hover:bg-amber-50"
-      >
-        <RotateCcw className="h-4 w-4 mr-1" />
-        Reset Quarter {currentQuarter}
-      </Button>
+    // Split into common (all positions) and position-specific stats
+    const allStats = ['intercepts', 'deflections', 'gains', 'receives', 'turnovers', 'penalties'];
+    const common = orderedStats.filter(s => allStats.includes(s.key)).map(s => s.key);
+    const specific = orderedStats.filter(s => !allStats.includes(s.key)).map(s => s.key);
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleUndo}
-        disabled={undoStack.length === 0}
-      >
-        <Undo className="h-4 w-4" />
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleRedo}
-        disabled={redoStack.length === 0}
-      >
-        <Redo className="h-4 w-4" />
-      </Button>
-
-      <Button
-        variant="default"
-        size="sm"
-        onClick={saveAllStats}
-        disabled={saveInProgress}
-        className="bg-blue-600 hover:bg-blue-700 text-white"
-      >
-        <Save className="h-4 w-4 mr-1" />
-        {saveInProgress ? 'Saving...' : 'Save All Stats'}
-      </Button>
-    </div>
-  );
+    return { common, specific };
+  };
 
   return (
     <PageTemplate
-      title="Record Stats"
+      title="Quick Tap Stats"
       subtitle={`Round ${game.round} | ${formatShortDate(game.date)} vs ${opponentDisplayName}`}
       breadcrumbs={breadcrumbs}
-      actions={pageActions}
       showBackButton={true}
       backButtonProps={{ 
         fallbackPath: `/game/${gameId}`,
@@ -799,169 +617,192 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         <title>Record Stats | NetballManager</title>
       </Helmet>
 
-      {/* Game scoreboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-        <Card className="overflow-hidden">
-          <CardHeader className="py-2">
-            <CardTitle className="text-base md:text-lg font-semibold">Game Score</CardTitle>
-          </CardHeader>
-          <CardContent className="py-1">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">{ourTeamDisplayName}</p>
-                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsFor')}</p>
-              </div>
-              <div className="text-xl md:text-2xl font-bold">-</div>
-              <div className="text-right">
-                <p className="text-xs md:text-sm text-muted-foreground">{opponentDisplayName}</p>
-                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
-              </div>
+      {/* Game Header with Score */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Quick Tap Stats
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {ourTeamDisplayName} vs {opponentDisplayName}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardHeader>
 
-        <Card className="overflow-hidden">
-          <CardHeader className="py-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base md:text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4].map(quarter => (
-                  <Button
-                    key={quarter}
-                    variant={quarter === currentQuarter ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentQuarter(quarter)}
-                    className="w-7 h-7 md:w-8 md:h-8 p-0 text-xs md:text-sm"
-                  >
-                    {quarter}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="py-1">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
-                <p className="text-xl md:text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Position stat cards */}
-      <div className="mb-4 md:mb-5">
-        <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Positions - Quarter {currentQuarter}</h2>
-
-        {allPositions.map(position => {
-          const player = getPlayerForPosition(position, currentQuarter);
-          const statConfig = positionStatConfig[position];
-
-          return (
-            <Card key={position} className="mb-3 overflow-hidden">
-              <CardHeader className="py-2 pb-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-2 mr-3 min-w-fit">
-                    <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-                      style={{
-                        backgroundColor: getPositionColor(position),
-                        border: '2px solid white',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                      }}
-                      title={positionLabels[position] || position}
-                    >
-                      {position}
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Game Score */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="text-center space-y-2">
+                  <div className="text-sm font-semibold mb-3">Game Score</div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">{ourTeamDisplayName}</p>
+                      <p className="text-2xl font-bold">{getGameTotal('goalsFor')}</p>
                     </div>
-
-                    <div className="min-w-[60px]">
-                      {player ? (
-                        <div>
-                          <p className="font-semibold text-sm">{player.displayName}</p>
-                          <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="font-semibold text-sm">Unassigned</p>
-                          <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
-                        </div>
-                      )}
+                    <div className="text-xl font-bold">-</div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{opponentDisplayName}</p>
+                      <p className="text-2xl font-bold">{getGameTotal('goalsAgainst')}</p>
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-                    {/* Player Rating */}
-                    <div className="flex flex-col items-center min-w-[80px]">
-                      <p className="text-xs font-medium mb-1">Rating</p>
-                      <div className="flex items-center gap-1">
+            {/* Quarter Score */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="text-center space-y-2">
+                  <div className="text-sm font-semibold mb-3">Quarter {currentQuarter}</div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Quarter Score</p>
+                      <p className="text-xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quarter & Controls */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="space-y-3">
+                  {/* Quarter Selector */}
+                  <div className="text-center">
+                    <div className="text-sm font-semibold mb-2">Quarter</div>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[1, 2, 3, 4].map(quarter => (
                         <Button
-                          variant="outline"
+                          key={quarter}
+                          variant={quarter === currentQuarter ? "default" : "outline"}
                           size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            const currentRating = positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5;
-                            updateRating(position, Math.max(0, currentRating - 1));
-                          }}
-                          disabled={(positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5) <= 0}
+                          onClick={() => setCurrentQuarter(quarter)}
+                          className="h-8 touch-manipulation"
                         >
-                          <Minus className="h-3 w-3" />
+                          {quarter}
                         </Button>
-
-                        <input
-                          type="number"
-                          min="0"
-                          max="10"
-                          className="w-12 h-6 text-center text-sm border border-gray-300 rounded"
-                          value={positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5}
-                          onChange={(e) => {
-                            const value = e.target.value === '' ? null : Math.min(10, Math.max(0, parseInt(e.target.value)));
-                            updateRating(position, value);
-                          }}
-                        />
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            const currentRating = positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5;
-                            updateRating(position, Math.min(10, currentRating + 1));
-                          }}
-                          disabled={(positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5) >= 10}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Common stats */}
-                  <div className="flex-1 flex flex-wrap gap-2">
-                    {commonStats.map(stat => (
-                      statConfig[stat] && (
-                        <div key={`${position}-common-${stat}`} className="flex-1 min-w-[120px]">
-                          {renderStatCounter(position, stat, false, false)}
-                        </div>
-                      )
+                  {/* Action Controls */}
+                  <div className="grid grid-cols-2 gap-1">
+                    <Button
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleUndo}
+                      disabled={undoStack.length === 0}
+                      className="touch-manipulation"
+                    >
+                      <Undo className="h-3 w-3 mr-1" />
+                      Undo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRedo}
+                      disabled={redoStack.length === 0}
+                      className="touch-manipulation"
+                    >
+                      <Redo className="h-3 w-3 mr-1" />
+                      Redo
+                    </Button>
+                  </div>
+
+                  <Button 
+                    onClick={resetCurrentQuarter}
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-amber-500 text-amber-700 hover:bg-amber-50 touch-manipulation"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Reset Q{currentQuarter}
+                  </Button>
+
+                  <Button
+                    onClick={saveAllStats}
+                    disabled={saveInProgress}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white touch-manipulation"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    {saveInProgress ? 'Saving...' : 'Save All Stats'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Position Cards with Quick Tap Interface */}
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold">Positions - Quarter {currentQuarter}</h2>
+
+        {allPositions.map(position => {
+          const assignedPlayerId = currentPositions[position];
+          const assignedPlayer = players?.find(p => p.id === assignedPlayerId);
+          const { common, specific } = getRelevantStatsForPosition(position);
+
+          return (
+            <Card key={position} className="overflow-hidden">
+              <CardHeader className="py-2 pb-2">
+                <div className="flex items-center gap-3">
+                  {/* Position Identity */}
+                  <div 
+                    className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                    style={{
+                      backgroundColor: getPositionColor(position),
+                      border: '2px solid white',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    {position}
+                  </div>
+
+                  <div className="min-w-[100px]">
+                    {assignedPlayer ? (
+                      <p className="font-semibold text-sm">{assignedPlayer.displayName}</p>
+                    ) : (
+                      <p className="font-semibold text-sm text-gray-400">Unassigned</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                  </div>
+
+                  {/* Common Stats Row - Quick Tap */}
+                  <div className="flex-1 grid grid-cols-6 gap-2">
+                    {common.map(stat => (
+                      <QuickStatButton
+                        key={stat}
+                        position={position}
+                        stat={stat}
+                      />
                     ))}
                   </div>
                 </div>
               </CardHeader>
+
+              {/* Position-Specific Stats Row */}
               <CardContent className="py-2 pt-1">
                 {(() => {
-                  const posSpecificStats = Object.entries(statConfig)
-                    .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat as StatType))
-                    .map(([stat]) => stat as StatType);
-
-                  if (posSpecificStats.length === 0) {
+                  if (specific.length === 0) {
                     return null;
                   }
 
                   return (
-                    <div className="flex justify-center gap-2 flex-wrap">
-                      {posSpecificStats.map(statType => (
-                        <div key={`${position}-${statType}`} className="w-[180px]">
-                          {renderStatCounter(position, statType, false, true)}
-                        </div>
+                    <div className="flex justify-center gap-2">
+                      {specific.map(statType => (
+                        <QuickStatButton
+                          key={statType}
+                          position={position}
+                          stat={statType}
+                          important={true}
+                        />
                       ))}
                     </div>
                   );
