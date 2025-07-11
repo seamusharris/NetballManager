@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 
   // Add routes
   //app.use('/api', routes); // Assuming 'routes' is defined elsewhere, keeping this line
-  app.use('/api', fixtureScraperRoutes);
+  app.use(fixtureScraperRoutes);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
