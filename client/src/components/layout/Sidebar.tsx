@@ -39,6 +39,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     const adminLinks = [
       { path: '/seasons', label: 'Season Management', icon: <CalendarRange className="w-5 h-5" />, section: 'admin' },
       { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" />, section: 'admin' },
+      { path: '/fixture-scraper', label: 'Fixture Scraper', icon: <Download className="w-5 h-5" />, section: 'admin' },
       { path: '/settings', label: 'System Settings', icon: <SettingsIcon className="w-5 h-5" />, section: 'admin' },
     ];
 
