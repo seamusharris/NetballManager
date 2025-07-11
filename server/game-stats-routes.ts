@@ -60,7 +60,10 @@ export function registerGameStatsRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
 
+      console.log(`Game-centric stats API: Fetching stats for game ${gameId}, team ${teamId}`);
+
       if (isNaN(gameId) || isNaN(teamId)) {
+        console.log(`Game-centric stats API: Invalid parameters - gameId: ${req.params.gameId}, teamId: ${req.params.teamId}`);
         return res.status(400).json({ error: 'Invalid game ID or team ID' });
       }
 
@@ -72,8 +75,11 @@ export function registerGameStatsRoutes(app: Express) {
       `);
 
       if (gameCheck.rows.length === 0) {
+        console.log(`Game-centric stats API: Team ${teamId} does not participate in game ${gameId}`);
         return res.status(404).json({ error: 'Game not found or team not participating' });
       }
+
+      console.log(`Game-centric stats API: Team ${teamId} verified for game ${gameId}`);
 
       const stats = await db.select()
         .from(gameStats)
@@ -82,6 +88,7 @@ export function registerGameStatsRoutes(app: Express) {
           eq(gameStats.teamId, teamId)
         ));
 
+      console.log(`Game-centric stats API: Found ${stats.length} stats for game ${gameId}, team ${teamId}`);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching game stats:', error);
@@ -244,6 +251,48 @@ export function registerGameStatsRoutes(app: Express) {
     } catch (error) {
       console.error('Error saving game rosters:', error);
       res.status(500).json({ error: 'Failed to save game rosters' });
+    }
+  });
+
+  // Team-based stats endpoint (called by new StatsRecorder)
+  app.get('/api/teams/:teamId/games/:gameId/stats', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const teamId = parseInt(req.params.teamId);
+
+      console.log(`Team-based stats API: Fetching stats for team ${teamId}, game ${gameId}`);
+
+      if (isNaN(gameId) || isNaN(teamId)) {
+        console.log(`Team-based stats API: Invalid parameters - gameId: ${req.params.gameId}, teamId: ${req.params.teamId}`);
+        return res.status(400).json({ error: 'Invalid game ID or team ID' });
+      }
+
+      // Verify team participates in game
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ${gameId} 
+        AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length === 0) {
+        console.log(`Team-based stats API: Team ${teamId} does not participate in game ${gameId}`);
+        return res.status(404).json({ error: 'Game not found or team not participating' });
+      }
+
+      console.log(`Team-based stats API: Team ${teamId} verified for game ${gameId}`);
+
+      const stats = await db.select()
+        .from(gameStats)
+        .where(and(
+          eq(gameStats.gameId, gameId),
+          eq(gameStats.teamId, teamId)
+        ));
+
+      console.log(`Team-based stats API: Found ${stats.length} stats for game ${gameId}, team ${teamId}`);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching team-based game stats:', error);
+      res.status(500).json({ error: 'Failed to fetch team-based game stats' });
     }
   });
 
