@@ -1255,9 +1255,9 @@ export default function ChartExamples() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flourish-embed flourish-bar-chart-race" data-src="visualisation/example123">
+                <div className="flourish-embed flourish-bar-chart-race" data-src="visualisation/24202666">
                   <iframe 
-                    src="https://flo.uri.sh/visualisation/example123/embed"
+                    src="https://flo.uri.sh/visualisation/24202666/embed"
                     title="Team Performance Over Season"
                     className="w-full border-0"
                     style={{ height: "400px" }}
@@ -1280,9 +1280,9 @@ export default function ChartExamples() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flourish-embed flourish-network" data-src="visualisation/example456">
+                <div className="flourish-embed flourish-network" data-src="visualisation/24202680">
                   <iframe 
-                    src="https://flo.uri.sh/visualisation/example456/embed"
+                    src="https://flo.uri.sh/visualisation/24202680/embed"
                     title="Player Pass Network"
                     className="w-full border-0"
                     style={{ height: "400px" }}
