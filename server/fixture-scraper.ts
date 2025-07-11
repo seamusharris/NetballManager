@@ -47,9 +47,32 @@ export class NetballConnectScraper {
       const html = await response.text();
       console.log(`Successfully fetched ${html.length} characters of HTML`);
       
-      // Log a sample of the HTML to help debug structure
-      console.log('HTML sample (first 500 chars):', html.substring(0, 500));
-      console.log('HTML sample (last 500 chars):', html.substring(Math.max(0, html.length - 500)));
+      // Comprehensive HTML structure logging
+      console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
+      console.log('HTML sample (last 1000 chars):', html.substring(Math.max(0, html.length - 1000)));
+      
+      // Look for JavaScript content that might contain fixture data
+      const scriptMatches = html.match(/<script[^>]*>(.*?)<\/script>/gis);
+      if (scriptMatches) {
+        console.log(`Found ${scriptMatches.length} script tags`);
+        scriptMatches.forEach((script, index) => {
+          if (script.length > 100) { // Only log substantial scripts
+            console.log(`Script ${index} (${script.length} chars):`, script.substring(0, 500));
+          }
+        });
+      }
+      
+      // Look for data attributes or JSON that might contain fixtures
+      const dataMatches = html.match(/data-[^=]*=["'][^"']*["']/gi);
+      if (dataMatches) {
+        console.log('Data attributes found:', dataMatches.slice(0, 10));
+      }
+      
+      // Check for potential API endpoints or AJAX calls
+      const apiMatches = html.match(/\/api\/[^"'\s]+/gi);
+      if (apiMatches) {
+        console.log('Potential API endpoints found:', apiMatches);
+      }
 
       const $ = cheerio.load(html);
       const fixtures: ScrapedFixture[] = [];
@@ -180,37 +203,82 @@ export class NetballConnectScraper {
         });
       }
 
-      // Approach 4: Look for script data
+      // Approach 4: Enhanced JavaScript data extraction
       if (fixtures.length === 0) {
         console.log('Searching for JavaScript data...');
         
         $('script').each((index, script) => {
           const scriptContent = $(script).html() || '';
           
-          // Look for fixture arrays or objects
-          const fixturePatterns = [
-            /fixtures?\s*[:=]\s*\[.*?\]/gi,
-            /games?\s*[:=]\s*\[.*?\]/gi,
-            /matches?\s*[:=]\s*\[.*?\]/gi,
-            /"homeTeam"\s*:\s*"[^"]+"/gi,
-            /"awayTeam"\s*:\s*"[^"]+"/gi
+          if (scriptContent.length < 50) return; // Skip tiny scripts
+          
+          console.log(`Analyzing script ${index} (${scriptContent.length} chars)`);
+          
+          // Look for JSON data structures
+          const jsonPatterns = [
+            /\{[^}]*"(?:home|away|team)"[^}]*\}/gi,
+            /\[[^\]]*"(?:home|away|team)"[^\]]*\]/gi,
+            /fixtures?\s*[:=]\s*(\[.*?\])/gi,
+            /games?\s*[:=]\s*(\[.*?\])/gi,
+            /matches?\s*[:=]\s*(\[.*?\])/gi,
+            /data\s*[:=]\s*(\{.*?\})/gi,
+            /window\.[^=]*=\s*(\{.*?\})/gi
           ];
           
-          fixturePatterns.forEach((pattern, patternIndex) => {
+          jsonPatterns.forEach((pattern, patternIndex) => {
             const matches = scriptContent.match(pattern);
             if (matches) {
-              console.log(`Script ${index}, Pattern ${patternIndex}: Found ${matches.length} matches`);
+              console.log(`Script ${index}, JSON Pattern ${patternIndex}: Found ${matches.length} matches`);
               matches.forEach((match, matchIndex) => {
-                console.log(`Match ${matchIndex}:`, match.substring(0, 200));
-                // Try to extract team names from the match
-                const fixture = this.extractFixtureFromText(match);
-                if (fixture && !this.isDuplicateFixture(fixtures, fixture)) {
-                  fixtures.push(fixture);
-                  console.log(`✓ Added fixture from script: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
+                console.log(`JSON Match ${matchIndex}:`, match.substring(0, 300));
+                
+                // Try to parse as JSON
+                try {
+                  // Extract just the JSON part
+                  const jsonMatch = match.match(/(\{.*\}|\[.*\])/);
+                  if (jsonMatch) {
+                    const jsonData = JSON.parse(jsonMatch[1]);
+                    console.log('Parsed JSON data:', JSON.stringify(jsonData).substring(0, 200));
+                    
+                    // Recursively search for team names in the parsed data
+                    const extractedFixtures = this.extractFixturesFromJSON(jsonData);
+                    extractedFixtures.forEach(fixture => {
+                      if (!this.isDuplicateFixture(fixtures, fixture)) {
+                        fixtures.push(fixture);
+                        console.log(`✓ Added fixture from JSON: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
+                      }
+                    });
+                  }
+                } catch (error) {
+                  // If JSON parsing fails, try text extraction
+                  const fixture = this.extractFixtureFromText(match);
+                  if (fixture && !this.isDuplicateFixture(fixtures, fixture)) {
+                    fixtures.push(fixture);
+                    console.log(`✓ Added fixture from script text: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
+                  }
                 }
               });
             }
           });
+          
+          // Look for specific NetballConnect patterns
+          if (scriptContent.includes('netball') || scriptContent.includes('livescore') || scriptContent.includes('fixture')) {
+            console.log(`Script ${index} contains netball-related content, analyzing...`);
+            
+            // Look for team names in any format
+            const teamNamePatterns = [
+              /["']([A-Za-z\s]{3,25})["']\s*(?:vs?|versus|playing|against)\s*["']([A-Za-z\s]{3,25})["']/gi,
+              /team["']?\s*[:=]\s*["']([A-Za-z\s]{3,25})["']/gi,
+              /name["']?\s*[:=]\s*["']([A-Za-z\s]{3,25})["']/gi
+            ];
+            
+            teamNamePatterns.forEach(pattern => {
+              const matches = scriptContent.match(pattern);
+              if (matches) {
+                console.log('Found potential team names:', matches.slice(0, 5));
+              }
+            });
+          }
         });
       }
 
@@ -437,6 +505,68 @@ export class NetballConnectScraper {
     } catch {
       return '';
     }
+  }
+
+  private extractFixturesFromJSON(data: any): ScrapedFixture[] {
+    const fixtures: ScrapedFixture[] = [];
+    
+    // Recursive function to search through nested objects/arrays
+    const searchForFixtures = (obj: any, path: string = '') => {
+      if (typeof obj === 'object' && obj !== null) {
+        if (Array.isArray(obj)) {
+          obj.forEach((item, index) => searchForFixtures(item, `${path}[${index}]`));
+        } else {
+          // Look for fixture-like objects
+          const keys = Object.keys(obj);
+          const hasHomeTeam = keys.some(k => k.toLowerCase().includes('home'));
+          const hasAwayTeam = keys.some(k => k.toLowerCase().includes('away'));
+          const hasTeams = keys.some(k => k.toLowerCase().includes('team'));
+          
+          if ((hasHomeTeam && hasAwayTeam) || hasTeams) {
+            console.log(`Found potential fixture object at ${path}:`, obj);
+            
+            // Extract team names
+            let homeTeam = '';
+            let awayTeam = '';
+            let date = '';
+            let time = '';
+            let venue = '';
+            
+            for (const [key, value] of Object.entries(obj)) {
+              const lowerKey = key.toLowerCase();
+              const strValue = typeof value === 'string' ? value : '';
+              
+              if (lowerKey.includes('home') && lowerKey.includes('team')) homeTeam = strValue;
+              else if (lowerKey.includes('away') && lowerKey.includes('team')) awayTeam = strValue;
+              else if (lowerKey.includes('team1')) homeTeam = strValue;
+              else if (lowerKey.includes('team2')) awayTeam = strValue;
+              else if (lowerKey.includes('date')) date = strValue;
+              else if (lowerKey.includes('time')) time = strValue;
+              else if (lowerKey.includes('venue')) venue = strValue;
+            }
+            
+            if (this.isValidTeamName(homeTeam) && this.isValidTeamName(awayTeam)) {
+              fixtures.push({
+                homeTeam: this.cleanTeamName(homeTeam),
+                awayTeam: this.cleanTeamName(awayTeam),
+                date: date || '',
+                time: time || '',
+                venue: venue || '',
+                round: ''
+              });
+            }
+          }
+          
+          // Continue searching nested objects
+          for (const value of Object.values(obj)) {
+            searchForFixtures(value, `${path}.${Object.keys(obj).find(k => obj[k] === value)}`);
+          }
+        }
+      }
+    };
+    
+    searchForFixtures(data);
+    return fixtures;
   }
 
   private normalizeTime(timeStr: string): string {
