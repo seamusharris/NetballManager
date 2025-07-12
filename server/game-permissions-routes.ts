@@ -154,8 +154,8 @@ export function registerGamePermissionsRoutes(app: Express) {
     }
   });
 
-  // Get all clubs that can be granted permissions
-  app.get('/api/club/available-for-permissions', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+  // Shared handler for available-for-permissions
+  async function availableForPermissionsHandler(req: AuthenticatedRequest, res: Response) {
     try {
       const currentClubId = req.user?.currentClubId;
       
@@ -171,5 +171,13 @@ export function registerGamePermissionsRoutes(app: Express) {
       console.error('Error fetching available clubs:', error);
       res.status(500).json({ error: 'Failed to fetch available clubs' });
     }
+  }
+
+  // NEW plural endpoint
+  app.get('/api/clubs/available-for-permissions', requireClubAccess(), availableForPermissionsHandler);
+  // OLD singular endpoint (deprecated)
+  app.get('/api/club/available-for-permissions', requireClubAccess(), (req: AuthenticatedRequest, res: Response) => {
+    console.warn('[DEPRECATED] /api/club/available-for-permissions is deprecated. Use /api/clubs/available-for-permissions instead.');
+    return availableForPermissionsHandler(req, res);
   });
 }

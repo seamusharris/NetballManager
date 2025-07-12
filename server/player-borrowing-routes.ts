@@ -14,57 +14,65 @@ const borrowPlayerSchema = z.object({
   notes: z.string().optional(),
 });
 
-export function registerPlayerBorrowingRoutes(app: Express) {
-  // Get all borrowing requests within the current club
-  app.get('/api/club/:clubId/player-borrowing', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const clubId = parseInt(req.params.clubId);
+// Shared handler for getting player borrowing
+async function getPlayerBorrowingHandler(req: AuthenticatedRequest, res: Response) {
+  try {
+    const clubId = parseInt(req.params.clubId);
       
-      const result = await db.execute(sql`
-        SELECT 
-          pb.*,
-          p.display_name as player_name,
-          lt.name as lending_team_name,
-          bt.name as borrowing_team_name,
-          g.date as game_date,
-          g.time as game_time,
-          ls.name as lending_season_name,
-          bs.name as borrowing_season_name
-        FROM player_borrowing pb
-        JOIN players p ON pb.player_id = p.id
-        JOIN teams lt ON pb.lending_team_id = lt.id
-        JOIN teams bt ON pb.borrowing_team_id = bt.id
-        JOIN games g ON pb.game_id = g.id
-        JOIN seasons ls ON lt.season_id = ls.id
-        JOIN seasons bs ON bt.season_id = bs.id
-        WHERE lt.club_id = ${clubId} AND bt.club_id = ${clubId}
-        ORDER BY g.date DESC, pb.created_at DESC
-      `);
+    const result = await db.execute(sql`
+      SELECT 
+        pb.*,
+        p.display_name as player_name,
+        lt.name as lending_team_name,
+        bt.name as borrowing_team_name,
+        g.date as game_date,
+        g.time as game_time,
+        ls.name as lending_season_name,
+        bs.name as borrowing_season_name
+      FROM player_borrowing pb
+      JOIN players p ON pb.player_id = p.id
+      JOIN teams lt ON pb.lending_team_id = lt.id
+      JOIN teams bt ON pb.borrowing_team_id = bt.id
+      JOIN games g ON pb.game_id = g.id
+      JOIN seasons ls ON lt.season_id = ls.id
+      JOIN seasons bs ON bt.season_id = bs.id
+      WHERE lt.club_id = ${clubId} AND bt.club_id = ${clubId}
+      ORDER BY g.date DESC, pb.created_at DESC
+    `);
 
-      const borrowingRequests = result.rows.map(row => ({
-        id: row.id,
-        gameId: row.game_id,
-        playerId: row.player_id,
-        playerName: row.player_name,
-        borrowingTeamId: row.borrowing_team_id,
-        borrowingTeamName: row.borrowing_team_name,
-        borrowingSeasonName: row.borrowing_season_name,
-        lendingTeamId: row.lending_team_id,
-        lendingTeamName: row.lending_team_name,
-        lendingSeasonName: row.lending_season_name,
-        approved: row.approved_by_lending_club && row.approved_by_borrowing_club,
-        jerseyNumber: row.jersey_number,
-        notes: row.notes,
-        gameDate: row.game_date,
-        gameTime: row.game_time,
-        createdAt: row.created_at
-      }));
+    const borrowingRequests = result.rows.map(row => ({
+      id: row.id,
+      gameId: row.game_id,
+      playerId: row.player_id,
+      playerName: row.player_name,
+      borrowingTeamId: row.borrowing_team_id,
+      borrowingTeamName: row.borrowing_team_name,
+      borrowingSeasonName: row.borrowing_season_name,
+      lendingTeamId: row.lending_team_id,
+      lendingTeamName: row.lending_team_name,
+      lendingSeasonName: row.lending_season_name,
+      approved: row.approved_by_lending_club && row.approved_by_borrowing_club,
+      jerseyNumber: row.jersey_number,
+      notes: row.notes,
+      gameDate: row.game_date,
+      gameTime: row.game_time,
+      createdAt: row.created_at
+    }));
 
-      res.json(borrowingRequests);
-    } catch (error) {
-      console.error('Error fetching borrowing requests:', error);
-      res.status(500).json({ error: 'Failed to fetch borrowing requests' });
-    }
+    res.json(borrowingRequests);
+  } catch (error) {
+    console.error('Error fetching borrowing requests:', error);
+    res.status(500).json({ error: 'Failed to fetch borrowing requests' });
+  }
+}
+
+export function registerPlayerBorrowingRoutes(app: Express) {
+  // NEW plural endpoint
+  app.get('/api/clubs/:clubId/player-borrowing', requireClubAccess(), getPlayerBorrowingHandler);
+  // OLD singular endpoint (deprecated)
+  app.get('/api/club/:clubId/player-borrowing', requireClubAccess(), (req: AuthenticatedRequest, res: Response) => {
+    console.warn('[DEPRECATED] /api/club/:clubId/player-borrowing is deprecated. Use /api/clubs/:clubId/player-borrowing instead.');
+    return getPlayerBorrowingHandler(req, res);
   });
 
   // Create a new borrowing request within the same club

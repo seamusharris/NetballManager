@@ -27,8 +27,8 @@ const updateUserRoleSchema = z.object({
 });
 
 export function registerUserManagementRoutes(app: Express) {
-  // Get all users in the current club
-  app.get('/api/club/:clubId/users', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
+  // Shared handler for getting users
+  async function getUsersHandler(req: AuthenticatedRequest, res: Response) {
     try {
       const clubId = parseInt(req.params.clubId);
       
@@ -68,7 +68,32 @@ export function registerUserManagementRoutes(app: Express) {
       console.error('Error fetching club users:', error);
       res.status(500).json({ error: 'Failed to fetch club users' });
     }
-  });
+  }
+  // Shared handler for getting available users
+  async function getAvailableUsersHandler(req: AuthenticatedRequest, res: Response) {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      
+      const result = await db.execute(sql`
+        SELECT u.id, u.username
+        FROM users u
+        WHERE u.id NOT IN (
+          SELECT cu.user_id 
+          FROM club_users cu 
+          WHERE cu.club_id = ${clubId}
+        )
+        ORDER BY u.username
+      `);
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error('Error fetching available users:', error);
+      res.status(500).json({ error: 'Failed to fetch available users' });
+    }
+  }
+  // NEW plural endpoints
+  app.get('/api/clubs/:clubId/users', requireClubAccess('canManagePlayers'), getUsersHandler);
+  app.get('/api/clubs/:clubId/users/available', requireClubAccess('canManagePlayers'), getAvailableUsersHandler);
 
   // Invite a user to the club
   app.post('/api/clubs/:clubId/users/invite', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
@@ -171,26 +196,13 @@ export function registerUserManagementRoutes(app: Express) {
     }
   });
 
-  // Get available users (not in current club)
-  app.get('/api/club/:clubId/users/available', requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const clubId = parseInt(req.params.clubId);
-      
-      const result = await db.execute(sql`
-        SELECT u.id, u.username
-        FROM users u
-        WHERE u.id NOT IN (
-          SELECT cu.user_id 
-          FROM club_users cu 
-          WHERE cu.club_id = ${clubId}
-        )
-        ORDER BY u.username
-      `);
-
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching available users:', error);
-      res.status(500).json({ error: 'Failed to fetch available users' });
-    }
+  // OLD singular endpoints (deprecated)
+  app.get('/api/club/:clubId/users', requireClubAccess('canManagePlayers'), (req: AuthenticatedRequest, res: Response) => {
+    console.warn('[DEPRECATED] /api/club/:clubId/users is deprecated. Use /api/clubs/:clubId/users instead.');
+    return getUsersHandler(req, res);
+  });
+  app.get('/api/club/:clubId/users/available', requireClubAccess('canManagePlayers'), (req: AuthenticatedRequest, res: Response) => {
+    console.warn('[DEPRECATED] /api/club/:clubId/users/available is deprecated. Use /api/clubs/:clubId/users/available instead.');
+    return getAvailableUsersHandler(req, res);
   });
 }
