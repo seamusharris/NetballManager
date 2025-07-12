@@ -81,11 +81,12 @@ export function FixtureImporter() {
           // Extract NetballConnect match ID (remove "Match ID: " prefix)
           const netballConnectId = matchIdText.match(/Match ID:\s*(\d+)/)?.[1] || matchIdText;
 
+          // Handle BYE games - both teams are stored, but game status will be set to 'bye'
           games.push({
             round,
             date: formatDate(date),
-            homeTeam: homeTeam === 'Bye' ? awayTeam : homeTeam,
-            awayTeam: awayTeam === 'Bye' ? null : awayTeam,
+            homeTeam: homeTeam,
+            awayTeam: awayTeam === 'Bye' ? null : awayTeam, // Only set away team to null if it's explicitly "Bye"
             matchId: netballConnectId,
             isBye
           });
@@ -119,7 +120,7 @@ export function FixtureImporter() {
 
     const teamName = parts[parts.length - 1];
     const clubName = parts.slice(0, -1).join(' ');
-    
+
     return { clubName, teamName, fullName: fullTeamName };
   };
 
@@ -151,7 +152,7 @@ export function FixtureImporter() {
 
     const existingTeam = findTeamByName(fullTeamName);
     const { clubName, teamName } = parseTeamInfo(fullTeamName);
-    
+
     if (existingTeam) {
       return { 
         status: 'matched', 
@@ -204,55 +205,60 @@ export function FixtureImporter() {
         const text = e.target?.result as string;
         const games = parseCSV(text);
 
+        // Get game statuses for BYE games
+        // Assuming apiClient.get returns the game statuses
+        const gameStatuses = await apiClient.get('/api/game-statuses');
+        const byeStatus = gameStatuses.find(s => s.name === 'bye');
+        const upcomingStatus = gameStatuses.find(s => s.name === 'upcoming');
+
+        // Import games
         for (const game of games) {
-          try {
-            let homeTeamId: number | null = null;
-            let awayTeamId: number | null = null;
+          let homeTeamId: number | null = null;
+          let awayTeamId: number | null = null;
 
-            // Find team IDs
-            if (game.isBye) {
-              const team = findTeamByName(game.homeTeam);
-              if (team) {
-                homeTeamId = team.id;
-                awayTeamId = null; // BYE games have no away team
-              } else {
-                stats.errors.push(`Team not found: ${game.homeTeam}`);
-                stats.gamesSkipped++;
-                continue;
-              }
+          // Find team IDs
+          if (game.isBye) {
+            // For BYE games, find the team that's NOT "Bye"
+            const playingTeam = game.homeTeam === 'Bye' ? game.awayTeam : game.homeTeam;
+            const team = findTeamByName(playingTeam);
+
+            if (team) {
+              homeTeamId = team.id;
+              awayTeamId = null; // BYE games have no opponent
             } else {
-              const homeTeam = findTeamByName(game.homeTeam);
-              const awayTeam = findTeamByName(game.awayTeam);
+              stats.errors.push(`BYE game team not found: ${playingTeam}`);
+              stats.gamesSkipped++;
+              continue;
+            }
+          } else {
+            const homeTeam = findTeamByName(game.homeTeam);
+            const awayTeam = findTeamByName(game.awayTeam);
 
-              if (!homeTeam || !awayTeam) {
-                stats.errors.push(`Teams not found: ${game.homeTeam} vs ${game.awayTeam}`);
-                stats.gamesSkipped++;
-                continue;
-              }
-
-              homeTeamId = homeTeam.id;
-              awayTeamId = awayTeam.id;
+            if (!homeTeam || !awayTeam) {
+              stats.errors.push(`Teams not found: ${game.homeTeam} vs ${game.awayTeam}`);
+              stats.gamesSkipped++;
+              continue;
             }
 
-            // Create the game
-            const gameData = {
-              date: game.date,
-              time: "14:00", // Default time
-              homeTeamId,
-              awayTeamId,
-              round: game.round,
-              statusId: game.isBye ? 6 : 1, // BYE or upcoming
-              seasonId: 1, // Default to current season
-              venue: game.isBye ? null : "TBD",
-              notes: `Imported from CSV - NetballConnect ID: ${game.matchId}`
-            };
-
-            await apiClient.post('/api/games', gameData);
-            stats.gamesCreated++;
-          } catch (error) {
-            stats.errors.push(`Failed to create game: ${game.homeTeam} vs ${game.awayTeam} - ${error.message}`);
-            stats.gamesSkipped++;
+            homeTeamId = homeTeam.id;
+            awayTeamId = awayTeam.id;
           }
+
+          // Create the game
+          const gameData = {
+            date: game.date,
+            time: "14:00", // Default time
+            homeTeamId,
+            awayTeamId,
+            round: game.round,
+            statusId: game.isBye ? byeStatus?.id : upcomingStatus?.id, // BYE or upcoming
+            seasonId: 1, // Default to current season
+            venue: game.isBye ? null : "TBD",
+            notes: `Imported from CSV - NetballConnect ID: ${game.matchId}`
+          };
+
+          await apiClient.post('/api/games', gameData);
+          stats.gamesCreated++;
         }
 
         setImportStats(stats);
@@ -298,13 +304,13 @@ export function FixtureImporter() {
               {previewData.map((game, index) => {
                 const homeTeamStatus = getTeamMatchStatus(game.homeTeam);
                 const awayTeamStatus = game.awayTeam ? getTeamMatchStatus(game.awayTeam) : null;
-                
+
                 return (
                   <div key={index} className="text-sm border-b pb-2 last:border-b-0">
                     <div className="font-medium text-blue-600 mb-1">
                       {game.round} - {game.date} - NetballConnect ID: {game.matchId}
                     </div>
-                    
+
                     <div className="space-y-1 ml-2">
                       <div className="flex items-start gap-2">
                         <span className="text-gray-600 min-w-[60px]">Home:</span>
@@ -318,7 +324,7 @@ export function FixtureImporter() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {game.awayTeam && awayTeamStatus && (
                         <div className="flex items-start gap-2">
                           <span className="text-gray-600 min-w-[60px]">Away:</span>
@@ -333,7 +339,7 @@ export function FixtureImporter() {
                           </div>
                         </div>
                       )}
-                      
+
                       {game.isBye && (
                         <div className="text-gray-500 italic text-xs ml-[68px]">
                           This is a BYE round
@@ -344,7 +350,7 @@ export function FixtureImporter() {
                 );
               })}
             </div>
-            
+
             <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
               <div className="font-medium mb-1">Legend:</div>
               <div className="space-y-1">
