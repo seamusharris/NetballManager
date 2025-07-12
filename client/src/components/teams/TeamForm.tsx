@@ -47,6 +47,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
       name: team?.name || '',
       clubId: clubId || 0,
       seasonId: team?.seasonId || (seasons?.find(s => s.isActive)?.id) || (seasons?.[0]?.id) || undefined,
+      sectionId: team?.sectionId || undefined,
       isActive: team?.isActive ?? true,
     },
   });
@@ -80,6 +81,11 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         }
       });
 
+      // Invalidate sections queries
+      if (selectedSeasonId) {
+        queryClient.invalidateQueries({ queryKey: ['sections', selectedSeasonId] });
+      }
+
       toast({ title: "Team created successfully" });
       onSuccess?.();
     },
@@ -100,14 +106,17 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
       
-      // Invalidate sections queries for all seasons
+      // Invalidate sections queries for current season
+      if (selectedSeasonId) {
+        queryClient.invalidateQueries({ queryKey: ['sections', selectedSeasonId] });
+      }
+      
+      // Invalidate all sections queries
       queryClient.invalidateQueries({ 
         predicate: (query) => {
-          const queryKey = query.queryKey[0];
-          return typeof queryKey === 'string' && (
-            queryKey.includes('/api/teams') || 
-            queryKey.includes('/api/seasons') && queryKey.includes('/sections')
-          );
+          const [queryKey] = query.queryKey;
+          return queryKey === 'sections' || 
+                 (typeof queryKey === 'string' && queryKey.includes('/api/seasons') && queryKey.includes('/sections'));
         }
       });
 
