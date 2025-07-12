@@ -57,6 +57,12 @@ export default function Teams() {
     enabled: !!currentClubId,
   });
 
+  const { data: sections = [] } = useQuery<any[]>({
+    queryKey: ['/api/seasons/1/sections', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons/1/sections'),
+    enabled: !!currentClubId,
+  });
+
   const deleteTeamMutation = useMutation({
     mutationFn: (teamId: number) => apiClient.delete(`/api/teams/${teamId}`),
     onSuccess: () => {
@@ -142,7 +148,10 @@ export default function Teams() {
                     </div>
                     <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-300">
                       <div className="font-bold text-xl text-green-700">
-                        {team.sectionId ? `Sec ${team.sectionId}` : 'No Section'}
+                        {team.sectionId ? 
+                          sections.find(s => s.id === team.sectionId)?.displayName || `Sec ${team.sectionId}` : 
+                          'No Section'
+                        }
                       </div>
                       <div className="text-xs text-green-600">Section</div>
                     </div>
