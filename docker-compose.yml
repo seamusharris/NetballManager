@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: neballmanager-db
+    environment:
+      POSTGRES_DB: neballmanager
+      POSTGRES_USER: neballmanager
+      POSTGRES_PASSWORD: neballmanager_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - neballmanager-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neballmanager -d neballmanager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application (optional - for full containerization)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neballmanager-app
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://neballmanager:neballmanager_dev@postgres:5432/neballmanager
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - neballmanager-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  neballmanager-network:
+    driver: bridge 
