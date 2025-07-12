@@ -69,3 +69,19 @@ export function useGamesQuery() {
     enabled: !!currentClubId
   });
 }
+
+// Re-export the new standardized select hooks for backward compatibility
+export { 
+  useSeasonsSelect, 
+  useSectionsSelect, 
+  useTeamsSelect, 
+  usePlayersSelect,
+  useGameStatusesSelect 
+} from './use-standard-selects';
+
+export { 
+  useTeamFormSelects,
+  useGameFormSelects,
+  useRosterFormSelects,
+  useSectionFormSelects
+} from './use-form-selects';

@@ -37,7 +37,94 @@ interface TeamFormProps {
   onCancel?: () => void;
 }
 
-export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFormProps) {
+// Define the SectionSelect component
+interface SectionSelectProps {
+  value: number | undefined;
+  onValueChange: (value: number | undefined) => void;
+  sections: Section[] | undefined;
+  isLoading: boolean;
+  error: any;
+  onRetry: () => void;
+}
+
+const SectionSelect: React.FC<SectionSelectProps> = ({
+  value,
+  onValueChange,
+  sections,
+  isLoading,
+  error,
+  onRetry,
+}) => {
+  return (
+    <Select onValueChange={(val) => onValueChange(val === 'none' ? undefined : parseInt(val))} value={value?.toString() || 'none'} disabled={isLoading}>
+      <FormControl>
+        <SelectTrigger>
+          <SelectValue
+            placeholder={
+              isLoading ? 'Loading sections...' : error ? 'Error loading sections' : 'Select a section'
+            }
+          />
+        </SelectTrigger>
+      </FormControl>
+      <SelectContent>
+        <SelectItem value="none">No section</SelectItem>
+        {sections && sections.length > 0 ? (
+          sections.map((section) => (
+            <SelectItem key={section.id} value={section.id.toString()}>
+              {section.displayName} ({section.teamCount} teams)
+            </SelectItem>
+          ))
+        ) : (
+          !isLoading && (
+            <SelectItem value="none" disabled>
+              {error ? 'Error loading sections' : 'No sections available'}
+            </SelectItem>
+          )
+        )}
+        {error && (
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            Retry
+          </Button>
+        )}
+      </SelectContent>
+    </Select>
+  );
+};
+
+// Custom hook to fetch form select data
+const useTeamFormSelects = (selectedSeasonId?: number) => {
+  const seasonsQuery = useQuery({
+    queryKey: ['seasons'],
+    queryFn: async () => {
+      const result = await apiClient.get('/api/seasons');
+      return result;
+    },
+    staleTime: 60000, // 1 minute
+  });
+
+  const sectionsQuery = useQuery({
+    queryKey: ['sections', selectedSeasonId],
+    queryFn: async () => {
+      if (!selectedSeasonId) return [];
+      const result = await apiClient.get(`/api/seasons/${selectedSeasonId}/sections`);
+      return result;
+    },
+    enabled: !!selectedSeasonId,
+    staleTime: 60000, // 1 minute
+  });
+
+  return {
+    seasons: seasonsQuery,
+    sections: {
+      data: sectionsQuery.data as Section[],
+      isLoading: sectionsQuery.isLoading,
+      error: sectionsQuery.error,
+      refetch: sectionsQuery.refetch,
+    },
+  };
+};
+
+export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess, onCancel }: TeamFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -53,6 +140,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   });
 
   const selectedSeasonId = form.watch('seasonId');
+  const { seasons, sections } = useTeamFormSelects(selectedSeasonId);
 
   // Initialize form with team data when available
   useEffect(() => {
@@ -64,26 +152,12 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         sectionId: team.sectionId || undefined,
         isActive: team.isActive ?? true,
       });
-    } else if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
+    } else if (seasons.data && seasons.data.length > 0 && !form.getValues('seasonId')) {
       // Set default season for new teams
-      const defaultSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
+      const defaultSeasonId = seasons.data.find(s => s.isActive)?.id || seasons.data[0].id;
       form.setValue('seasonId', defaultSeasonId);
     }
-  }, [team, seasons, form, clubId]);
-
-  const { data: sections = [] } = useQuery({
-    queryKey: ['sections', selectedSeasonId],
-    queryFn: async () => {
-      if (!selectedSeasonId) return [];
-      console.log('TeamForm: Fetching sections for season:', selectedSeasonId);
-      const result = await apiClient.get(`/api/seasons/${selectedSeasonId}/sections`);
-      console.log('TeamForm: Sections received:', result);
-      return result;
-    },
-    enabled: !!selectedSeasonId,
-    staleTime: 0, // Disable caching temporarily for debugging
-    gcTime: 0, // Disable caching temporarily for debugging
-  });
+  }, [team, seasons.data, form, clubId]);
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post('/api/teams', data),
@@ -91,11 +165,11 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
       // Invalidate all team-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey[0];
           return typeof queryKey === 'string' && queryKey.includes('/api/teams');
-        }
+        },
       });
 
       // Invalidate sections queries
@@ -103,16 +177,16 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         queryClient.invalidateQueries({ queryKey: ['sections', selectedSeasonId] });
       }
 
-      toast({ title: "Team created successfully" });
+      toast({ title: 'Team created successfully' });
       onSuccess?.();
     },
     onError: (error: any) => {
       toast({
-        title: "Error creating team",
+        title: 'Error creating team',
         description: error.message,
-        variant: "destructive"
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   const updateMutation = useMutation({
@@ -123,37 +197,39 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     },
     onSuccess: (result) => {
       console.log('TeamForm: Update mutation successful, result:', result);
-      
+
       // Invalidate all team-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
-      
+
       // Invalidate sections queries for current season
       if (selectedSeasonId) {
         queryClient.invalidateQueries({ queryKey: ['sections', selectedSeasonId] });
       }
-      
+
       // Invalidate all sections queries
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         predicate: (query) => {
           const [queryKey] = query.queryKey;
-          return queryKey === 'sections' || 
-                 (typeof queryKey === 'string' && queryKey.includes('/api/seasons') && queryKey.includes('/sections'));
-        }
+          return (
+            queryKey === 'sections' ||
+            (typeof queryKey === 'string' && queryKey.includes('/api/seasons') && queryKey.includes('/sections'))
+          );
+        },
       });
 
-      toast({ title: "Team updated successfully" });
+      toast({ title: 'Team updated successfully' });
       onSuccess?.();
     },
     onError: (error: any) => {
       console.error('TeamForm: Update mutation failed:', error);
       toast({
-        title: "Error updating team",
+        title: 'Error updating team',
         description: error.message,
-        variant: "destructive"
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -163,18 +239,18 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     console.log('TeamForm: Submitting data:', data);
     console.log('TeamForm: Is editing existing team?', !!team);
     console.log('TeamForm: Team ID:', team?.id);
-    
+
     // Validate required fields
     if (!data.seasonId) {
       console.error('TeamForm: Missing seasonId');
       toast({
-        title: "Error",
-        description: "Season is required",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Season is required',
+        variant: 'destructive',
       });
       return;
     }
-    
+
     if (team) {
       console.log('TeamForm: Calling update mutation...');
       updateMutation.mutate(data, {
@@ -184,7 +260,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         },
         onError: (error) => {
           console.error('TeamForm: Update failed callback:', error);
-        }
+        },
       });
     } else {
       console.log('TeamForm: Calling create mutation...');
@@ -196,17 +272,14 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         },
         onError: (error) => {
           console.error('TeamForm: Create failed callback:', error);
-        }
+        },
       });
     }
   };
 
   return (
     <Form {...form}>
-      <form 
-        onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -221,34 +294,32 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           )}
         />
 
-        
-
         <FormField
           control={form.control}
           name="seasonId"
           render={({ field }) => {
             // Ensure we have a valid string value for the Select component
-            const stringValue = field.value != null ? field.value.toString() : "";
-            
-            console.log('TeamForm: Season field render', { 
-              fieldValue: field.value, 
-              stringValue, 
-              availableSeasons: seasons?.map(s => ({ id: s.id, name: s.name })),
+            const stringValue = field.value != null ? field.value.toString() : '';
+
+            console.log('TeamForm: Season field render', {
+              fieldValue: field.value,
+              stringValue,
+              availableSeasons: seasons?.data?.map((s) => ({ id: s.id, name: s.name })),
               teamSeasonId: team?.seasonId,
-              hasSeasons: !!seasons && seasons.length > 0
+              hasSeasons: !!seasons && seasons.data && seasons.data.length > 0,
             });
-            
+
             return (
               <FormItem>
                 <FormLabel required>Season</FormLabel>
-                <Select 
+                <Select
                   onValueChange={(value) => {
                     console.log('TeamForm: Season changed to:', value);
                     const seasonId = parseInt(value);
                     field.onChange(seasonId);
                     // Clear section when season changes
                     form.setValue('sectionId', undefined);
-                  }} 
+                  }}
                   value={stringValue}
                 >
                   <FormControl>
@@ -257,10 +328,10 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {seasons?.map((season) => (
+                    {seasons?.data?.map((season) => (
                       <SelectItem key={season.id} value={season.id.toString()}>
                         {season.name} ({season.year})
-                        {season.isActive && " (Active)"}
+                        {season.isActive && ' (Active)'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -277,27 +348,16 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           render={({ field }) => (
             <FormItem>
               <FormLabel>Section (Optional)</FormLabel>
-              <Select 
-                onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))} 
-                value={field.value?.toString() || "none"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a section" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">No section</SelectItem>
-                  {sections?.map((section: Section) => (
-                    <SelectItem 
-                      key={section.id} 
-                      value={section.id.toString()}
-                    >
-                      {section.displayName} ({section.teamCount} teams)
-                    </SelectItem>
-                  )) || []}
-                </SelectContent>
-              </Select>
+              <SectionSelect
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value ? parseInt(value) : undefined);
+                }}
+                sections={sections.data}
+                isLoading={sections.isLoading}
+                error={sections.error}
+                onRetry={sections.refetch}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -310,7 +370,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
             </Button>
           )}
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (team ? "Updating..." : "Creating...") : (team ? "Update Team" : "Create Team")}
+            {isSubmitting ? (team ? 'Updating...' : 'Creating...') : team ? 'Update Team' : 'Create Team'}
           </Button>
         </div>
       </form>

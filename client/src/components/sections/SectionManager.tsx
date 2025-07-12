@@ -35,6 +35,12 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
   const { data: sections = [], isLoading } = useQuery({
     queryKey: ['sections', seasonId],
     queryFn: () => apiClient.get(`/api/seasons/${seasonId}/sections`),
+    select: (data) => {
+      return (data || []).map((section: any) => ({
+        ...section,
+        displayName: section.displayName || `${section.ageGroup} - ${section.sectionName}`
+      }));
+    }
   });
 
   const createMutation = useMutation({
