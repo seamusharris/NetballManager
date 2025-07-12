@@ -136,15 +136,15 @@ export default function Teams() {
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors duration-300">
                       <div className="font-bold text-xl text-blue-700">
-                        {team.seasonName ? seasons.find(s => s.name === team.seasonName)?.year || 'N/A' : 'N/A'}
+                        {team.seasonName || 'N/A'}
                       </div>
                       <div className="text-xs text-blue-600">Season</div>
                     </div>
                     <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-300">
                       <div className="font-bold text-xl text-green-700">
-                        <Calendar className="h-5 w-5 mx-auto" />
+                        {team.sectionId ? `Sec ${team.sectionId}` : 'No Section'}
                       </div>
-                      <div className="text-xs text-green-600">Schedule</div>
+                      <div className="text-xs text-green-600">Section</div>
                     </div>
                   </div>
 
