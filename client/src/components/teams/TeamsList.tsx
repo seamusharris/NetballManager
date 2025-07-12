@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Users } from 'lucide-react';
 import { Team } from '@shared/schema';
+import { CrudDialog } from '@/components/ui/crud-dialog';
+import TeamForm from './TeamForm';
 
 interface TeamsListProps {
   teams: (Team & { seasonName?: string; seasonYear?: number })[];
@@ -14,6 +16,9 @@ interface TeamsListProps {
 }
 
 export function TeamsList({ teams, onEdit, onDelete, onManagePlayers, isLoading }: TeamsListProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
+  const [editingTeam, setEditingTeam] = React.useState<Team | null>(null);
+
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

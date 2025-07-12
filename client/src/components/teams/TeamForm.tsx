@@ -46,7 +46,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     defaultValues: {
       name: team?.name || '',
       clubId: clubId || 0,
-      seasonId: team?.seasonId || (seasons && seasons.length > 0 ? seasons.find(s => s.isActive)?.id || seasons[0].id : undefined),
+      seasonId: team?.seasonId || undefined,
       sectionId: team?.sectionId || undefined,
       isActive: team?.isActive ?? true,
     },
@@ -54,42 +54,19 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
 
   const selectedSeasonId = form.watch('seasonId');
 
-  // Set form values when team data or seasons load
+  // Initialize form with team data when available
   useEffect(() => {
-    console.log('TeamForm: useEffect triggered', { 
-      team, 
-      seasonsLength: seasons?.length,
-      currentFormSeasonId: form.getValues('seasonId')
-    });
-    
-    if (team && seasons && seasons.length > 0) {
-      console.log('TeamForm: Setting team values', {
+    if (team) {
+      form.reset({
         name: team.name,
+        clubId: team.clubId || clubId,
         seasonId: team.seasonId,
-        sectionId: team.sectionId,
-        isActive: team.isActive
+        sectionId: team.sectionId || undefined,
+        isActive: team.isActive ?? true,
       });
-      
-      // Set individual values with validation
-      form.setValue('name', team.name);
-      form.setValue('clubId', team.clubId || clubId);
-      
-      // Ensure seasonId is valid
-      if (team.seasonId && seasons.find(s => s.id === team.seasonId)) {
-        form.setValue('seasonId', team.seasonId);
-      } else {
-        // Fallback to active season if team's season doesn't exist
-        const fallbackSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
-        console.log('TeamForm: Team season not found, using fallback:', fallbackSeasonId);
-        form.setValue('seasonId', fallbackSeasonId);
-      }
-      
-      form.setValue('sectionId', team.sectionId || undefined);
-      form.setValue('isActive', team.isActive ?? true);
-    } else if (!team && seasons && seasons.length > 0 && !form.getValues('seasonId')) {
+    } else if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
       // Set default season for new teams
       const defaultSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
-      console.log('TeamForm: Setting default season for new team:', defaultSeasonId);
       form.setValue('seasonId', defaultSeasonId);
     }
   }, [team, seasons, form, clubId]);
@@ -273,7 +250,6 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                     form.setValue('sectionId', undefined);
                   }} 
                   value={stringValue}
-                  key={`season-select-${field.value}-${seasons?.length || 0}`}
                 >
                   <FormControl>
                     <SelectTrigger>
