@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams } from 'wouter';
 import { Plus, Activity, Users, Edit, Trash2, MoreVertical, Trophy, Calendar } from 'lucide-react';
@@ -13,6 +14,7 @@ import TeamForm from '@/components/teams/TeamForm';
 import { TEAM_NAME } from '@/lib/settings';
 import { ContentSection, ActionButton } from '@/components/ui/ui-standards';
 import PageTemplate from '@/components/layout/PageTemplate';
+import { CrudDialog } from '@/components/ui/crud-dialog';
 
 export default function Teams() {
   const params = useParams();
@@ -33,7 +35,7 @@ export default function Teams() {
     }
   }, [location, currentClubId, setLocation]);
 
-  const [showForm, setShowForm] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -95,7 +97,7 @@ export default function Teams() {
       ]}
       actions={
         <ActionButton
-          onClick={() => setShowForm(true)}
+          onClick={() => setIsCreateDialogOpen(true)}
           icon={Plus}
           variant="primary"
         >
@@ -105,31 +107,6 @@ export default function Teams() {
       status={activeSeason?.name || 'No Active Season'}
     >
       <ContentSection title="Team Management">
-        {/* Team Form */}
-        {showForm && (
-          <Card className="border-2 border-primary/20 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {editingTeam ? 'Edit Team' : 'Add New Team'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <TeamForm
-                team={editingTeam}
-                onSuccess={() => {
-                  setShowForm(false);
-                  setEditingTeam(null);
-                }}
-                onCancel={() => {
-                  setShowForm(false);
-                  setEditingTeam(null);
-                }}
-              />
-            </CardContent>
-          </Card>
-        )}
-
         {/* Teams Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {teams.map((team) => (
@@ -193,10 +170,7 @@ export default function Teams() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setEditingTeam(team);
-                        setShowForm(true);
-                      }}
+                      onClick={() => setEditingTeam(team)}
                       className="group-hover:border-yellow-500 group-hover:text-yellow-600 transition-all duration-300"
                     >
                       Edit
@@ -230,13 +204,48 @@ export default function Teams() {
             <p className="text-muted-foreground mb-4">
               Get started by adding your first team to the club.
             </p>
-            <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+            <Button onClick={() => setIsCreateDialogOpen(true)} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add First Team
             </Button>
           </Card>
         )}
       </ContentSection>
+
+      {/* Create Team Dialog */}
+      <CrudDialog
+        isOpen={isCreateDialogOpen}
+        setIsOpen={setIsCreateDialogOpen}
+        title="Create New Team"
+      >
+        <TeamForm
+          clubId={currentClubId!}
+          onSuccess={() => {
+            setIsCreateDialogOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['teams'] });
+          }}
+          onCancel={() => setIsCreateDialogOpen(false)}
+        />
+      </CrudDialog>
+
+      {/* Edit Team Dialog */}
+      <CrudDialog
+        isOpen={!!editingTeam}
+        setIsOpen={(open) => !open && setEditingTeam(null)}
+        title="Edit Team"
+      >
+        {editingTeam && (
+          <TeamForm
+            team={editingTeam}
+            clubId={editingTeam.clubId || currentClubId!}
+            onSuccess={() => {
+              setEditingTeam(null);
+              queryClient.invalidateQueries({ queryKey: ['teams'] });
+            }}
+            onCancel={() => setEditingTeam(null)}
+          />
+        )}
+      </CrudDialog>
     </PageTemplate>
   );
 }
