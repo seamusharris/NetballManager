@@ -271,47 +271,42 @@ export async function loadUserClubPermissions(userId: number): Promise<Array<{
  */
 export async function loadUserPermissions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    // For now, load the first available user from the database
+    // For now, load all clubs as user clubs (consistent with /api/user/clubs endpoint)
     // This will be replaced with proper authentication later
     if (!req.user) {
-      const userResult = await db.execute(sql`
-        SELECT 
-          u.id,
-          u.username
-        FROM users u
-        JOIN club_users cu ON u.id = cu.user_id
-        WHERE cu.is_active = true
-        LIMIT 1
+      // Get all active clubs and return them as user clubs
+      const result = await db.execute(sql`
+        SELECT id, name, code FROM clubs WHERE is_active = true ORDER BY name
       `);
 
-      if (userResult.rows.length > 0) {
-        const user = userResult.rows[0];
-        // Fetch all clubs for this user
-        const clubs = await loadUserClubPermissions(user.id);
-        req.user = {
-          id: Number(user.id),
-          username: String(user.username),
-          clubs,
-          currentClubId: clubs[0]?.clubId // default to first club
-        };
-      } else {
-        // Fallback if no users found
-        req.user = {
-          id: 1,
-          username: 'admin',
-          clubs: [{
-            clubId: 1,
-            role: 'admin',
-            permissions: {
-              canManagePlayers: true,
-              canManageGames: true,
-              canManageStats: true,
-              canViewOtherTeams: true,
-            }
-          }],
-          currentClubId: 1
-        };
+      const clubs = result.rows.map(club => ({
+        clubId: Number(club.id),
+        clubName: String(club.name),
+        clubCode: String(club.code),
+        role: "admin", // Default role for now
+        permissions: {
+          canManagePlayers: true,
+          canManageGames: true,
+          canManageStats: true,
+          canViewOtherTeams: true,
+        }
+      }));
+
+      // Check if there's a club ID in the header
+      const headerClubId = req.headers['x-current-club-id'] ? parseInt(req.headers['x-current-club-id'] as string) : null;
+      
+      // Set current club ID based on header or default to first club
+      let currentClubId = clubs[0]?.clubId;
+      if (headerClubId && clubs.some(c => c.clubId === headerClubId)) {
+        currentClubId = headerClubId;
       }
+
+      req.user = {
+        id: 1,
+        username: 'admin',
+        clubs,
+        currentClubId
+      };
     }
     next();
   } catch (error) {

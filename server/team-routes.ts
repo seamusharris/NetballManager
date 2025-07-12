@@ -789,31 +789,31 @@ export function registerTeamRoutes(app: Express) {
       const result = await db.execute(sql`
         SELECT 
           g.*,
-          gs.name as status, 
-          gs.display_name as status_display_name, 
-          gs.is_completed, 
-          gs.allows_statistics, 
-          gs.home_team_goals, 
+          gs.name AS status,
+          gs.display_name AS status_display_name,
+          gs.is_completed,
+          gs.allows_statistics,
+          gs.home_team_goals,
           gs.away_team_goals,
-          s.name as season_name, 
-          s.start_date as season_start, 
-          s.end_date as season_end, 
-          s.is_active as season_active,
-          ht.name as home_team_name, 
-          ht.division as home_team_division, 
-          ht.club_id as home_club_id,
-          at.name as away_team_name, 
-          at.division as away_team_division, 
-          at.club_id as away_club_id,
-          hc.name as home_club_name, 
-          hc.code as home_club_code,
-          ac.name as away_club_name, 
-          ac.code as away_club_code,
+          s.name AS season_name,
+          s.start_date AS season_start,
+          s.end_date AS season_end,
+          s.is_active AS season_active,
+          ht.name AS home_team_name,
+          ht.division AS home_team_division,
+          ht.club_id AS home_club_id,
+          at.name AS away_team_name,
+          at.division AS away_team_division,
+          at.club_id AS away_club_id,
+          hc.name AS home_club_name,
+          hc.code AS home_club_code,
+          ac.name AS away_club_name,
+          ac.code AS away_club_code,
           CASE 
             WHEN g.home_team_id = ${teamId} THEN 'home'
             WHEN g.away_team_id = ${teamId} THEN 'away'
-            ELSE null
-          END as team_perspective
+            ELSE NULL
+          END AS team_role
         FROM games g
         LEFT JOIN game_statuses gs ON g.status_id = gs.id
         LEFT JOIN seasons s ON g.season_id = s.id
@@ -821,7 +821,8 @@ export function registerTeamRoutes(app: Express) {
         LEFT JOIN teams at ON g.away_team_id = at.id
         LEFT JOIN clubs hc ON ht.club_id = hc.id
         LEFT JOIN clubs ac ON at.club_id = ac.id
-        WHERE g.id = ${gameId} AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+        WHERE g.id = ${gameId}
+          AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
       `);
 
       if (result.rows.length === 0) {

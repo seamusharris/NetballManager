@@ -69,9 +69,40 @@ export function useSectionsSelect(seasonId: number | undefined, options: Standar
 export function useTeamsSelect(options: StandardSelectHookOptions = {}) {
   const { transform, filterActive = true, ...queryOptions } = options;
   
+  // Get the current club ID from the URL or context
+  const getCurrentClubId = () => {
+    // Try to get club ID from URL first - check multiple patterns
+    const pathname = window.location.pathname;
+    
+    // Pattern 1: /club/123/teams
+    let urlMatch = pathname.match(/\/club\/(\d+)/);
+    if (urlMatch) {
+      return parseInt(urlMatch[1]);
+    }
+    
+    // Pattern 2: /club/123 (without /teams)
+    urlMatch = pathname.match(/\/club\/(\d+)$/);
+    if (urlMatch) {
+      return parseInt(urlMatch[1]);
+    }
+    
+    // Pattern 3: /club/123/anything
+    urlMatch = pathname.match(/\/club\/(\d+)\//);
+    if (urlMatch) {
+      return parseInt(urlMatch[1]);
+    }
+    
+    // Fallback to context (for backward compatibility)
+    return null;
+  };
+  
+  const clubId = getCurrentClubId();
+  const endpoint = clubId ? `/api/clubs/${clubId}/teams` : '/api/teams';
+  const queryKey = clubId ? ['teams', clubId] : ['teams'];
+  
   return useQuery({
-    queryKey: ['teams'],
-    queryFn: () => apiClient.get('/api/teams'),
+    queryKey,
+    queryFn: () => apiClient.get(endpoint),
     select: (data) => {
       let teams = data || [];
       if (filterActive) {

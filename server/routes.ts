@@ -45,82 +45,7 @@ async function checkPoolHealth(): Promise<boolean> {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware to simulate authentication and set club context from request
-  app.use('/api', async (req: any, res, next) => {
-    // For development, simulate an authenticated user with access to all clubs
-    if (!req.user) {
-      try {
-        // Get all clubs from database for dev user with retry logic
-        let allClubs;
-        let retryCount = 0;
-        const maxRetries = 3;
-
-        while (retryCount < maxRetries) {
-          try {
-            allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
-            break;
-          } catch (dbError: any) {
-            retryCount++;
-            console.warn(`Database query attempt ${retryCount} failed:`, dbError.message);
-
-            if (retryCount >= maxRetries) {
-              throw dbError;
-            }
-
-            // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
-          }
-        }
-
-        const userClubs = allClubs.rows.map(club => ({
-          clubId: club.id,
-          role: 'admin',
-          permissions: {
-            canManagePlayers: true,
-            canManageGames: true,
-            canManageStats: true,
-            canViewOtherTeams: true,
-          }
-        }));
-
-        req.user = {
-          id: 1,
-          username: 'dev-user',
-          clubs: userClubs,
-          currentClubId: null // Will be set below
-        };
-      } catch (error) {
-        console.error('Error loading clubs for dev user:', error);
-        // Fallback to basic setup without default club
-        req.user = {
-          id: 1,
-          username: 'dev-user',
-          clubs: [],
-          currentClubId: null
-        };
-      }
-    }
-
-    // Check for club ID header and set it if present
-    const headerClubId = req.headers['x-current-club-id'];
-    if (headerClubId) {
-      const clubId = parseInt(headerClubId as string, 10);
-      if (!isNaN(clubId)) {
-        req.user.currentClubId = clubId;
-        console.log(`Auth middleware: Set currentClubId to ${clubId} from header`);
-      } else {
-        console.log(`Auth middleware: Invalid header club ID: ${headerClubId}`);
-        req.user.currentClubId = null;
-      }
-    } else {
-      // Log only once per request type to avoid spam
-      if (!req.url.includes('user/clubs') && !req.url.includes('seasons')) {
-        console.log(`Auth middleware: No x-current-club-id header for ${req.method} ${req.url}`);
-      }
-      req.user.currentClubId = null;
-    }
-
-    next();
-  });
+  // [REMOVE] app.use('/api', async (req, res, next) => { ... })
 
   // put application routes here
   // prefix all routes with /api
@@ -1399,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // REST endpoint for club games - Stage 3 implementation
-  app.get("/api/clubs/:clubId/games", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/clubs/:clubId/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const { seasonId } = req.query;
