@@ -20,6 +20,7 @@ import { registerTeamRoutes } from './team-routes';
 import { registerUserManagementRoutes } from "./user-management-routes";
 import { registerPlayerBorrowingRoutes } from "./player-borrowing-routes";
 import { registerGamePermissionsRoutes } from "./game-permissions-routes";
+import { registerFixtureScraperRoutes } from "./fixture-scraper-routes";
 import { 
   AuthenticatedRequest, 
   requireClubAccess, 
@@ -2875,6 +2876,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
+  
+  // Register fixture scraper routes
+  registerFixtureScraperRoutes(app);
 
   // Register section routes
   const { registerSectionRoutes } = await import('./section-routes');
