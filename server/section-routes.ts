@@ -9,28 +9,35 @@ export function registerSectionRoutes(app: Express) {
   app.get("/api/seasons/:seasonId/sections", standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const seasonId = parseInt(req.params.seasonId);
+      console.log(`=== SECTIONS DEBUG: Starting sections query for season ${seasonId} ===`);
 
       if (isNaN(seasonId)) {
+        console.log(`SECTIONS ERROR: Invalid season ID: ${req.params.seasonId}`);
         return res.status(400).json({ error: "Invalid season ID" });
       }
 
       // Debug: Check what sections exist for this season without the is_active filter
+      console.log(`SECTIONS DEBUG: Executing debug sections query...`);
       const debugSections = await db.execute(sql`
         SELECT s.*, s.is_active 
         FROM sections s 
         WHERE s.season_id = ${seasonId}
       `);
-      console.log(`Debug: All sections for season ${seasonId}:`, debugSections.rows);
+      console.log(`SECTIONS DEBUG: All sections for season ${seasonId}:`, debugSections.rows);
+      console.log(`SECTIONS DEBUG: Found ${debugSections.rows.length} sections`);
 
       // Debug: Check teams with section assignments
+      console.log(`SECTIONS DEBUG: Executing debug teams query...`);
       const debugTeams = await db.execute(sql`
         SELECT t.id, t.name, t.section_id, s.display_name as section_name
         FROM teams t
         LEFT JOIN sections s ON t.section_id = s.id
         WHERE t.season_id = ${seasonId} AND t.is_active = true
       `);
-      console.log(`Debug: Teams with sections for season ${seasonId}:`, debugTeams.rows);
+      console.log(`SECTIONS DEBUG: Teams with sections for season ${seasonId}:`, debugTeams.rows);
+      console.log(`SECTIONS DEBUG: Found ${debugTeams.rows.length} teams`);
 
+      console.log(`SECTIONS DEBUG: Executing main sections query...`);
       const result = await db.execute(sql`
         SELECT 
           s.*,
@@ -41,6 +48,8 @@ export function registerSectionRoutes(app: Express) {
         GROUP BY s.id
         ORDER BY s.age_group, s.section_name
       `);
+      console.log(`SECTIONS DEBUG: Main query result:`, result.rows);
+      console.log(`SECTIONS DEBUG: Main query returned ${result.rows.length} sections`);
 
       const sectionsWithCounts = result.rows.map(row => ({
         id: row.id,
@@ -55,9 +64,11 @@ export function registerSectionRoutes(app: Express) {
         teamCount: parseInt(row.team_count) || 0
       }));
 
+      console.log(`SECTIONS DEBUG: Final sections response:`, sectionsWithCounts);
+      console.log(`=== SECTIONS DEBUG: Completed sections query for season ${seasonId} ===`);
       res.json(sectionsWithCounts);
     } catch (error) {
-      console.error("Error fetching sections:", error);
+      console.error("SECTIONS ERROR: Error fetching sections:", error);
       res.status(500).json({ error: "Failed to fetch sections" });
     }
   });
