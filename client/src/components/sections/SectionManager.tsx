@@ -17,7 +17,6 @@ interface Section {
   sectionName: string;
   displayName: string;
   description?: string;
-  maxTeams: number;
   isActive: boolean;
   teamCount: number;
 }
@@ -184,10 +183,10 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm">
                       <Users className="h-4 w-4 mr-1" />
-                      {section.teamCount} / {section.maxTeams} teams
+                      {section.teamCount} teams
                     </div>
-                    <Badge variant={section.teamCount === section.maxTeams ? "secondary" : "default"}>
-                      {section.teamCount === section.maxTeams ? "Full" : "Available"}
+                    <Badge variant="default">
+                      Active
                     </Badge>
                   </div>
                 </div>

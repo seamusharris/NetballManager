@@ -190,7 +190,6 @@ export const sections = pgTable("sections", {
   sectionName: text("section_name").notNull(), // e.g., "1", "2", "A", "B"
   displayName: text("display_name").notNull(), // e.g., "15U/1", "Open A"
   description: text("description"), // Optional description
-  maxTeams: integer("max_teams").default(8), // Maximum teams allowed in this section
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

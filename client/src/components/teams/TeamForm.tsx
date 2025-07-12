@@ -43,7 +43,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   const queryClient = useQueryClient();
 
   const selectedSeasonId = form.watch('seasonId');
-  
+
   const { data: sections = [] } = useQuery({
     queryKey: ['sections', selectedSeasonId],
     queryFn: () => selectedSeasonId ? apiClient.get(`/api/seasons/${selectedSeasonId}/sections`) : Promise.resolve([]),
@@ -212,9 +212,8 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                     <SelectItem 
                       key={section.id} 
                       value={section.id.toString()}
-                      disabled={section.teamCount >= section.maxTeams && !team?.sectionId}
                     >
-                      {section.displayName} ({section.teamCount}/{section.maxTeams} teams)
+                      {section.displayName} ({section.teamCount} teams)
                     </SelectItem>
                   ))}
                 </SelectContent>

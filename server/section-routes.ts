@@ -33,7 +33,6 @@ export function registerSectionRoutes(app: Express) {
         sectionName: row.section_name,
         displayName: row.display_name,
         description: row.description,
-        maxTeams: row.max_teams,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
