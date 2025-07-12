@@ -841,7 +841,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="sections" className="mt-6">
-          {activeSeason && activeSeason.id ? (
+          {activeSeason?.id ? (
             <SectionManager 
               seasonId={activeSeason.id} 
               seasonName={activeSeason.name}
@@ -850,7 +850,7 @@ export default function Settings() {
             <Card>
               <CardContent className="text-center py-8">
                 <p className="text-muted-foreground">
-                  Please set an active season first to manage sections.
+                  {activeSeason === undefined ? 'Loading active season...' : 'Please set an active season first to manage sections.'}
                 </p>
               </CardContent>
             </Card>
