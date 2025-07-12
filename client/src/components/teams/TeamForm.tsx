@@ -172,7 +172,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>No seasons available</SelectItem>
+                    <SelectItem value="no-seasons" disabled>No seasons available</SelectItem>
                   )}
                 </SelectContent>
               </Select>
