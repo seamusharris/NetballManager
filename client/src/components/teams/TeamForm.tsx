@@ -21,7 +21,6 @@ import { apiClient } from '@/lib/apiClient';
 
 const teamFormSchema = z.object({
   name: z.string().min(1, 'Team name is required'),
-  division: z.string().optional(),
   clubId: z.number(),
   seasonId: z.number(),
   sectionId: z.number().optional(),
@@ -46,7 +45,6 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     resolver: zodResolver(teamFormSchema),
     defaultValues: {
       name: team?.name || '',
-      division: team?.division || '',
       clubId: clubId || 0,
       seasonId: team?.seasonId || seasons?.find(s => s.isActive)?.id || seasons?.[0]?.id || 0,
       isActive: team?.isActive ?? true,
@@ -152,19 +150,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="division"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Division (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Division 1, Premier" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
 
         <FormField
           control={form.control}
@@ -179,11 +165,15 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {seasons?.map((season) => (
-                    <SelectItem key={season.id} value={season.id.toString()}>
-                      {season.name} ({season.year})
-                    </SelectItem>
-                  )) || []}
+                  {seasons && seasons.length > 0 ? (
+                    seasons.map((season) => (
+                      <SelectItem key={season.id} value={season.id.toString()}>
+                        {season.name} ({season.year})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>No seasons available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
