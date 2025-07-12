@@ -56,9 +56,13 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
 
   // Set form values when team data or seasons load
   useEffect(() => {
-    console.log('TeamForm: useEffect triggered', { team, seasonsLength: seasons?.length });
+    console.log('TeamForm: useEffect triggered', { 
+      team, 
+      seasonsLength: seasons?.length,
+      currentFormSeasonId: form.getValues('seasonId')
+    });
     
-    if (team) {
+    if (team && seasons && seasons.length > 0) {
       console.log('TeamForm: Setting team values', {
         name: team.name,
         seasonId: team.seasonId,
@@ -66,13 +70,23 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         isActive: team.isActive
       });
       
-      // Set individual values instead of resetting to preserve form state
+      // Set individual values with validation
       form.setValue('name', team.name);
       form.setValue('clubId', team.clubId || clubId);
-      form.setValue('seasonId', team.seasonId);
+      
+      // Ensure seasonId is valid
+      if (team.seasonId && seasons.find(s => s.id === team.seasonId)) {
+        form.setValue('seasonId', team.seasonId);
+      } else {
+        // Fallback to active season if team's season doesn't exist
+        const fallbackSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
+        console.log('TeamForm: Team season not found, using fallback:', fallbackSeasonId);
+        form.setValue('seasonId', fallbackSeasonId);
+      }
+      
       form.setValue('sectionId', team.sectionId || undefined);
       form.setValue('isActive', team.isActive ?? true);
-    } else if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
+    } else if (!team && seasons && seasons.length > 0 && !form.getValues('seasonId')) {
       // Set default season for new teams
       const defaultSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
       console.log('TeamForm: Setting default season for new team:', defaultSeasonId);
@@ -236,11 +250,12 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           control={form.control}
           name="seasonId"
           render={({ field }) => {
-            const currentValue = field.value?.toString() || "";
+            const currentValue = field.value ? field.value.toString() : "";
             console.log('TeamForm: Season field render', { 
               fieldValue: field.value, 
               currentValue, 
-              availableSeasons: seasons?.map(s => ({ id: s.id, name: s.name }))
+              availableSeasons: seasons?.map(s => ({ id: s.id, name: s.name })),
+              teamSeasonId: team?.seasonId
             });
             
             return (
