@@ -46,7 +46,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     defaultValues: {
       name: team?.name || '',
       clubId: clubId || 0,
-      seasonId: team?.seasonId || (seasons?.find(s => s.isActive)?.id) || (seasons?.[0]?.id) || undefined,
+      seasonId: team?.seasonId || undefined,
       sectionId: team?.sectionId || undefined,
       isActive: team?.isActive ?? true,
     },
@@ -54,13 +54,23 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
 
   const selectedSeasonId = form.watch('seasonId');
 
-  // Update seasonId when seasons load and no seasonId is set
+  // Set form values when team data or seasons load
   useEffect(() => {
-    if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
-      const defaultSeasonId = team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0].id;
+    if (team) {
+      // Reset form with team data
+      form.reset({
+        name: team.name,
+        clubId: team.clubId || clubId,
+        seasonId: team.seasonId,
+        sectionId: team.sectionId || undefined,
+        isActive: team.isActive ?? true,
+      });
+    } else if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
+      // Set default season for new teams
+      const defaultSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
       form.setValue('seasonId', defaultSeasonId);
     }
-  }, [seasons, team?.seasonId, form]);
+  }, [team, seasons, form, clubId]);
 
   const { data: sections = [] } = useQuery({
     queryKey: ['sections', selectedSeasonId],
