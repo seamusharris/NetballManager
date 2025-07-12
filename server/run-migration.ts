@@ -5,6 +5,7 @@ import { createTeamGameNotesTable } from './migrations/createTeamGameNotesTable'
 import { migrateGameNotesToTeamNotes } from './migrations/migrateGameNotesToTeamNotes';
 import { addNewStatisticsColumns } from './migrations/addNewStatisticsColumns';
 import { removeOldStatisticsColumns } from './migrations/removeOldStatisticsColumns';
+import { addSectionsTable } from './migrations/addSectionsTable';
 
 // Define an array of migration objects, each containing a name and a function to execute
 const migrations = [
@@ -14,6 +15,7 @@ const migrations = [
   { name: 'migrateGameNotesToTeamNotes', fn: migrateGameNotesToTeamNotes },
   { name: 'addNewStatisticsColumns', fn: addNewStatisticsColumns },
   { name: 'removeOldStatisticsColumns', fn: removeOldStatisticsColumns },
+  { name: 'addSectionsTable', fn: addSectionsTable },
 ];
 
 // Run migrations function
