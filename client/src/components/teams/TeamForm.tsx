@@ -46,7 +46,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     defaultValues: {
       name: team?.name || '',
       clubId: clubId || 0,
-      seasonId: team?.seasonId || undefined,
+      seasonId: team?.seasonId || (seasons && seasons.length > 0 ? seasons.find(s => s.isActive)?.id || seasons[0].id : undefined),
       sectionId: team?.sectionId || undefined,
       isActive: team?.isActive ?? true,
     },
@@ -56,7 +56,16 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
 
   // Set form values when team data or seasons load
   useEffect(() => {
+    console.log('TeamForm: useEffect triggered', { team, seasonsLength: seasons?.length });
+    
     if (team) {
+      console.log('TeamForm: Setting team values', {
+        name: team.name,
+        seasonId: team.seasonId,
+        sectionId: team.sectionId,
+        isActive: team.isActive
+      });
+      
       // Set individual values instead of resetting to preserve form state
       form.setValue('name', team.name);
       form.setValue('clubId', team.clubId || clubId);
@@ -66,6 +75,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     } else if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
       // Set default season for new teams
       const defaultSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
+      console.log('TeamForm: Setting default season for new team:', defaultSeasonId);
       form.setValue('seasonId', defaultSeasonId);
     }
   }, [team, seasons, form, clubId]);
@@ -115,8 +125,14 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => apiClient.patch(`/api/teams/${team?.id}`, data),
-    onSuccess: () => {
+    mutationFn: (data: any) => {
+      console.log('TeamForm: Update mutation called with data:', data);
+      console.log('TeamForm: Updating team with ID:', team?.id);
+      return apiClient.patch(`/api/teams/${team?.id}`, data);
+    },
+    onSuccess: (result) => {
+      console.log('TeamForm: Update mutation successful, result:', result);
+      
       // Invalidate all team-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
@@ -140,6 +156,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
       onSuccess?.();
     },
     onError: (error: any) => {
+      console.error('TeamForm: Update mutation failed:', error);
       toast({
         title: "Error updating team",
         description: error.message,
@@ -151,21 +168,43 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (data: TeamFormData) => {
+    console.log('TeamForm: Form submission started');
     console.log('TeamForm: Submitting data:', data);
+    console.log('TeamForm: Is editing existing team?', !!team);
+    console.log('TeamForm: Team ID:', team?.id);
+    
+    // Validate required fields
+    if (!data.seasonId) {
+      console.error('TeamForm: Missing seasonId');
+      toast({
+        title: "Error",
+        description: "Season is required",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (team) {
+      console.log('TeamForm: Calling update mutation...');
       updateMutation.mutate(data, {
         onSuccess: () => {
-          console.log('TeamForm: Update successful');
+          console.log('TeamForm: Update successful callback');
           onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('TeamForm: Update failed callback:', error);
         }
       });
     } else {
+      console.log('TeamForm: Calling create mutation...');
       createMutation.mutate(data, {
         onSuccess: () => {
-          console.log('TeamForm: Create successful');
+          console.log('TeamForm: Create successful callback');
           form.reset();
           onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('TeamForm: Create failed callback:', error);
         }
       });
     }
@@ -196,35 +235,45 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
         <FormField
           control={form.control}
           name="seasonId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Season</FormLabel>
-              <Select 
-                onValueChange={(value) => {
-                  const seasonId = parseInt(value);
-                  field.onChange(seasonId);
-                  // Clear section when season changes
-                  form.setValue('sectionId', undefined);
-                }} 
-                value={field.value ? field.value.toString() : ""}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a season" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {seasons?.map((season) => (
-                    <SelectItem key={season.id} value={season.id.toString()}>
-                      {season.name} ({season.year})
-                      {season.isActive && " (Active)"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const currentValue = field.value?.toString() || "";
+            console.log('TeamForm: Season field render', { 
+              fieldValue: field.value, 
+              currentValue, 
+              availableSeasons: seasons?.map(s => ({ id: s.id, name: s.name }))
+            });
+            
+            return (
+              <FormItem>
+                <FormLabel required>Season</FormLabel>
+                <Select 
+                  onValueChange={(value) => {
+                    console.log('TeamForm: Season changed to:', value);
+                    const seasonId = parseInt(value);
+                    field.onChange(seasonId);
+                    // Clear section when season changes
+                    form.setValue('sectionId', undefined);
+                  }} 
+                  value={currentValue}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a season" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {seasons?.map((season) => (
+                      <SelectItem key={season.id} value={season.id.toString()}>
+                        {season.name} ({season.year})
+                        {season.isActive && " (Active)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
