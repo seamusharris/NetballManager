@@ -12,7 +12,12 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "migration:forfeit-tracking": "tsx server/run-forfeit-migration.ts"
+    "migration:forfeit-tracking": "tsx server/run-forfeit-migration.ts",
+    "test": "vitest",
+    "test:api": "vitest run tests/api/",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -108,7 +113,12 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.1",
     "typescript": "5.6.3",
-    "vite": "^5.4.14"
+    "vite": "^5.4.14",
+    "@vitest/ui": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
+    "vitest": "^2.1.8"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
