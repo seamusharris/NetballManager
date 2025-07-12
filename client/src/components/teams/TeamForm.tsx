@@ -165,15 +165,11 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {seasons && seasons.length > 0 ? (
-                    seasons.map((season) => (
-                      <SelectItem key={season.id} value={season.id.toString()}>
-                        {season.name} ({season.year})
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-seasons" disabled>No seasons available</SelectItem>
-                  )}
+                  {seasons?.map((season) => (
+                    <SelectItem key={season.id} value={season.id.toString()}>
+                      {season.name} ({season.year})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
