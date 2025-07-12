@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -46,12 +46,20 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
     defaultValues: {
       name: team?.name || '',
       clubId: clubId || 0,
-      seasonId: team?.seasonId || seasons?.find(s => s.isActive)?.id || seasons?.[0]?.id || 0,
+      seasonId: team?.seasonId || (seasons?.find(s => s.isActive)?.id) || (seasons?.[0]?.id) || undefined,
       isActive: team?.isActive ?? true,
     },
   });
 
   const selectedSeasonId = form.watch('seasonId');
+
+  // Update seasonId when seasons load and no seasonId is set
+  useEffect(() => {
+    if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
+      const defaultSeasonId = team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0].id;
+      form.setValue('seasonId', defaultSeasonId);
+    }
+  }, [seasons, team?.seasonId, form]);
 
   const { data: sections = [] } = useQuery({
     queryKey: ['sections', selectedSeasonId],
@@ -91,10 +99,15 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
+      
+      // Invalidate sections queries for all seasons
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey[0];
-          return typeof queryKey === 'string' && queryKey.includes('/api/teams');
+          return typeof queryKey === 'string' && (
+            queryKey.includes('/api/teams') || 
+            queryKey.includes('/api/seasons') && queryKey.includes('/sections')
+          );
         }
       });
 
@@ -158,7 +171,10 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           render={({ field }) => (
             <FormItem>
               <FormLabel required>Season</FormLabel>
-              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+              <Select 
+                onValueChange={(value) => field.onChange(parseInt(value))} 
+                value={field.value ? field.value.toString() : ""}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a season" />
@@ -168,6 +184,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                   {seasons?.map((season) => (
                     <SelectItem key={season.id} value={season.id.toString()}>
                       {season.name} ({season.year})
+                      {season.isActive && " (Active)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
