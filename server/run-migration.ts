@@ -1,27 +1,26 @@
-// Import the required migration functions
-import { createGameScoresTable } from './migrations/createGameScoresTable';
-import { migrateToTeamBasedScoring } from './migrations/migrateToTeamBasedScoring';
-import { createTeamGameNotesTable } from './migrations/createTeamGameNotesTable';
-import { migrateGameNotesToTeamNotes } from './migrations/migrateGameNotesToTeamNotes';
-import { addNewStatisticsColumns } from './migrations/addNewStatisticsColumns';
-import { removeOldStatisticsColumns } from './migrations/removeOldStatisticsColumns';
-import { addSectionsTable } from './migrations/addSectionsTable';
 
-// Define an array of migration objects, each containing a name and a function to execute
+// Migration runner for future database schema changes
+// All completed migrations have been moved to server/migrations/completed/
+
+// Import future migration functions here
+// Example:
+// import { exampleFutureMigration } from './migrations/exampleFutureMigration';
+
+// Define an array of migration objects for future migrations
 const migrations = [
-  { name: 'createGameScoresTable', fn: createGameScoresTable },
-  { name: 'migrateToTeamBasedScoring', fn: migrateToTeamBasedScoring },
-  { name: 'createTeamGameNotesTable', fn: createTeamGameNotesTable },
-  { name: 'migrateGameNotesToTeamNotes', fn: migrateGameNotesToTeamNotes },
-  { name: 'addNewStatisticsColumns', fn: addNewStatisticsColumns },
-  { name: 'removeOldStatisticsColumns', fn: removeOldStatisticsColumns },
-  { name: 'addSectionsTable', fn: addSectionsTable },
+  // Add future migrations here
+  // { name: 'exampleFutureMigration', fn: exampleFutureMigration },
 ];
 
 // Run migrations function
 async function runMigrations() {
   try {
     console.log('Starting migration process...');
+    
+    if (migrations.length === 0) {
+      console.log('✅ No pending migrations to run');
+      process.exit(0);
+    }
     
     for (const migration of migrations) {
       console.log(`Running migration: ${migration.name}`);
