@@ -22,6 +22,15 @@ export function registerSectionRoutes(app: Express) {
       `);
       console.log(`Debug: All sections for season ${seasonId}:`, debugSections.rows);
 
+      // Debug: Check teams with section assignments
+      const debugTeams = await db.execute(sql`
+        SELECT t.id, t.name, t.section_id, s.display_name as section_name
+        FROM teams t
+        LEFT JOIN sections s ON t.section_id = s.id
+        WHERE t.season_id = ${seasonId} AND t.is_active = true
+      `);
+      console.log(`Debug: Teams with sections for season ${seasonId}:`, debugTeams.rows);
+
       const result = await db.execute(sql`
         SELECT 
           s.*,
