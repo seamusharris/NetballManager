@@ -252,20 +252,24 @@ export function registerTeamRoutes(app: Express) {
       const teamId = parseInt(req.params.id);
       const { name, division, isActive, seasonId, sectionId } = req.body;
 
-      // Build update object only with provided fields
+      console.log(`Team update request for team ${teamId}:`, { name, division, isActive, seasonId, sectionId });
+
+      // Build update object only with provided fields, mapping camelCase to snake_case
       const updateData: any = {};
       if (name !== undefined) updateData.name = name;
       if (division !== undefined) updateData.division = division;
-      if (isActive !== undefined) updateData.isActive = isActive;
-      if (seasonId !== undefined) updateData.seasonId = seasonId;
-      if (sectionId !== undefined) updateData.sectionId = sectionId;
+      if (isActive !== undefined) updateData.is_active = isActive;
+      if (seasonId !== undefined) updateData.season_id = seasonId;
+      if (sectionId !== undefined) updateData.section_id = sectionId;
 
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ message: "No valid fields to update" });
       }
 
       // Always update the timestamp
-      updateData.updatedAt = new Date();
+      updateData.updated_at = new Date();
+
+      console.log(`Team update data for team ${teamId}:`, updateData);
 
       // Use proper Drizzle ORM update method
       const result = await db.update(teams)
@@ -277,6 +281,7 @@ export function registerTeamRoutes(app: Express) {
         return res.status(404).json({ message: "Team not found" });
       }
 
+      console.log(`Team ${teamId} updated successfully:`, result[0]);
       res.json(result[0]);
     } catch (error) {
       console.error("Error updating team:", error);
