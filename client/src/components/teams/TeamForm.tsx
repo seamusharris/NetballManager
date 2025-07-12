@@ -72,8 +72,16 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
 
   const { data: sections = [] } = useQuery({
     queryKey: ['sections', selectedSeasonId],
-    queryFn: () => selectedSeasonId ? apiClient.get(`/api/seasons/${selectedSeasonId}/sections`) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!selectedSeasonId) return [];
+      console.log('TeamForm: Fetching sections for season:', selectedSeasonId);
+      const result = await apiClient.get(`/api/seasons/${selectedSeasonId}/sections`);
+      console.log('TeamForm: Sections received:', result);
+      return result;
+    },
     enabled: !!selectedSeasonId,
+    staleTime: 0, // Disable caching temporarily for debugging
+    gcTime: 0, // Disable caching temporarily for debugging
   });
 
   const createMutation = useMutation({
