@@ -43,18 +43,18 @@ export function FixtureImporter() {
       // Parse CSV line (handle quoted values)
       const columns = line.split(',').map(col => col.replace(/^"|"$/g, '').trim());
       
-      const round = columns[0];
-      const date = columns[1];
+      const round = columns[0]; // Round number
+      const date = columns[1];  // Date for all games in this round
 
-      // Process games in pairs starting from column 2
-      for (let j = 2; j < columns.length; j += 4) {
-        if (j + 3 < columns.length) {
-          const homeTeam = columns[j];
-          const awayTeam = columns[j + 1];
-          const matchIdText = columns[j + 2]; // "Match ID: XXXXX"
+      // Process games starting from column 2: homeTeam, awayTeam, matchId pattern
+      for (let j = 2; j < columns.length; j += 3) {
+        if (j + 2 < columns.length) {
+          const homeTeam = columns[j];     // Home team
+          const awayTeam = columns[j + 1]; // Away team  
+          const matchIdText = columns[j + 2]; // Match ID
           
           // Skip if we don't have complete data
-          if (!homeTeam || !awayTeam) continue;
+          if (!homeTeam || !awayTeam || !matchIdText) continue;
 
           const isBye = homeTeam.toLowerCase() === 'bye' || awayTeam.toLowerCase() === 'bye';
           
@@ -266,7 +266,9 @@ export function FixtureImporter() {
           <ul className="list-disc list-inside space-y-1">
             <li>Header row with column names</li>
             <li>Each row represents one round with multiple games</li>
-            <li>Columns: Round, Date, Team1, Team2, MatchID, Team3, Team4, MatchID, etc.</li>
+            <li>Column 1: Round number (e.g., "Round 1")</li>
+            <li>Column 2: Date for all games in that round</li>
+            <li>Columns 3+: Repeating pattern of Home Team, Away Team, Match ID</li>
             <li>Use "Bye" for bye rounds</li>
             <li>Team names should match existing teams in your club</li>
           </ul>
