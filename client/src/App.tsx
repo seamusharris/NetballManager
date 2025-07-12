@@ -3,7 +3,6 @@ import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ClubProvider from '@/contexts/ClubContext';
-import { initializeCacheManager } from '@/lib/cacheManager';
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
@@ -354,8 +353,6 @@ const queryClient = new QueryClient({
 // Export queryClient for use in other components
 export { queryClient };
 
-// Initialize cache manager
-initializeCacheManager(queryClient);
 
 function AppContent() {
   try {

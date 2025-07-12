@@ -15,13 +15,13 @@ if (!process.env.DATABASE_URL) {
 // Enhanced connection pool configuration to prevent ECONNREFUSED errors
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  // Connection pool settings
-  max: 20, // Maximum number of clients in the pool
-  min: 2,  // Minimum number of clients in the pool
-  connectionTimeoutMillis: 10000, // How long to wait for a connection
-  idleTimeoutMillis: 30000, // How long a connection can be idle
+  // Connection pool settings - optimized for performance
+  max: 10, // Reduced from 20 to prevent too many connections
+  min: 1,  // Reduced from 2 to minimize idle connections
+  connectionTimeoutMillis: 5000, // Reduced timeout for faster failure detection
+  idleTimeoutMillis: 60000, // Increased idle time to reduce churn
   // Retry settings
-  maxUses: 7500, // Number of times a connection can be used before being destroyed
+  maxUses: 10000, // Increased to reduce connection recycling
   // SSL settings for production
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
@@ -32,19 +32,28 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
-// Handle connect events
+// Handle connect events - only log on errors or significant events
 pool.on('connect', (client) => {
-  console.log('New database client connected');
+  // Only log if we're in debug mode
+  if (process.env.DEBUG_DB_CONNECTIONS === 'true') {
+    console.log('New database client connected');
+  }
 });
 
-// Handle acquire events
+// Handle acquire events - only log if there are issues
 pool.on('acquire', (client) => {
-  console.log('Database client acquired from pool');
+  // Only log if we're in debug mode or if there are too many connections
+  if (process.env.DEBUG_DB_CONNECTIONS === 'true') {
+    console.log('Database client acquired from pool');
+  }
 });
 
-// Handle release events
+// Handle release events - only log if there are issues
 pool.on('release', (client) => {
-  console.log('Database client released back to pool');
+  // Only log if we're in debug mode
+  if (process.env.DEBUG_DB_CONNECTIONS === 'true') {
+    console.log('Database client released back to pool');
+  }
 });
 
 export const db = drizzle(pool, { schema });

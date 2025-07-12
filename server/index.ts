@@ -1,75 +1,110 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-import dotenv from "dotenv";
-
-// Load environment variables from .env file
-dotenv.config();
+import express from 'express';
+import { registerRoutes } from './routes';
+import { registerTeamRoutes } from './team-routes';
+import { registerGameScoresRoutes } from './game-scores-routes';
+import { registerGameStatsRoutes } from './game-stats-routes';
+import gameStatusRoutes from './game-status-routes';
+import { registerGamePermissionsRoutes } from './game-permissions-routes';
+import { registerPlayerBorrowingRoutes } from './player-borrowing-routes';
+import { registerUserManagementRoutes } from './user-management-routes';
+import { enhancedHealthCheck } from './db-wrapper';
+import { setupVite, serveStatic } from './vite';
+import { loadUserPermissions } from './auth-middleware';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+const PORT = process.env.PORT || 3000;
 
+// Enhanced CORS configuration
 app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-current-club-id');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // Add routes
-  //app.use('/api', routes); // Assuming 'routes' is defined elsewhere, keeping this line
+// Apply user permissions middleware only to API routes
+app.use('/api', loadUserPermissions);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+// Database health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    const health = await enhancedHealthCheck();
+    res.json({
+      status: health.healthy ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      database: health.details
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
+});
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-  server.listen(port, "localhost", () => {
-    log(`serving on port ${port}`);
-  });
-})();
+// Database health monitoring on startup
+async function checkDatabaseHealth() {
+  console.log('🔍 Checking database health on startup...');
+  try {
+    const health = await enhancedHealthCheck();
+    if (health.healthy) {
+      console.log('✅ Database connection healthy');
+      // Only log pool stats if there are issues
+      if (health.details.waitingCount > 0 || health.details.totalCount > 5) {
+        console.log(`📊 Pool stats: ${health.details.idleCount} idle, ${health.details.waitingCount} waiting, ${health.details.totalCount} total`);
+      }
+    } else {
+      console.warn('⚠️ Database connection degraded:', health.details.errors);
+    }
+  } catch (error) {
+    console.error('❌ Database health check failed:', error);
+  }
+}
 
-export { app };
+// Register all API routes
+registerRoutes(app);
+registerTeamRoutes(app);
+registerGameScoresRoutes(app);
+registerGameStatsRoutes(app);
+app.use('/api/game-statuses', gameStatusRoutes);
+registerGamePermissionsRoutes(app);
+registerPlayerBorrowingRoutes(app);
+registerUserManagementRoutes(app);
+
+// Start server with health check
+const server = app.listen(PORT, async () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Perform initial health check
+  await checkDatabaseHealth();
+  
+  // Set up periodic health monitoring - reduced frequency
+  setInterval(async () => {
+    try {
+      const health = await enhancedHealthCheck();
+      // Only log if there are issues
+      if (!health.healthy || health.details.waitingCount > 0) {
+        console.warn('⚠️ Database health degraded:', health.details.errors);
+      }
+    } catch (error) {
+      console.error('❌ Periodic health check failed:', error);
+    }
+  }, 10 * 60 * 1000); // Check every 10 minutes instead of 5
+});
+
+// Setup Vite for development or serve static files for production
+if (process.env.NODE_ENV === 'development') {
+  setupVite(app, server);
+} else {
+  serveStatic(app);
+}

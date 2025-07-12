@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { sql, inArray } from "drizzle-orm";
+import { sql, inArray, eq, and } from "drizzle-orm";
 import { db, pool } from "./db";
 import { 
   insertPlayerSchema, importPlayerSchema,
@@ -11,7 +11,8 @@ import {
   insertGameStatSchema, importGameStatSchema,
   insertSeasonSchema,
   players, games, rosters, gameStats, seasons,
-  POSITIONS
+  POSITIONS,
+  gameScores
 } from "@shared/schema";
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
@@ -44,153 +45,49 @@ async function checkPoolHealth(): Promise<boolean> {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware to simulate authentication and set club context from request
-  app.use(async (req: any, res, next) => {
+  app.use('/api', async (req: any, res, next) => {
     // For development, simulate an authenticated user with access to all clubs
     if (!req.user) {
       try {
+        // Get all clubs from database for dev user with retry logic
+        let allClubs;
+        let retryCount = 0;
+        const maxRetries = 3;
 
+        while (retryCount < maxRetries) {
+          try {
+            allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
+            break;
+          } catch (dbError: any) {
+            retryCount++;
+            console.warn(`Database query attempt ${retryCount} failed:`, dbError.message);
 
-  // Official Game Scores endpoints
-  app.get('/api/games/:gameId/scores', async (req, res) => {
-    try {
-      const gameId = parseInt(req.params.gameId);
-      if (isNaN(gameId)) {
-        return res.status(400).json({ error: 'Invalid game ID' });
-      }
-
-      const scores = await db.select().from(schema.gameScores)
-        .where(eq(schema.gameScores.gameId, gameId))
-        .orderBy(schema.gameScores.quarter);
-
-      res.json(scores);
-    } catch (error) {
-      console.error('Error fetching game scores:', error);
-      res.status(500).json({ error: 'Failed to fetch game scores' });
-    }
-  });
-
-  app.post('/api/games/:gameId/scores', async (req, res) => {
-    try {
-      const gameId = parseInt(req.params.gameId);
-      if (isNaN(gameId)) {
-        return res.status(400).json({ error: 'Invalid game ID' });
-      }
-
-      const { quarter, homeScore, awayScore, notes } = req.body;
-
-      // Validate quarter
-      if (!quarter || quarter < 1 || quarter > 4) {
-        return res.status(400).json({ error: 'Quarter must be between 1 and 4' });
-      }
-
-      // Validate scores
-      if (homeScore < 0 || awayScore < 0) {
-        return res.status(400).json({ error: 'Scores cannot be negative' });
-      }
-
-      // Insert or update the score for this quarter
-      const result = await db.insert(schema.gameScores)
-        .values({
-          gameId,
-          quarter,
-          homeScore: homeScore || 0,
-          awayScore: awayScore || 0,
-          notes,
-          enteredBy: 1 // TODO: Get from authenticated user
-        })
-        .onConflictDoUpdate({
-          target: [schema.gameScores.gameId, schema.gameScores.quarter],
-          set: {
-            homeScore: homeScore || 0,
-            awayScore: awayScore || 0,
-            notes,
-            enteredAt: new Date()
-          }
-        })
-        .returning();
-
-      res.json(result[0]);
-    } catch (error) {
-      console.error('Error saving game score:', error);
-      res.status(500).json({ error: 'Failed to save game score' });
-    }
-  });
-
-  app.delete('/api/games/:gameId/scores/:quarter', async (req, res) => {
-    try {
-      const gameId = parseInt(req.params.gameId);
-      const quarter = parseInt(req.params.quarter);
-
-      if (isNaN(gameId) || isNaN(quarter)) {
-        return res.status(400).json({ error: 'Invalid game ID or quarter' });
-      }
-
-      await db.delete(schema.gameScores)
-        .where(
-          and(
-            eq(schema.gameScores.gameId, gameId),
-            eq(schema.gameScores.quarter, quarter)
-          )
-        );
-
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error deleting game score:', error);
-      res.status(500).json({ error: 'Failed to delete game score' });
-    }
-  });
-
-        // Check database health first
-        const isHealthy = await checkPoolHealth();
-        if (!isHealthy) {
-          console.warn('Database connection unhealthy, using fallback user setup');
-          req.user = {
-            id: 1,
-            username: 'dev-user',
-            clubs: [],
-            currentClubId: null
-          };
-        } else {
-          // Get all clubs from database for dev user with retry logic
-          let allClubs;
-          let retryCount = 0;
-          const maxRetries = 3;
-
-          while (retryCount < maxRetries) {
-            try {
-              allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
-              break;
-            } catch (dbError: any) {
-              retryCount++;
-              console.warn(`Database query attempt ${retryCount} failed:`, dbError.message);
-
-              if (retryCount >= maxRetries) {
-                throw dbError;
-              }
-
-              // Wait before retry (exponential backoff)
-              await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+            if (retryCount >= maxRetries) {
+              throw dbError;
             }
+
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
           }
-
-          const userClubs = allClubs.rows.map(club => ({
-            clubId: club.id,
-            role: 'admin',
-            permissions: {
-              canManagePlayers: true,
-              canManageGames: true,
-              canManageStats: true,
-              canViewOtherTeams: true,
-            }
-          }));
-
-          req.user = {
-            id: 1,
-            username: 'dev-user',
-            clubs: userClubs,
-            currentClubId: null // Will be set below
-          };
         }
+
+        const userClubs = allClubs.rows.map(club => ({
+          clubId: club.id,
+          role: 'admin',
+          permissions: {
+            canManagePlayers: true,
+            canManageGames: true,
+            canManageStats: true,
+            canViewOtherTeams: true,
+          }
+        }));
+
+        req.user = {
+          id: 1,
+          username: 'dev-user',
+          clubs: userClubs,
+          currentClubId: null // Will be set below
+        };
       } catch (error) {
         console.error('Error loading clubs for dev user:', error);
         // Fallback to basic setup without default club
@@ -3223,7 +3120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Get all teams across all clubs (for inter-club games)
-  app.get("/api/teams/all", loadUserPermissions, async (req, res) => {
+  app.get("/api/teams/all", async (req, res) => {
     try {
       console.log('Fetching all teams across all clubs');
 
@@ -3265,7 +3162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teams routes
-  app.get("/api/teams", loadUserPermissions, async (req, res) => {
+  app.get("/api/teams", async (req, res) => {
     try {
       console.log(`Teams endpoint called for club ${req.user.currentClubId}`);
       console.log('User context:', req.user.clubs);
@@ -3503,7 +3400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Games routes
-  app.get("/api/games", loadUserPermissions, async (req, res) => {
+  app.get("/api/games", async (req, res) => {
     try {
       const currentTeamId = req.headers['x-current-team-id'];
       const isClubWide = req.headers['x-club-wide'] === 'true';

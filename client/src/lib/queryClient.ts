@@ -191,11 +191,12 @@ export const getQueryFn: <T>(options: {
 
     try {
       // Use apiClient.get() to ensure proper headers are included
-      return await apiClient.get(url);
+      const result = await apiClient.get(url);
+      return result as any;
     } catch (error: any) {
       if (unauthorizedBehavior === "returnNull" && 
           (error?.message?.includes('401') || error?.status === 401)) {
-        return null;
+        return null as any;
       }
       throw error;
     }
@@ -205,8 +206,6 @@ export const getQueryFn: <T>(options: {
  * Optimized query client configuration with smart caching
  * to prevent infinite loops and improve performance
  */
-import { QueryClient } from '@tanstack/react-query';
-
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

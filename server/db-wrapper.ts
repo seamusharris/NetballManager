@@ -42,15 +42,20 @@ export async function executeWithRetry<T>(
         throw error;
       }
       
-      console.warn(`Database query failed on attempt ${attempt}/${maxRetries}:`, {
-        code: error.code,
-        message: error.message,
-        retrying: attempt < maxRetries
-      });
+      // Only log on retries to reduce noise
+      if (attempt > 1) {
+        console.warn(`Database query failed on attempt ${attempt}/${maxRetries}:`, {
+          code: error.code,
+          message: error.message,
+          retrying: attempt < maxRetries
+        });
+      }
       
       // Wait before retry with exponential backoff
       const delay = Math.pow(2, attempt) * baseDelay;
-      console.log(`Waiting ${delay}ms before retry ${attempt + 1}...`);
+      if (attempt > 1) {
+        console.log(`Waiting ${delay}ms before retry ${attempt + 1}...`);
+      }
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -60,12 +65,35 @@ export async function executeWithRetry<T>(
 
 /**
  * Safe pool query with retry logic and connection management
+ * Optimized to reduce connection churn
  */
 export async function safePoolQuery(text: string, params?: any[]): Promise<any> {
   return executeWithRetry(async () => {
     const client = await pool.connect();
     try {
       return await client.query(text, params);
+    } finally {
+      client.release();
+    }
+  });
+}
+
+/**
+ * Batch query executor to reduce connection overhead
+ * Executes multiple queries in a single connection
+ */
+export async function executeBatchQueries(
+  queries: Array<{ text: string; params?: any[] }>
+): Promise<any[]> {
+  return executeWithRetry(async () => {
+    const client = await pool.connect();
+    try {
+      const results = [];
+      for (const query of queries) {
+        const result = await client.query(query.text, query.params);
+        results.push(result);
+      }
+      return results;
     } finally {
       client.release();
     }
