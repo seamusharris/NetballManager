@@ -13,7 +13,6 @@ const sectionFormSchema = z.object({
   ageGroup: z.string().min(1, 'Age group is required'),
   sectionName: z.string().min(1, 'Section name is required'),
   description: z.string().optional(),
-  maxTeams: z.number().min(1).max(20).default(8),
 });
 
 type SectionFormData = z.infer<typeof sectionFormSchema>;
@@ -39,7 +38,6 @@ export default function SectionForm({
       ageGroup: section?.ageGroup || '',
       sectionName: section?.sectionName || '',
       description: section?.description || '',
-      maxTeams: section?.maxTeams || 8,
     },
   });
 
@@ -88,26 +86,6 @@ export default function SectionForm({
             )}
           />
         </div>
-
-        <FormField
-          control={form.control}
-          name="maxTeams"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Maximum Teams</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  min={1} 
-                  max={20}
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 8)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <FormField
           control={form.control}
