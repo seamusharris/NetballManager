@@ -54,6 +54,7 @@ import { useClub } from '@/contexts/ClubContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SectionManager from '@/components/sections/SectionManager';
 import SeasonsManager from '@/components/seasons/SeasonsManager';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -78,7 +79,14 @@ export default function Settings() {
     playerAvailabilityImported?: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { currentClubId, currentTeamId, currentTeamName, activeSeason } = useClub();
+  const { currentClubId, currentTeamId, currentTeamName } = useClub();
+
+  // Fetch active season directly
+  const { data: activeSeason } = useQuery<any>({
+    queryKey: ['/api/seasons/active', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons/active'),
+    enabled: !!currentClubId,
+  });
 
   // Get current browser timezone
   const getBrowserTimezone = () => {
