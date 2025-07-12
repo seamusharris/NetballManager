@@ -246,13 +246,15 @@ export function registerTeamRoutes(app: Express) {
   app.patch("/api/teams/:id", async (req, res) => {
     try {
       const teamId = parseInt(req.params.id);
-      const { name, division, isActive } = req.body;
+      const { name, division, isActive, seasonId, sectionId } = req.body;
 
       // Build update object only with provided fields
       const updateData: any = {};
       if (name !== undefined) updateData.name = name;
       if (division !== undefined) updateData.division = division;
       if (isActive !== undefined) updateData.isActive = isActive;
+      if (seasonId !== undefined) updateData.seasonId = seasonId;
+      if (sectionId !== undefined) updateData.sectionId = sectionId;
 
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ message: "No valid fields to update" });
