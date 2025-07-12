@@ -30,8 +30,8 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     [sortedGameIds]
   );
 
-  // Include timestamp in key to force refresh when needed - updated version for opponent perspective
-  const freshKey = forceFresh ? `fresh-${Date.now()}` : `cached-v4-opponent-${Date.now()}`;
+  // Create a stable query key that doesn't change on every render
+  const freshKey = forceFresh ? 'fresh' : 'cached-v4-opponent';
 
   // Fetch batch game statistics
   const { 
@@ -53,7 +53,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
       return result;
     },
     enabled: sortedGameIds.length > 0,
-    staleTime: 0, // Force fresh data to test opponent perspective
+    staleTime: 5 * 60 * 1000, // 5 minutes - reasonable cache time
     gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
     retry: CACHE_SETTINGS.MAX_RETRIES,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

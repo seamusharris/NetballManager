@@ -4,21 +4,23 @@ import { sql } from 'drizzle-orm';
 
 /**
  * Execute a database query with automatic retry on connection failures
+ * Enhanced with better error handling and exponential backoff
  */
 export async function executeWithRetry<T>(
   queryFn: () => Promise<T>,
-  maxRetries: number = 3
+  maxRetries: number = 3,
+  baseDelay: number = 1000
 ): Promise<T> {
   let lastError: any;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Check pool health before executing
+      // Check pool health before executing (only on retries)
       if (attempt > 1) {
         const isHealthy = await checkPoolHealth();
         if (!isHealthy) {
           console.log(`Attempt ${attempt}: Database not healthy, waiting before retry...`);
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 500));
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * baseDelay));
         }
       }
       
@@ -31,8 +33,10 @@ export async function executeWithRetry<T>(
         error.code === '57P01' || // terminating connection due to administrator command
         error.code === 'ECONNRESET' ||
         error.code === 'ENOTFOUND' ||
+        error.code === 'ECONNREFUSED' ||
         error.message?.includes('connection') ||
-        error.message?.includes('timeout');
+        error.message?.includes('timeout') ||
+        error.message?.includes('ECONNREFUSED');
         
       if (!isConnectionError || attempt === maxRetries) {
         throw error;
@@ -45,7 +49,9 @@ export async function executeWithRetry<T>(
       });
       
       // Wait before retry with exponential backoff
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 200));
+      const delay = Math.pow(2, attempt) * baseDelay;
+      console.log(`Waiting ${delay}ms before retry ${attempt + 1}...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
   
@@ -53,14 +59,7 @@ export async function executeWithRetry<T>(
 }
 
 /**
- * Safe database execute with retry logic
- */
-export async function safeExecute<T = any>(query: any): Promise<{ rows: T[] }> {
-  return executeWithRetry(() => db.execute(query));
-}
-
-/**
- * Safe pool query with retry logic
+ * Safe pool query with retry logic and connection management
  */
 export async function safePoolQuery(text: string, params?: any[]): Promise<any> {
   return executeWithRetry(async () => {
@@ -71,4 +70,40 @@ export async function safePoolQuery(text: string, params?: any[]): Promise<any> 
       client.release();
     }
   });
+}
+
+/**
+ * Enhanced database health check with detailed diagnostics
+ */
+export async function enhancedHealthCheck(): Promise<{
+  healthy: boolean;
+  details: {
+    poolSize: number;
+    idleCount: number;
+    waitingCount: number;
+    totalCount: number;
+    errors: string[];
+  };
+}> {
+  const details = {
+    poolSize: pool.totalCount,
+    idleCount: pool.idleCount,
+    waitingCount: pool.waitingCount,
+    totalCount: pool.totalCount,
+    errors: [] as string[]
+  };
+
+  try {
+    const isHealthy = await checkPoolHealth();
+    return {
+      healthy: isHealthy,
+      details
+    };
+  } catch (error: any) {
+    details.errors.push(error.message);
+    return {
+      healthy: false,
+      details
+    };
+  }
 }

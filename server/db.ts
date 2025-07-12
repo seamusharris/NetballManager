@@ -12,7 +12,41 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Enhanced connection pool configuration to prevent ECONNREFUSED errors
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  // Connection pool settings
+  max: 20, // Maximum number of clients in the pool
+  min: 2,  // Minimum number of clients in the pool
+  connectionTimeoutMillis: 10000, // How long to wait for a connection
+  idleTimeoutMillis: 30000, // How long a connection can be idle
+  // Retry settings
+  maxUses: 7500, // Number of times a connection can be used before being destroyed
+  // SSL settings for production
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+// Handle pool errors
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+// Handle connect events
+pool.on('connect', (client) => {
+  console.log('New database client connected');
+});
+
+// Handle acquire events
+pool.on('acquire', (client) => {
+  console.log('Database client acquired from pool');
+});
+
+// Handle release events
+pool.on('release', (client) => {
+  console.log('Database client released back to pool');
+});
+
 export const db = drizzle(pool, { schema });
 
 // Helper function to update player-season relationships
