@@ -198,8 +198,8 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
             <FormItem>
               <FormLabel>Section (Optional)</FormLabel>
               <Select 
-                onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} 
-                value={field.value?.toString() || ""}
+                onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))} 
+                value={field.value?.toString() || "none"}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -207,7 +207,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">No section</SelectItem>
+                  <SelectItem value="none">No section</SelectItem>
                   {sections?.map((section: Section) => (
                     <SelectItem 
                       key={section.id} 
