@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,24 +39,45 @@ export function FixtureImporter() {
       const line = lines[i];
       if (!line.trim()) continue;
 
-      // Parse CSV line (handle quoted values)
-      const columns = line.split(',').map(col => col.replace(/^"|"$/g, '').trim());
-      
-      const round = columns[0]; // Round number
-      const date = columns[1];  // Date for all games in this round
+      // Parse CSV line with proper CSV parsing (handle quoted values with commas)
+      const columns = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let k = 0; k < line.length; k++) {
+        const char = line[k];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          columns.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      columns.push(current.trim()); // Don't forget the last column
+
+      // Remove quotes from columns that were quoted
+      const cleanColumns = columns.map(col => col.replace(/^"|"$/g, ''));
+
+      const round = cleanColumns[0]; // Round number
+      const date = cleanColumns[1];  // Date for all games in this round
 
       // Process games starting from column 2: homeTeam, awayTeam, matchId pattern
-      for (let j = 2; j < columns.length; j += 3) {
-        if (j + 2 < columns.length) {
-          const homeTeam = columns[j];     // Home team
-          const awayTeam = columns[j + 1]; // Away team  
-          const matchIdText = columns[j + 2]; // Match ID
-          
-          // Skip if we don't have complete data
-          if (!homeTeam || !awayTeam || !matchIdText) continue;
+      for (let j = 2; j < cleanColumns.length; j += 3) {
+        if (j + 2 < cleanColumns.length) {
+          const homeTeam = cleanColumns[j];     // Home team
+          const awayTeam = cleanColumns[j + 1]; // Away team  
+          const matchIdText = cleanColumns[j + 2]; // Match ID
+
+          // Skip if we don't have complete data or empty values
+          if (!homeTeam || !awayTeam || !matchIdText || 
+              homeTeam.trim() === '' || awayTeam.trim() === '' || matchIdText.trim() === '') {
+            continue;
+          }
 
           const isBye = homeTeam.toLowerCase() === 'bye' || awayTeam.toLowerCase() === 'bye';
-          
+
           games.push({
             round,
             date: formatDate(date),
@@ -85,7 +105,7 @@ export function FixtureImporter() {
 
   const findTeamByName = (teamName: string) => {
     if (!teamName || teamName.toLowerCase() === 'bye') return null;
-    
+
     return clubTeams.find(team => 
       team.name.toLowerCase().includes(teamName.toLowerCase()) ||
       teamName.toLowerCase().includes(team.name.toLowerCase())
@@ -96,7 +116,7 @@ export function FixtureImporter() {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      
+
       // Parse and preview the file
       const reader = new FileReader();
       reader.onload = (e) => {
