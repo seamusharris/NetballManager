@@ -270,17 +270,11 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                     form.setValue('sectionId', undefined);
                   }} 
                   value={currentValue}
+                  defaultValue={currentValue}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue 
-                        placeholder="Select a season"
-                      >
-                        {field.value && seasons ? 
-                          seasons.find(s => s.id === field.value)?.name || "Select a season"
-                          : "Select a season"
-                        }
-                      </SelectValue>
+                      <SelectValue placeholder="Select a season" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
