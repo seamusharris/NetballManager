@@ -24,7 +24,6 @@ import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisW
 import GameAnalysisWidget from '@/components/ui/game-analysis-widget';
 import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
-import { cacheKeys } from '@/lib/cacheKeys';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import OpponentFormWidget from '@/components/dashboard/OpponentFormWidget';
 
@@ -88,31 +87,30 @@ export default function Dashboard() {
 
   // Fetch games with team context - use team-specific endpoint to completely avoid cache pollution
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: [`team-games-${currentTeamId}`, currentClubId, currentTeamId, Date.now()], // Force cache invalidation
-    queryFn: async () => {
+    queryKey: ['team-games', currentClubId, currentTeamId],
+    queryFn: async (): Promise<any[]> => {
       console.log(`Dashboard: Fetching games via team-specific endpoint for team ${currentTeamId}`);
       if (!currentTeamId) {
         throw new Error('No team ID available for games query');
       }
       // Use team-specific endpoint to completely bypass club-wide cache
-      const result = await apiClient.get(`/api/teams/${currentTeamId}/games`);
+      const result = await apiClient.get<any[]>(`/api/teams/${currentTeamId}/games`);
       console.log(`Dashboard: Received ${result?.length || 0} games for team ${currentTeamId}`);
-      return result;
+      return Array.isArray(result) ? result : [];
     },
     enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 0, // No cache for debugging
-    gcTime: 0, // No cache for debugging
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000, // 1 minute cache for games
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    // Removed refetchOnMount and refetchOnWindowFocus for normal operation
   });
 
   // Filter season games from main games data (same approach as Team Preparation)
   const seasonGames = useMemo(() => {
-    if (!currentTeamId || !games.length) return [];
-    return games.filter(game => 
+    if (!currentTeamId || !(Array.isArray(games)) || games.length === 0) return [];
+    return (games as any[]).filter(game => 
       (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId) &&
       game.statusIsCompleted
-    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [games, currentTeamId]);
 
   // Opponents system has been completely removed
@@ -298,8 +296,8 @@ export default function Dashboard() {
                       return game.date >= currentDate && 
                         !game.statusIsCompleted;
                     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5) || []}
-                    currentTeamId={currentTeamId || 0}
-                    currentClubId={currentClubId || 0}
+                    currentTeamId={currentTeamId ?? 0}
+                    currentClubId={currentClubId ?? 0}
                     batchScores={gameScoresMap}
                     batchStats={gameStatsMap}
                     title="Upcoming Games"
@@ -315,8 +313,8 @@ export default function Dashboard() {
                     historicalGames={games?.filter(game => 
                       game.statusIsCompleted
                     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || []}
-                    currentTeamId={currentTeamId || 0}
-                    currentClubId={currentClubId || 0}
+                    currentTeamId={currentTeamId ?? 0}
+                    currentClubId={currentClubId ?? 0}
                     batchScores={gameScoresMap}
                     batchStats={gameStatsMap}
                     title="Recent Games"
