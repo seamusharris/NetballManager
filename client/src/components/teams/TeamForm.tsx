@@ -57,14 +57,12 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   // Set form values when team data or seasons load
   useEffect(() => {
     if (team) {
-      // Reset form with team data
-      form.reset({
-        name: team.name,
-        clubId: team.clubId || clubId,
-        seasonId: team.seasonId,
-        sectionId: team.sectionId || undefined,
-        isActive: team.isActive ?? true,
-      });
+      // Set individual values instead of resetting to preserve form state
+      form.setValue('name', team.name);
+      form.setValue('clubId', team.clubId || clubId);
+      form.setValue('seasonId', team.seasonId);
+      form.setValue('sectionId', team.sectionId || undefined);
+      form.setValue('isActive', team.isActive ?? true);
     } else if (seasons && seasons.length > 0 && !form.getValues('seasonId')) {
       // Set default season for new teams
       const defaultSeasonId = seasons.find(s => s.isActive)?.id || seasons[0].id;
@@ -145,16 +143,19 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (data: TeamFormData) => {
+    console.log('TeamForm: Submitting data:', data);
+    
     if (team) {
       updateMutation.mutate(data, {
         onSuccess: () => {
-          form.reset();
+          console.log('TeamForm: Update successful');
           onSuccess?.();
         }
       });
     } else {
       createMutation.mutate(data, {
         onSuccess: () => {
+          console.log('TeamForm: Create successful');
           form.reset();
           onSuccess?.();
         }
@@ -191,7 +192,12 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
             <FormItem>
               <FormLabel required>Season</FormLabel>
               <Select 
-                onValueChange={(value) => field.onChange(parseInt(value))} 
+                onValueChange={(value) => {
+                  const seasonId = parseInt(value);
+                  field.onChange(seasonId);
+                  // Clear section when season changes
+                  form.setValue('sectionId', undefined);
+                }} 
                 value={field.value ? field.value.toString() : ""}
               >
                 <FormControl>
