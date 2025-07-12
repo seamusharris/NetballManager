@@ -636,11 +636,6 @@ export default function Settings() {
         </Alert>
       )}
 
-      {/* Game Status Management - Full Width */}
-      <div className="mb-8">
-        <GameStatusManager />
-      </div>
-
       {/* Data Management Section - Full Width */}
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-4">Data Management</h2>
@@ -726,7 +721,7 @@ export default function Settings() {
       </div>
 
       {/* Application Settings - Grid Layout */}
-      <Tabs defaultValue="general" className="w-[400px]">
+      <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="seasons">Seasons</TabsTrigger>
@@ -735,13 +730,117 @@ export default function Settings() {
           <TabsTrigger value="import">Import</TabsTrigger>
         </TabsList>
         
-      </Tabs>
+        <TabsContent value="general" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Display Settings</CardTitle>
+                <CardDescription>
+                  Configure how dates and times are displayed in the application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select value={timezone} onValueChange={setTimezone}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={getBrowserTimezone()}>
+                        {formatTimezone(getBrowserTimezone())} (Browser Default)
+                      </SelectItem>
+                      {COMMON_TIMEZONES.map((tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {formatTimezone(tz)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={saveSettings} className="w-full">
+                  Save Settings
+                </Button>
+              </CardContent>
+            </Card>
 
-      <TabsContent value="seasons">
+            <Card>
+              <CardHeader>
+                <CardTitle>Export for Visualization</CardTitle>
+                <CardDescription>
+                  Export data in formats optimized for Flourish and other visualization tools.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button 
+                  onClick={handleExportPlayers} 
+                  disabled={isExporting}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Export Players List
+                </Button>
+                
+                <Button 
+                  onClick={handleExportTeamPerformance} 
+                  disabled={isExporting}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Team Performance Timeline
+                </Button>
+                
+                <Button 
+                  onClick={handleExportQuarterAnalysis} 
+                  disabled={isExporting}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <Clock className="mr-2 h-4 w-4" />
+                  Quarter Analysis Heatmap
+                </Button>
+                
+                <Button 
+                  onClick={handleExportPositionData} 
+                  disabled={isExporting}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <Target className="mr-2 h-4 w-4" />
+                  Position Performance
+                </Button>
+                
+                <Button 
+                  onClick={handleExportPlayerNetwork} 
+                  disabled={isExporting}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Player Network Analysis
+                </Button>
+                
+                <Button 
+                  onClick={handleExportGameTimeline} 
+                  disabled={isExporting}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Game Timeline
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="seasons" className="mt-6">
           <SeasonsManager />
         </TabsContent>
 
-        <TabsContent value="sections">
+        <TabsContent value="sections" className="mt-6">
           {activeSeason ? (
             <SectionManager 
               seasonId={activeSeason.id} 
@@ -757,11 +856,16 @@ export default function Settings() {
             </Card>
           )}
         </TabsContent>
-      {/* Fixture Importer Section - Full Width */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Fixture Importer</h2>
-        <FixtureImporter />
-      </div>
+
+        <TabsContent value="game-statuses" className="mt-6">
+          <GameStatusManager />
+        </TabsContent>
+
+        <TabsContent value="import" className="mt-6">
+          <FixtureImporter />
+        </TabsContent>
+      </Tabs>
+      
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
