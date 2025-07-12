@@ -257,7 +257,8 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
               fieldValue: field.value, 
               stringValue, 
               availableSeasons: seasons?.map(s => ({ id: s.id, name: s.name })),
-              teamSeasonId: team?.seasonId
+              teamSeasonId: team?.seasonId,
+              hasSeasons: !!seasons && seasons.length > 0
             });
             
             return (
@@ -272,6 +273,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                     form.setValue('sectionId', undefined);
                   }} 
                   value={stringValue}
+                  key={`season-select-${field.value}-${seasons?.length || 0}`}
                 >
                   <FormControl>
                     <SelectTrigger>
