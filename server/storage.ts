@@ -598,7 +598,7 @@ export class DatabaseStorage implements IStorage {
     playerId: number;
   }>): Promise<any[]> {
     if (rosterData.length === 0) return [];
-    
+
     return await db
       .insert(rosters)
       .values(rosterData)
@@ -770,8 +770,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async removePlayerFromClub(playerId: number, clubId: number): Promise<boolean> {
-    try {
-      await db.execute(sql`
+    try {      await db.execute(sql`
         UPDATE club_players 
         SET is_active = false, left_date = CURRENT_DATE, updated_at = NOW() 
         WHERE player_id = ${playerId} AND club_id = ${clubId}

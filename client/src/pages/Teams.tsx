@@ -219,6 +219,7 @@ export default function Teams() {
         title="Create New Team"
       >
         <TeamForm
+          seasons={seasons}
           clubId={currentClubId!}
           onSuccess={() => {
             setIsCreateDialogOpen(false);
@@ -237,6 +238,7 @@ export default function Teams() {
         {editingTeam && (
           <TeamForm
             team={editingTeam}
+            seasons={seasons}
             clubId={editingTeam.clubId || currentClubId!}
             onSuccess={() => {
               setEditingTeam(null);

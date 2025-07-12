@@ -1,4 +1,3 @@
-
 import type { Express } from "express";
 import { sql, eq, and } from "drizzle-orm";
 import { db } from "./db";
@@ -10,7 +9,7 @@ export function registerSectionRoutes(app: Express) {
   app.get("/api/seasons/:seasonId/sections", standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const seasonId = parseInt(req.params.seasonId);
-      
+
       if (isNaN(seasonId)) {
         return res.status(400).json({ error: "Invalid season ID" });
       }
@@ -50,7 +49,7 @@ export function registerSectionRoutes(app: Express) {
   app.post("/api/seasons/:seasonId/sections", standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const seasonId = parseInt(req.params.seasonId);
-      
+
       if (isNaN(seasonId)) {
         return res.status(400).json({ error: "Invalid season ID" });
       }
@@ -85,7 +84,7 @@ export function registerSectionRoutes(app: Express) {
   app.patch("/api/sections/:id", standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid section ID" });
       }
@@ -123,7 +122,7 @@ export function registerSectionRoutes(app: Express) {
   app.delete("/api/sections/:id", standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid section ID" });
       }
@@ -140,7 +139,7 @@ export function registerSectionRoutes(app: Express) {
       }
 
       const result = await db.delete(sections).where(eq(sections.id, id)).returning();
-      
+
       if (result.length === 0) {
         return res.status(404).json({ error: "Section not found" });
       }
@@ -156,7 +155,7 @@ export function registerSectionRoutes(app: Express) {
   app.get("/api/sections/:id/teams", standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const sectionId = parseInt(req.params.id);
-      
+
       if (isNaN(sectionId)) {
         return res.status(400).json({ error: "Invalid section ID" });
       }
@@ -201,7 +200,7 @@ export function registerSectionRoutes(app: Express) {
     try {
       const teamId = parseInt(req.params.id);
       const { sectionId } = req.body;
-      
+
       if (isNaN(teamId)) {
         return res.status(400).json({ error: "Invalid team ID" });
       }
