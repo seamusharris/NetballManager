@@ -14,6 +14,14 @@ export function registerSectionRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid season ID" });
       }
 
+      // Debug: Check what sections exist for this season without the is_active filter
+      const debugSections = await db.execute(sql`
+        SELECT s.*, s.is_active 
+        FROM sections s 
+        WHERE s.season_id = ${seasonId}
+      `);
+      console.log(`Debug: All sections for season ${seasonId}:`, debugSections.rows);
+
       const result = await db.execute(sql`
         SELECT 
           s.*,
