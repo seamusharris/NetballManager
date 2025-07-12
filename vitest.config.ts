@@ -1,18 +1,20 @@
 import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { resolve } from 'path';
 
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.test.ts'],
+    exclude: ['node_modules/**', 'dist/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
-        'node_modules/',
-        'dist/',
-        'tests/',
+        'node_modules/**',
+        'dist/**',
+        'tests/**',
         '**/*.d.ts',
         '**/*.config.*',
         '**/coverage/**'
@@ -21,9 +23,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './client/src'),
-      '@shared': path.resolve(__dirname, './shared'),
-      '@server': path.resolve(__dirname, './server')
+      '@': resolve(__dirname, './client/src'),
+      '~': resolve(__dirname, './server')
     }
   }
 }); 

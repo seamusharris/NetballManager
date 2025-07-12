@@ -41,7 +41,7 @@ export default function Teams() {
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
     queryKey: ['teams', currentClubId],
-    queryFn: () => apiClient.get('/api/teams'),
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
     enabled: !!currentClubId,
   });
 
@@ -96,7 +96,7 @@ export default function Teams() {
   return (
     <PageTemplate
       title="Teams"
-      description={`Manage teams for ${currentClub?.name}`}
+      subtitle={`Manage teams for ${currentClub?.name}`}
       breadcrumbs={[
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'Teams' }
@@ -110,7 +110,6 @@ export default function Teams() {
           Add Team
         </Button>
       }
-      status={activeSeason?.name || 'No Active Season'}
     >
       <ContentSection title="Team Management">
         {/* Teams Grid */}

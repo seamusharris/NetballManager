@@ -1276,8 +1276,8 @@ export default function GameDetails() {
     isLoading: isLoadingTeams,
     error: teamsError
   } = useQuery({
-    queryKey: ['/api/teams'],
-    queryFn: () => apiClient.get('/api/teams'),
+    queryKey: ['/api/clubs', currentClubId, 'teams'],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
     select: (data) => Array.isArray(data) ? data : [],
     enabled: !!currentClubId
   });

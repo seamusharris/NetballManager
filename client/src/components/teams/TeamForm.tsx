@@ -159,15 +159,15 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
   }, [team, seasons.data, form, clubId]);
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/teams', data),
+    mutationFn: (data: any) => apiClient.post(`/api/clubs/${clubId}/teams`, data),
     onSuccess: () => {
       // Invalidate all team-related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clubs', clubId, 'teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey[0];
-          return typeof queryKey === 'string' && queryKey.includes('/api/teams');
+          return typeof queryKey === 'string' && queryKey.includes('/api/clubs') && queryKey.includes('/teams');
         },
       });
 
@@ -198,7 +198,7 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
       console.log('TeamForm: Update mutation successful, result:', result);
 
       // Invalidate all team-related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clubs', clubId, 'teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
 

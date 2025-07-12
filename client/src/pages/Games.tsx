@@ -78,7 +78,7 @@ export default function Games() {
       if (isClubWideGamesView) {
         return apiClient.get(`/api/clubs/${currentClubId}/teams`);
       } else {
-        return apiClient.get('/api/teams');
+        return apiClient.get(`/api/clubs/${currentClubId}/teams`);
       }
     },
     enabled: !!currentClubId,

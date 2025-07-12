@@ -3312,17 +3312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get players by club
-  app.get('/api/clubs/:clubId/players', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const clubId = parseInt(req.params.clubId);
-      const players = await storage.getPlayersByClub(clubId);
-      res.json(players);
-    } catch (error) {
-      console.error('Error fetching club players:', error);
-      res.status(500).json({ error: 'Failed to fetch club players' });
-    }
-  });
+  // Get players by club (DEPRECATED - duplicate endpoint removed)
+  // Use the REST endpoint at /api/clubs/:clubId/players with standardAuth instead
 
   // Games routes
   app.get("/api/games", async (req, res) => {
