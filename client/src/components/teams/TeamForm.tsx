@@ -7,6 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Team, Season } from '@shared/schema';
+
+interface Section {
+  id: number;
+  displayName: string;
+  teamCount: number;
+  maxTeams: number;
+}
 import { useToast } from '@/hooks/use-toast';
 import { useCreateMutation } from '@/hooks/use-form-mutations';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +24,7 @@ const teamFormSchema = z.object({
   division: z.string().optional(),
   clubId: z.number(),
   seasonId: z.number(),
+  sectionId: z.number().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -33,6 +41,14 @@ interface TeamFormProps {
 export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const selectedSeasonId = form.watch('seasonId');
+  
+  const { data: sections = [] } = useQuery({
+    queryKey: ['sections', selectedSeasonId],
+    queryFn: () => selectedSeasonId ? apiClient.get(`/api/seasons/${selectedSeasonId}/sections`) : Promise.resolve([]),
+    enabled: !!selectedSeasonId,
+  });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post('/api/teams', data),
@@ -166,6 +182,39 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                   {seasons.map((season) => (
                     <SelectItem key={season.id} value={season.id.toString()}>
                       {season.name} ({season.year})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="sectionId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Section (Optional)</FormLabel>
+              <Select 
+                onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} 
+                value={field.value?.toString() || ""}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a section" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">No section</SelectItem>
+                  {sections.map((section: Section) => (
+                    <SelectItem 
+                      key={section.id} 
+                      value={section.id.toString()}
+                      disabled={section.teamCount >= section.maxTeams && !team?.sectionId}
+                    >
+                      {section.displayName} ({section.teamCount}/{section.maxTeams} teams)
                     </SelectItem>
                   ))}
                 </SelectContent>

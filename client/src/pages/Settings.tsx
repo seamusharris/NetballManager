@@ -51,6 +51,8 @@ import { apiClient } from '@/lib/apiClient';
 import { GameStatusManager } from '@/components/settings/GameStatusManager';
 import { FixtureImporter } from '@/components/settings/FixtureImporter';
 import { useClub } from '@/contexts/ClubContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SectionManager from '@/components/sections/SectionManager';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -75,7 +77,7 @@ export default function Settings() {
     playerAvailabilityImported?: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { currentClubId, currentTeamId, currentTeamName } = useClub();
+  const { currentClubId, currentTeamId, currentTeamName, activeSeason } = useClub();
 
   // Get current browser timezone
   const getBrowserTimezone = () => {
@@ -723,133 +725,37 @@ export default function Settings() {
       </div>
 
       {/* Application Settings - Grid Layout */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Display Preferences</CardTitle>
-              <CardDescription>Customize how information is displayed</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="timezone">Timezone</Label>
-                <Select 
-                  value={timezone} 
-                  onValueChange={setTimezone}
-                >
-                  <SelectTrigger id="timezone" className="w-full">
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={getBrowserTimezone()}>
-                      Browser Default ({getBrowserTimezone()})
-                    </SelectItem>
+      <Tabs defaultValue="general" className="w-[400px]">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="seasons">Seasons</TabsTrigger>
+          <TabsTrigger value="sections">Sections</TabsTrigger>
+          <TabsTrigger value="game-statuses">Game Statuses</TabsTrigger>
+          <TabsTrigger value="import">Import</TabsTrigger>
+        </TabsList>
+        
+      </Tabs>
 
-                    {COMMON_TIMEZONES.map((tz) => (
-                      <SelectItem key={tz} value={tz}>
-                        {formatTimezone(tz)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">
-                  This timezone will be used for displaying dates and times across the application
+      <TabsContent value="seasons">
+          <SeasonsManager />
+        </TabsContent>
+
+        <TabsContent value="sections">
+          {activeSeason ? (
+            <SectionManager 
+              seasonId={activeSeason.id} 
+              seasonName={activeSeason.name}
+            />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Please set an active season first to manage sections.
                 </p>
-              </div>
-
-              <Button onClick={saveSettings} variant="outline" className="w-full">
-                Save Display Preferences
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <Download className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-medium">Export Data</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="flex items-center space-x-2"
-              >
-                <Download className="h-4 w-4" />
-                <span>{isExporting ? 'Exporting...' : 'Export All Data'}</span>
-              </Button>
-              <Button
-                onClick={handleExportPlayers}
-                disabled={isExporting}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>Export Players Only</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <BarChart3 className="h-5 w-5 text-purple-600" />
-              <h3 className="text-lg font-medium">Flourish Chart Data</h3>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Export team data in CSV format for use with Flourish charts. Each export is optimized for specific chart types.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                onClick={handleExportTeamPerformance}
-                disabled={isExporting}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <TrendingUp className="h-4 w-4" />
-                <span>Team Performance (Bar Race)</span>
-              </Button>
-              <Button
-                onClick={handleExportQuarterAnalysis}
-                disabled={isExporting}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Clock className="h-4 w-4" />
-                <span>Quarter Analysis (Heatmap)</span>
-              </Button>
-              <Button
-                onClick={handleExportPositionData}
-                disabled={isExporting}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Target className="h-4 w-4" />
-                <span>Position Performance</span>
-              </Button>
-              <Button
-                onClick={handleExportPlayerNetwork}
-                disabled={isExporting}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>Player Network</span>
-              </Button>
-              <Button
-                onClick={handleExportGameTimeline}
-                disabled={isExporting}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Game Timeline</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
       {/* Fixture Importer Section - Full Width */}
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-4">Fixture Importer</h2>

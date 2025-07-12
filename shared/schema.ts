@@ -182,13 +182,32 @@ export const insertClubSchema = createInsertSchema(clubs).omit({ id: true });
 export type InsertClub = z.infer<typeof insertClubSchema>;
 export type Club = typeof clubs.$inferSelect;
 
+// Sections table - defines age groups and section numbers/letters
+export const sections = pgTable("sections", {
+  id: serial("id").primaryKey(),
+  seasonId: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
+  ageGroup: text("age_group").notNull(), // e.g., "15U", "9U", "Open"
+  sectionName: text("section_name").notNull(), // e.g., "1", "2", "A", "B"
+  displayName: text("display_name").notNull(), // e.g., "15U/1", "Open A"
+  description: text("description"), // Optional description
+  maxTeams: integer("max_teams").default(8), // Maximum teams allowed in this section
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    seasonAgeGroupSectionUnique: unique().on(table.seasonId, table.ageGroup, table.sectionName)
+  };
+});
+
 // Team model (replaces single-team concept)
 export const teams = pgTable("teams", {
   id: serial("id").primaryKey(),
   clubId: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
   seasonId: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "set null" }), // Can be null for legacy teams
   name: text("name").notNull(), // e.g., "Emeralds A"
-  division: text("division"), // e.g., "Division 1"
+  division: text("division"), // e.g., "Division 1" (kept for backward compatibility)
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -197,6 +216,10 @@ export const teams = pgTable("teams", {
     clubSeasonNameUnique: unique().on(table.clubId, table.seasonId, table.name)
   };
 });
+
+export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
+export type InsertSection = z.infer<typeof insertSectionSchema>;
+export type Section = typeof sections.$inferSelect;
 
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true });
 export type InsertTeam = z.infer<typeof insertTeamSchema>;

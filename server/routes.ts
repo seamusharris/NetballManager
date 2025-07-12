@@ -2875,6 +2875,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
+
+  // Register section routes
+  const { registerSectionRoutes } = await import('./section-routes');
+  registerSectionRoutes(app);
   
   // Register game-centric stats routes
   const { registerGameStatsRoutes } = await import('./game-stats-routes');
