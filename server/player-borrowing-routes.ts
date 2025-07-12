@@ -67,13 +67,8 @@ async function getPlayerBorrowingHandler(req: AuthenticatedRequest, res: Respons
 }
 
 export function registerPlayerBorrowingRoutes(app: Express) {
-  // NEW plural endpoint
+  // Plural endpoint
   app.get('/api/clubs/:clubId/player-borrowing', requireClubAccess(), getPlayerBorrowingHandler);
-  // OLD singular endpoint (deprecated)
-  app.get('/api/club/:clubId/player-borrowing', requireClubAccess(), (req: AuthenticatedRequest, res: Response) => {
-    console.warn('[DEPRECATED] /api/club/:clubId/player-borrowing is deprecated. Use /api/clubs/:clubId/player-borrowing instead.');
-    return getPlayerBorrowingHandler(req, res);
-  });
 
   // Create a new borrowing request within the same club
   app.post('/api/clubs/:clubId/player-borrowing', requireClubAccess('canManageGames'), async (req: AuthenticatedRequest, res: Response) => {

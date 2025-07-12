@@ -173,11 +173,6 @@ export function registerGamePermissionsRoutes(app: Express) {
     }
   }
 
-  // NEW plural endpoint
+  // Plural endpoint
   app.get('/api/clubs/available-for-permissions', requireClubAccess(), availableForPermissionsHandler);
-  // OLD singular endpoint (deprecated)
-  app.get('/api/club/available-for-permissions', requireClubAccess(), (req: AuthenticatedRequest, res: Response) => {
-    console.warn('[DEPRECATED] /api/club/available-for-permissions is deprecated. Use /api/clubs/available-for-permissions instead.');
-    return availableForPermissionsHandler(req, res);
-  });
 }

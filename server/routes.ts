@@ -1061,7 +1061,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/club/:id", async (req, res) => {
+  app.patch("/api/clubs/:id", async (req, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
       const { 
@@ -1125,7 +1125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/club/:id", async (req, res) => {
+  app.delete("/api/clubs/:id", async (req, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
 
@@ -2843,13 +2843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Club details endpoint (OLD, singular, DEPRECATED)
-  app.get('/api/club/:clubId', async (req: any, res) => {
-    console.warn('[DEPRECATED] /api/club/:clubId is deprecated. Use /api/clubs/:clubId instead.');
-    // Forward to the new handler logic
-    req.url = `/api/clubs/${req.params.clubId}`;
-    app.handle(req, res);
-  });
+
 
   // Register game status routes
   app.use("/api/game-statuses", gameStatusRoutes);
@@ -3226,56 +3220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch player clubs' });
     }  });
 
-  // Add player to a club
-  app.post("/api/club/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
-    try {
-      const clubId = parseInt(req.params.clubId);
-      const playerId = parseInt(req.params.playerId);
-      const { notes } = req.body;
 
-      const success = await storage.addPlayerToClub(playerId, clubId, notes);
-
-      if (success) {
-        res.json({ message: 'Player added to club successfully' });
-      } else {
-        res.status(500).json({ error: 'Failed to add player to club' });
-      }
-    } catch (error) {
-      console.error('Error adding player to club:', error);
-      res.status(500).json({ error: 'Failed to add player to club' });
-    }
-  });
-
-  // Remove player from a club
-  app.delete("/api/club/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
-    try {
-      const clubId = parseInt(req.params.clubId);
-      const playerId = parseInt(req.params.playerId);
-
-      const success = await storage.removePlayerFromClub(playerId, clubId);
-
-      if (success) {
-        res.json({ message: 'Player removed from club successfully' });
-      } else {
-        res.status(500).json({ error: 'Failed to remove player from club' });
-      }
-    } catch (error) {
-      console.error('Error removing player from club:', error);
-      res.status(500).json({ error: 'Failed to remove player from club' });
-    }
-  });
-
-  // Get all players directly associated with a club
-  app.get("/api/club/:clubId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
-    try {
-      const clubId = parseInt(req.params.clubId);
-      const players = await storage.getPlayersByClub(clubId);
-      res.json(players);
-    } catch (error) {
-      console.error('Error fetching club players:', error);
-      res.status(500).json({ error: 'Failed to fetch club players' });
-    }
-  });
 
   // Get all teams across all clubs (for inter-club games)
   app.get("/api/teams/all", loadUserPermissions, async (req, res) => {

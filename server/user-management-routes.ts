@@ -91,7 +91,7 @@ export function registerUserManagementRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to fetch available users' });
     }
   }
-  // NEW plural endpoints
+  // Plural endpoints
   app.get('/api/clubs/:clubId/users', requireClubAccess('canManagePlayers'), getUsersHandler);
   app.get('/api/clubs/:clubId/users/available', requireClubAccess('canManagePlayers'), getAvailableUsersHandler);
 
@@ -196,13 +196,5 @@ export function registerUserManagementRoutes(app: Express) {
     }
   });
 
-  // OLD singular endpoints (deprecated)
-  app.get('/api/club/:clubId/users', requireClubAccess('canManagePlayers'), (req: AuthenticatedRequest, res: Response) => {
-    console.warn('[DEPRECATED] /api/club/:clubId/users is deprecated. Use /api/clubs/:clubId/users instead.');
-    return getUsersHandler(req, res);
-  });
-  app.get('/api/club/:clubId/users/available', requireClubAccess('canManagePlayers'), (req: AuthenticatedRequest, res: Response) => {
-    console.warn('[DEPRECATED] /api/club/:clubId/users/available is deprecated. Use /api/clubs/:clubId/users/available instead.');
-    return getAvailableUsersHandler(req, res);
-  });
+
 }
