@@ -2808,38 +2808,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Club details endpoint
-  app.get('/api/club/:clubId', async (req: any, res) => {
+  // Club details endpoint (NEW, plural, explicit clubId)
+  app.get('/api/clubs/:clubId', async (req: any, res) => {
     try {
-      let clubId;
-
-      // Handle 'current' as a special case
-      if (req.params.clubId === 'current') {
-        clubId = req.user?.currentClubId;
-        console.log('Clubs/current endpoint: using currentClubId from user context:', clubId);
-        if (!clubId) {
-          console.log('Clubs/current endpoint: No current club ID available');
-          return res.status(400).json({ error: 'No current club selected' });
-        }
-      } else {
-        clubId = parseInt(req.params.clubId);
-        if (isNaN(clubId)) {
-          console.log('Clubs endpoint: Invalid club ID provided:', req.params.clubId);
-          return res.status(400).json({ error: 'Invalid club ID' });
-        }
+      const clubId = parseInt(req.params.clubId);
+      if (isNaN(clubId)) {
+        return res.status(400).json({ error: 'Invalid club ID' });
       }
-
-      console.log('Clubs endpoint: fetching club with ID:', clubId);
-
       // Fetch club from database
       const result = await db.execute(sql`
         SELECT * FROM clubs WHERE id = ${clubId}
       `);
-
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Club not found' });
       }
-
       const club = result.rows[0];
       res.json({
         id: club.id,
@@ -2859,6 +2841,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error fetching club details:', error);
       res.status(500).json({ error: 'Failed to fetch club details' });
     }
+  });
+
+  // Club details endpoint (OLD, singular, DEPRECATED)
+  app.get('/api/club/:clubId', async (req: any, res) => {
+    console.warn('[DEPRECATED] /api/club/:clubId is deprecated. Use /api/clubs/:clubId instead.');
+    // Forward to the new handler logic
+    req.url = `/api/clubs/${req.params.clubId}`;
+    app.handle(req, res);
   });
 
   // Register game status routes
