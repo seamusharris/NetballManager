@@ -68,18 +68,17 @@ const SectionSelect: React.FC<SectionSelectProps> = ({
       </FormControl>
       <SelectContent>
         <SelectItem value="none">No section</SelectItem>
-        {sections && sections.length > 0 ? (
+        {sections && sections.length > 0 && (
           sections.map((section) => (
             <SelectItem key={section.id} value={section.id.toString()}>
               {section.displayName} ({section.teamCount} teams)
             </SelectItem>
           ))
-        ) : (
-          !isLoading && (
-            <SelectItem value="none" disabled>
-              {error ? 'Error loading sections' : 'No sections available'}
-            </SelectItem>
-          )
+        )}
+        {!isLoading && sections && sections.length === 0 && (
+          <SelectItem value="none" disabled>
+            No sections available for this season
+          </SelectItem>
         )}
         {error && (
           <Button type="button" variant="outline" size="sm" onClick={onRetry}>
