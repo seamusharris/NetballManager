@@ -819,7 +819,7 @@ export function registerTeamRoutes(app: Express) {
         LEFT JOIN seasons s ON g.season_id = s.id
         LEFT JOIN teams ht ON g.home_team_id = ht.id
         LEFT JOIN teams at ON g.away_team_id = at.id
-        LEFT JOIN clubs hcON ht.club_id = hc.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
         LEFT JOIN clubs ac ON at.club_id = ac.id
         WHERE g.id = ${gameId} AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
       `);
