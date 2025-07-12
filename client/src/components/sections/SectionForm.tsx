@@ -12,6 +12,7 @@ import { Section } from '@shared/schema';
 const sectionFormSchema = z.object({
   ageGroup: z.string().min(1, 'Age group is required'),
   sectionName: z.string().min(1, 'Section name is required'),
+  displayName: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -37,6 +38,7 @@ export default function SectionForm({
     defaultValues: {
       ageGroup: section?.ageGroup || '',
       sectionName: section?.sectionName || '',
+      displayName: section?.displayName || '',
       description: section?.description || '',
     },
   });
@@ -86,6 +88,23 @@ export default function SectionForm({
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display Name (Optional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Auto-generated from Age Group/Section if left empty"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
