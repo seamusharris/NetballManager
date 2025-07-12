@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { players, playerSeasons } from '@shared/schema';
 import { db } from './db';
 import { eq } from 'drizzle-orm';
-import { Pool } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 
 /**
  * Dedicated route handler for managing player-season relationships
