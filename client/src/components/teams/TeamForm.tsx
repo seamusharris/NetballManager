@@ -250,10 +250,12 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
           control={form.control}
           name="seasonId"
           render={({ field }) => {
-            const currentValue = field.value ? field.value.toString() : "";
+            // Ensure we have a valid string value for the Select component
+            const stringValue = field.value != null ? field.value.toString() : "";
+            
             console.log('TeamForm: Season field render', { 
               fieldValue: field.value, 
-              currentValue, 
+              stringValue, 
               availableSeasons: seasons?.map(s => ({ id: s.id, name: s.name })),
               teamSeasonId: team?.seasonId
             });
@@ -269,8 +271,7 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
                     // Clear section when season changes
                     form.setValue('sectionId', undefined);
                   }} 
-                  value={currentValue}
-                  defaultValue={currentValue}
+                  value={stringValue}
                 >
                   <FormControl>
                     <SelectTrigger>
