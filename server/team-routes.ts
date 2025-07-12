@@ -131,9 +131,11 @@ export function registerTeamRoutes(app: Express) {
           s.name as season_name, 
           s.year as season_year,
           s.start_date as season_start_date,
-          s.end_date as season_end_date
+          s.end_date as season_end_date,
+          sec.display_name as section_name
         FROM teams t
         LEFT JOIN seasons s ON t.season_id = s.id
+        LEFT JOIN sections sec ON t.section_id = sec.id
         WHERE t.club_id = ${clubId} AND t.is_active = true
         ORDER BY s.start_date DESC, t.name
       `);
@@ -150,7 +152,8 @@ export function registerTeamRoutes(app: Express) {
         seasonName: row.season_name,
         seasonYear: row.season_year,
         seasonStartDate: row.season_start_date,
-        seasonEndDate: row.season_end_date
+        seasonEndDate: row.season_end_date,
+        sectionName: row.section_name
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
@@ -188,9 +191,11 @@ export function registerTeamRoutes(app: Express) {
           s.name as season_name, 
           s.year as season_year,
           s.start_date as season_start_date,
-          s.end_date as season_end_date
+          s.end_date as season_end_date,
+          sec.display_name as section_name
         FROM teams t
         LEFT JOIN seasons s ON t.season_id = s.id
+        LEFT JOIN sections sec ON t.section_id = sec.id
         WHERE t.club_id = ${clubId} AND t.is_active = true
         ORDER BY s.start_date DESC, t.name
       `);
@@ -207,7 +212,8 @@ export function registerTeamRoutes(app: Express) {
         seasonName: row.season_name,
         seasonYear: row.season_year,
         seasonStartDate: row.season_start_date,
-        seasonEndDate: row.season_end_date
+        seasonEndDate: row.season_end_date,
+        sectionName: row.section_name
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
