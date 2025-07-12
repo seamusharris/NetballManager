@@ -841,7 +841,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="sections" className="mt-6">
-          {activeSeason ? (
+          {activeSeason && activeSeason.id ? (
             <SectionManager 
               seasonId={activeSeason.id} 
               seasonName={activeSeason.name}
