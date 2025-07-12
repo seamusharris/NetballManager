@@ -78,12 +78,15 @@ export function FixtureImporter() {
 
           const isBye = homeTeam.toLowerCase() === 'bye' || awayTeam.toLowerCase() === 'bye';
 
+          // Extract NetballConnect match ID (remove "Match ID: " prefix)
+          const netballConnectId = matchIdText.match(/Match ID:\s*(\d+)/)?.[1] || matchIdText;
+
           games.push({
             round,
             date: formatDate(date),
             homeTeam: homeTeam === 'Bye' ? awayTeam : homeTeam,
             awayTeam: awayTeam === 'Bye' ? null : awayTeam,
-            matchId: matchIdText,
+            matchId: netballConnectId,
             isBye
           });
         }
@@ -103,13 +106,66 @@ export function FixtureImporter() {
     }
   };
 
-  const findTeamByName = (teamName: string) => {
-    if (!teamName || teamName.toLowerCase() === 'bye') return null;
+  const parseTeamInfo = (fullTeamName: string) => {
+    if (!fullTeamName || fullTeamName.toLowerCase() === 'bye') {
+      return { clubName: '', teamName: '', fullName: fullTeamName };
+    }
 
-    return clubTeams.find(team => 
-      team.name.toLowerCase().includes(teamName.toLowerCase()) ||
-      teamName.toLowerCase().includes(team.name.toLowerCase())
+    // Split by spaces and take the last word as team name, rest as club name
+    const parts = fullTeamName.trim().split(/\s+/);
+    if (parts.length === 1) {
+      return { clubName: '', teamName: parts[0], fullName: fullTeamName };
+    }
+
+    const teamName = parts[parts.length - 1];
+    const clubName = parts.slice(0, -1).join(' ');
+    
+    return { clubName, teamName, fullName: fullTeamName };
+  };
+
+  const findTeamByName = (fullTeamName: string) => {
+    if (!fullTeamName || fullTeamName.toLowerCase() === 'bye') return null;
+
+    const { clubName, teamName } = parseTeamInfo(fullTeamName);
+
+    // Try exact match first
+    let matchedTeam = clubTeams.find(team => 
+      team.name.toLowerCase() === teamName.toLowerCase()
     );
+
+    // If no exact match, try partial matches
+    if (!matchedTeam) {
+      matchedTeam = clubTeams.find(team => 
+        team.name.toLowerCase().includes(teamName.toLowerCase()) ||
+        teamName.toLowerCase().includes(team.name.toLowerCase())
+      );
+    }
+
+    return matchedTeam;
+  };
+
+  const getTeamMatchStatus = (fullTeamName: string) => {
+    if (!fullTeamName || fullTeamName.toLowerCase() === 'bye') {
+      return { status: 'bye', message: 'BYE' };
+    }
+
+    const existingTeam = findTeamByName(fullTeamName);
+    const { clubName, teamName } = parseTeamInfo(fullTeamName);
+    
+    if (existingTeam) {
+      return { 
+        status: 'matched', 
+        message: `✓ Matches "${existingTeam.name}"`,
+        team: existingTeam
+      };
+    } else {
+      return { 
+        status: 'new', 
+        message: `⚠ New team needed: Club "${clubName}", Team "${teamName}"`,
+        clubName,
+        teamName
+      };
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,7 +244,7 @@ export function FixtureImporter() {
               statusId: game.isBye ? 6 : 1, // BYE or upcoming
               seasonId: 1, // Default to current season
               venue: game.isBye ? null : "TBD",
-              notes: `Imported from CSV - ${game.matchId}`
+              notes: `Imported from CSV - NetballConnect ID: ${game.matchId}`
             };
 
             await apiClient.post('/api/games', gameData);
@@ -238,15 +294,63 @@ export function FixtureImporter() {
         {previewData.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-medium">Preview (first 10 games):</h4>
-            <div className="max-h-60 overflow-y-auto border rounded p-2 space-y-1">
-              {previewData.map((game, index) => (
-                <div key={index} className="text-sm">
-                  <span className="font-medium">{game.round}</span> - {game.date}: 
-                  <span className={game.isBye ? "text-gray-500 italic" : ""}>
-                    {game.homeTeam} {game.awayTeam ? `vs ${game.awayTeam}` : '(BYE)'}
-                  </span>
-                </div>
-              ))}
+            <div className="max-h-80 overflow-y-auto border rounded p-3 space-y-3">
+              {previewData.map((game, index) => {
+                const homeTeamStatus = getTeamMatchStatus(game.homeTeam);
+                const awayTeamStatus = game.awayTeam ? getTeamMatchStatus(game.awayTeam) : null;
+                
+                return (
+                  <div key={index} className="text-sm border-b pb-2 last:border-b-0">
+                    <div className="font-medium text-blue-600 mb-1">
+                      {game.round} - {game.date} - NetballConnect ID: {game.matchId}
+                    </div>
+                    
+                    <div className="space-y-1 ml-2">
+                      <div className="flex items-start gap-2">
+                        <span className="text-gray-600 min-w-[60px]">Home:</span>
+                        <div>
+                          <div className="font-medium">{game.homeTeam}</div>
+                          <div className={`text-xs ${
+                            homeTeamStatus.status === 'matched' ? 'text-green-600' : 
+                            homeTeamStatus.status === 'new' ? 'text-orange-600' : 'text-gray-500'
+                          }`}>
+                            {homeTeamStatus.message}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {game.awayTeam && awayTeamStatus && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-gray-600 min-w-[60px]">Away:</span>
+                          <div>
+                            <div className="font-medium">{game.awayTeam}</div>
+                            <div className={`text-xs ${
+                              awayTeamStatus.status === 'matched' ? 'text-green-600' : 
+                              awayTeamStatus.status === 'new' ? 'text-orange-600' : 'text-gray-500'
+                            }`}>
+                              {awayTeamStatus.message}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {game.isBye && (
+                        <div className="text-gray-500 italic text-xs ml-[68px]">
+                          This is a BYE round
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
+              <div className="font-medium mb-1">Legend:</div>
+              <div className="space-y-1">
+                <div><span className="text-green-600">✓</span> Team found and will be matched</div>
+                <div><span className="text-orange-600">⚠</span> New team will need to be created</div>
+              </div>
             </div>
           </div>
         )}
