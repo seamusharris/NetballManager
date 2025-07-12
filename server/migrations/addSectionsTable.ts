@@ -31,7 +31,8 @@ export async function addSectionsTable() {
   console.log("Sections table and team section_id column added successfully");
 }
 
-if (require.main === module) {
+// ES module equivalent of require.main === module check
+if (import.meta.url === `file://${process.argv[1]}`) {
   addSectionsTable()
     .then(() => {
       console.log("Migration completed successfully");
