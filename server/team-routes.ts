@@ -105,11 +105,12 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get all teams for current user's club (matches players endpoint pattern)
+  // DEPRECATED: Use /api/clubs/:clubId/teams instead
+  // This endpoint is kept for backward compatibility but should not be used
   app.get("/api/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = req.user?.currentClubId;
-      console.log(`Teams endpoint called for club ${clubId}`);
+      console.log(`DEPRECATED /api/teams endpoint called for club ${clubId}`);
       console.log(`User context:`, req.user?.clubs?.map(c => c.clubId));
 
       if (!clubId) {

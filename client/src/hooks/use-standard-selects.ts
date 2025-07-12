@@ -69,9 +69,8 @@ export function useSectionsSelect(seasonId: number | undefined, options: Standar
 export function useTeamsSelect(options: StandardSelectHookOptions = {}) {
   const { transform, filterActive = true, ...queryOptions } = options;
   
-  // Get the current club ID from the URL or context
+  // Get the current club ID from the URL
   const getCurrentClubId = () => {
-    // Try to get club ID from URL first - check multiple patterns
     const pathname = window.location.pathname;
     
     // Pattern 1: /club/123/teams
@@ -92,13 +91,25 @@ export function useTeamsSelect(options: StandardSelectHookOptions = {}) {
       return parseInt(urlMatch[1]);
     }
     
-    // Fallback to context (for backward compatibility)
+    // If no club ID found in URL, we can't proceed
+    console.warn('No club ID found in URL pathname:', pathname);
     return null;
   };
   
   const clubId = getCurrentClubId();
-  const endpoint = clubId ? `/api/clubs/${clubId}/teams` : '/api/teams';
-  const queryKey = clubId ? ['teams', clubId] : ['teams'];
+  
+  // Always use the club-specific endpoint - no fallback to /api/teams
+  if (!clubId) {
+    return {
+      data: [],
+      isLoading: false,
+      error: new Error('No club ID found in URL'),
+      isError: true
+    };
+  }
+  
+  const endpoint = `/api/clubs/${clubId}/teams`;
+  const queryKey = ['teams', clubId];
   
   return useQuery({
     queryKey,
