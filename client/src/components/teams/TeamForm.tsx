@@ -42,6 +42,17 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const form = useForm<TeamFormData>({
+    resolver: zodResolver(teamFormSchema),
+    defaultValues: {
+      name: team?.name || '',
+      division: team?.division || '',
+      clubId: clubId || 0,
+      seasonId: team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0]?.id || 0,
+      isActive: team?.isActive ?? true,
+    },
+  });
+
   const selectedSeasonId = form.watch('seasonId');
 
   const { data: sections = [] } = useQuery({
@@ -102,17 +113,6 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
-
-  const form = useForm<TeamFormData>({
-    resolver: zodResolver(teamFormSchema),
-    defaultValues: {
-      name: team?.name || '',
-      division: team?.division || '',
-      clubId: clubId || 0,
-      seasonId: team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0]?.id || 0,
-      isActive: team?.isActive ?? true,
-    },
-  });
 
   const handleSubmit = (data: TeamFormData) => {
     if (team) {
