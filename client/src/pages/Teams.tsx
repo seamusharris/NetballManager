@@ -102,13 +102,13 @@ export default function Teams() {
         { label: 'Teams' }
       ]}
       actions={
-        <ActionButton
+        <Button
           onClick={() => setIsCreateDialogOpen(true)}
-          icon={Plus}
-          variant="primary"
+          className="flex items-center gap-2"
         >
+          <Plus className="h-4 w-4" />
           Add Team
-        </ActionButton>
+        </Button>
       }
       status={activeSeason?.name || 'No Active Season'}
     >
