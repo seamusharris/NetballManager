@@ -664,7 +664,8 @@ export class DatabaseStorage implements IStorage {
 
   // Season methods
   async getSeasons(): Promise<Season[]> {
-    return await db.select().from(seasons).orderBy(desc(seasons.year), seasons.displayOrder);
+    // Order by year descending, then display_order ascending
+    return await db.select().from(seasons).orderBy(desc(seasons.year), asc(seasons.display_order));
   }
 
   async getSeason(id: number): Promise<Season | undefined> {
@@ -673,7 +674,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActiveSeason(): Promise<Season | undefined> {
-    const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true));
+    // Fix: Use correct column name for is_active
+    const [season] = await db.select().from(seasons).where(eq(seasons.is_active, true));
     return season || undefined;
   }
 
@@ -693,12 +695,12 @@ export class DatabaseStorage implements IStorage {
 
   async setActiveSeason(id: number): Promise<Season | undefined> {
     // First deactivate all seasons
-    await db.update(seasons).set({ isActive: false });
+    await db.update(seasons).set({ is_active: false });
 
     // Then activate the specified season
     const [season] = await db
       .update(seasons)
-      .set({ isActive: true })
+      .set({ is_active: true })
       .where(eq(seasons.id, id))
       .returning();
 

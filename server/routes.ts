@@ -31,6 +31,7 @@ import {
   requireAuth,
   standardAuth
 } from "./auth-middleware";
+import { transformToApiFormat } from './api-utils';
 
 // Database health check function
 async function checkPoolHealth(): Promise<boolean> {
@@ -278,13 +279,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await db.execute(sql`
             INSERT INTO teams (
-              id, club_id, season_id, name, division, is_active
+              id, club_id, season_id, name, division_id, is_active
             ) VALUES (
               ${team.id}, 
               ${team.clubId}, 
               ${team.seasonId}, 
               ${team.name || "Unknown Team"}, 
-              ${team.division || null}, 
+              ${team.divisionId || null}, 
               ${team.isActive !== false}
             )
           `);
@@ -545,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`REST endpoint: Fetching players for club ${clubId}`);
       const players = await storage.getPlayersByClub(clubId);
-      res.json(players);
+      res.json(transformToApiFormat(players));
     } catch (error) {
       console.error('Error fetching players:', error);
       res.status(500).json({ message: "Failed to fetch players" });
@@ -563,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Legacy endpoint: Fetching players for club ${clubId}`);
       const players = await storage.getPlayersByClub(clubId);
-      res.json(players);
+      res.json(transformToApiFormat(players));
     } catch (error) {
       console.error('Error fetching players:', error);
       res.status(500).json({ message: "Failed to fetch players" });
@@ -653,7 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           success: true,
           message: `Player ${playerId} seasons updated successfully`,
-          seasons: seasonsResult.rows
+          seasons: transformToApiFormat(seasonsResult.rows)
         });
 
       } catch (dbError) {
@@ -710,7 +711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE cp.player_id = $1 AND cp.is_active = true
       `, [playerId]);
 
-      res.json(result.rows);
+      res.json(transformToApiFormat(result.rows));
     } catch (error) {
       console.error("Error fetching player clubs:", error);
       res.status(500).json({ message: "Failed to fetch player clubs" });
@@ -870,7 +871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
 
       const club = result.rows[0];
-      res.status(201).json({
+      res.status(201).json(transformToApiFormat({
         id: club.id,
         name: club.name,
         code: club.code,
@@ -880,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
-      });
+      }));
     } catch (error) {
       console.error("Error creating club:", error);
       res.status(500).json({ message: "Failed to create club" });
@@ -934,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor, clubId]);
 
       const club = result.rows[0];
-      res.json({
+      res.json(transformToApiFormat({
         id: club.id,
         name: club.name,
         code: club.code,
@@ -944,7 +945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
-      });
+      }));
     } catch (error) {
       console.error("Error updating club:", error);
       res.status(500).json({ message: "Failed to update club" });
@@ -990,7 +991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!player) {
         return res.status(404).json({ message: "Player not found" });
       }
-      res.json(player);
+      res.json(transformToApiFormat(player));
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch player" });
     }
@@ -999,9 +1000,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get seasons for a specific player
   app.get("/api/players/:id/seasons", async (req, res) => {
     try {
-      const playerId = Number(req.params.id);
-
-      //      // Import our specialized player-season function
+      // Import the player-season route handler function
       const { getPlayerSeasons } = await import('./player-season-routes');
 
             // Use our function to get player seasons
@@ -1036,7 +1035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Season IDs for player ${playerId}: ${result.rows.map(s => s.id).join(', ')}`);
       }
 
-      res.json(result.rows);
+      res.json(transformToApiFormat(result.rows));
     } catch (error) {
       console.error(`Error fetching player seasons: ${error}`);
       res.status(500).json({ message: "Failed to fetch player seasons" });
@@ -1139,7 +1138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('=== PLAYER CREATION REQUEST COMPLETE ===\n');
-      res.status(201).json(player);
+      res.status(201).json(transformToApiFormat(player));
     } catch (error) {
       console.error("=== PLAYER CREATION ERROR ===");
       console.error("Error details:", error);
@@ -1239,7 +1238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create a more complete response that includes the seasons
         const enhancedResponse = {
           ...updatedPlayer,
-          seasons: playerSeasons || []
+          seasons: transformToApiFormat(playerSeasons || [])
         };
 
         console.log(`Player ${id} successfully updated with seasons:`, playerSeasons);
@@ -1250,7 +1249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error getting player seasons for response:", error);
         // Still return the player data even if we couldn't get the seasons
-        return res.json(updatedPlayer);
+        return res.json(transformToApiFormat(updatedPlayer));
       }
     } catch (error) {
       console.error("Error updating player:", error);
@@ -1350,10 +1349,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           s.end_date as season_end, 
           s.is_active as season_active,
           ht.name as home_team_name, 
-          ht.division as home_team_division, 
+          ht.division_id as home_team_division, 
           ht.club_id as home_club_id,
           at.name as away_team_name, 
-          at.division as away_team_division, 
+          at.division_id as away_team_division, 
           at.club_id as away_club_id,
           hc.name as home_club_name, 
           hc.code as home_club_code,
@@ -1376,7 +1375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`REST endpoint found ${result.rows.length} games for club ${clubId}`);
 
       const transformedGames = result.rows.map(transformGameRow);
-      res.json(transformedGames);
+      res.json(transformToApiFormat(transformedGames));
     } catch (error) {
       console.error('Error fetching club games via REST:', error);
       res.status(500).json({ error: 'Failed to fetch club games' });
@@ -1427,10 +1426,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             s.end_date as season_end, 
             s.is_active as season_active,
             ht.name as home_team_name, 
-            ht.division as home_team_division, 
+            ht.division_id as home_team_division, 
             ht.club_id as home_club_id,
             at.name as away_team_name, 
-            at.division as away_team_division, 
+            at.division_id as away_team_division, 
             at.club_id as away_club_id,
             hc.name as home_club_name, 
             hc.code as home_club_code,
@@ -1463,10 +1462,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             s.end_date as season_end, 
             s.is_active as season_active,
             ht.name as home_team_name, 
-            ht.division as home_team_division, 
+            ht.division_id as home_team_division, 
             ht.club_id as home_club_id,
             at.name as away_team_name, 
-            at.division as away_team_division, 
+            at.division_id as away_team_division, 
             at.club_id as away_club_id,
             hc.name as home_club_name, 
             hc.code as home_club_code,
@@ -1492,7 +1491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // UNIFIED TRANSFORMATION - guarantees consistent camelCase format including statusIsCompleted
       const games = result.rows.map(transformGameRow);
 
-      res.json(games);
+      res.json(transformToApiFormat(games));
     } catch (error) {
       console.error('Error fetching games:', error);
       res.status(500).json({ message: "Failed to fetch games" });
@@ -1535,10 +1534,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           s.end_date as season_end, 
           s.is_active as season_active,
           ht.name as home_team_name, 
-          ht.division as home_team_division, 
+          ht.division_id as home_team_division, 
           ht.club_id as home_club_id,
           at.name as away_team_name, 
-          at.division as away_team_division, 
+          at.division_id as away_team_division, 
           at.club_id as away_club_id,
           hc.name as home_club_name, 
           hc.code as home_club_code,
@@ -1560,7 +1559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use same transformation as main games endpoint
       const games = result.rows.map(transformGameRow);
 
-      res.json(games);
+      res.json(transformToApiFormat(games));
     } catch (error) {
       console.error('Error fetching team games:', error);
       res.status(500).json({ message: "Failed to fetch team games" });
@@ -1577,8 +1576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           g.*,
           gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.home_team_goals, gs.away_team_goals,
           s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
-          ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
-          at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
+          ht.name as home_team_name, ht.division_id as home_team_division, ht.club_id as home_club_id,
+          at.name as away_team_name, at.division_id as away_team_division, at.club_id as away_club_id,
           hc.name as home_club_name, hc.code as home_club_code,
           ac.name as away_club_name, ac.code as away_club_code
         FROM games g
@@ -1646,7 +1645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         away_team_name: row.away_team_name
       };
 
-      res.json(game);
+      res.json(transformToApiFormat(game));
     } catch (error) {
       console.error('Error fetching game:', error);
       res.status(500).json({ message: "Failed to fetch game" });
@@ -1694,7 +1693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const game = await storage.createGame(gameData);
         console.log("Created BYE game:", game);
-        return res.status(201).json(game);
+        return res.status(201).json(transformToApiFormat(game));
       } else {
         // For regular games, ensure we have both home and away teams
         if (!req.body.homeTeamId || !req.body.awayTeamId) {
@@ -1725,7 +1724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Creating regular game:", gameData);
         const game = await storage.createGame(gameData);
         console.log("Created regular game:", game);
-        return res.status(201).json(game);
+        return res.status(201).json(transformToApiFormat(game));
       }
     } catch (error) {
       const err = error as Error;
@@ -1746,7 +1745,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Set the 4th game as upcoming
         const fourthGame = games[3];
         await storage.updateGame(fourthGame.id, { completed: false });
-        return res.json({ message: "Fourth game updated as upcoming", game: fourthGame });
+        return res.json({ message: "Fourth game updated as upcoming", game: transformToApiFormat(fourthGame) });
       }
 
       // Add a new upcoming game (e.g., June 2, 2025)
@@ -1757,7 +1756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completed: false
       });
 
-      res.status(201).json({ message: "New upcoming game created", game: newGame });
+      res.status(201).json({ message: "New upcoming game created", game: transformToApiFormat(newGame) });
     } catch (error) {
       res.status(500).json({ message: "Failed to create upcoming game" });
     }
@@ -1805,7 +1804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Game updated successfully:', updatedGame);
 
-      res.json(updatedGame);
+      res.json(transformToApiFormat(updatedGame));
     } catch (error) {
       console.error("Game update error:", error);
       res.status(500).json({ message: "Failed to update game" });
@@ -1833,7 +1832,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameId = Number(req.params.gameId);
       const rosters = await storage.getRostersByGame(gameId);
-      res.json(rosters);
+      res.json(transformToApiFormat(rosters));
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch rosters" });
     }
@@ -1886,7 +1885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const roster = await storage.createRoster(parsedData.data);
-      res.status(201).json(roster);
+      res.status(201).json(transformToApiFormat(roster));
     } catch (error) {
       res.status(500).json({ message: "Failed to create roster position" });
     }
@@ -1899,7 +1898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedRoster) {
         return res.status(404).json({ message: "Roster position not found" });
       }
-      res.json(updatedRoster);
+      res.json(transformToApiFormat(updatedRoster));
     } catch (error) {
       res.status(500).json({ message: "Failed to update roster position" });
     }
@@ -2084,7 +2083,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Club-scoped batch rosters request for club ${clubId}, games:`, gameIds);
 
-      const gameIdInts = gameIds.map(id => parseInt(id));
+      const gameIdInts = gameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+      if (gameIdInts.length === 0) {
+        return res.json({});
+      }
 
       const rostersData = await db.select()
         .from(rosters)
@@ -2107,7 +2109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log(`Club-scoped batch rosters response: found rosters for ${Object.keys(rostersMap).filter(id => rostersMap[id].length > 0).length} games`);
-      res.json(rostersMap);
+      res.json(transformToApiFormat(rostersMap));
     } catch (error) {
       console.error('Club-scoped batch rosters fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch batch rosters', details: error.message });
@@ -2163,7 +2165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const rostersCount = Object.entries(rostersMap).map(([gameId, rosters]) => `${gameId}:${rosters.length}`).join(', ');
       console.log(`POST Batch rosters endpoint successfully returned rosters for ${validGameIds.length} games. Counts: ${rostersCount}`);
-      res.json(rostersMap);
+      res.json(transformToApiFormat(rostersMap));
     } catch (error) {
       console.error(`Error in POST batch game rosters endpoint:`, error);
       res.status(500).json({ error: "Failed to get batch game rosters" });
@@ -2183,7 +2185,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Club-scoped POST Batch stats endpoint for club ${clubId}, gameIds:`, gameIds);
 
-      const gameIdInts = gameIds.map(id => parseInt(id));
+      const gameIdInts = gameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+      if (gameIdInts.length === 0) {
+        return res.json({});
+      }
 
       const stats = await db.select()
         .from(gameStats)
@@ -2206,7 +2211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log(`Club-scoped batch stats response: found stats for ${Object.keys(statsMap).filter(id => statsMap[id].length > 0).length} games`);
-      res.json(statsMap);
+      res.json(transformToApiFormat(statsMap));
     } catch (error) {
       console.error('Club-scoped batch stats fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch batch stats', details: error.message });
@@ -2260,7 +2265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }, {} as Record<number, any[]>);
 
       console.log(`POST Batch endpoint successfully returned stats for ${validGameIds.length} games`);
-      res.json(statsMap);
+      res.json(transformToApiFormat(statsMap));
     } catch (error) {
       console.error(`Error in POST batch game stats endpoint:`, error);
       res.status(500).json({ error: "Failed to get batch game stats" });
@@ -2272,7 +2277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameId = Number(req.params.gameId);
       const stats = await storage.getGameStatsByGame(gameId);
-      res.json(stats);
+      res.json(transformToApiFormat(stats));
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch game stats" });
     }
@@ -2351,7 +2356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log("Game stat created/updated successfully:", stat);
         res.set('Cache-Control', 'no-cache');
-        res.status(201).json(stat);
+        res.status(201).json(transformToApiFormat(stat));
       } catch (innerError) {
         console.error("Inner error handling game stats:", innerError);
         throw innerError;
@@ -2382,7 +2387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Cache-Control', 'no-cache');
       console.log(`Updated game stat for game ${updatedStat.gameId}, cache invalidated`);
 
-      res.json(updatedStat);
+      res.json(transformToApiFormat(updatedStat));
     } catch (error) {
       console.error("Failed to update game stat:", error);
       res.status(500).json({ message: "Failed to update game stat" });
@@ -2404,15 +2409,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT 
           t.id,
           t.name,
-          t.division,
+          t.division_id,
           t.club_id,
           t.season_id,
           c.name as club_name,
-          s.name as season_name
+          s.name as season_name,
+          d.display_name as division_name
         FROM teams t
         JOIN team_players tp ON t.id = tp.team_id
         JOIN clubs c ON t.club_id = c.id
         JOIN seasons s ON t.season_id = s.id
+        LEFT JOIN divisions d ON t.division_id = d.id
         WHERE tp.player_id = ${playerId} 
           AND t.is_active = true 
           AND t.name != 'Bye'
@@ -2424,14 +2431,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mappedTeams = teams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        division: row.division,
+        divisionId: row.division_id,
+        divisionName: row.division_name,
         clubId: row.club_id,
         seasonId: row.season_id,
         clubName: row.club_name,
         seasonName: row.season_name
       }));
 
-      res.json(mappedTeams);
+      res.json(transformToApiFormat(mappedTeams));
     } catch (error) {
       console.error("Error fetching player teams:", error);
       res.status(500).json({ message: "Failed to fetch player teams" });
@@ -2442,7 +2450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/seasons', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const allSeasons = await storage.getSeasons();
-      res.json(allSeasons);
+      res.json(transformToApiFormat(allSeasons));
     } catch (error) {
       console.error('Error fetching seasons:', error);
       res.status(500).json({ message: 'Failed to fetch seasons' });
@@ -2456,7 +2464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!activeSeason) {
         return res.status(404).json({ message: 'No active season found' });
       }
-      res.json(activeSeason);
+      res.json(transformToApiFormat(activeSeason));
     } catch (error) {
       console.error('Error fetching active season:', error);
       res.status(500).json({ message: 'Failed to fetch active season' });
@@ -2471,7 +2479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!season) {
         return res.status(404).json({ message: 'Season not found' });
       }
-      res.json(season);
+      res.json(transformToApiFormat(season));
     } catch (error) {
       console.error(`Error fetching season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to fetch season' });
@@ -2483,7 +2491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const seasonData = insertSeasonSchema.parse(req.body);
       const season = await storage.createSeason(seasonData);
-      res.status(201).json(season);
+      res.status(201).json(transformToApiFormat(season));
     } catch (error) {
       console.error('Error creating season:', error);
       res.status(400).json({ message: 'Invalid season data' });
@@ -2500,7 +2508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedSeason) {
         return res.status(404).json({ message: 'Season not found' });
       }
-      res.json(updatedSeason);
+      res.json(transformToApiFormat(updatedSeason));
     } catch (error) {
       console.error(`Error updating season ${req.params.id}:`, error);
       res.status(400).json({ message: 'Invalid season data' });
@@ -2515,7 +2523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!season) {
         return res.status(404).json({ message: 'Season not found' });
       }
-      res.json(season);
+      res.json(transformToApiFormat(season));
     } catch (error) {
       console.error(`Error activating season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to activate season' });
@@ -2551,7 +2559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const seasonId = parseInt(req.params.id);
       const games = await storage.getGamesBySeason(seasonId);
-      res.json(games);
+      res.json(transformToApiFormat(games));
     } catch (error) {
       console.error(`Error fetching games for season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to fetch games for season' });
@@ -2588,7 +2596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log('Returning user clubs:', userClubs);
-      res.json(userClubs);
+      res.json(transformToApiFormat(userClubs));
     } catch (error) {
       console.error('Error fetching user clubs:', error);
       // Return empty array on error to prevent app crashes
@@ -2627,7 +2635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teamsCount: parseInt(row.teams_count) || 0
       }));
 
-      res.json(clubs);
+      res.json(transformToApiFormat(clubs));
     } catch (error) {
       console.error('Error fetching clubs:', error);
       res.status(500).json({ error: 'Failed to fetch clubs' });
@@ -2649,7 +2657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Club not found' });
       }
       const club = result.rows[0];
-      res.json({
+      res.json(transformToApiFormat({
         id: club.id,
         name: club.name,
         code: club.code,
@@ -2662,7 +2670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: club.is_active,
         createdAt: club.created_at,
         updatedAt: club.updated_at
-      });
+      }));
     } catch (error) {
       console.error('Error fetching club details:', error);
       res.status(500).json({ error: 'Failed to fetch club details' });
@@ -2686,9 +2694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
 
-  // Register section routes
-  const { registerSectionRoutes } = await import('./section-routes');
-  registerSectionRoutes(app);
+  // Register section routes - REMOVED (section system deprecated)
   
   // Register game-centric stats routes
   const { registerGameStatsRoutes } = await import('./game-stats-routes');
@@ -2710,7 +2716,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rosters = await storage.getRostersByGame(gameId);
       
       console.log(`Found ${rosters.length} roster entries for game ${gameId}`);
-      res.json(rosters);
+      res.json(transformToApiFormat(rosters));
     } catch (error) {
       console.error('Error fetching game-centric rosters:', error);
       res.status(500).json({ error: 'Failed to fetch rosters' });
@@ -2767,7 +2773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE tga.game_id = ${gameId} AND tga.team_id = ${teamId}
       `);
 
-      res.json(awardsResult.rows.map(row => ({
+      res.json(transformToApiFormat(awardsResult.rows.map(row => ({
         id: row.id,
         gameId: row.game_id,
         teamId: row.team_id,
@@ -2777,7 +2783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enteredBy: row.entered_by,
         createdAt: row.created_at,
         updatedAt: row.updated_at
-      })));
+      }))));
     } catch (error) {
       console.error('Error fetching team game awards:', error);
       res.status(500).json({ error: 'Failed to fetch team game awards' });
@@ -2846,7 +2852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         RETURNING *
       `);
 
-      res.json({ success: true, award: result.rows[0] });
+      res.json({ success: true, award: transformToApiFormat(result.rows[0]) });
     } catch (error) {
       console.error('Error saving team game award:', error);
       res.status(500).json({ error: 'Failed to save team game award' });
@@ -2893,12 +2899,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const notes = notesResult.rows[0];
-      res.json({
+      res.json(transformToApiFormat({
         notes: notes.notes,
         enteredBy: notes.entered_by,
         createdAt: notes.created_at,
         updatedAt: notes.updated_at
-      });
+      }));
     } catch (error) {
       console.error('Error fetching team game notes:', error);
       res.status(500).json({ error: 'Failed to fetch team game notes' });
@@ -2944,7 +2950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         RETURNING *
       `);
 
-      res.json({ success: true, notes: result.rows[0] });
+      res.json(transformToApiFormat({ success: true, notes: result.rows[0] }));
     } catch (error) {
       console.error('Error saving team game notes:', error);
       res.status(500).json({ error: 'Failed to save team game notes' });
@@ -3026,7 +3032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { reassignAllPlayersToWarrandyte } = await import('./reassign-all-players-to-warrandyte');
       const result = await reassignAllPlayersToWarrandyte();
-      res.json(result);
+      res.json(transformToApiFormat(result));
     } catch (error) {
       console.error('Error reassigning players to Warrandyte:', error);
       res.status(500).json({ error: 'Failed to reassign players to Warrandyte' });
@@ -3040,7 +3046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const playerId = parseInt(req.params.playerId);
       const clubs = await storage.getPlayerClubs(playerId);
-      res.json(clubs);
+      res.json(transformToApiFormat(clubs));
     } catch (error) {
       console.error('Error fetching player clubs:', error);
       res.status(500).json({ error: 'Failed to fetch player clubs' });
@@ -3058,10 +3064,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                s.name as season_name, 
                s.year as season_year,
                c.name as club_name,
-               c.code as club_code
+               c.code as club_code,
+               d.display_name as division_name
         FROM teams t
         LEFT JOIN seasons s ON t.season_id = s.id
         LEFT JOIN clubs c ON t.club_id = c.id
+        LEFT JOIN divisions d ON t.division_id = d.id
         WHERE t.name != 'Bye'
         ORDER BY c.name, t.name
       `);
@@ -3071,7 +3079,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mappedTeams = teams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        division: row.division,
+        divisionId: row.division_id,
+        divisionName: row.division_name,
         clubId: row.club_id,
         seasonId: row.season_id,
         isActive: row.is_active,
@@ -3083,17 +3092,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clubCode: row.club_code
       }));
 
-      res.json(mappedTeams);
+      res.json(transformToApiFormat(mappedTeams));
     } catch (error) {
       console.error('Error fetching all teams:', error);
       res.status(500).json({ error: 'Failed to fetch all teams' });
     }
   });
 
-  // Teams routes
+  // Teams routes - DEPRECATED: Use team-routes.ts instead
+  // This endpoint is kept for backward compatibility but should be removed
   app.get("/api/teams", async (req, res) => {
     try {
-      console.log(`Teams endpoint called for club ${req.user.currentClubId}`);
+      console.log(`DEPRECATED /api/teams endpoint called for club ${req.user.currentClubId}`);
       console.log('User context:', req.user.clubs);
       console.log('Query params:', req.query);
 
@@ -3101,42 +3111,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No current club selected" });
       }
 
-// Fetch teams for current club only
-      {
-        console.log(`Fetching teams for club ${req.user.currentClubId}`);
+      console.log(`Fetching teams for club ${req.user.currentClubId}`);
 
-        const teams = await db.execute(sql`
-          SELECT t.*, 
-                 s.name as season_name, 
-                 s.year as season_year
-          FROM teams t
-          LEFT JOIN seasons s ON t.season_id = s.id
-          WHERE t.club_id = ${req.user.currentClubId}
-          ORDER BY t.name
-        `);
+      const teams = await db.execute(sql`
+        SELECT 
+          t.id,
+          t.name,
+          t.division_id,
+          t.is_active,
+          t.created_at,
+          t.updated_at,
+          s.id as season_id,
+          s.name as season_name, 
+          s.year as season_year,
+          s.start_date as season_start_date,
+          s.end_date as season_end_date,
+          d.display_name as division_name
+        FROM teams t
+        LEFT JOIN seasons s ON t.season_id = s.id
+        LEFT JOIN divisions d ON t.division_id = d.id
+        WHERE t.club_id = ${req.user.currentClubId} AND t.is_active = true
+        ORDER BY s.start_date DESC, t.name
+      `);
 
-        console.log(`Found ${teams.rows.length} teams for club ${req.user.currentClubId}`);
+      console.log(`Raw team query results for club ${req.user.currentClubId}:`, teams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        division_id: row.division_id,
+        division_name: row.division_name
+      })));
 
-        // Map the response to include season information properly
-        const mappedTeams = teams.rows.map(row => ({
-          id: row.id,
-          name: row.name,
-          division: row.division,
-          clubId: row.club_id,
-          seasonId: row.season_id,
-          isActive: row.is_active,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-          seasonName: row.season_name,
-          seasonYear: row.season_year
-        }));
+      const mappedTeams = teams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        divisionId: row.division_id,
+        divisionName: row.division_name,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        seasonId: row.season_id,
+        seasonName: row.season_name,
+        seasonYear: row.season_year,
+        seasonStartDate: row.season_start_date,
+        seasonEndDate: row.season_end_date,
+      }));
 
-        res.json(mappedTeams);
-      }
+      res.json(transformToApiFormat(mappedTeams));
     } catch (error) {
-      console.error('Error fetching teams:', error);
-      res.status(500).json({ error: 'Failed to fetch teams' });
-    }  });
+      console.error('Error fetching all teams:', error);
+      res.status(500).json({ error: 'Failed to fetch all teams' });
+    }
+  });
 
   // Admin endpoint to add all players to Warrandyte
 
@@ -3298,7 +3323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Final response being sent:`, JSON.stringify(mappedPlayers, null, 2));
       console.log(`=== UNASSIGNED PLAYERS ENDPOINT COMPLETE ===`);
-      res.json(mappedPlayers);
+      res.json(transformToApiFormat(mappedPlayers));
     } catch (error) {
       console.error('Error fetching unassigned players:', error);
       res.status(500).json({ error: 'Failed to fetch unassigned players' });
@@ -3309,7 +3334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/players', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const players = await storage.getPlayers();
-      res.json(players);
+      res.json(transformToApiFormat(players));
     } catch (error) {
       console.error('Error fetching players:', error);
       res.status(500).json({ error: 'Failed to fetch players' });
@@ -3451,7 +3476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusOpponentGoals: row.status_away_team_goals
       }));
 
-      res.json(games);
+      res.json(transformToApiFormat(games));
     } catch (error) {
       console.error('Error fetching games:', error);
       res.status(500).json({ error: 'Failed to fetch games' });
@@ -3605,7 +3630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarColor: row.avatar_color
       }));
 
-      res.json(mappedRoster);
+      res.json(transformToApiFormat(mappedRoster));
     } catch (error) {
       console.error('Error fetching team roster entries:', error);
       res.status(500).json({ error: 'Failed to fetch roster entries' });

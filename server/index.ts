@@ -7,6 +7,7 @@ import gameStatusRoutes from './game-status-routes';
 import { registerGamePermissionsRoutes } from './game-permissions-routes';
 import { registerPlayerBorrowingRoutes } from './player-borrowing-routes';
 import { registerUserManagementRoutes } from './user-management-routes';
+import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
 import { loadUserPermissions } from './auth-middleware';
@@ -79,6 +80,7 @@ app.use('/api/game-statuses', gameStatusRoutes);
 registerGamePermissionsRoutes(app);
 registerPlayerBorrowingRoutes(app);
 registerUserManagementRoutes(app);
+registerAgeGroupsSectionsRoutes(app);
 
 // Start server with health check
 const server = app.listen(PORT, async () => {

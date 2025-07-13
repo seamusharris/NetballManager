@@ -6,14 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Team, Season } from '@shared/schema';
+import { Team, Season, Division } from '@shared/schema';
 
-interface Section {
+interface DivisionOption {
   id: number;
   displayName: string;
+  ageGroupName: string;
+  sectionName: string;
   teamCount: number;
-  maxTeams: number;
 }
+
 import { useToast } from '@/hooks/use-toast';
 import { useCreateMutation } from '@/hooks/use-form-mutations';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -23,7 +25,7 @@ const teamFormSchema = z.object({
   name: z.string().min(1, 'Team name is required'),
   clubId: z.number(),
   seasonId: z.number(),
-  sectionId: z.number().optional(),
+  divisionId: z.number().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -37,20 +39,20 @@ interface TeamFormProps {
   onCancel?: () => void;
 }
 
-// Define the SectionSelect component
-interface SectionSelectProps {
+// Define the DivisionSelect component
+interface DivisionSelectProps {
   value: number | undefined;
   onValueChange: (value: number | undefined) => void;
-  sections: Section[] | undefined;
+  divisions: DivisionOption[] | undefined;
   isLoading: boolean;
   error: any;
   onRetry: () => void;
 }
 
-const SectionSelect: React.FC<SectionSelectProps> = ({
+const DivisionSelect: React.FC<DivisionSelectProps> = ({
   value,
   onValueChange,
-  sections,
+  divisions,
   isLoading,
   error,
   onRetry,
@@ -61,23 +63,23 @@ const SectionSelect: React.FC<SectionSelectProps> = ({
         <SelectTrigger>
           <SelectValue
             placeholder={
-              isLoading ? 'Loading sections...' : error ? 'Error loading sections' : 'Select a section'
+              isLoading ? 'Loading divisions...' : error ? 'Error loading divisions' : 'Select a division'
             }
           />
         </SelectTrigger>
       </FormControl>
       <SelectContent>
-        <SelectItem value="none">No section</SelectItem>
-        {sections && sections.length > 0 && (
-          sections.map((section) => (
-            <SelectItem key={section.id} value={section.id.toString()}>
-              {section.displayName} ({section.teamCount} teams)
+        <SelectItem value="none">No division</SelectItem>
+        {divisions && divisions.length > 0 && (
+          divisions.map((division) => (
+            <SelectItem key={division.id} value={division.id.toString()}>
+              {division.displayName} ({division.teamCount} teams)
             </SelectItem>
           ))
         )}
-        {!isLoading && sections && sections.length === 0 && (
+        {!isLoading && divisions && divisions.length === 0 && (
           <SelectItem value="none" disabled>
-            No sections available for this season
+            No divisions available for this season
           </SelectItem>
         )}
         {error && (
@@ -101,22 +103,24 @@ const useTeamFormSelects = (selectedSeasonId?: number) => {
     staleTime: 60000, // 1 minute
   });
 
-  const sectionsQuery = useQuery<Section[]>({
-    queryKey: ['/api/seasons/1/sections'],
+  const divisionsQuery = useQuery<DivisionOption[]>({
+    queryKey: ['/api/seasons', selectedSeasonId, 'divisions'],
     queryFn: async () => {
-      const result = await apiClient.get('/api/seasons/1/sections');
-      return result as Section[];
+      if (!selectedSeasonId) return [];
+      const result = await apiClient.get(`/api/seasons/${selectedSeasonId}/divisions`);
+      return result as DivisionOption[];
     },
+    enabled: !!selectedSeasonId,
     staleTime: 60000, // 1 minute
   });
 
   return {
     seasons: seasonsQuery,
-    sections: {
-      data: sectionsQuery.data as Section[],
-      isLoading: sectionsQuery.isLoading,
-      error: sectionsQuery.error,
-      refetch: sectionsQuery.refetch,
+    divisions: {
+      data: divisionsQuery.data as DivisionOption[],
+      isLoading: divisionsQuery.isLoading,
+      error: divisionsQuery.error,
+      refetch: divisionsQuery.refetch,
     },
   };
 };
@@ -131,13 +135,13 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
       name: team?.name || '',
       clubId: clubId || 0,
       seasonId: team?.seasonId || undefined,
-      sectionId: team?.sectionId || undefined,
+      divisionId: team?.divisionId || undefined,
       isActive: team?.isActive ?? true,
     },
   });
 
   const selectedSeasonId = form.watch('seasonId');
-  const { seasons, sections } = useTeamFormSelects(selectedSeasonId);
+  const { seasons, divisions } = useTeamFormSelects(selectedSeasonId);
 
   // Initialize form with team data when available
   useEffect(() => {
@@ -146,7 +150,7 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
         name: team.name,
         clubId: team.clubId || clubId,
         seasonId: team.seasonId,
-        sectionId: team.sectionId || undefined,
+        divisionId: team.divisionId || undefined,
         isActive: team.isActive ?? true,
       });
     } else if (seasons.data && seasons.data.length > 0 && !form.getValues('seasonId')) {
@@ -169,8 +173,8 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
         },
       });
 
-      // Invalidate sections queries
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/1/sections'] });
+      // Invalidate divisions queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons', selectedSeasonId, 'divisions'] });
 
       toast({ title: 'Team created successfully' });
       onSuccess?.();
@@ -198,8 +202,8 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
 
-      // Invalidate sections queries
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/1/sections'] });
+      // Invalidate divisions queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons', selectedSeasonId, 'divisions'] });
 
       toast({ title: 'Team updated successfully' });
       onSuccess?.();
@@ -299,8 +303,8 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
                     console.log('TeamForm: Season changed to:', value);
                     const seasonId = parseInt(value);
                     field.onChange(seasonId);
-                    // Clear section when season changes
-                    form.setValue('sectionId', undefined);
+                    // Clear division when season changes
+                    form.setValue('divisionId', undefined);
                   }}
                   value={stringValue}
                 >
@@ -326,19 +330,19 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
 
         <FormField
           control={form.control}
-          name="sectionId"
+          name="divisionId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Section (Optional)</FormLabel>
-              <SectionSelect
+              <FormLabel>Division (Optional)</FormLabel>
+              <DivisionSelect
                 value={field.value}
                 onValueChange={(value) => {
                   field.onChange(value);
                 }}
-                sections={sections.data}
-                isLoading={sections.isLoading}
-                error={sections.error}
-                onRetry={sections.refetch}
+                divisions={divisions.data}
+                isLoading={divisions.isLoading}
+                error={divisions.error}
+                onRetry={divisions.refetch}
               />
               <FormMessage />
             </FormItem>

@@ -6,6 +6,7 @@ import {
   AuthenticatedRequest, 
   requireClubAccess 
 } from "./auth-middleware";
+import { transformToApiFormat } from './api-utils';
 
 export function registerTeamRoutes(app: Express) {
   // Get all teams for a season
@@ -21,7 +22,7 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY t.name
       `);
 
-      res.json(teams.rows);
+      res.json(transformToApiFormat(teams.rows));
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
@@ -49,7 +50,7 @@ export function registerTeamRoutes(app: Express) {
         playerName: row.display_name
       }));
 
-      res.json(mappedAssignments);
+      res.json(transformToApiFormat(mappedAssignments));
     } catch (error) {
       console.error("Error fetching team assignments:", error);
       res.status(500).json({ message: "Failed to fetch team assignments" });
@@ -84,8 +85,8 @@ export function registerTeamRoutes(app: Express) {
 
         // Create the team
         await db.execute(sql`
-          INSERT INTO teams (club_id, season_id, name, division)
-          VALUES (${clubId}, ${seasonId}, 'Main Team', 'Division 1')
+          INSERT INTO teams (club_id, season_id, name, division_id)
+          VALUES (${clubId}, ${seasonId}, 'Main Team', 1)
         `);
 
         // Fetch the newly created team
@@ -98,7 +99,7 @@ export function registerTeamRoutes(app: Express) {
         `);
       }
 
-      res.json(team.rows[0]);
+      res.json(transformToApiFormat(team.rows[0]));
     } catch (error) {
       console.error("Error getting/creating default team:", error);
       res.status(500).json({ message: "Failed to get default team" });
@@ -123,20 +124,19 @@ export function registerTeamRoutes(app: Express) {
         SELECT 
           t.id,
           t.name,
-          t.division,
+          t.division_id,
           t.is_active,
           t.created_at,
           t.updated_at,
-          t.section_id,
           s.id as season_id,
           s.name as season_name, 
           s.year as season_year,
           s.start_date as season_start_date,
           s.end_date as season_end_date,
-          sec.display_name as section_name
+          d.display_name as division_name
         FROM teams t
         LEFT JOIN seasons s ON t.season_id = s.id
-        LEFT JOIN sections sec ON t.section_id = sec.id
+        LEFT JOIN divisions d ON t.division_id = d.id
         WHERE t.club_id = ${clubId} AND t.is_active = true
         ORDER BY s.start_date DESC, t.name
       `);
@@ -144,28 +144,27 @@ export function registerTeamRoutes(app: Express) {
       console.log(`Raw team query results for club ${clubId}:`, clubTeams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        section_id: row.section_id,
-        section_name: row.section_name
+        division_id: row.division_id,
+        division_name: row.division_name
       })));
 
       const teams = clubTeams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        division: row.division,
+        divisionId: row.division_id,
+        divisionName: row.division_name,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        sectionId: row.section_id,
         seasonId: row.season_id,
         seasonName: row.season_name,
         seasonYear: row.season_year,
         seasonStartDate: row.season_start_date,
         seasonEndDate: row.season_end_date,
-        sectionName: row.section_name
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
-      res.json(teams);
+      res.json(transformToApiFormat(teams));
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
@@ -190,20 +189,19 @@ export function registerTeamRoutes(app: Express) {
         SELECT 
           t.id,
           t.name,
-          t.division,
+          t.division_id,
           t.is_active,
           t.created_at,
           t.updated_at,
-          t.section_id,
           s.id as season_id,
           s.name as season_name, 
           s.year as season_year,
           s.start_date as season_start_date,
           s.end_date as season_end_date,
-          sec.display_name as section_name
+          d.display_name as division_name
         FROM teams t
         LEFT JOIN seasons s ON t.season_id = s.id
-        LEFT JOIN sections sec ON t.section_id = sec.id
+        LEFT JOIN divisions d ON t.division_id = d.id
         WHERE t.club_id = ${clubId} AND t.is_active = true
         ORDER BY s.start_date DESC, t.name
       `);
@@ -211,28 +209,27 @@ export function registerTeamRoutes(app: Express) {
       console.log(`Raw team query results for club ${clubId}:`, clubTeams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        section_id: row.section_id,
-        section_name: row.section_name
+        division_id: row.division_id,
+        division_name: row.division_name
       })));
 
       const teams = clubTeams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        division: row.division,
+        divisionId: row.division_id,
+        divisionName: row.division_name,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        sectionId: row.section_id,
         seasonId: row.season_id,
         seasonName: row.season_name,
         seasonYear: row.season_year,
         seasonStartDate: row.season_start_date,
         seasonEndDate: row.season_end_date,
-        sectionName: row.section_name
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
-      res.json(teams);
+      res.json(transformToApiFormat(teams));
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
@@ -243,7 +240,7 @@ export function registerTeamRoutes(app: Express) {
   app.post("/api/teams", async (req, res) => {
     try {
       console.log('Team creation request body:', req.body);
-      const { clubId, seasonId, name, division, isActive } = req.body;
+      const { clubId, seasonId, name, divisionId, isActive } = req.body;
 
       if (!clubId || !seasonId || !name) {
         console.log('Validation failed:', { clubId, seasonId, name });
@@ -251,12 +248,12 @@ export function registerTeamRoutes(app: Express) {
       }
 
       const result = await db.execute(sql`
-        INSERT INTO teams (club_id, season_id, name, division, is_active)
-        VALUES (${clubId}, ${seasonId}, ${name}, ${division || 'Division 1'}, ${isActive !== false})
+        INSERT INTO teams (club_id, season_id, name, division_id, is_active)
+        VALUES (${clubId}, ${seasonId}, ${name}, ${divisionId || 1}, ${isActive !== false})
         RETURNING *
       `);
 
-      res.status(201).json(result.rows[0]);
+      res.status(201).json(transformToApiFormat(result.rows[0]));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Team with this name already exists for this club and season" });
@@ -271,17 +268,16 @@ export function registerTeamRoutes(app: Express) {
   app.patch("/api/teams/:id", async (req, res) => {
     try {
       const teamId = parseInt(req.params.id);
-      const { name, division, isActive, seasonId, sectionId } = req.body;
+      const { name, divisionId, isActive, seasonId } = req.body;
 
-      console.log(`Team update request for team ${teamId}:`, { name, division, isActive, seasonId, sectionId });
+      console.log(`Team update request for team ${teamId}:`, { name, divisionId, isActive, seasonId });
 
       // Build update object only with provided fields, using camelCase for Drizzle ORM
       const updateData: any = {};
       if (name !== undefined) updateData.name = name;
-      if (division !== undefined) updateData.division = division;
+      if (divisionId !== undefined) updateData.divisionId = divisionId;
       if (isActive !== undefined) updateData.isActive = isActive;
       if (seasonId !== undefined) updateData.seasonId = seasonId;
-      if (sectionId !== undefined) updateData.sectionId = sectionId;
       // Always update the timestamp
       updateData.updatedAt = new Date();
 
@@ -296,7 +292,7 @@ export function registerTeamRoutes(app: Express) {
       }
 
       console.log(`Team ${teamId} updated successfully:`, result[0]);
-      res.json(result[0]);
+      res.json(transformToApiFormat(result[0]));
     } catch (error) {
       console.error("Error updating team:", error);
       res.status(500).json({ message: "Failed to update team" });
@@ -366,7 +362,7 @@ export function registerTeamRoutes(app: Express) {
         SELECT 
           t.id,
           t.name,
-          t.division,
+          t.division_id,
           t.club_id,
           t.season_id,
           t.is_active,
@@ -378,10 +374,12 @@ export function registerTeamRoutes(app: Express) {
           s.name as season_name, 
           s.year as season_year,
           s.start_date as season_start_date,
-          s.end_date as season_end_date
+          s.end_date as season_end_date,
+          d.display_name as division_name
         FROM teams t
         LEFT JOIN clubs c ON t.club_id = c.id
         LEFT JOIN seasons s ON t.season_id = s.id
+        LEFT JOIN divisions d ON t.division_id = d.id
         WHERE t.is_active = true AND c.is_active = true
         ORDER BY c.name, t.name
       `);
@@ -389,7 +387,8 @@ export function registerTeamRoutes(app: Express) {
       const mappedTeams = teams.rows.map(row => ({
         id: row.id,
         name: row.name,
-        division: row.division,
+        divisionId: row.division_id,
+        divisionName: row.division_name,
         clubId: row.club_id,
         seasonId: row.season_id,
         isActive: row.is_active,
@@ -400,10 +399,10 @@ export function registerTeamRoutes(app: Express) {
         seasonName: row.season_name,
         seasonYear: row.season_year,
         seasonStartDate: row.season_start_date,
-        seasonEndDate: row.season_end_date
+        seasonEndDate: row.season_end_date,
       }));
 
-      res.json(mappedTeams);
+      res.json(transformToApiFormat(mappedTeams));
     } catch (error) {
       console.error("Error fetching all teams:", error);
       res.status(500).json({ message: "Failed to fetch all teams" });
@@ -417,7 +416,7 @@ export function registerTeamRoutes(app: Express) {
         SELECT * FROM clubs WHERE is_active = true ORDER BY name
       `);
 
-      res.json(clubs.rows);
+      res.json(transformToApiFormat(clubs.rows));
     } catch (error) {
       console.error("Error fetching clubs:", error);
       res.status(500).json({ message: "Failed to fetch clubs" });
@@ -446,7 +445,7 @@ export function registerTeamRoutes(app: Express) {
         return res.status(403).json({ error: 'Access denied to this team' });
       }
 
-      res.json(teamData);
+      res.json(transformToApiFormat(teamData));
     } catch (error) {
       console.error("Error fetching team:", error);
       res.status(500).json({ message: "Failed to fetch team" });
@@ -493,7 +492,7 @@ export function registerTeamRoutes(app: Express) {
         .returning();
 
       console.log(`Auto-assigned player ${playerId} to season ${seasonId} when adding to team ${teamId}`);
-      res.status(201).json(result[0]);
+      res.status(201).json(transformToApiFormat(result[0]));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Player is already on this team" });
@@ -564,7 +563,7 @@ export function registerTeamRoutes(app: Express) {
         return res.status(404).json({ message: "Team player not found" });
       }
 
-      res.json(result.rows[0]);
+      res.json(transformToApiFormat(result.rows[0]));
     } catch (error) {
       console.error("Error updating team player:", error);
       res.status(500).json({ message: "Failed to update team player" });
@@ -624,7 +623,7 @@ export function registerTeamRoutes(app: Express) {
       }));
 
       console.log(`Found ${players.length} players for team ${teamId}`);
-      res.json(players);
+      res.json(transformToApiFormat(players));
     } catch (error) {
       console.error("Error fetching team players:", error);
       res.status(500).json({ message: "Failed to fetch team players" });
@@ -671,7 +670,7 @@ export function registerTeamRoutes(app: Express) {
         WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
       `);
 
-      res.json(stats.rows[0] || {});
+      res.json(transformToApiFormat(stats.rows[0] || {}));
     } catch (error) {
       console.error('Error fetching team stats:', error);
       res.status(500).json({ error: 'Failed to fetch team stats' });
@@ -747,7 +746,7 @@ export function registerTeamRoutes(app: Express) {
         avatarColor: row.avatar_color
       }));
 
-      res.json(mappedRoster);
+      res.json(transformToApiFormat(mappedRoster));
     } catch (error) {
       console.error('Error fetching team roster:', error);
       res.status(500).json({ error: 'Failed to fetch team roster' });
@@ -794,10 +793,10 @@ export function registerTeamRoutes(app: Express) {
           s.end_date AS season_end,
           s.is_active AS season_active,
           ht.name AS home_team_name,
-          ht.division AS home_team_division,
+          ht.division_id AS home_team_division,
           ht.club_id AS home_club_id,
           at.name AS away_team_name,
-          at.division AS away_team_division,
+          at.division_id AS away_team_division,
           at.club_id AS away_club_id,
           hc.name AS home_club_name,
           hc.code AS home_club_code,
@@ -874,7 +873,7 @@ export function registerTeamRoutes(app: Express) {
         isBye: row.away_team_name === 'Bye'
       };
 
-      res.json(game);
+      res.json(transformToApiFormat(game));
     } catch (error) {
       console.error('Error fetching team-perspective game:', error);
       res.status(500).json({ error: 'Failed to fetch game' });
@@ -925,7 +924,7 @@ export function registerTeamRoutes(app: Express) {
         isAvailable: row.is_available
       }));
 
-      res.json(mappedAvailability);
+      res.json(transformToApiFormat(mappedAvailability));
     } catch (error) {
       console.error('Error fetching team availability:', error);
       res.status(500).json({ error: 'Failed to fetch team availability' });
@@ -1029,7 +1028,7 @@ export function registerTeamRoutes(app: Express) {
       }));
 
       console.log(`Returning ${mappedAvailablePlayers.length} available players`);
-      res.json(mappedAvailablePlayers);
+      res.json(transformToApiFormat(mappedAvailablePlayers));
     } catch (error) {
       console.error("Error fetching available players:", error);
       res.status(500).json({ message: "Failed to fetch available players" });

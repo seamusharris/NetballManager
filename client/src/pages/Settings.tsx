@@ -52,7 +52,7 @@ import { GameStatusManager } from '@/components/settings/GameStatusManager';
 import { FixtureImporter } from '@/components/settings/FixtureImporter';
 import { useClub } from '@/contexts/ClubContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SectionManager from '@/components/sections/SectionManager';
+import DivisionManager from '@/components/divisions/DivisionManager';
 import SeasonsManager from '@/components/seasons/SeasonsManager';
 import { useQuery } from '@tanstack/react-query';
 
@@ -733,7 +733,7 @@ export default function Settings() {
         <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="seasons">Seasons</TabsTrigger>
-          <TabsTrigger value="sections">Sections</TabsTrigger>
+          <TabsTrigger value="divisions">Divisions</TabsTrigger>
           <TabsTrigger value="game-statuses">Game Statuses</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
         </TabsList>
@@ -848,9 +848,9 @@ export default function Settings() {
           <SeasonsManager />
         </TabsContent>
 
-        <TabsContent value="sections" className="mt-6">
+        <TabsContent value="divisions" className="mt-6">
           {activeSeason?.id ? (
-            <SectionManager 
+            <DivisionManager 
               seasonId={activeSeason.id} 
               seasonName={activeSeason.name}
             />
@@ -858,7 +858,7 @@ export default function Settings() {
             <Card>
               <CardContent className="text-center py-8">
                 <p className="text-muted-foreground">
-                  {activeSeason === undefined ? 'Loading active season...' : 'Please set an active season first to manage sections.'}
+                  {activeSeason === undefined ? 'Loading active season...' : 'Please set an active season first to manage divisions.'}
                 </p>
               </CardContent>
             </Card>

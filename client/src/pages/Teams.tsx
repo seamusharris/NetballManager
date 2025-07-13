@@ -57,13 +57,6 @@ export default function Teams() {
     enabled: !!currentClubId,
   });
 
-  const { data: sections = [] } = useQuery<any[]>({
-    queryKey: ['/api/seasons/1/sections', currentClubId],
-    queryFn: () => apiClient.get('/api/seasons/1/sections'),
-    enabled: !!currentClubId,
-    select: (data) => Array.isArray(data) ? data : [],
-  });
-
   const deleteTeamMutation = useMutation({
     mutationFn: (teamId: number) => apiClient.delete(`/api/teams/${teamId}`),
     onSuccess: () => {
@@ -133,7 +126,7 @@ export default function Teams() {
                       <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">
                         {team.name}
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground">{team.division}</p>
+                      <p className="text-sm text-muted-foreground">{team.division || team.divisionId || 'No Division'}</p>
                     </div>
                   </div>
                   <Badge variant={team.isActive ? "default" : "secondary"} className="transition-all duration-300">
@@ -149,15 +142,6 @@ export default function Teams() {
                         {team.seasonName || 'N/A'}
                       </div>
                       <div className="text-xs text-blue-600">Season</div>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-300">
-                      <div className="font-bold text-xl text-green-700">
-                        {team.sectionId ? 
-                          (Array.isArray(sections) ? sections.find(s => Number(s.id) === Number(team.sectionId))?.displayName : null) || `Sec ${team.sectionId}` : 
-                          'No Section'
-                        }
-                      </div>
-                      <div className="text-xs text-green-600">Section</div>
                     </div>
                   </div>
 

@@ -27,8 +27,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
-// Create form schema excluding positionPreferences (we handle this separately)
-const formSchema = insertPlayerSchema.omit({ positionPreferences: true }).extend({
+// Create custom form schema for player creation
+const formSchema = z.object({
+  display_name: z.string().min(1, "Display name is required"),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  date_of_birth: z.string().optional(),
+  active: z.boolean().default(true),
+  avatar_color: z.string().default('bg-blue-600'),
   position1: z.string().refine((val) => allPositions.includes(val as Position), {
     message: "Please select a valid position",
   }),
@@ -56,7 +62,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   const getPositionDefaults = () => {
     if (!player) return { position1: "", position2: "none", position3: "none", position4: "none" };
 
-    const preferences = player.positionPreferences as Position[];
+    const preferences = player.position_preferences as Position[];
     return {
       position1: preferences[0] || "",
       position2: preferences[1] || "none",
@@ -104,14 +110,14 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         headers: {
           'x-current-club-id': clubId.toString(),
           ...(teamId && { 'x-current-team-id': teamId.toString() })
-        }
+        } as any
       });
 
       console.log('PlayerForm: API call initiated, promise created');
       
       // Add promise logging
       apiPromise
-        .then(response => {
+        .then((response: any) => {
           console.log('PlayerForm: API call succeeded with response:', response.status);
         })
         .catch(error => {
@@ -177,15 +183,16 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      displayName: player?.displayName || "",
-      firstName: player?.firstName || "",
-      lastName: player?.lastName || "",
-      dateOfBirth: player?.dateOfBirth || "",
+      display_name: player?.display_name || "",
+      first_name: player?.first_name || "",
+      last_name: player?.last_name || "",
+      date_of_birth: player?.date_of_birth || "",
       position1: positionDefaults.position1,
       position2: positionDefaults.position2,
       position3: positionDefaults.position3,
       position4: positionDefaults.position4,
       active: player?.active !== undefined ? player.active : true,
+      avatar_color: player?.avatar_color || 'bg-blue-600',
     },
   });
 
@@ -353,7 +360,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="displayName"
+            name="display_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel required>Display Name</FormLabel>
@@ -394,7 +401,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="firstName"
+            name="first_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel required>First Name</FormLabel>
@@ -408,7 +415,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
           <FormField
             control={form.control}
-            name="lastName"
+            name="last_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel required>Last Name</FormLabel>
@@ -423,7 +430,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
         <FormField
           control={form.control}
-          name="dateOfBirth"
+          name="date_of_birth"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>

@@ -4,6 +4,7 @@ import { db } from './db';
 import { sql } from 'drizzle-orm';
 import { AuthenticatedRequest, requireClubAccess } from './auth-middleware';
 import { z } from 'zod';
+import { transformToApiFormat } from './api-utils';
 
 const borrowPlayerSchema = z.object({
   playerId: z.number(),
@@ -59,7 +60,7 @@ async function getPlayerBorrowingHandler(req: AuthenticatedRequest, res: Respons
       createdAt: row.created_at
     }));
 
-    res.json(borrowingRequests);
+    res.json(transformToApiFormat(borrowingRequests));
   } catch (error) {
     console.error('Error fetching borrowing requests:', error);
     res.status(500).json({ error: 'Failed to fetch borrowing requests' });
@@ -262,7 +263,7 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         seasonName: row.season_name
       }));
 
-      res.json(availablePlayers);
+      res.json(transformToApiFormat(availablePlayers));
     } catch (error) {
       console.error('Error fetching available players for borrowing:', error);
       res.status(500).json({ error: 'Failed to fetch available players' });
@@ -308,7 +309,7 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         notes: row.notes
       }));
 
-      res.json(borrowedPlayers);
+      res.json(transformToApiFormat(borrowedPlayers));
     } catch (error) {
       console.error('Error fetching borrowed players for game:', error);
       res.status(500).json({ error: 'Failed to fetch borrowed players' });

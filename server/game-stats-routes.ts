@@ -4,6 +4,7 @@ import { db } from './db';
 import { sql } from 'drizzle-orm';
 import { gameStats, games, teams } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { transformToApiFormat } from './api-utils';
 
 /**
  * Game-centric stats routes following the new REST pattern
@@ -47,7 +48,7 @@ export function registerGameStatsRoutes(app: Express) {
       }
 
       const game = result.rows[0];
-      res.json(game);
+      res.json(transformToApiFormat(game));
     } catch (error) {
       console.error('Error fetching game with team context:', error);
       res.status(500).json({ error: 'Failed to fetch game data' });
@@ -89,7 +90,7 @@ export function registerGameStatsRoutes(app: Express) {
         ));
 
       console.log(`Game-centric stats API: Found ${stats.length} stats for game ${gameId}, team ${teamId}`);
-      res.json(stats);
+      res.json(transformToApiFormat(stats));
     } catch (error) {
       console.error('Error fetching game stats:', error);
       res.status(500).json({ error: 'Failed to fetch game stats' });
@@ -136,7 +137,7 @@ export function registerGameStatsRoutes(app: Express) {
         return res.status(404).json({ error: 'Stat not found' });
       }
 
-      res.json(updated);
+      res.json(transformToApiFormat(updated));
     } catch (error) {
       console.error('Error updating game stat:', error);
       res.status(500).json({ error: 'Failed to update game stat' });
@@ -199,7 +200,7 @@ export function registerGameStatsRoutes(app: Express) {
         }
       }
 
-      res.json(results);
+      res.json(transformToApiFormat(results));
     } catch (error) {
       console.error('Error saving game stats:', error);
       res.status(500).json({ error: 'Failed to save game stats' });
@@ -235,7 +236,7 @@ export function registerGameStatsRoutes(app: Express) {
         ORDER BY r.position
       `);
 
-      res.json(result.rows);
+      res.json(transformToApiFormat(result.rows));
     } catch (error) {
       console.error('Error fetching game rosters:', error);
       res.status(500).json({ error: 'Failed to fetch game rosters' });
@@ -291,9 +292,9 @@ export function registerGameStatsRoutes(app: Express) {
           RETURNING *
         `);
 
-        res.json(result.rows);
+        res.json(transformToApiFormat(result.rows));
       } else {
-        res.json([]);
+        res.json(transformToApiFormat([]));
       }
     } catch (error) {
       console.error('Error saving game rosters:', error);
@@ -353,7 +354,7 @@ export function registerGameStatsRoutes(app: Express) {
           [...new Set(allGameStats.map(s => s.teamId))]);
       }
       
-      res.json(stats);
+      res.json(transformToApiFormat(stats));
     } catch (error) {
       console.error('Error fetching team-based game stats:', error);
       res.status(500).json({ error: 'Failed to fetch team-based game stats' });
@@ -410,7 +411,7 @@ export function registerGameStatsRoutes(app: Express) {
 
       console.log(`Club-scoped batch stats response: found stats for ${Object.keys(statsByGame).filter(k => statsByGame[k].length > 0).length} games${teamId ? ` (filtered by team ${teamId})` : ''}`);
 
-      res.json(statsByGame);
+      res.json(transformToApiFormat(statsByGame));
     } catch (error) {
       console.error('Club-scoped batch stats error:', error);
       res.status(500).json({ error: 'Failed to fetch batch stats' });

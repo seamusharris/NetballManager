@@ -3,10 +3,11 @@ import { db } from './db';
 import { gameScores, games } from '@shared/schema';
 import { eq, and, or, inArray, sql } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
+import { transformToApiFormat } from './api-utils';
 
 export function registerGameScoresRoutes(app: Express) {
   // Club-scoped batch endpoint for multiple games' official scores
-  app.post('/api/clubs/:clubId/games/scores/batch', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+  app.post('/api/clubs/:clubId/games/scores/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameIds } = req.body;
       const clubId = parseInt(req.params.clubId);
@@ -21,12 +22,16 @@ export function registerGameScoresRoutes(app: Express) {
       console.log(`Club-scoped batch scores request for club ${clubId}, games:`, limitedGameIds);
 
       // Convert to integers and get scores directly
-      const gameIdList = limitedGameIds.map(id => parseInt(id));
+      const gameIdList = limitedGameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+
+      if (gameIdList.length === 0) {
+        return res.json({});
+      }
 
       // Get all scores for the requested games using proper Drizzle ORM
       const scores = await db.select()
         .from(gameScores)
-        .where(inArray(gameScores.gameId, gameIdList));
+        .where(inArray(gameScores.game_id, gameIdList));
 
       // Group scores by game ID
       const scoresMap: Record<number, any[]> = {};
@@ -35,7 +40,7 @@ export function registerGameScoresRoutes(app: Express) {
       });
 
       scores.forEach((score) => {
-        const gameId = score.gameId;
+        const gameId = score.game_id;
         if (scoresMap[gameId]) {
           scoresMap[gameId].push(score);
         } else {
@@ -51,7 +56,7 @@ export function registerGameScoresRoutes(app: Express) {
         console.log(`Club-scoped batch scores response: NO scores found for ${gamesWithoutScores.length} games: [${gamesWithoutScores.join(', ')}]`);
       }
 
-      res.json(scoresMap);
+      res.json(transformToApiFormat(scoresMap));
     } catch (error) {
       console.error('Batch scores fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch batch scores' });
@@ -59,7 +64,7 @@ export function registerGameScoresRoutes(app: Express) {
   });
 
   // Legacy batch endpoint for backward compatibility
-  app.post('/api/games/scores/batch', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+  app.post('/api/games/scores/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameIds } = req.body;
       const clubId = parseInt(req.headers['x-current-club-id'] as string);
@@ -74,12 +79,16 @@ export function registerGameScoresRoutes(app: Express) {
       console.log(`Batch scores request for club ${clubId}, games:`, limitedGameIds);
 
       // Convert to integers and get scores directly
-      const gameIdList = limitedGameIds.map(id => parseInt(id));
+      const gameIdList = limitedGameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+
+      if (gameIdList.length === 0) {
+        return res.json({});
+      }
 
       // Get all scores for the requested games using proper Drizzle ORM
       const scores = await db.select()
         .from(gameScores)
-        .where(inArray(gameScores.gameId, gameIdList));
+        .where(inArray(gameScores.game_id, gameIdList));
 
       // Group scores by game ID
       const scoresMap: Record<number, any[]> = {};
@@ -88,7 +97,7 @@ export function registerGameScoresRoutes(app: Express) {
       });
 
       scores.forEach((score) => {
-        const gameId = score.gameId;
+        const gameId = score.game_id;
         if (scoresMap[gameId]) {
           scoresMap[gameId].push(score);
         } else {
@@ -104,7 +113,7 @@ export function registerGameScoresRoutes(app: Express) {
         console.log(`Batch scores response: NO scores found for ${gamesWithoutScores.length} games: [${gamesWithoutScores.join(', ')}]`);
       }
       
-      res.json(scoresMap);
+      res.json(transformToApiFormat(scoresMap));
     } catch (error) {
       console.error('Error fetching batch game scores:', error);
       res.status(500).json({ error: 'Failed to fetch batch game scores' });
@@ -118,13 +127,13 @@ export function registerGameScoresRoutes(app: Express) {
 
     const scores = await db.select()
       .from(gameScores)
-      .where(eq(gameScores.gameId, gameId));
+      .where(eq(gameScores.game_id, gameId));
 
     if (scores.length === 0) {
       return res.json([]); // No official scores entered yet - return empty array
     }
 
-    res.json(scores);
+    res.json(transformToApiFormat(scores));
   } catch (error) {
     console.error('Error fetching game scores:', error);
     res.status(500).json({ error: 'Failed to fetch game scores' });
@@ -158,20 +167,20 @@ export function registerGameScoresRoutes(app: Express) {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    const { homeTeamId, awayTeamId } = game[0];
+    const { home_team_id, away_team_id } = game[0];
 
     // Insert or update home team score for this quarter
     await db.insert(gameScores)
       .values({
-        gameId,
-        teamId: homeTeamId,
+        game_id: gameId,
+        team_id: home_team_id,
         quarter,
         score: homeScore,
-        enteredBy: req.user?.id,
+        entered_by: req.user?.id,
         notes: notes || null,
       })
       .onConflictDoUpdate({
-        target: [gameScores.gameId, gameScores.teamId, gameScores.quarter],
+        target: [gameScores.game_id, gameScores.team_id, gameScores.quarter],
         set: {
           score: homeScore,
           notes: notes || null,
@@ -181,15 +190,15 @@ export function registerGameScoresRoutes(app: Express) {
     // Insert or update away team score for this quarter
     await db.insert(gameScores)
       .values({
-        gameId,
-        teamId: awayTeamId,
+        game_id: gameId,
+        team_id: away_team_id,
         quarter,
         score: awayScore,
-        enteredBy: req.user?.id,
+        entered_by: req.user?.id,
         notes: null, // Notes only on home team entry to avoid duplication
       })
       .onConflictDoUpdate({
-        target: [gameScores.gameId, gameScores.teamId, gameScores.quarter],
+        target: [gameScores.game_id, gameScores.team_id, gameScores.quarter],
         set: {
           score: awayScore,
         }
@@ -198,10 +207,10 @@ export function registerGameScoresRoutes(app: Express) {
     // Return the updated scores for this quarter
     const updatedScores = await db.select()
       .from(gameScores)
-      .where(eq(gameScores.gameId, gameId));
+      .where(eq(gameScores.game_id, gameId));
 
     console.log('Successfully saved scores for game', gameId, 'quarter', quarter);
-    res.json(updatedScores);
+    res.json(transformToApiFormat(updatedScores));
   } catch (error) {
     console.error('Error saving game scores:', error);
     console.error('Stack trace:', error.stack);
@@ -215,7 +224,7 @@ export function registerGameScoresRoutes(app: Express) {
     const gameId = parseInt(req.params.gameId);
 
     await db.delete(gameScores)
-      .where(eq(gameScores.gameId, gameId));
+      .where(eq(gameScores.game_id, gameId));
 
     res.json({ success: true });
   } catch (error) {
