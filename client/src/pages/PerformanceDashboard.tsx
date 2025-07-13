@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PerformanceDashboard } from '@/components/dashboard/PerformanceDashboard';
 import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
 import { useRequestMonitor } from '@/hooks/use-request-monitor';
-import { Activity, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Activity, RefreshCw, AlertTriangle, CheckCircle, Clock, Zap, Database, Server } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PerformanceMetrics {
@@ -12,8 +12,9 @@ interface PerformanceMetrics {
   apiResponseTime: number;
   renderTime: number;
   memoryUsage?: number;
-  cacheHitRate?: number;
-  errorRate?: number;
+  requestCount: number;
+  averageResponseTime: number;
+  slowRequests: number;
   timestamp: number;
 }
 
@@ -25,6 +26,7 @@ export default function PerformanceDashboardPage() {
   const performanceMetrics = usePerformanceMonitor('PerformanceDashboard', {
     trackApiCalls: true,
     trackRenderTime: true,
+    trackMemoryUsage: true,
     logToConsole: true
   });
 
@@ -38,8 +40,9 @@ export default function PerformanceDashboardPage() {
         apiResponseTime: performanceMetrics.metrics.apiResponseTime || 0,
         renderTime: performanceMetrics.metrics.renderTime || 0,
         memoryUsage: performanceMetrics.metrics.memoryUsage,
-        cacheHitRate: undefined, // Not available in current hook
-        errorRate: undefined, // Not available in current hook
+        requestCount: performanceMetrics.metrics.requestCount || 0,
+        averageResponseTime: performanceMetrics.metrics.averageResponseTime || 0,
+        slowRequests: performanceMetrics.metrics.slowRequests || 0,
         timestamp: Date.now()
       };
 
@@ -115,14 +118,61 @@ export default function PerformanceDashboardPage() {
             </Alert>
           )}
 
-          {/* Performance Dashboard Component */}
-          <PerformanceDashboard 
-            metrics={metrics}
-            isRealTime={isRealTime}
-            onRefresh={handleRefresh}
-          />
+          {/* Real-time Performance Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium text-gray-600">Page Load Time</span>
+                </div>
+                <p className="text-2xl font-bold mt-2">
+                  {performanceMetrics.metrics.pageLoadTime?.toFixed(0) || 0}ms
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Additional System Information */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-gray-600">API Response Time</span>
+                </div>
+                <p className="text-2xl font-bold mt-2">
+                  {performanceMetrics.metrics.apiResponseTime?.toFixed(0) || 0}ms
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <Database className="h-5 w-5 text-purple-600" />
+                  <span className="text-sm font-medium text-gray-600">Memory Usage</span>
+                </div>
+                <p className="text-2xl font-bold mt-2">
+                  {performanceMetrics.metrics.memoryUsage 
+                    ? `${performanceMetrics.metrics.memoryUsage.toFixed(1)}MB`
+                    : 'N/A'
+                  }
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2">
+                  <Server className="h-5 w-5 text-orange-600" />
+                  <span className="text-sm font-medium text-gray-600">Total Requests</span>
+                </div>
+                <p className="text-2xl font-bold mt-2">
+                  {performanceMetrics.metrics.requestCount || 0}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Request Monitoring */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader>
@@ -134,16 +184,24 @@ export default function PerformanceDashboardPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Concurrent Requests</p>
-                    <p className="text-2xl font-bold">{requestMetrics.concurrentRequests}</p>
+                    <p className="text-sm font-medium text-gray-600">Active Requests</p>
+                    <p className="text-2xl font-bold">{requestMetrics.activeRequests}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Duplicate Requests</p>
-                    <p className="text-2xl font-bold">{requestMetrics.duplicateRequests}</p>
+                    <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                    <p className="text-2xl font-bold">{requestMetrics.totalRequests}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Failed Requests</p>
+                    <p className="text-2xl font-bold text-red-600">{requestMetrics.failedRequests}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-600">Average Response Time</p>
                     <p className="text-2xl font-bold">{requestMetrics.averageResponseTime?.toFixed(0) || 0}ms</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Slow Requests</p>
+                    <p className="text-2xl font-bold text-orange-600">{performanceMetrics.metrics.slowRequests || 0}</p>
                   </div>
                 </div>
               </CardContent>
@@ -173,12 +231,23 @@ export default function PerformanceDashboardPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-600">Real-time Updates</p>
-                    <p className="text-2xl font-bold">{isRealTime ? 'Enabled' : 'Disabled'}</p>
+                    <p className="text-2xl font-bold text-green-600">{isRealTime ? 'Enabled' : 'Disabled'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Render Time</p>
+                    <p className="text-2xl font-bold">{performanceMetrics.metrics.renderTime?.toFixed(0) || 0}ms</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Performance Dashboard Component */}
+          <PerformanceDashboard 
+            metrics={metrics}
+            isRealTime={isRealTime}
+            onRefresh={handleRefresh}
+          />
 
           {/* Performance Tips */}
           <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -199,10 +268,10 @@ export default function PerformanceDashboardPage() {
                 <div>
                   <h4 className="font-semibold mb-2">Frontend Optimization</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Implement React Query caching</li>
-                    <li>• Use lazy loading for components</li>
+                    <li>• Implement code splitting</li>
+                    <li>• Use React.memo for expensive components</li>
                     <li>• Optimize bundle size</li>
-                    <li>• Implement proper error boundaries</li>
+                    <li>• Implement lazy loading</li>
                   </ul>
                 </div>
               </div>

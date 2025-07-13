@@ -11,6 +11,9 @@ interface PerformanceMetrics {
   apiResponseTime: number;
   renderTime: number;
   memoryUsage?: number;
+  requestCount: number;
+  averageResponseTime: number;
+  slowRequests: number;
 }
 
 interface PerformanceMonitorOptions {
@@ -20,18 +23,80 @@ interface PerformanceMonitorOptions {
   logToConsole?: boolean;
 }
 
+// Global performance monitoring state
+let globalMetrics: PerformanceMetrics = {
+  pageLoadTime: 0,
+  apiResponseTime: 0,
+  renderTime: 0,
+  requestCount: 0,
+  averageResponseTime: 0,
+  slowRequests: 0,
+};
+
+let requestTimes: number[] = [];
+let slowRequestThreshold = 1000; // 1 second
+
+// Intercept fetch to track API calls automatically
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+  const start = performance.now();
+  globalMetrics.requestCount++;
+  
+  try {
+    const response = await originalFetch(...args);
+    const responseTime = performance.now() - start;
+    
+    requestTimes.push(responseTime);
+    globalMetrics.averageResponseTime = requestTimes.reduce((a, b) => a + b, 0) / requestTimes.length;
+    
+    if (responseTime > slowRequestThreshold) {
+      globalMetrics.slowRequests++;
+    }
+    
+    // Keep only last 100 requests for average calculation
+    if (requestTimes.length > 100) {
+      requestTimes.shift();
+    }
+    
+    return response;
+  } catch (error) {
+    const responseTime = performance.now() - start;
+    requestTimes.push(responseTime);
+    globalMetrics.averageResponseTime = requestTimes.reduce((a, b) => a + b, 0) / requestTimes.length;
+    throw error;
+  }
+};
+
+// Track memory usage periodically
+setInterval(() => {
+  if ('memory' in performance) {
+    const memory = (performance as any).memory;
+    globalMetrics.memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // Convert to MB
+  }
+}, 5000); // Update every 5 seconds
+
 export const usePerformanceMonitor = (
   componentName: string,
   options: PerformanceMonitorOptions = {}
 ) => {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    pageLoadTime: 0,
-    apiResponseTime: 0,
-    renderTime: 0,
-  });
+  const [metrics, setMetrics] = useState<PerformanceMetrics>(globalMetrics);
 
   const startTime = useRef<number>(Date.now());
   const renderStartTime = useRef<number>(0);
+
+  // Update metrics from global state
+  useEffect(() => {
+    const updateMetrics = () => {
+      setMetrics({ ...globalMetrics });
+    };
+
+    // Update immediately
+    updateMetrics();
+
+    // Update every second
+    const interval = setInterval(updateMetrics, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Track component render time
   useEffect(() => {
@@ -40,6 +105,7 @@ export const usePerformanceMonitor = (
       
       return () => {
         const renderTime = performance.now() - renderStartTime.current;
+        globalMetrics.renderTime = renderTime;
         setMetrics(prev => ({ ...prev, renderTime }));
         
         if (options.logToConsole && renderTime > 16) { // 16ms = 60fps threshold
@@ -52,6 +118,7 @@ export const usePerformanceMonitor = (
   // Track page load time
   useEffect(() => {
     const loadTime = Date.now() - startTime.current;
+    globalMetrics.pageLoadTime = loadTime;
     setMetrics(prev => ({ ...prev, pageLoadTime: loadTime }));
     
     if (options.logToConsole) {
@@ -63,10 +130,9 @@ export const usePerformanceMonitor = (
   useEffect(() => {
     if (options.trackMemoryUsage && 'memory' in performance) {
       const memory = (performance as any).memory;
-      setMetrics(prev => ({ 
-        ...prev, 
-        memoryUsage: memory.usedJSHeapSize / 1024 / 1024 // Convert to MB
-      }));
+      const memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // Convert to MB
+      globalMetrics.memoryUsage = memoryUsage;
+      setMetrics(prev => ({ ...prev, memoryUsage }));
     }
   }, [options.trackMemoryUsage]);
 
@@ -81,6 +147,7 @@ export const usePerformanceMonitor = (
       const result = await apiCall();
       const responseTime = performance.now() - start;
       
+      globalMetrics.apiResponseTime = responseTime;
       setMetrics(prev => ({ ...prev, apiResponseTime: responseTime }));
       
       if (options.logToConsole && responseTime > 1000) { // 1 second threshold
