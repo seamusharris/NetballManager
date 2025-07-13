@@ -270,6 +270,12 @@ export async function loadUserClubPermissions(userId: number): Promise<Array<{
  * For now, this loads the first available user until proper authentication is implemented
  */
 export async function loadUserPermissions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  // Skip static assets and Vite HMR/internal requests
+  const staticAssetRegex = /\.(js|css|png|jpg|jpeg|svg|ico|woff2?|ttf|map)$/i;
+  const viteInternal = req.path.startsWith('/@vite') || req.path.startsWith('/@fs') || req.path.startsWith('/__vite_ping') || req.path.startsWith('/@react-refresh');
+  if (staticAssetRegex.test(req.path) || viteInternal) {
+    return next();
+  }
   try {
     // For now, load all clubs as user clubs (consistent with /api/user/clubs endpoint)
     // This will be replaced with proper authentication later
@@ -293,11 +299,11 @@ export async function loadUserPermissions(req: AuthenticatedRequest, res: Respon
       }));
 
       // Check if there's a club ID in the header
-      const headerClubId = req.headers['x-current-club-id'] ? parseInt(req.headers['x-current-club-id'] as string) : null;
-      
+      const headerClubIdRaw = req.headers['x-current-club-id'];
+      const headerClubId = typeof headerClubIdRaw === 'string' ? parseInt(headerClubIdRaw) : null;
       // Set current club ID based on header or default to first club
       let currentClubId = clubs[0]?.clubId;
-      if (headerClubId && clubs.some(c => c.clubId === headerClubId)) {
+      if (headerClubId && Array.isArray(clubs) && clubs.some((c) => c.clubId === headerClubId)) {
         currentClubId = headerClubId;
       }
 
@@ -334,7 +340,7 @@ export function standardAuth(options: {
       // Check club access if required
       if (options.requireClub || options.permission) {
         const clubAccess = requireClubAccess(options.permission);
-        return clubAccess(req, res, (err) => {
+        return clubAccess(req, res, (err: any) => {
           if (err) return next(err);
 
           // Continue with additional checks
