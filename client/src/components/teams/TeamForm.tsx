@@ -92,23 +92,21 @@ const SectionSelect: React.FC<SectionSelectProps> = ({
 
 // Custom hook to fetch form select data
 const useTeamFormSelects = (selectedSeasonId?: number) => {
-  const seasonsQuery = useQuery({
+  const seasonsQuery = useQuery<Season[]>({
     queryKey: ['seasons'],
     queryFn: async () => {
       const result = await apiClient.get('/api/seasons');
-      return result;
+      return result as Season[];
     },
     staleTime: 60000, // 1 minute
   });
 
-  const sectionsQuery = useQuery({
-    queryKey: ['sections', selectedSeasonId],
+  const sectionsQuery = useQuery<Section[]>({
+    queryKey: ['/api/seasons/1/sections'],
     queryFn: async () => {
-      if (!selectedSeasonId) return [];
-      const result = await apiClient.get(`/api/seasons/${selectedSeasonId}/sections`);
-      return result;
+      const result = await apiClient.get('/api/seasons/1/sections');
+      return result as Section[];
     },
-    enabled: !!selectedSeasonId,
     staleTime: 60000, // 1 minute
   });
 
@@ -172,9 +170,7 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
       });
 
       // Invalidate sections queries
-      if (selectedSeasonId) {
-        queryClient.invalidateQueries({ queryKey: ['sections', selectedSeasonId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/1/sections'] });
 
       toast({ title: 'Team created successfully' });
       onSuccess?.();
@@ -202,21 +198,8 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
 
-      // Invalidate sections queries for current season
-      if (selectedSeasonId) {
-        queryClient.invalidateQueries({ queryKey: ['sections', selectedSeasonId] });
-      }
-
-      // Invalidate all sections queries
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const [queryKey] = query.queryKey;
-          return (
-            queryKey === 'sections' ||
-            (typeof queryKey === 'string' && queryKey.includes('/api/seasons') && queryKey.includes('/sections'))
-          );
-        },
-      });
+      // Invalidate sections queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/1/sections'] });
 
       toast({ title: 'Team updated successfully' });
       onSuccess?.();
@@ -350,7 +333,7 @@ export default function TeamForm({ team, seasons: propSeasons, clubId, onSuccess
               <SectionSelect
                 value={field.value}
                 onValueChange={(value) => {
-                  field.onChange(value ? parseInt(value) : undefined);
+                  field.onChange(value);
                 }}
                 sections={sections.data}
                 isLoading={sections.isLoading}

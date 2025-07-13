@@ -61,6 +61,7 @@ export default function Teams() {
     queryKey: ['/api/seasons/1/sections', currentClubId],
     queryFn: () => apiClient.get('/api/seasons/1/sections'),
     enabled: !!currentClubId,
+    select: (data) => Array.isArray(data) ? data : [],
   });
 
   const deleteTeamMutation = useMutation({
@@ -69,6 +70,10 @@ export default function Teams() {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
     },
   });
+
+
+
+
 
   if (clubLoading || !currentClubId) {
     return (
@@ -115,7 +120,7 @@ export default function Teams() {
         {/* Teams Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {teams.map((team) => (
-            <Card key={team.id} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30">
+            <Card key={team.id} className="group hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-primary/30 overflow-hidden ring-0 focus:ring-0" style={{ borderStyle: 'solid' }}>
               <CardHeader className="bg-gradient-to-br from-slate-50 to-slate-100 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -148,7 +153,7 @@ export default function Teams() {
                     <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-300">
                       <div className="font-bold text-xl text-green-700">
                         {team.sectionId ? 
-                          sections.find(s => s.id === team.sectionId)?.displayName || `Sec ${team.sectionId}` : 
+                          (Array.isArray(sections) ? sections.find(s => Number(s.id) === Number(team.sectionId))?.displayName : null) || `Sec ${team.sectionId}` : 
                           'No Section'
                         }
                       </div>

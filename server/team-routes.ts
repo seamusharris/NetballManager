@@ -275,24 +275,17 @@ export function registerTeamRoutes(app: Express) {
 
       console.log(`Team update request for team ${teamId}:`, { name, division, isActive, seasonId, sectionId });
 
-      // Build update object only with provided fields, mapping camelCase to snake_case
+      // Build update object only with provided fields, using camelCase for Drizzle ORM
       const updateData: any = {};
       if (name !== undefined) updateData.name = name;
       if (division !== undefined) updateData.division = division;
-      if (isActive !== undefined) updateData.is_active = isActive;
-      if (seasonId !== undefined) updateData.season_id = seasonId;
-      if (sectionId !== undefined) updateData.section_id = sectionId;
-
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({ message: "No valid fields to update" });
-      }
-
+      if (isActive !== undefined) updateData.isActive = isActive;
+      if (seasonId !== undefined) updateData.seasonId = seasonId;
+      if (sectionId !== undefined) updateData.sectionId = sectionId;
       // Always update the timestamp
-      updateData.updated_at = new Date();
+      updateData.updatedAt = new Date();
 
-      console.log(`Team update data for team ${teamId}:`, updateData);
-
-      // Use proper Drizzle ORM update method
+      // Use Drizzle ORM update method
       const result = await db.update(teams)
         .set(updateData)
         .where(eq(teams.id, teamId))
