@@ -15,6 +15,8 @@ import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameReco
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useEffect, useState, useMemo } from 'react';
 import { useRequestMonitor } from '@/hooks/use-request-monitor';
+import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
+import { useOptimizedTeams, useOptimizedTeamGames } from '@/hooks/use-optimized-queries';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import TopPlayersWidget from '@/components/dashboard/TopPlayersWidget';
@@ -39,6 +41,13 @@ export default function Dashboard() {
     setCurrentTeamId,
     isLoading: clubLoading 
   } = useClub();
+
+  // Performance monitoring
+  const performanceMetrics = usePerformanceMonitor('Dashboard', {
+    trackApiCalls: true,
+    trackRenderTime: true,
+    logToConsole: true
+  });
 
   // Monitor request performance
   const requestMetrics = useRequestMonitor('Dashboard');
@@ -85,24 +94,8 @@ export default function Dashboard() {
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
-  // Fetch games with team context - use team-specific endpoint to completely avoid cache pollution
-  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['team-games', currentClubId, currentTeamId],
-    queryFn: async (): Promise<any[]> => {
-      console.log(`Dashboard: Fetching games via team-specific endpoint for team ${currentTeamId}`);
-      if (!currentTeamId) {
-        throw new Error('No team ID available for games query');
-      }
-      // Use team-specific endpoint to completely bypass club-wide cache
-      const result = await apiClient.get<any[]>(`/api/teams/${currentTeamId}/games`);
-      console.log(`Dashboard: Received ${result?.length || 0} games for team ${currentTeamId}`);
-      return Array.isArray(result) ? result : [];
-    },
-    enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 60 * 1000, // 1 minute cache for games
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    // Removed refetchOnMount and refetchOnWindowFocus for normal operation
-  });
+  // Fetch games with team context using optimized hook
+  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useOptimizedTeamGames(currentClubId, currentTeamId);
 
   // Filter season games from main games data (same approach as Team Preparation)
   const seasonGames = useMemo(() => {

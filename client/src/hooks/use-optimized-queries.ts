@@ -74,6 +74,21 @@ export const useOptimizedGames = (clubId: number, seasonId?: number) => {
 };
 
 /**
+ * Optimized hook for fetching team-specific games
+ */
+export const useOptimizedTeamGames = (clubId: number | null, teamId: number | null) => {
+  return useQuery<any[]>({
+    queryKey: ['team-games', clubId, teamId],
+    queryFn: () => apiClient.get(`/api/teams/${teamId}/games`),
+    staleTime: CACHE_TIMES.SHORT,
+    gcTime: CACHE_TIMES.MEDIUM,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    enabled: !!clubId && !!teamId,
+  });
+};
+
+/**
  * Optimized hook for fetching game statistics with smart invalidation
  */
 export const useOptimizedGameStats = (gameId: number) => {

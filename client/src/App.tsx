@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import Dashboard from "@/pages/Dashboard";
 import Players from "@/pages/Players";
 import Roster from "@/pages/Roster";
