@@ -873,7 +873,7 @@ export function registerTeamRoutes(app: Express) {
         awayClubCode: row.away_club_code,
 
         // Team perspective context
-        teamPerspective: row.team_perspective, // 'home' or 'away'
+        teamPerspective: row.team_role, // 'home' or 'away'
         ourTeamId: teamId,
         opponentTeamId: row.home_team_id === teamId ? row.away_team_id : row.home_team_id,
 

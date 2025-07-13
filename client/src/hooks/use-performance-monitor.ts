@@ -1,120 +1,180 @@
 
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+
+/**
+ * Performance monitoring hook for tracking app performance metrics
+ * Helps identify bottlenecks and optimize user experience
+ */
 
 interface PerformanceMetrics {
-  apiCalls: number;
-  cacheHits: number;
-  cacheMisses: number;
-  averageResponseTime: number;
-  errorRate: number;
+  pageLoadTime: number;
+  apiResponseTime: number;
+  renderTime: number;
+  memoryUsage?: number;
 }
 
-export function usePerformanceMonitor(componentName: string) {
-  const queryClient = useQueryClient();
-  const metricsRef = useRef<PerformanceMetrics>({
-    apiCalls: 0,
-    cacheHits: 0,
-    cacheMisses: 0,
-    averageResponseTime: 0,
-    errorRate: 0
+interface PerformanceMonitorOptions {
+  trackApiCalls?: boolean;
+  trackRenderTime?: boolean;
+  trackMemoryUsage?: boolean;
+  logToConsole?: boolean;
+}
+
+export const usePerformanceMonitor = (
+  componentName: string,
+  options: PerformanceMonitorOptions = {}
+) => {
+  const [metrics, setMetrics] = useState<PerformanceMetrics>({
+    pageLoadTime: 0,
+    apiResponseTime: 0,
+    renderTime: 0,
   });
 
+  const startTime = useRef<number>(Date.now());
+  const renderStartTime = useRef<number>(0);
+
+  // Track component render time
   useEffect(() => {
-    const startTime = performance.now();
+    if (options.trackRenderTime) {
+      renderStartTime.current = performance.now();
+      
+      return () => {
+        const renderTime = performance.now() - renderStartTime.current;
+        setMetrics(prev => ({ ...prev, renderTime }));
+        
+        if (options.logToConsole && renderTime > 16) { // 16ms = 60fps threshold
+          console.warn(`🚨 Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
+        }
+      };
+    }
+  }, [componentName, options.trackRenderTime, options.logToConsole]);
+
+  // Track page load time
+  useEffect(() => {
+    const loadTime = Date.now() - startTime.current;
+    setMetrics(prev => ({ ...prev, pageLoadTime: loadTime }));
     
-    // Monitor query cache stats
-    const cache = queryClient.getQueryCache();
-    const queries = cache.getAll();
+    if (options.logToConsole) {
+      console.log(`📊 ${componentName} load time: ${loadTime}ms`);
+    }
+  }, [componentName, options.logToConsole]);
+
+  // Track memory usage if available
+  useEffect(() => {
+    if (options.trackMemoryUsage && 'memory' in performance) {
+      const memory = (performance as any).memory;
+      setMetrics(prev => ({ 
+        ...prev, 
+        memoryUsage: memory.usedJSHeapSize / 1024 / 1024 // Convert to MB
+      }));
+    }
+  }, [options.trackMemoryUsage]);
+
+  // API performance tracking
+  const trackApiCall = async <T>(
+    apiCall: () => Promise<T>,
+    endpoint: string
+  ): Promise<T> => {
+    const start = performance.now();
     
-    const activeQueries = queries.filter(q => q.state.status === 'loading').length;
-    const cachedQueries = queries.filter(q => q.state.status === 'success').length;
-    const errorQueries = queries.filter(q => q.state.status === 'error').length;
-    
-    console.log(`[${componentName}] Performance Stats:`, {
-      activeQueries,
-      cachedQueries,
-      errorQueries,
-      totalQueries: queries.length,
-      loadTime: performance.now() - startTime
-    });
-
-    return () => {
-      const endTime = performance.now();
-      console.log(`[${componentName}] Component unmounted after ${endTime - startTime}ms`);
-    };
-  }, [componentName, queryClient]);
-
-  const recordApiCall = (responseTime: number, wasError: boolean = false) => {
-    const metrics = metricsRef.current;
-    metrics.apiCalls++;
-    metrics.averageResponseTime = (metrics.averageResponseTime + responseTime) / 2;
-    if (wasError) metrics.errorRate = (metrics.errorRate + 1) / metrics.apiCalls;
+    try {
+      const result = await apiCall();
+      const responseTime = performance.now() - start;
+      
+      setMetrics(prev => ({ ...prev, apiResponseTime: responseTime }));
+      
+      if (options.logToConsole && responseTime > 1000) { // 1 second threshold
+        console.warn(`🐌 Slow API call detected: ${endpoint} took ${responseTime.toFixed(2)}ms`);
+      }
+      
+      return result;
+    } catch (error) {
+      const responseTime = performance.now() - start;
+      console.error(`❌ API call failed: ${endpoint} after ${responseTime.toFixed(2)}ms`, error);
+      throw error;
+    }
   };
-
-  const recordCacheHit = () => {
-    metricsRef.current.cacheHits++;
-  };
-
-  const recordCacheMiss = () => {
-    metricsRef.current.cacheMisses++;
-  };
-
-  const getMetrics = (): PerformanceMetrics => ({ ...metricsRef.current });
 
   return {
-    recordApiCall,
-    recordCacheHit,
-    recordCacheMiss,
-    getMetrics
+    metrics,
+    trackApiCall,
+    // Performance optimization helpers
+    debounce: <T extends (...args: any[]) => any>(
+      func: T,
+      delay: number
+    ): T => {
+      let timeoutId: NodeJS.Timeout;
+      return ((...args: any[]) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func(...args), delay);
+      }) as T;
+    },
+    
+    throttle: <T extends (...args: any[]) => any>(
+      func: T,
+      delay: number
+    ): T => {
+      let lastCall = 0;
+      return ((...args: any[]) => {
+        const now = Date.now();
+        if (now - lastCall >= delay) {
+          lastCall = now;
+          func(...args);
+        }
+      }) as T;
+    },
   };
-}
+};
 
-// Global performance tracker
-class PerformanceTracker {
-  private static instance: PerformanceTracker;
-  private metrics = new Map<string, PerformanceMetrics>();
+/**
+ * Hook for tracking specific performance bottlenecks
+ */
+export const usePerformanceBottleneck = (componentName: string) => {
+  const [bottlenecks, setBottlenecks] = useState<string[]>([]);
 
-  static getInstance(): PerformanceTracker {
-    if (!PerformanceTracker.instance) {
-      PerformanceTracker.instance = new PerformanceTracker();
+  const trackBottleneck = (operation: string, duration: number, threshold = 100) => {
+    if (duration > threshold) {
+      const bottleneck = `${operation}: ${duration.toFixed(2)}ms`;
+      setBottlenecks(prev => [...prev, bottleneck]);
+      console.warn(`🚨 Performance bottleneck in ${componentName}: ${bottleneck}`);
     }
-    return PerformanceTracker.instance;
-  }
+  };
 
-  trackPageLoad(pageName: string, loadTime: number) {
-    console.log(`[Performance] ${pageName} loaded in ${loadTime}ms`);
-    
-    // Store metrics for analysis
-    const existing = this.metrics.get(pageName) || {
-      apiCalls: 0,
-      cacheHits: 0,
-      cacheMisses: 0,
-      averageResponseTime: 0,
-      errorRate: 0
-    };
-    
-    existing.averageResponseTime = (existing.averageResponseTime + loadTime) / 2;
-    this.metrics.set(pageName, existing);
-  }
+  const clearBottlenecks = () => setBottlenecks([]);
 
-  getOverallMetrics() {
-    const overall = Array.from(this.metrics.values()).reduce((acc, curr) => ({
-      apiCalls: acc.apiCalls + curr.apiCalls,
-      cacheHits: acc.cacheHits + curr.cacheHits,
-      cacheMisses: acc.cacheMisses + curr.cacheMisses,
-      averageResponseTime: (acc.averageResponseTime + curr.averageResponseTime) / 2,
-      errorRate: (acc.errorRate + curr.errorRate) / 2
-    }), {
-      apiCalls: 0,
-      cacheHits: 0,
-      cacheMisses: 0,
-      averageResponseTime: 0,
-      errorRate: 0
-    });
+  return {
+    bottlenecks,
+    trackBottleneck,
+    clearBottlenecks,
+  };
+};
 
-    return overall;
-  }
-}
+/**
+ * Hook for optimizing re-renders
+ */
+export const useRenderOptimization = (componentName: string) => {
+  const renderCount = useRef(0);
+  const lastRenderTime = useRef(performance.now());
 
-export const performanceTracker = PerformanceTracker.getInstance();
+  useEffect(() => {
+    renderCount.current += 1;
+    const now = performance.now();
+    const timeSinceLastRender = now - lastRenderTime.current;
+    lastRenderTime.current = now;
+
+    // Warn about excessive re-renders
+    if (renderCount.current > 10) {
+      console.warn(`🔄 Excessive re-renders detected in ${componentName}: ${renderCount.current} renders`);
+    }
+
+    // Warn about rapid re-renders
+    if (timeSinceLastRender < 16) { // Less than 60fps
+      console.warn(`⚡ Rapid re-render detected in ${componentName}: ${timeSinceLastRender.toFixed(2)}ms since last render`);
+    }
+  });
+
+  return {
+    renderCount: renderCount.current,
+    resetRenderCount: () => { renderCount.current = 0; },
+  };
+};

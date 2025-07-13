@@ -1,113 +1,164 @@
-import { useQuery, QueryKey, UseQueryOptions } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
-import { apiClient } from '@/lib/apiClient';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/apiClient';
 
-// Define optimized stale times (in milliseconds) based on data type
-const STALE_TIMES = {
-  // Player data changes infrequently
-  PLAYERS: 1000 * 60 * 60, // 1 hour
+/**
+ * Optimized query hooks with smart caching and prefetching
+ * Reduces unnecessary API calls and improves user experience
+ */
 
-  // Game details change infrequently once created
-  GAMES: 1000 * 60 * 30, // 30 minutes
+// Cache time constants
+const CACHE_TIMES = {
+  SHORT: 2 * 60 * 1000,    // 2 minutes
+  MEDIUM: 10 * 60 * 1000,  // 10 minutes
+  LONG: 30 * 60 * 1000,    // 30 minutes
+  STATIC: 60 * 60 * 1000,  // 1 hour
+} as const;
 
-  // Game stats might change during active games
-  GAME_STATS: 1000 * 60 * 5, // 5 minutes
-
-  // Rosters are usually set once per game
-  ROSTERS: 1000 * 60 * 15, // 15 minutes
-
-  // Opponents data changes very infrequently
-  OPPONENTS: 1000 * 60 * 60 * 24, // 24 hours
-
-  // Default stale time for other data
-  DEFAULT: 1000 * 60 * 10 // 10 minutes
+/**
+ * Optimized hook for fetching club data with smart caching
+ */
+export const useOptimizedClub = (clubId: number) => {
+  return useQuery({
+    queryKey: ['club', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+    staleTime: CACHE_TIMES.MEDIUM,
+    gcTime: CACHE_TIMES.LONG,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 };
 
 /**
- * Get the appropriate stale time based on the API endpoint
+ * Optimized hook for fetching teams with prefetching
  */
-function getStaleTime(endpoint: string): number {
-  // Live stats and scores - very fresh data needed
-  if (endpoint.includes('/stats') || endpoint.includes('/scores')) {
-    return 30 * 1000; // 30 seconds
+export const useOptimizedTeams = (clubId: number) => {
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
+    queryKey: ['teams', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+    staleTime: CACHE_TIMES.MEDIUM,
+    gcTime: CACHE_TIMES.LONG,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  // Prefetch team details when teams are loaded
+  if (query.data && Array.isArray(query.data)) {
+    query.data.forEach((team: { id: number }) => {
+      queryClient.prefetchQuery({
+        queryKey: ['team', team.id],
+        queryFn: () => apiClient.get(`/api/teams/${team.id}`),
+        staleTime: CACHE_TIMES.MEDIUM,
+      });
+    });
   }
 
-  // Games data changes during match day but not constantly
-  if (endpoint.includes('/games')) {
-    return 5 * 60 * 1000; // 5 minutes
-  }
-
-  // Roster data changes during team selection
-  if (endpoint.includes('/rosters')) {
-    return 2 * 60 * 1000; // 2 minutes
-  }
-
-  // Player data changes less frequently
-  if (endpoint.includes('/players')) {
-    return 15 * 60 * 1000; // 15 minutes
-  }
-
-  // Team data is relatively stable
-  if (endpoint.includes('/teams')) {
-    return 30 * 60 * 1000; // 30 minutes
-  }
-
-  // Seasons and clubs are very stable
-  if (endpoint.includes('/seasons') || endpoint.includes('/clubs')) {
-    return 60 * 60 * 1000; // 1 hour
-  }
-
-  // Default for other endpoints
-  return 5 * 60 * 1000; // 5 minutes
-}
+  return query;
+};
 
 /**
- * Optimized query hook that sets appropriate stale times based on data type
+ * Optimized hook for fetching games with batch loading
  */
-export function useOptimizedQuery<TData = unknown>(
-  endpoint: string,
-  options?: Omit<UseQueryOptions<TData, Error, TData, QueryKey>, 'queryKey' | 'queryFn'>
-) {
-  return useQuery<TData, Error>({
-    queryKey: [endpoint],
-    queryFn: () => apiClient.get<TData>(endpoint),
-    staleTime: getStaleTime(endpoint),
-    retry: (failureCount, error) => {
-      // Only retry network errors, not 4xx/5xx responses
-      if (error instanceof Error && error.message.includes('API error')) {
-        return false;
-      }
-      return failureCount < 3;
+export const useOptimizedGames = (clubId: number, seasonId?: number) => {
+  const queryKey = seasonId ? ['games', clubId, seasonId] : ['games', clubId];
+  
+  return useQuery({
+    queryKey,
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/games${seasonId ? `?seasonId=${seasonId}` : ''}`),
+    staleTime: CACHE_TIMES.SHORT,
+    gcTime: CACHE_TIMES.MEDIUM,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+};
+
+/**
+ * Optimized hook for fetching game statistics with smart invalidation
+ */
+export const useOptimizedGameStats = (gameId: number) => {
+  return useQuery({
+    queryKey: ['game-stats', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
+    staleTime: CACHE_TIMES.SHORT,
+    gcTime: CACHE_TIMES.MEDIUM,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+};
+
+/**
+ * Optimized hook for fetching player data with minimal refetching
+ */
+export const useOptimizedPlayers = (clubId: number) => {
+  return useQuery({
+    queryKey: ['players', clubId],
+    queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+    staleTime: CACHE_TIMES.MEDIUM,
+    gcTime: CACHE_TIMES.LONG,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+};
+
+/**
+ * Optimized hook for fetching seasons (static data)
+ */
+export const useOptimizedSeasons = () => {
+  return useQuery({
+    queryKey: ['seasons'],
+    queryFn: () => apiClient.get('/api/seasons'),
+    staleTime: CACHE_TIMES.STATIC,
+    gcTime: CACHE_TIMES.STATIC,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+};
+
+/**
+ * Optimized hook for fetching game statuses (static data)
+ */
+export const useOptimizedGameStatuses = () => {
+  return useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
+    staleTime: CACHE_TIMES.STATIC,
+    gcTime: CACHE_TIMES.STATIC,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+};
+
+/**
+ * Batch prefetching utility for dashboard data
+ */
+export const usePrefetchDashboardData = (clubId: number) => {
+  const queryClient = useQueryClient();
+  
+  return {
+    prefetchAll: async () => {
+      await Promise.all([
+        queryClient.prefetchQuery({
+          queryKey: ['club', clubId],
+          queryFn: () => apiClient.get(`/api/clubs/${clubId}`),
+          staleTime: CACHE_TIMES.MEDIUM,
+        }),
+        queryClient.prefetchQuery({
+          queryKey: ['teams', clubId],
+          queryFn: () => apiClient.get(`/api/clubs/${clubId}/teams`),
+          staleTime: CACHE_TIMES.MEDIUM,
+        }),
+        queryClient.prefetchQuery({
+          queryKey: ['games', clubId],
+          queryFn: () => apiClient.get(`/api/clubs/${clubId}/games`),
+          staleTime: CACHE_TIMES.SHORT,
+        }),
+        queryClient.prefetchQuery({
+          queryKey: ['players', clubId],
+          queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
+          staleTime: CACHE_TIMES.MEDIUM,
+        }),
+      ]);
     },
-    ...options
-  });
-}
-
-/**
- * Prefetch data and add it to the cache
- */
-export async function prefetchData(endpoint: string) {
-  await queryClient.prefetchQuery({
-    queryKey: [endpoint],
-    queryFn: async () => {
-      const response = await fetch(endpoint);
-      if (!response.ok) {
-        throw new Error(`API error (${response.status})`);
-      }
-      return response.json();
-    },
-    staleTime: getStaleTime(endpoint)
-  });
-}
-
-/**
- * Invalidate queries by endpoint pattern
- */
-export function invalidateQueries(pattern: string) {
-  return queryClient.invalidateQueries({ 
-    predicate: (query) => {
-      const queryKey = query.queryKey[0];
-      return typeof queryKey === 'string' && queryKey.includes(pattern);
-    }
-  });
-}
+  };
+};
