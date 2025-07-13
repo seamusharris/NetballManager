@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ClubProvider from '@/contexts/ClubContext';
 import { Toaster } from "@/components/ui/toaster";
@@ -24,8 +24,10 @@ import Settings from '@/pages/Settings';
 import ComponentExamples from '@/pages/ComponentExamples';
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
+import PerformanceDashboard from "@/pages/PerformanceDashboard";
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
+import { queryClient } from '@/lib/queryClient';
 
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
@@ -151,6 +153,7 @@ function Router() {
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
         <Route path="/settings" component={Settings} />
+        <Route path="/performance-dashboard" component={withErrorBoundary(PerformanceDashboard, 'PerformanceDashboard')} />
         <Route path="/component-examples" component={ComponentExamples} />
         <Route path="/seasons" component={withErrorBoundary(Seasons, 'Seasons')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
@@ -341,17 +344,7 @@ function Router() {
   );
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
-// Export queryClient for use in other components
-export { queryClient };
 
 
 function AppContent() {

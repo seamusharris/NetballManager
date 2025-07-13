@@ -14,6 +14,9 @@ import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Helmet } from 'react-helmet';
+import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
+import { useOptimizedTeams, useOptimizedTeamGames, useOptimizedSeasons, useOptimizedGameStatuses } from '@/hooks/use-optimized-queries';
+import { useApiErrorHandler } from '@/hooks/use-api-error-handler';
 
 // Import new UI standards
 import { ContentBox, ActionButton, ResponsiveGrid } from '@/components/ui/ui-standards';
@@ -25,6 +28,19 @@ interface QueryParams {
 }
 
 export default function Games() {
+  // Performance monitoring
+  const performanceMetrics = usePerformanceMonitor('Games', {
+    trackApiCalls: true,
+    trackRenderTime: true,
+    logToConsole: true
+  });
+
+  // Error handling
+  const { handleError, handleValidationError } = useApiErrorHandler({
+    showToast: true,
+    logToConsole: true
+  });
+
   const { currentClub, currentClubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const params = useParams();
   const [location] = useLocation();

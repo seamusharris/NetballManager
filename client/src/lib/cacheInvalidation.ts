@@ -1,5 +1,5 @@
 
-import { queryClient } from '../App';
+import { queryClient } from './queryClient';
 
 /**
  * Smart Hierarchical Cache Invalidation System

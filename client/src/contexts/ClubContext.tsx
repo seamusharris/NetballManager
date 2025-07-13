@@ -77,16 +77,8 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
 
   // Single initialization effect - runs only once when userClubs are loaded
   useEffect(() => {
-    console.log('ClubContext: Initialization effect triggered', { 
-      hasUserClubs: Array.isArray(userClubs) && userClubs.length > 0,
-      currentClubId,
-      isInitialized,
-      isLoadingClubs,
-      userClubsLength: userClubs.length
-    });
-
     // Only run if we have user clubs, haven't initialized yet, and aren't currently loading
-    if (Array.isArray(userClubs) && userClubs.length > 0 && !isInitialized && !isLoadingClubs && currentClubId === null) {
+    if (Array.isArray(userClubs) && userClubs.length > 0 && !isInitialized && !isLoadingClubs) {
       console.log('ClubContext: Starting initialization...');
 
       let targetClubId: number;
@@ -98,9 +90,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
         const isValidClub = userClubs.some(club => club.clubId === storedId);
         if (isValidClub) {
           targetClubId = storedId;
-          console.log('ClubContext: Using valid stored club ID:', storedId);
         } else {
-          console.warn('ClubContext: Stored club ID invalid, resetting...');
           localStorage.removeItem('currentClubId');
           const warrandyteClub = userClubs.find(club => club.clubId === 54);
           targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
@@ -109,10 +99,9 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
         // No stored club - prefer Warrandyte (54) if available
         const warrandyteClub = userClubs.find(club => club.clubId === 54);
         targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
-        console.log('ClubContext: No stored club, selecting:', targetClubId);
       }
 
-      // Set everything immediately without transitions to avoid loops
+      // Set everything immediately
       localStorage.setItem('currentClubId', targetClubId.toString());
       apiClient.setClubContext({ currentClubId: targetClubId });
       setCurrentClubId(targetClubId);
@@ -120,42 +109,36 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
 
       console.log('ClubContext: Initialization completed with club:', targetClubId);
     }
-  }, [userClubs, isLoadingClubs, isInitialized, currentClubId]);
+  }, [userClubs, isLoadingClubs, isInitialized]);
 
   // Load saved team from localStorage when teams are available
   useEffect(() => {
     const savedTeamId = localStorage.getItem('current-team-id');
-    if (savedTeamId && !currentTeamId && clubTeams.length > 0) {
+    if (savedTeamId && clubTeams.length > 0) {
       const teamId = parseInt(savedTeamId, 10);
       const teamExists = clubTeams.some(team => team.id === teamId);
       if (teamExists) {
-        console.log('ClubContext: Restoring saved team:', teamId);
         setCurrentTeamId(teamId);
       } else {
-        console.log('ClubContext: Saved team not found, clearing...');
         localStorage.removeItem('current-team-id');
       }
     }
-  }, [clubTeams, currentTeamId]);
+  }, [clubTeams]);
 
   // Keep API client in sync with context changes
   useEffect(() => {
     if (currentClubId !== null) {
-      console.log('ClubContext: Syncing API client with context:', { currentClubId, currentTeamId });
       apiClient.setClubContext({ currentClubId, currentTeamId });
     }
   }, [currentClubId, currentTeamId]);
 
   const switchClub = useCallback((clubId: number) => {
-    console.log('ClubContext: Switching club to:', clubId);
-
     // Validate access
     if (!Array.isArray(userClubs) || !userClubs.some(club => club.clubId === clubId)) {
-      console.error('ClubContext: Access denied to club:', clubId);
       return;
     }
 
-    // Update everything immediately without transitions
+    // Update everything immediately
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
     setCurrentClubId(clubId);
@@ -163,13 +146,9 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
     // Clear team selection when switching clubs
     setCurrentTeamId(null);
     localStorage.removeItem('current-team-id');
-
-    console.log('ClubContext: Club switch completed to:', clubId);
   }, [userClubs]);
 
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
-    console.log('ClubContext: Setting team to:', teamId);
-
     if (teamId === currentTeamId) {
       return; // No change needed
     }
@@ -181,17 +160,11 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('current-team-id');
     }
 
-    // Update API client context with the NEW team ID immediately
-    // This ensures API calls use the correct context before React re-renders
+    // Update API client context
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
 
-    // Update state after API client is set
+    // Update state
     setCurrentTeamId(teamId);
-
-    // Cache invalidation disabled to prevent race conditions
-    // Let React Query handle cache naturally through query key changes
-
-    console.log('ClubContext: Team context updated to:', teamId);
   }, [currentClubId, currentTeamId]);
 
   const hasPermission = useCallback((permission: keyof UserClubAccess['permissions']) => {

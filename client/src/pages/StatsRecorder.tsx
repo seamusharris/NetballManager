@@ -218,7 +218,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     }
 
     const teamPlayerIds = new Set();
-    if (rosters) {
+    if (rosters && Array.isArray(rosters)) {
         rosters.forEach((r: any) => teamPlayerIds.add(r.playerId));
     }
 
@@ -310,7 +310,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
   // Initialize current positions from roster data
   useEffect(() => {
-    if (rosters && rosters.length > 0) {
+    if (rosters && Array.isArray(rosters) && rosters.length > 0) {
       console.log(`Setting up positions for quarter ${currentQuarter} from ${rosters.length} roster entries`);
 
       const latestPositions: Record<Position, number | null> = {
@@ -353,7 +353,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     }
 
     // For other quarters, look up from roster data
-    if (!rosters) return undefined;
+    if (!rosters || !Array.isArray(rosters)) return undefined;
 
     const roster = rosters.find((r: any) => 
       r.position === position && r.quarter === quarter
@@ -467,11 +467,11 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           return;
         }
 
-        const existingStat = existingStats?.find((s: any) => 
+        const existingStat = existingStats && Array.isArray(existingStats) ? existingStats.find((s: any) => 
           s.position === position && 
           s.quarter === quarter &&
           s.teamId === currentTeamId
-        );
+        ) : undefined;
 
         if (existingStat) {
           // Use game-centric endpoint for updates too
@@ -491,7 +491,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           updates.push(updatePromise);
         } else {
           const createPromise = apiClient.post(`/api/game/${gameId}/team/${currentTeamId}/stats`, {
-            gameId: parseInt(gameId),
+            gameId: gameId,
             teamId: currentTeamId,
             position: position,
             quarter: quarter,

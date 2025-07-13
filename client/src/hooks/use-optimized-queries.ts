@@ -105,14 +105,15 @@ export const useOptimizedGameStats = (gameId: number) => {
 /**
  * Optimized hook for fetching player data with minimal refetching
  */
-export const useOptimizedPlayers = (clubId: number) => {
-  return useQuery({
+export const useOptimizedPlayers = (clubId: number | null) => {
+  return useQuery<any[]>({
     queryKey: ['players', clubId],
     queryFn: () => apiClient.get(`/api/clubs/${clubId}/players`),
     staleTime: CACHE_TIMES.MEDIUM,
     gcTime: CACHE_TIMES.LONG,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    enabled: !!clubId,
   });
 };
 

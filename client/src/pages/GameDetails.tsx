@@ -1861,13 +1861,13 @@ export default function GameDetails() {
                 </CardHeader>
                 <CardContent>
                   {console.log("Debug: Rendering roster section", { 
-                    rosterLength: roster?.length, 
+                    rosterLength: roster && Array.isArray(roster) ? roster.length : 0, 
                     isLoading: isLoadingRoster,
                     playersLength: players?.length,
                     isLoadingPlayers,
-                    firstRosterEntry: roster?.[0],
+                    firstRosterEntry: roster && Array.isArray(roster) ? roster[0] : undefined,
                     firstPlayer: players?.[0],
-                    rosterPlayerIds: roster?.slice(0, 5)?.map(r => r.playerId),
+                    rosterPlayerIds: roster && Array.isArray(roster) ? roster.slice(0, 5)?.map(r => r.playerId) : [],
                     playerIds: players?.slice(0, 5)?.map(p => p.id),
                     playersWithNames: players?.slice(0, 3)?.map(p => ({id: p.id, name: p.displayName}))
                   })}
@@ -2019,7 +2019,7 @@ export default function GameDetails() {
   }
 
   // Find positions played by this player in this game
-  const playerPositions = roster?.filter(r => r.playerId === awardWinner.id) || [];
+  const playerPositions = roster && Array.isArray(roster) ? roster.filter(r => r.playerId === awardWinner.id) : [];
 
   // Initialize stat counters
   let goals = 0;

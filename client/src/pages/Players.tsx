@@ -17,10 +17,26 @@ import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 import { apiClient } from '@/lib/apiClient';
+import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
+import { useOptimizedPlayers, useOptimizedSeasons } from '@/hooks/use-optimized-queries';
+import { useApiErrorHandler } from '@/hooks/use-api-error-handler';
 
 export default function Players() {
   const params = useParams<{ clubId?: string; teamId?: string }>();
   const [location, setLocation] = useLocation();
+
+  // Performance monitoring
+  const performanceMetrics = usePerformanceMonitor('Players', {
+    trackApiCalls: true,
+    trackRenderTime: true,
+    logToConsole: true
+  });
+
+  // Error handling
+  const { handleError, handleValidationError } = useApiErrorHandler({
+    showToast: true,
+    logToConsole: true
+  });
 
   // ALL HOOKS MUST BE DECLARED AT THE TOP LEVEL
   const {
@@ -47,25 +63,11 @@ export default function Players() {
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
 
-  // ALL QUERY HOOKS
-  const { data: activeSeason } = useQuery({
-    queryKey: ['seasons', 'active'],
-    queryFn: async () => {
-      const response = await apiClient.get('/api/seasons/active');
-      return response;
-    },
-  });
-
-  // Get club players
-  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useQuery({
-    queryKey: ['players', clubId],
-    queryFn: async () => {
-      if (!clubId) return [];
-      const response = await apiClient.get(`/api/clubs/${clubId}/players`);
-      return response;
-    },
-    enabled: !!clubId,
-  });
+  // ALL QUERY HOOKS - Using optimized hooks
+  const { data: activeSeason } = useOptimizedSeasons();
+  
+  // Get club players using optimized hook
+  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useOptimizedPlayers(clubId);
 
   // ALL MUTATION HOOKS
   const createPlayer = useMutation({

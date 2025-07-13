@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useNextGame } from '@/hooks/use-next-game';
 import { 
   Building2, Home, Users, Calendar, ClipboardList, Trophy, 
-  CalendarRange, Settings as SettingsIcon, Zap, Target, Download, X 
+  CalendarRange, Settings as SettingsIcon, Zap, Target, Download, X, Activity
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
@@ -40,6 +40,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       { path: '/seasons', label: 'Season Management', icon: <CalendarRange className="w-5 h-5" />, section: 'admin' },
       { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" />, section: 'admin' },
       { path: '/settings', label: 'System Settings', icon: <SettingsIcon className="w-5 h-5" />, section: 'admin' },
+      { path: '/performance-dashboard', label: 'Performance Dashboard', icon: <Activity className="w-5 h-5" />, section: 'admin' },
     ];
 
     const devLinks = [

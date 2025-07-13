@@ -50,6 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
 
+
+
+
+
   // ----- DIAGNOSTIC APIs -----
 
   // Debug stats relationships
@@ -3530,13 +3534,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Team-based get roster entries (NEW - Stage 5)
-  app.get('/api/teams/:teamId/games/:gameId/rosters', requireTeamGameAccess(), async (req: AuthenticatedRequest, res) => {
+
+
+  // Team-based get roster entries (NEW - Stage 5) - MOVED TO TOP
+  app.get('/api/teams/:teamId/games/:gameId/rosters', async (req: AuthenticatedRequest, res) => {
     try {
-      const { gameId } = req.params;
-      const rosters = await storage.getRostersByGame(parseInt(gameId));
-      console.log(`Team-based roster fetch: Found ${rosters.length} roster entries for game ${gameId}`);
-      res.json(rosters);
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      console.log(`Team-based roster fetch: teamId=${teamId}, gameId=${gameId}`);
+
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Verify the team is actually playing in this game
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ${gameId} AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Team is not playing in this game' });
+      }
+
+      // Get roster entries for this team's game
+      const roster = await db.execute(sql`
+        SELECT 
+          r.id,
+          r.game_id,
+          r.quarter,
+          r.position,
+          r.player_id,
+          p.display_name,
+          p.first_name,
+          p.last_name,
+          p.avatar_color
+        FROM rosters r
+        JOIN players p ON r.player_id = p.id
+        WHERE r.game_id = ${gameId}
+        ORDER BY r.quarter, r.position
+      `);
+
+      console.log(`Team-based roster fetch: Found ${roster.rows.length} roster entries for game ${gameId}`);
+
+      const mappedRoster = roster.rows.map(row => ({
+        id: row.id,
+        gameId: row.game_id,
+        quarter: row.quarter,
+        position: row.position,
+        playerId: row.player_id,
+        playerName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        avatarColor: row.avatar_color
+      }));
+
+      res.json(mappedRoster);
     } catch (error) {
       console.error('Error fetching team roster entries:', error);
       res.status(500).json({ error: 'Failed to fetch roster entries' });
