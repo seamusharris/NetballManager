@@ -28,30 +28,3 @@ export function transformToApiFormat(data: any): any {
 export function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
 }
-
-export function flattenRelationshipData(data: any, relationships: Record<string, string[]>): any {
-  const result = { ...data };
-  
-  for (const [relationshipName, fields] of Object.entries(relationships)) {
-    const relationshipData = result[relationshipName];
-    
-    if (relationshipData) {
-      // Add flattened fields with prefixes
-      for (const field of fields) {
-        const flatKey = `${relationshipName}${field.charAt(0).toUpperCase() + field.slice(1)}`;
-        result[flatKey] = relationshipData[field];
-      }
-      
-      // Remove the nested object (optional - keep for backward compatibility)
-      // delete result[relationshipName];
-    }
-  }
-  
-  return result;
-}
-
-// Example usage:
-// const gameWithFlatData = flattenRelationshipData(game, {
-//   season: ['id', 'name', 'year'],
-//   opponent: ['id', 'teamName', 'primaryContact']
-// });

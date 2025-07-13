@@ -25,8 +25,6 @@ export const gameStatuses = pgTable("game_statuses", {
 });
 
 export const insertGameStatusSchema = createInsertSchema(gameStatuses).omit({ id: true });
-export const importGameStatusSchema = createInsertSchema(gameStatuses);
-export type InsertGameStatus = z.infer<typeof insertGameStatusSchema>;
 export type GameStatus = typeof gameStatuses.$inferSelect;
 
 
@@ -48,8 +46,6 @@ export const seasons = pgTable("seasons", {
 
 // Default schema without ID for normal creation
 export const insertSeasonSchema = createInsertSchema(seasons).omit({ id: true });
-// Schema with ID for import operations
-export const importSeasonSchema = createInsertSchema(seasons);
 export type InsertSeason = z.infer<typeof insertSeasonSchema>;
 export type Season = typeof seasons.$inferSelect;
 
@@ -179,7 +175,6 @@ export const clubs = pgTable("clubs", {
 });
 
 export const insertClubSchema = createInsertSchema(clubs).omit({ id: true });
-export type InsertClub = z.infer<typeof insertClubSchema>;
 export type Club = typeof clubs.$inferSelect;
 
 // Sections table - defines age groups and section numbers/letters
@@ -217,11 +212,9 @@ export const teams = pgTable("teams", {
 });
 
 export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
-export type InsertSection = z.infer<typeof insertSectionSchema>;
 export type Section = typeof sections.$inferSelect;
 
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true });
-export type InsertTeam = z.infer<typeof insertTeamSchema>;
 export type Team = typeof teams.$inferSelect;
 
 // Team-player relationships (replaces player_seasons)
@@ -239,8 +232,7 @@ export const teamPlayers = pgTable("team_players", {
 });
 
 export const insertTeamPlayerSchema = createInsertSchema(teamPlayers).omit({ id: true });
-export type InsertTeamPlayer = z.infer<typeof insertTeamPlayerSchema>;
-export type TeamPlayer = typeof teamPlayers.$inferSelect;
+
 
 // Club user access control
 export const clubUsers = pgTable("club_users", {
@@ -261,8 +253,7 @@ export const clubUsers = pgTable("club_users", {
 });
 
 export const insertClubUserSchema = createInsertSchema(clubUsers).omit({ id: true });
-export type InsertClubUser = z.infer<typeof insertClubUserSchema>;
-export type ClubUser = typeof clubUsers.$inferSelect;
+
 
 // Player borrowing between teams within the same club
 export const playerBorrowing = pgTable("player_borrowing", {

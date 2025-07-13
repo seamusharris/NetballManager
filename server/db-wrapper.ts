@@ -63,42 +63,7 @@ export async function executeWithRetry<T>(
   throw lastError;
 }
 
-/**
- * Safe pool query with retry logic and connection management
- * Optimized to reduce connection churn
- */
-export async function safePoolQuery(text: string, params?: any[]): Promise<any> {
-  return executeWithRetry(async () => {
-    const client = await pool.connect();
-    try {
-      return await client.query(text, params);
-    } finally {
-      client.release();
-    }
-  });
-}
 
-/**
- * Batch query executor to reduce connection overhead
- * Executes multiple queries in a single connection
- */
-export async function executeBatchQueries(
-  queries: Array<{ text: string; params?: any[] }>
-): Promise<any[]> {
-  return executeWithRetry(async () => {
-    const client = await pool.connect();
-    try {
-      const results = [];
-      for (const query of queries) {
-        const result = await client.query(query.text, query.params);
-        results.push(result);
-      }
-      return results;
-    } finally {
-      client.release();
-    }
-  });
-}
 
 /**
  * Enhanced database health check with detailed diagnostics

@@ -221,49 +221,7 @@ export function requireAuth() {
   };
 }
 
-/**
- * Load user's club permissions
- */
-export async function loadUserClubPermissions(userId: number): Promise<Array<{
-  clubId: number;
-  clubName: string;
-  clubCode: string;
-  role: string;
-  permissions: {
-    canManagePlayers: boolean;
-    canManageGames: boolean;
-    canManageStats: boolean;
-    canViewOtherTeams: boolean;
-  };
-}>> {
-  const result = await db.execute(sql`
-    SELECT 
-      cu.club_id,
-      cu.role,
-      cu.can_manage_players,
-      cu.can_manage_games,
-      cu.can_manage_stats,
-      cu.can_view_other_teams,
-      c.name as club_name,
-      c.code as club_code
-    FROM club_users cu
-    JOIN clubs c ON cu.club_id = c.id
-    WHERE cu.user_id = ${userId} AND cu.is_active = true;
-  `);
 
-  return result.rows.map(row => ({
-    clubId: Number(row.club_id),
-    clubName: String(row.club_name),
-    clubCode: String(row.club_code),
-    role: String(row.role),
-    permissions: {
-      canManagePlayers: Boolean(row.can_manage_players),
-      canManageGames: Boolean(row.can_manage_games),
-      canManageStats: Boolean(row.can_manage_stats),
-      canViewOtherTeams: Boolean(row.can_view_other_teams),
-    }
-  }));
-}
 
 /**
  * Middleware to load user permissions and set up default user context

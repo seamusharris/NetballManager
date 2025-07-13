@@ -1,0 +1,76 @@
+# Page snapshot
+
+```yaml
+- complementary:
+  - text: 🏐
+  - heading "Netball Team Stats" [level=1]
+  - button:
+    - img
+  - paragraph: Club Wide
+  - link "Club Dashboard":
+    - /url: /
+    - img
+    - text: Club Dashboard
+  - link "All Players":
+    - /url: /club/54/players
+    - img
+    - text: All Players
+  - link "All Teams":
+    - /url: /club/54/teams
+    - img
+    - text: All Teams
+  - link "All Games":
+    - /url: /club/54/games
+    - img
+    - text: All Games
+  - link "Team Ladder":
+    - /url: /team-ladder
+    - img
+    - text: Team Ladder
+  - paragraph: Administration
+  - link "Season Management":
+    - /url: /seasons
+    - img
+    - text: Season Management
+  - link "Club Management":
+    - /url: /clubs
+    - img
+    - text: Club Management
+  - link "System Settings":
+    - /url: /settings
+    - img
+    - text: System Settings
+  - paragraph: Development
+  - link "Component Examples":
+    - /url: /component-examples
+    - img
+    - text: Component Examples
+  - link "Reference":
+    - /url: /reference
+    - img
+    - text: Reference
+  - link "PlayerBox Tests":
+    - /url: /player-box-test
+    - img
+    - text: PlayerBox Tests
+  - link "Drag Drop Examples":
+    - /url: /drag-drop-examples
+    - img
+    - text: Drag Drop Examples
+- banner:
+  - button:
+    - img
+  - heading "Clubs" [level=2]
+  - button "Warrandyte Netball Club":
+    - img
+    - text: Warrandyte Netball Club
+    - img
+  - text: "Team:"
+  - combobox: All teams
+- main:
+  - img
+  - heading "404 Page Not Found" [level=1]
+  - paragraph: Did you forget to add the page to the router?
+- region "Notifications (F8)":
+  - list
+```
