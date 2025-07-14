@@ -1,6 +1,7 @@
 import { queryClient } from './queryClient';
 import { apiClient } from './apiClient';
 import { CACHE_KEYS, normalizeGameIds } from './cacheKeys';
+import type { GameStat } from '@shared/schema';
 
 interface BatchFetchOptions {
   gameIds: number[] | string;
@@ -148,22 +149,32 @@ export class UnifiedDataFetcher {
     });
   }
 
-  async batchFetchStats(gameIds: number[], clubId: number, teamId?: number): Promise<Record<string, GameStat[]>> {
-    if (gameIds.length === 0) return {};
+  async batchFetchStats(gameIds: number[] | string, clubId: number, teamId?: number): Promise<Record<string, GameStat[]>> {
+    // Ensure gameIds is always an array of numbers
+    let ids: number[];
+    if (Array.isArray(gameIds)) {
+      ids = gameIds;
+    } else if (typeof gameIds === 'string') {
+      ids = gameIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+    } else {
+      ids = [];
+    }
+    if (ids.length === 0) return {} as Record<string, GameStat[]>;
 
-    console.log(`UnifiedDataFetcher: Batch fetching stats for ${gameIds.length} games, teamId: ${teamId}`);
+    console.log(`UnifiedDataFetcher: Batch fetching stats for ${ids.length} games, teamId: ${teamId}`);
 
     try {
+      // Always wrap gameIds in an object for the POST body
       const response = await apiClient.post(`/api/clubs/${clubId}/games/stats/batch`, {
-        gameIds,
+        gameIds: ids,
         teamId // Include team ID for filtering
       });
 
-      console.log(`UnifiedDataFetcher: Batch stats received for ${gameIds.length} games`);
-      return response || {};
+      console.log(`UnifiedDataFetcher: Batch stats received for ${ids.length} games`);
+      return response || ({} as Record<string, GameStat[]>);
     } catch (error) {
       console.error('UnifiedDataFetcher: Batch stats fetch failed:', error);
-      return {};
+      return {} as Record<string, GameStat[]>;
     }
   }
 

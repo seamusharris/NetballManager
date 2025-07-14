@@ -84,11 +84,21 @@ class ApiClient {
     console.log('API Client: All headers being sent:', headers);
     console.log(`API Client: Final headers:`, headers);
 
+    let requestBody: any = undefined;
     if (data) {
-      const snakeData = snakecaseKeys(data, { deep: true });
-      const dataString = JSON.stringify(snakeData);
-      console.log('API Client: Request data size:', dataString.length + ' bytes');
-      console.log(`API Client: Request data (snake_case):`, JSON.stringify(snakeData, null, 2));
+      // Bypass snakecaseKeys for batch scores/stats endpoints that require camelCase
+      const isCamelCaseBatchEndpoint =
+        endpoint.includes('/games/scores/batch') ||
+        endpoint.includes('/games/stats/batch');
+      if (isCamelCaseBatchEndpoint) {
+        requestBody = JSON.stringify(data);
+        console.log('API Client: Request data (camelCase, no snakecaseKeys):', JSON.stringify(data, null, 2));
+      } else {
+        const snakeData = snakecaseKeys(data, { deep: true });
+        requestBody = JSON.stringify(snakeData);
+        console.log('API Client: Request data (snake_case):', JSON.stringify(snakeData, null, 2));
+      }
+      console.log('API Client: Request data size:', requestBody.length + ' bytes');
     } else {
       console.log('API Client: No request data.');
     }
@@ -99,7 +109,7 @@ class ApiClient {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method,
         headers,
-        body: data ? JSON.stringify(snakecaseKeys(data, { deep: true })) : undefined,
+        body: data ? requestBody : undefined,
       });
 
       console.log(`API Client: Response status: ${response.status} ${response.statusText} at ${new Date().toISOString()}`);

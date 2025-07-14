@@ -43,16 +43,16 @@ export default function TopPlayersWidget({
       // Season filter
       let passesSeasonFilter = true;
       if (seasonFilter === 'current' && activeSeason) {
-        passesSeasonFilter = game.seasonId === activeSeason.id;
+        passesSeasonFilter = game.season_id === activeSeason.id;
       } else if (seasonFilter && seasonFilter !== 'current') {
-        const seasonId = parseInt(seasonFilter);
-        passesSeasonFilter = game.seasonId === seasonId;
+        const filterSeasonId = parseInt(seasonFilter);
+        passesSeasonFilter = game.season_id === filterSeasonId;
       }
 
       // Team filter - only apply if teamId is provided
       let passesTeamFilter = true;
       if (teamId) {
-        passesTeamFilter = game.homeTeamId === teamId || game.awayTeamId === teamId;
+        passesTeamFilter = game.home_team_id === teamId || game.away_team_id === teamId;
       }
 
       return passesSeasonFilter && passesTeamFilter;
@@ -61,10 +61,16 @@ export default function TopPlayersWidget({
 
   // Filter for completed games that allow statistics
   const validGames = useMemo(() => {
-    return filteredGames.filter(game => 
-      game.statusIsCompleted === true && 
-      game.statusAllowsStatistics === true
-    );
+    // If status_is_completed/status_allows_statistics do not exist, use status_id mapping
+    return filteredGames.filter(game => {
+      // If status_is_completed and status_allows_statistics exist, use them
+      if ('status_is_completed' in game && 'status_allows_statistics' in game) {
+        return game.status_is_completed === true && game.status_allows_statistics === true;
+      }
+      // Otherwise, use status_id mapping (assuming 3 = completed, 1 = upcoming, etc.)
+      // You may need to adjust these mappings based on your schema
+      return game.status_id === 3; // 3 = completed
+    });
   }, [filteredGames]);
 
   const gameIds = useMemo(() => {
@@ -89,7 +95,7 @@ export default function TopPlayersWidget({
             const rosters = gameRostersMap[game.id] || [];
             return rosters.some((roster: any) => 
               roster.playerId === player.id &&
-              ((game.homeTeamId === teamId) || (game.awayTeamId === teamId))
+              (game.home_team_id === teamId || game.away_team_id === teamId)
             );
           });
         })
@@ -112,7 +118,7 @@ export default function TopPlayersWidget({
         const wasRostered = gameRosters.some((roster: any) => {
           if (roster.playerId !== player.id) return false;
           if (!teamId) return true;
-          return (game.homeTeamId === teamId) || (game.awayTeamId === teamId);
+          return game.home_team_id === teamId || game.away_team_id === teamId;
         });
 
         if (wasRostered) {
@@ -156,8 +162,9 @@ export default function TopPlayersWidget({
     gameRostersMap, 
     players, 
     teamId, 
-    validGames,
-    gameIds
+    games, 
+    seasonFilter, 
+    activeSeason
   ]);
 
   // Get players with their stats and sort by performance
@@ -182,15 +189,9 @@ export default function TopPlayersWidget({
   return (
     <BaseWidget
       title="Top Players"
-      icon="Trophy"
       className={cn("", className)}
-      actions={
-        <ViewMoreButton 
-          href="/players" 
-          label="View All Players"
-        />
-      }
     >
+      <ViewMoreButton href="/players" />
       <div className="space-y-3">
         {topPlayers.length > 0 ? (
           topPlayers.map((player, index) => {
@@ -202,20 +203,13 @@ export default function TopPlayersWidget({
               <PlayerBox
                 key={player.id}
                 playerId={player.id}
-                playerName={player.displayName || `${player.firstName} ${player.lastName}`}
-                playerColor={player.avatarColor || 'bg-gray-500'}
-                displayName={`#${rank} ${player.displayName}`}
+                playerName={player.display_name || `${player.first_name} ${player.last_name}`}
+                playerColor={player.avatar_color || 'bg-gray-500'}
+                displayName={`#${rank} ${player.display_name}`}
                 subtitle={`${totalContributions} contributions in ${stats.gamesPlayed} games`}
                 onClick={() => `/players/${player.id}`}
                 className="transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <span>{stats.goals}G</span>
-                  <span>{stats.rebounds}R</span>
-                  <span>{stats.intercepts}I</span>
-                  {stats.rating > 0 && <span>{stats.rating.toFixed(1)}★</span>}
-                </div>
-              </PlayerBox>
+              />
             );
           })
         ) : (

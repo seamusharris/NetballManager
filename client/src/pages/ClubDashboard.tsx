@@ -110,7 +110,7 @@ export default function ClubDashboard() {
       if (allGameIds.length === 0) return {};
 
       console.log('ClubDashboard: Fetching official scores for games:', allGameIds);
-      const response = await apiClient.post('/api/games/scores/batch', {
+      const response = await apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, {
         gameIds: allGameIds
       });
       console.log('ClubDashboard: Official scores batch response:', response);

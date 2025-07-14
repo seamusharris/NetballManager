@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GameStat, Position, allPositions } from '@shared/schema';
@@ -15,7 +15,7 @@ export default function StatsDebug() {
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => {
       console.log(`StatsDebug: Fetching stats via legacy endpoint /api/games/${gameId}/stats`);
-      return apiRequest(`/api/games/${gameId}/stats`);
+      return apiClient.get(`/api/games/${gameId}/stats`);
     },
     enabled: !!gameId && !isNaN(gameId),
     refetchInterval: 2000 // Auto refresh every 2 seconds

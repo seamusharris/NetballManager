@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiRequest, apiClient } from '@/lib/apiClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { getCompletedGamesForStats } from '@/lib/gameFilters';
+import { useClub } from '@/contexts/ClubContext';
 
 interface QuarterPerformanceWidgetProps {
   games: Game[];
@@ -22,6 +23,7 @@ export default function QuarterPerformanceWidget({
   selectedSeason,
   currentTeamId 
 }: QuarterPerformanceWidgetProps) {
+  const { currentClubId } = useClub();
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -33,7 +35,7 @@ export default function QuarterPerformanceWidget({
   // Get games valid for statistics - memoize to prevent infinite re-renders
   const validGameIds = useMemo(() => {
     // Filter for completed games that allow statistics
-  const validGames = getCompletedGamesForStats(games);
+    const validGames = getCompletedGamesForStats(games);
 
     console.log('QuarterPerformanceWidget valid games:', validGames.length, 'out of', games.length);
     return validGames.map(game => game.id);
@@ -53,10 +55,10 @@ export default function QuarterPerformanceWidget({
       }
 
       try {
-        // Use the POST batch scores endpoint
+        // Use the club-scoped batch scores endpoint
         console.log(`QuarterPerformanceWidget: Fetching batch scores for game IDs:`, validGameIds);
 
-        const batchScores = await apiClient.post('/api/games/scores/batch', {
+        const batchScores = await apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, {
           gameIds: validGameIds
         });
 
@@ -75,7 +77,7 @@ export default function QuarterPerformanceWidget({
         return {};
       }
     },
-    enabled: enableQuery,
+    enabled: enableQuery && !!currentClubId,
     staleTime: 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000
   });
@@ -119,12 +121,12 @@ export default function QuarterPerformanceWidget({
       if (currentTeamId) {
         // Use the provided current team ID to determine our team vs opponent
         ourTeamId = currentTeamId;
-        opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
+        opponentTeamId = game.home_team_id === currentTeamId ? game.away_team_id : game.home_team_id;
       } else {
         // Fallback: try to determine from game structure
         console.warn('QuarterPerformanceWidget: No currentTeamId provided, using fallback logic');
-        ourTeamId = game.homeTeamId;
-        opponentTeamId = game.awayTeamId;
+        ourTeamId = game.home_team_id;
+        opponentTeamId = game.away_team_id;
       }
 
       // Group scores by quarter for this game

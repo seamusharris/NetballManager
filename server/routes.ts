@@ -32,6 +32,7 @@ import {
   standardAuth
 } from "./auth-middleware";
 import { transformToApiFormat } from './api-utils';
+import camelcaseKeys from 'camelcase-keys';
 
 // Database health check function
 async function checkPoolHealth(): Promise<boolean> {
@@ -389,10 +390,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id, game_id, quarter, position, player_id
             ) VALUES (
               ${roster.id}, 
-              ${roster.gameId}, 
+              ${roster.game_id}, 
               ${quarter}, 
               ${position}, 
-              ${roster.playerId}
+              ${roster.player_id}
             )
           `);
           rostersImported++;
@@ -423,22 +424,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Clean and normalize all fields
           const cleanStat = {
             id: stat.id,
-            gameId: stat.gameId,
-            playerId: stat.playerId,
+            game_id: stat.game_id,
+            player_id: stat.player_id,
             quarter: stat.quarter >= 1 && stat.quarter <= 4 ? stat.quarter : 1,
-            goalsFor: Math.max(0, parseInt(stat.goalsFor || 0)),
-            goalsAgainst: Math.max(0, parseInt(stat.goalsAgainst || 0)),
-            missedGoals: Math.max(0, parseInt(stat.missedGoals || 0)),
+            goals_for: Math.max(0, parseInt(stat.goals_for || 0)),
+            goals_against: Math.max(0, parseInt(stat.goals_against || 0)),
+            missed_goals: Math.max(0, parseInt(stat.missed_goals || 0)),
             rebounds: Math.max(0, parseInt(stat.rebounds || 0)),
             intercepts: Math.max(0, parseInt(stat.intercepts || 0)),
-            badPass: Math.max(0, parseInt(stat.badPass || 0)),
-            handlingError: Math.max(0, parseInt(stat.handlingError || 0)),
-            pickUp: Math.max(0, parseInt(stat.pickUp || 0)),
+            bad_pass: Math.max(0, parseInt(stat.bad_pass || 0)),
+            handling_error: Math.max(0, parseInt(stat.handling_error || 0)),
+            pick_up: Math.max(0, parseInt(stat.pick_up || 0)),
             infringement: Math.max(0, parseInt(stat.infringement || 0)),
             rating: Math.min(10, Math.max(1, parseInt(stat.rating || 5)))
           };
 
-          console.log(`Processing stat for quarter ${cleanStat.quarter}, player ${cleanStat.playerId}:`, stat);
+          console.log(`Processing stat for quarter ${cleanStat.quarter}, player ${cleanStat.player_id}:`, stat);
 
           await db.execute(sql`
             INSERT INTO game_stats (
@@ -447,17 +448,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               pick_up, infringement, rating
             ) VALUES (
               ${cleanStat.id}, 
-              ${cleanStat.gameId}, 
-              ${cleanStat.playerId}, 
+              ${cleanStat.game_id}, 
+              ${cleanStat.player_id}, 
               ${cleanStat.quarter}, 
-              ${cleanStat.goalsFor}, 
-              ${cleanStat.goalsAgainst}, 
-              ${cleanStat.missedGoals}, 
+              ${cleanStat.goals_for}, 
+              ${cleanStat.goals_against}, 
+              ${cleanStat.missed_goals}, 
               ${cleanStat.rebounds}, 
               ${cleanStat.intercepts}, 
-              ${cleanStat.badPass}, 
-              ${cleanStat.handlingError}, 
-              ${cleanStat.pickUp}, 
+              ${cleanStat.bad_pass}, 
+              ${cleanStat.handling_error}, 
+              ${cleanStat.pick_up}, 
               ${cleanStat.infringement}, 
               ${cleanStat.rating}
             )
@@ -1334,7 +1335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`REST Club games endpoint: clubId=${clubId}, seasonId=${seasonId}`);
 
-      // Use the same SQL query as the working header-based endpoint
+      // Updated SQL: include all games where either home or away team belongs to the club
       const result = await db.execute(sql`
         SELECT 
           g.*,
@@ -1361,14 +1362,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM games g
         LEFT JOIN game_statuses gs ON g.status_id = gs.id
         LEFT JOIN seasons s ON g.season_id = s.id
-        LEFT JOIN teams ht ON g.home_team_id = ht.id
-        LEFT JOIN teams at ON g.away_team_id = at.id
+        JOIN teams ht ON g.home_team_id = ht.id
+        JOIN teams at ON g.away_team_id = at.id
         LEFT JOIN clubs hc ON ht.club_id = hc.id
         LEFT JOIN clubs ac ON at.club_id = ac.id
-        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
-          SELECT 1 FROM game_permissions gp
-          WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-        ))
+        WHERE ht.club_id = ${clubId} OR at.club_id = ${clubId}
         ORDER BY g.date DESC, g.time DESC
       `);
 
@@ -2072,25 +2070,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- GAME STATS API -----
   // Batch endpoint to get rosters for multiple games at once
   // Club-scoped batch rosters endpoint
-  app.post("/api/clubs/:clubId/games/rosters/batch", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/clubs/:clubId/games/rosters/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    console.log('ENTER batch rosters endpoint');
     try {
-      const { gameIds } = req.body;
+      const { gameIds } = camelcaseKeys(req.body, { deep: false });
       const clubId = parseInt(req.params.clubId);
 
       if (!Array.isArray(gameIds) || gameIds.length === 0) {
+        console.log('EXIT: gameIds missing or empty');
         return res.status(400).json({ error: 'gameIds array is required' });
       }
 
       console.log(`Club-scoped batch rosters request for club ${clubId}, games:`, gameIds);
 
-      const gameIdInts = gameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
-      if (gameIdInts.length === 0) {
-        return res.json({});
+      // TEST 1: Simple equality query on rosters
+      try {
+        const singleRoster = await db.select()
+          .from(rosters)
+          .where(eq(rosters.game_id, 1));
+        console.log('Simple equality query rostersData:', singleRoster);
+      } catch (err) {
+        console.error('Simple equality query error:', err);
       }
 
-      const rostersData = await db.select()
-        .from(rosters)
-        .where(inArray(rosters.gameId, gameIdInts));
+      // TEST 2: inArray query on gameStats
+      try {
+        const statsData = await db.select()
+          .from(gameStats)
+          .where(inArray(gameStats.game_id, [1, 2, 3]));
+        console.log('inArray query gameStatsData:', statsData);
+      } catch (err) {
+        console.error('inArray query on gameStats error:', err);
+      }
 
       // Group rosters by game ID - ensure consistent format
       const rostersMap: Record<string, any[]> = {};
@@ -2099,8 +2110,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rostersMap[gameIdStr] = [];
       });
 
+      // Fetch all rosters for the requested games
+      const rostersData = await db.select()
+        .from(rosters)
+        .where(inArray(rosters.game_id, gameIds));
+
       rostersData.forEach((roster) => {
-        const gameId = roster.gameId.toString();
+        const gameId = roster.game_id.toString();
         if (rostersMap[gameId]) {
           rostersMap[gameId].push(roster);
         } else {
@@ -2118,6 +2134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Legacy batch rosters endpoint for backward compatibility
   app.post("/api/games/rosters/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    console.log('ENTER legacy batch rosters endpoint');
     try {
       console.log("POST Batch rosters endpoint received body:", req.body);
       const { gameIds } = req.body;
@@ -2174,7 +2191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Batch endpoint to get stats for multiple games at once
   // Club-scoped batch stats endpoint
-  app.post("/api/clubs/:clubId/games/stats/batch", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/clubs/:clubId/games/stats/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameIds } = req.body;
       const clubId = parseInt(req.params.clubId);

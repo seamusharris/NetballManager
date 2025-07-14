@@ -1,44 +1,34 @@
 import { Express } from 'express';
-import { db } from './db';
+import { db, pool } from './db';
 import { gameScores, games } from '@shared/schema';
 import { eq, and, or, inArray, sql } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 import { transformToApiFormat } from './api-utils';
+import camelcaseKeys from 'camelcase-keys';
 
 export function registerGameScoresRoutes(app: Express) {
-  // Club-scoped batch endpoint for multiple games' official scores
+  // Club-scoped batch endpoint for multiple games' official scores (restored to original logic)
   app.post('/api/clubs/:clubId/games/scores/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const { gameIds } = req.body;
-      const clubId = parseInt(req.params.clubId);
-
       if (!Array.isArray(gameIds) || gameIds.length === 0) {
         return res.status(400).json({ error: 'gameIds array is required' });
       }
-
-      // Limit batch size to prevent server overwhelm
-      const limitedGameIds = gameIds.slice(0, 50);
-
-      console.log(`Club-scoped batch scores request for club ${clubId}, games:`, limitedGameIds);
-
-      // Convert to integers and get scores directly
-      const gameIdList = limitedGameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
-
-      if (gameIdList.length === 0) {
-        return res.json({});
+      const validGameIds = gameIds
+        .map(id => typeof id === 'number' ? id : parseInt(id, 10))
+        .filter(id => !isNaN(id) && id > 0);
+      if (validGameIds.length === 0) {
+        return res.status(400).json({ error: 'No valid gameIds provided' });
       }
-
-      // Get all scores for the requested games using proper Drizzle ORM
+      // Fetch all scores for the requested games
       const scores = await db.select()
         .from(gameScores)
-        .where(inArray(gameScores.game_id, gameIdList));
-
+        .where(inArray(gameScores.game_id, validGameIds));
       // Group scores by game ID
-      const scoresMap: Record<number, any[]> = {};
-      limitedGameIds.forEach(gameId => {
+      const scoresMap = {};
+      validGameIds.forEach(gameId => {
         scoresMap[gameId] = [];
       });
-
       scores.forEach((score) => {
         const gameId = score.game_id;
         if (scoresMap[gameId]) {
@@ -47,15 +37,6 @@ export function registerGameScoresRoutes(app: Express) {
           scoresMap[gameId] = [score];
         }
       });
-
-      const gamesWithScores = Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0);
-      const gamesWithoutScores = gameIds.filter(id => !gamesWithScores.includes(id.toString()));
-      
-      console.log(`Club-scoped batch scores response: found scores for ${gamesWithScores.length} games: [${gamesWithScores.join(', ')}]`);
-      if (gamesWithoutScores.length > 0) {
-        console.log(`Club-scoped batch scores response: NO scores found for ${gamesWithoutScores.length} games: [${gamesWithoutScores.join(', ')}]`);
-      }
-
       res.json(transformToApiFormat(scoresMap));
     } catch (error) {
       console.error('Batch scores fetch error:', error);
@@ -66,7 +47,8 @@ export function registerGameScoresRoutes(app: Express) {
   // Legacy batch endpoint for backward compatibility
   app.post('/api/games/scores/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
-      const { gameIds } = req.body;
+      // Accept both snake_case and camelCase keys
+      const { gameIds } = camelcaseKeys(req.body, { deep: true });
       const clubId = parseInt(req.headers['x-current-club-id'] as string);
 
       if (!Array.isArray(gameIds) || gameIds.length === 0) {

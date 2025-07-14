@@ -175,7 +175,7 @@ export default function TeamPreparation() {
   const gameIds = allGames.map(game => game.id);
   const { data: scoresMap = {} } = useQuery<Record<string, any[]>>({
     queryKey: ['scores', gameIds],
-    queryFn: () => apiClient.post('/api/games/scores/batch', { gameIds }),
+    queryFn: () => apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds }),
     enabled: gameIds.length > 0,
   });
 

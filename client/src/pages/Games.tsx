@@ -4,7 +4,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import GameForm from '@/components/games/GameForm';
 import { GamesList } from '@/components/games/GamesList';
-import { apiRequest, apiClient } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation, useParams } from 'wouter';
@@ -191,7 +191,7 @@ export default function Games() {
   // Fetch players
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ['players'],
-    queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
+    queryFn: () => apiClient.get('/api/players'),
   });
 
   const handleCreate = async (game: Game) => {
@@ -201,7 +201,7 @@ export default function Games() {
       // Ensure game has season context - use active season if not specified
       if (!game.seasonId) {
         try {
-          const activeSeason = await apiRequest('GET', '/api/seasons/active');
+          const activeSeason = await apiClient.get('/api/seasons/active') as { id: number; name: string };
           game.seasonId = activeSeason.id;
           console.log(`Assigned game to active season: ${activeSeason.name} (ID: ${activeSeason.id})`);
         } catch (error) {
@@ -209,7 +209,7 @@ export default function Games() {
         }
       }
 
-      await apiRequest('POST', '/api/games', game);
+      await apiClient.post('/api/games', game);
 
       // Invalidate games queries using the correct query keys that match the actual queries
       if (currentClubId) {
@@ -315,9 +315,9 @@ export default function Games() {
   };
 
   // Fetch all teams for inter-club games
-  const { data: allTeams = [] } = useQuery({
+  const { data: allTeams = [] } = useQuery<any[]>({
     queryKey: ['teams', 'all'],
-    queryFn: () => apiRequest('GET', '/api/teams/all')
+    queryFn: () => apiClient.get('/api/teams/all')
   });
 
   // Debug club context

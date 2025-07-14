@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Users, Calendar, Settings, ArrowRight, ClipboardList } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import { useLocation, useParams } from 'wouter';
-import { Game, Player, Opponent } from '@shared/schema';
+import { Game, Player } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
 
@@ -35,26 +35,26 @@ export default function Roster() {
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
 
   // Fetch games
-  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
+  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery<Game[]>({
     queryKey: ['games', currentClub?.id],
-    queryFn: () => apiRequest('GET', '/api/games'),
+    queryFn: () => apiClient.get('/api/games'),
     retry: 1,
     enabled: !!currentClub?.id
   });
 
   // Fetch players
-  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
+  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery<Player[]>({
     queryKey: ['players', currentClub?.id],
-    queryFn: () => apiRequest('GET', '/api/players'),
+    queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClub?.id
   });
 
   // Fetch opponents for legacy support
-  const { data: opponents = [], isLoading: opponentsLoading, error: opponentsError } = useQuery({
+  const { data: opponents = [], isLoading: opponentsLoading, error: opponentsError } = useQuery<any[]>({
     queryKey: ['opponents'],
     queryFn: async () => {
       try {
-        const result = await apiRequest('GET', '/api/opponents');
+        const result = await apiClient.get('/api/opponents');
         return Array.isArray(result) ? result : [];
       } catch (error) {
         console.warn('Opponents API not available (expected)');

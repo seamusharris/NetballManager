@@ -82,31 +82,36 @@ registerPlayerBorrowingRoutes(app);
 registerUserManagementRoutes(app);
 registerAgeGroupsSectionsRoutes(app);
 
-// Start server with health check
-const server = app.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Perform initial health check
-  await checkDatabaseHealth();
-  
-  // Set up periodic health monitoring - reduced frequency
-  setInterval(async () => {
-    try {
-      const health = await enhancedHealthCheck();
-      // Only log if there are issues
-      if (!health.healthy || health.details.waitingCount > 0) {
-        console.warn('⚠️ Database health degraded:', health.details.errors);
-      }
-    } catch (error) {
-      console.error('❌ Periodic health check failed:', error);
-    }
-  }, 10 * 60 * 1000); // Check every 10 minutes instead of 5
-});
+// Export app for testing
+export default app;
 
-// Setup Vite for development or serve static files for production
-if (process.env.NODE_ENV === 'development') {
-  setupVite(app, server);
-} else {
-  serveStatic(app);
+// Start server with health check only if run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const server = app.listen(PORT, async () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Perform initial health check
+    await checkDatabaseHealth();
+    
+    // Set up periodic health monitoring - reduced frequency
+    setInterval(async () => {
+      try {
+        const health = await enhancedHealthCheck();
+        // Only log if there are issues
+        if (!health.healthy || health.details.waitingCount > 0) {
+          console.warn('⚠️ Database health degraded:', health.details.errors);
+        }
+      } catch (error) {
+        console.error('❌ Periodic health check failed:', error);
+      }
+    }, 10 * 60 * 1000); // Check every 10 minutes instead of 5
+  });
+
+  // Setup Vite for development or serve static files for production
+  if (process.env.NODE_ENV === 'development') {
+    setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
 }

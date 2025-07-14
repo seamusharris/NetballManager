@@ -524,7 +524,8 @@ export class DatabaseStorage implements IStorage {
 
   // Roster methods
   async getRostersByGame(gameId: number): Promise<Roster[]> {
-    return await db.select().from(rosters).where(eq(rosters.gameId, gameId));
+    console.log('ENTER getRostersByGame with gameId:', gameId);
+    return await db.select().from(rosters).where(eq(rosters.game_id, gameId));
   }
 
   async getRoster(id: number): Promise<Roster | undefined> {
@@ -542,10 +543,10 @@ export class DatabaseStorage implements IStorage {
     const [roster] = await db
       .insert(rosters)
       .values({
-        gameId: insertRoster.gameId,
+        game_id: insertRoster.game_id,
         quarter: insertRoster.quarter,
         position: position,
-        playerId: insertRoster.playerId
+        player_id: insertRoster.player_id
       })
       .returning();
     return roster;
@@ -555,9 +556,9 @@ export class DatabaseStorage implements IStorage {
     // Handle type-safe update to avoid TS errors
     const updateData: Record<string, any> = {};
 
-    if (updateRoster.gameId !== undefined) updateData.gameId = updateRoster.gameId;
+    if (updateRoster.game_id !== undefined) updateData.game_id = updateRoster.game_id;
     if (updateRoster.quarter !== undefined) updateData.quarter = updateRoster.quarter;
-    if (updateRoster.playerId !== undefined) updateData.playerId = updateRoster.playerId;
+    if (updateRoster.player_id !== undefined) updateData.player_id = updateRoster.player_id;
 
     // Special handling for position to ensure it's a valid enum value
     if (updateRoster.position !== undefined) {
@@ -586,16 +587,16 @@ export class DatabaseStorage implements IStorage {
   async deleteRostersByGame(gameId: number): Promise<boolean> {
     const result = await db
       .delete(rosters)
-      .where(eq(rosters.gameId, gameId))
+      .where(eq(rosters.game_id, gameId))
       .returning({ id: rosters.id });
     return result.length > 0;
   }
 
   async createRostersBulk(rosterData: Array<{
-    gameId: number;
+    game_id: number;
     quarter: number;
     position: string;
-    playerId: number;
+    player_id: number;
   }>): Promise<any[]> {
     if (rosterData.length === 0) return [];
 
@@ -610,15 +611,15 @@ export class DatabaseStorage implements IStorage {
     try {
       if (teamId) {
         return await db.select().from(gameStats).where(
-          and(eq(gameStats.gameId, gameId), eq(gameStats.teamId, teamId))
+          and(eq(gameStats.game_id, gameId), eq(gameStats.team_id, teamId))
         );
       }
-      return await db.select().from(gameStats).where(eq(gameStats.gameId, gameId));
+      return await db.select().from(gameStats).where(eq(gameStats.game_id, gameId));
     } catch (error) {
       // Handle case where team_id column doesn't exist yet
       if (error.message?.includes('column "team_id" does not exist')) {
         console.log(`team_id column missing for game ${gameId}, returning all stats`);
-        return await db.select().from(gameStats).where(eq(gameStats.gameId, gameId));
+        return await db.select().from(gameStats).where(eq(gameStats.game_id, gameId));
       }
       throw error;
     }
@@ -657,7 +658,7 @@ export class DatabaseStorage implements IStorage {
   async deleteGameStatsByGame(gameId: number): Promise<boolean> {
     const result = await db
       .delete(gameStats)
-      .where(eq(gameStats.gameId, gameId))
+      .where(eq(gameStats.game_id, gameId))
       .returning({ id: gameStats.id });
     return result.length > 0;
   }
@@ -714,7 +715,7 @@ export class DatabaseStorage implements IStorage {
 
   // Games by season
   async getGamesBySeason(seasonId: number): Promise<Game[]> {
-    return await db.select().from(games).where(eq(games.seasonId, seasonId));
+    return await db.select().from(games).where(eq(games.season_id, seasonId));
   }
 
   // Club-player relationship methods

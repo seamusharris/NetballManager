@@ -264,7 +264,7 @@ export default function GamePreparation() {
     queryKey: ['games', 'scores', 'batch', gameIdsArray.join(',')],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return {};
-      return apiClient.post('/api/games/scores/batch', { gameIds: gameIdsArray });
+      return apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds: gameIdsArray });
     },
     enabled: gameIdsArray.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -306,7 +306,7 @@ export default function GamePreparation() {
     queryKey: ['games', 'scores', 'batch', seasonGameIds.join(',')],
     queryFn: async () => {
       if (seasonGameIds.length === 0) return {};
-      return apiClient.post('/api/games/scores/batch', { gameIds: seasonGameIds });
+      return apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds: seasonGameIds });
     },
     enabled: seasonGameIds.length > 0,
     staleTime: 5 * 60 * 1000,

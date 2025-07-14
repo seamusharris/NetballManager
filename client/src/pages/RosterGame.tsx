@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Player, Game } from '@shared/schema';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { useClub } from '@/contexts/ClubContext';
 import PageTemplate from '@/components/layout/PageTemplate';
@@ -41,11 +41,11 @@ export default function RosterGame() {
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
 
   // Fetch ONLY the specific game we need (same approach as PlayerAvailability)
-  const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
+  const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery<Game>({
     queryKey: ['game', gameId],
     queryFn: async () => {
       console.log(`RosterGame: Fetching specific game ${gameId}`);
-      const result = await apiRequest('GET', `/api/games/${gameId}`) as Promise<Game>;
+      const result = await apiClient.get(`/api/games/${gameId}`) as Game;
       console.log(`RosterGame: Game ${gameId} response:`, result);
       return result;
     },
@@ -58,9 +58,9 @@ export default function RosterGame() {
 
 
   // Fetch team-specific players
-  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
+  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery<Player[]>({
     queryKey: ['teamPlayers', teamId],
-    queryFn: () => apiRequest('GET', `/api/teams/${teamId}/players`),
+    queryFn: () => apiClient.get(`/api/teams/${teamId}/players`),
     enabled: !!teamId
   });
 
@@ -70,10 +70,10 @@ export default function RosterGame() {
     queryFn: async () => {
       if (!teamId) {
         // Fallback to legacy endpoint if no team ID
-        const response = await apiRequest('GET', `/api/games/${gameId}/availability`);
+        const response = await apiClient.get(`/api/games/${gameId}/availability`);
         return response;
       }
-      const response = await apiRequest('GET', `/api/teams/${teamId}/games/${gameId}/availability`);
+      const response = await apiClient.get(`/api/teams/${teamId}/games/${gameId}/availability`);
       return response;
     },
     enabled: !!gameId,

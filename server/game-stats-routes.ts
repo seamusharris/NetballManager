@@ -1,10 +1,12 @@
 import { Express, Response } from 'express';
 import { AuthenticatedRequest, standardAuth } from './auth-middleware';
-import { db } from './db';
+import { db, pool } from './db';
 import { sql } from 'drizzle-orm';
 import { gameStats, games, teams } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { transformToApiFormat } from './api-utils';
+import camelcaseKeys from 'camelcase-keys';
+import { inArray } from 'drizzle-orm';
 
 /**
  * Game-centric stats routes following the new REST pattern
@@ -85,8 +87,8 @@ export function registerGameStatsRoutes(app: Express) {
       const stats = await db.select()
         .from(gameStats)
         .where(and(
-          eq(gameStats.gameId, gameId),
-          eq(gameStats.teamId, teamId)
+          eq(gameStats.game_id, gameId),
+          eq(gameStats.team_id, teamId)
         ));
 
       console.log(`Game-centric stats API: Found ${stats.length} stats for game ${gameId}, team ${teamId}`);
@@ -98,7 +100,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Update individual stat for a specific game and team
-  app.patch('/api/game/:gameId/team/:teamId/stats/:statId', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.patch('/api/game/:gameId/team/:teamId/stats/:statId', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -123,13 +125,13 @@ export function registerGameStatsRoutes(app: Express) {
       const [updated] = await db.update(gameStats)
         .set({
           ...req.body,
-          gameId,
-          teamId
+          game_id: gameId,
+          team_id: teamId
         })
         .where(and(
           eq(gameStats.id, statId),
-          eq(gameStats.gameId, gameId),
-          eq(gameStats.teamId, teamId)
+          eq(gameStats.game_id, gameId),
+          eq(gameStats.team_id, teamId)
         ))
         .returning();
 
@@ -145,7 +147,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Create/update stats for a specific game and team
-  app.post('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.post('/api/game/:gameId/team/:teamId/stats', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -175,8 +177,8 @@ export function registerGameStatsRoutes(app: Express) {
       for (const stat of stats) {
         const statData = {
           ...stat,
-          gameId,
-          teamId
+          game_id: gameId,
+          team_id: teamId
         };
 
         const statColumns = [
@@ -244,7 +246,7 @@ export function registerGameStatsRoutes(app: Express) {
   });
 
   // Update roster for a specific game and team
-  app.post('/api/game/:gameId/team/:teamId/rosters', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res: Response) => {
+  app.post('/api/game/:gameId/team/:teamId/rosters', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const teamId = parseInt(req.params.teamId);
@@ -279,14 +281,14 @@ export function registerGameStatsRoutes(app: Express) {
       if (rosters.length > 0) {
         const values = rosters.map(roster => ({
           ...roster,
-          gameId,
-          teamId
+          game_id: gameId,
+          team_id: teamId
         }));
 
         const result = await db.execute(sql`
           INSERT INTO rosters (game_id, team_id, player_id, position, quarter)
           VALUES ${sql.join(
-            values.map(v => sql`(${v.gameId}, ${v.teamId}, ${v.playerId}, ${v.position}, ${v.quarter})`),
+            values.map(v => sql`(${v.game_id}, ${v.team_id}, ${v.playerId}, ${v.position}, ${v.quarter})`),
             sql`, `
           )}
           RETURNING *
@@ -332,26 +334,26 @@ export function registerGameStatsRoutes(app: Express) {
       // First, let's see what stats exist for this game regardless of team
       const allGameStats = await db.select()
         .from(gameStats)
-        .where(eq(gameStats.gameId, gameId));
+        .where(eq(gameStats.game_id, gameId));
 
       console.log(`Team-based stats API: Found ${allGameStats.length} total stats for game ${gameId}`);
       allGameStats.forEach(stat => {
-        console.log(`  - Stat ID ${stat.id}: team=${stat.teamId}, position=${stat.position}, quarter=${stat.quarter}`);
+        console.log(`  - Stat ID ${stat.id}: team=${stat.team_id}, position=${stat.position}, quarter=${stat.quarter}`);
       });
 
       // Now get stats for the specific team
       const stats = await db.select()
         .from(gameStats)
         .where(and(
-          eq(gameStats.gameId, gameId),
-          eq(gameStats.teamId, teamId)
+          eq(gameStats.game_id, gameId),
+          eq(gameStats.team_id, teamId)
         ));
 
       console.log(`Team-based stats API: Found ${stats.length} stats for game ${gameId}, team ${teamId}`);
       
       if (stats.length === 0) {
-        console.log(`Team-based stats API: No stats found for team ${teamId}. Available teams in this game:`, 
-          [...new Set(allGameStats.map(s => s.teamId))]);
+        const availableTeams = Array.from(new Set(allGameStats.map(s => s.team_id)));
+        console.log(`Team-based stats API: No stats found for team ${teamId}. Available teams in this game:`, availableTeams);
       }
       
       res.json(transformToApiFormat(stats));
@@ -361,59 +363,40 @@ export function registerGameStatsRoutes(app: Express) {
     }
   });
 
-  // Club-scoped batch endpoint for stats
-  app.post('/api/clubs/:clubId/games/stats/batch', async (req, res) => {
+  // Club-scoped batch endpoint for stats (restored to original logic)
+  app.post('/api/clubs/:clubId/games/stats/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
-      const clubId = parseInt(req.params.clubId);
-      const { gameIds, teamId } = req.body;
-
+      // Accept both snake_case and camelCase keys
+      const { gameIds } = camelcaseKeys(req.body, { deep: true });
       if (!Array.isArray(gameIds) || gameIds.length === 0) {
         return res.status(400).json({ error: 'gameIds array is required' });
       }
-
-      console.log(`Club-scoped POST Batch stats endpoint for club ${clubId}, gameIds:`, gameIds, 'teamId:', teamId);
-
-      let query = `
-        SELECT gs.*
-        FROM game_stats gs
-        JOIN games g ON gs.gameId = g.id
-        WHERE g.clubId = ? AND gs.gameId IN (${gameIds.map(() => '?').join(',')})
-      `;
-
-      let queryParams = [clubId, ...gameIds];
-
-      // If teamId is provided, filter stats to only that team
-      if (teamId) {
-        query += ` AND gs.teamId = ?`;
-        queryParams.push(teamId);
+      const validGameIds = gameIds
+        .map(id => typeof id === 'number' ? id : parseInt(id, 10))
+        .filter(id => !isNaN(id) && id > 0);
+      if (validGameIds.length === 0) {
+        return res.status(400).json({ error: 'No valid gameIds provided' });
       }
-
-      query += ` ORDER BY gs.gameId, gs.quarter, gs.position`;
-
-      const allStats = await db.query(query, queryParams);
-
-      // Group by game ID
-      const statsByGame: Record<string, any[]> = {};
-
-      // Initialize empty arrays for all requested games
-      gameIds.forEach(gameId => {
-        statsByGame[gameId.toString()] = [];
+      // Fetch all stats for the requested games
+      const stats = await db.select()
+        .from(gameStats)
+        .where(inArray(gameStats.game_id, validGameIds));
+      // Group stats by game ID
+      const statsMap = {};
+      validGameIds.forEach(gameId => {
+        statsMap[gameId] = [];
       });
-
-      // Populate with actual stats
-      allStats.forEach(stat => {
-        const gameId = stat.gameId.toString();
-        if (!statsByGame[gameId]) {
-          statsByGame[gameId] = [];
+      stats.forEach((stat) => {
+        const gameId = stat.game_id;
+        if (statsMap[gameId]) {
+          statsMap[gameId].push(stat);
+        } else {
+          statsMap[gameId] = [stat];
         }
-        statsByGame[gameId].push(stat);
       });
-
-      console.log(`Club-scoped batch stats response: found stats for ${Object.keys(statsByGame).filter(k => statsByGame[k].length > 0).length} games${teamId ? ` (filtered by team ${teamId})` : ''}`);
-
-      res.json(transformToApiFormat(statsByGame));
+      res.json(transformToApiFormat(statsMap));
     } catch (error) {
-      console.error('Club-scoped batch stats error:', error);
+      console.error('Batch stats fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch batch stats' });
     }
   });

@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Users, ArrowLeftRight, Plus, Trash2 } from 'lucide-react';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { useClub } from '@/contexts/ClubContext';
 
@@ -57,34 +57,34 @@ export default function PlayerBorrowing() {
 
   // Fetch borrowing requests for current club
   const { data: borrowingRequests = [], isLoading: isLoadingRequests } = useQuery<BorrowingRequest[]>({
-    queryKey: ['borrowing-requests', currentClub?.clubId],
-    queryFn: () => apiRequest('GET', `/api/clubs/${currentClub?.clubId}/player-borrowing`),
-    enabled: !!currentClub?.clubId
+    queryKey: ['borrowing-requests', currentClub?.id],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/player-borrowing`),
+    enabled: !!currentClub?.id
   });
 
   // Fetch games for borrowing selection
-  const { data: games = [] } = useQuery({
+  const { data: games = [] } = useQuery<any[]>({
     queryKey: ['games'],
-    queryFn: () => apiRequest('GET', '/api/games')
+    queryFn: () => apiClient.get('/api/games')
   });
 
   // Fetch teams for the current club
-  const { data: teams = [] } = useQuery({
+  const { data: teams = [] } = useQuery<any[]>({
     queryKey: ['teams'],
-    queryFn: () => apiRequest('GET', '/api/teams')
+    queryFn: () => apiClient.get('/api/teams')
   });
 
   // Fetch available players for borrowing
   const { data: availablePlayers = [] } = useQuery<AvailablePlayer[]>({
-    queryKey: ['available-players', currentClub?.clubId, selectedGame, selectedTeam],
-    queryFn: () => apiRequest('GET', `/api/clubs/${currentClub?.clubId}/players/available-for-borrowing?gameId=${selectedGame}&excludeTeamId=${selectedTeam}`),
-    enabled: !!currentClub?.clubId && !!selectedGame && !!selectedTeam
+    queryKey: ['available-players', currentClub?.id, selectedGame, selectedTeam],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClub?.id}/players/available-for-borrowing?gameId=${selectedGame}&excludeTeamId=${selectedTeam}`),
+    enabled: !!currentClub?.id && !!selectedGame && !!selectedTeam
   });
 
   // Create borrowing request mutation
   const createBorrowingMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('POST', `/api/clubs/${currentClub?.clubId}/player-borrowing`, data);
+      return apiClient.post(`/api/clubs/${currentClub?.id}/player-borrowing`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['borrowing-requests'] });
@@ -107,7 +107,7 @@ export default function PlayerBorrowing() {
   // Delete borrowing request mutation
   const deleteBorrowingMutation = useMutation({
     mutationFn: async (borrowingId: number) => {
-      return apiRequest('DELETE', `/api/clubs/${currentClub?.clubId}/player-borrowing/${borrowingId}`);
+      return apiClient.delete(`/api/clubs/${currentClub?.id}/player-borrowing/${borrowingId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['borrowing-requests'] });
