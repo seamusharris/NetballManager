@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import camelcaseKeys from 'camelcase-keys';
+import snakecaseKeys from 'snakecase-keys';
 
 interface GameStatus {
   id: number;
@@ -66,13 +68,13 @@ export function GameStatusManager() {
   // Fetch all game statuses (including inactive ones for management)
   const { data: gameStatuses = [], isLoading } = useQuery({
     queryKey: ['/api/game-statuses'],
-    queryFn: () => apiRequest('GET', '/api/game-statuses'),
+    queryFn: () => apiRequest('GET', '/api/game-statuses').then((res: any) => camelcaseKeys(res, { deep: true })),
   });
 
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: GameStatusFormData) => 
-      apiRequest('POST', '/api/game-statuses', data),
+      apiRequest('POST', '/api/game-statuses', snakecaseKeys(data as unknown as Record<string, unknown>)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/game-statuses'] });
       setIsCreateDialogOpen(false);
@@ -94,7 +96,7 @@ export function GameStatusManager() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<GameStatusFormData> }) =>
-      apiRequest('PUT', `/api/game-statuses/${id}`, data),
+      apiRequest('PUT', `/api/game-statuses/${id}`, snakecaseKeys(data as unknown as Record<string, unknown>)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/game-statuses'] });
       setIsEditDialogOpen(false);

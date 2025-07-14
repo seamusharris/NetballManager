@@ -13,8 +13,8 @@ router.get("/", async (req, res) => {
     const statuses = await db
       .select()
       .from(gameStatuses)
-      .where(eq(gameStatuses.isActive, true))
-      .orderBy(gameStatuses.sortOrder);
+      .where(eq(gameStatuses.is_active, true))
+      .orderBy(gameStatuses.sort_order);
     
     res.json(statuses);
   } catch (error) {
@@ -68,7 +68,7 @@ router.put("/:id", async (req, res) => {
     
     const updatedStatus = await db
       .update(gameStatuses)
-      .set({ ...body, updatedAt: new Date() })
+      .set({ ...body, updated_at: new Date() })
       .where(eq(gameStatuses.id, id))
       .returning();
     
@@ -92,7 +92,7 @@ router.delete("/:id", async (req, res) => {
     const gamesUsingStatus = await db
       .select({ count: sql<number>`count(*)` })
       .from(games)
-      .where(eq(games.statusId, id));
+      .where(eq(games.status_id, id));
     
     if (gamesUsingStatus[0].count > 0) {
       return res.status(400).json({ 
@@ -102,7 +102,7 @@ router.delete("/:id", async (req, res) => {
     
     const deletedStatus = await db
       .update(gameStatuses)
-      .set({ isActive: false, updatedAt: new Date() })
+      .set({ is_active: false, updated_at: new Date() })
       .where(eq(gameStatuses.id, id))
       .returning();
     

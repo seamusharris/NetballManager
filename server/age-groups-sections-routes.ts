@@ -191,18 +191,11 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid season ID" });
       }
 
-      // Log the raw request body and its keys
-      console.log("Raw req.body:", req.body);
-      console.log("req.body keys:", Object.keys(req.body));
-      console.log("req.body.age_group_id:", req.body.age_group_id);
-      console.log("req.body.ageGroupId:", req.body.ageGroupId);
-
       // If no display name provided, generate one from age group and section names
-      let displayName = req.body.displayName;
+      let displayName = req.body.display_name || req.body.displayName;
       if (!displayName) {
         const ageGroupId = req.body.age_group_id ?? req.body.ageGroupId;
         const ageGroup = await db.select().from(ageGroups).where(eq(ageGroups.id, ageGroupId));
-        console.log("Found age group:", ageGroup);
         if (ageGroup.length > 0) {
           displayName = ageGroup[0].name;
         } else {
@@ -217,8 +210,6 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         display_name: displayName,
         section_id: req.body.section_id // Ensure section_id is included
       };
-
-      console.log("Final division data:", divisionData);
 
       const parsedData = insertDivisionSchema.safeParse(divisionData);
       if (!parsedData.success) {
@@ -458,11 +449,11 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
   // Create section
   router.post('/sections', async (req, res) => {
     try {
-      const { displayName, isActive = true, name } = req.body;
-      if (!displayName) return res.status(400).json({ error: 'displayName is required' });
+      const { display_name, is_active = true, name } = req.body;
+      if (!display_name) return res.status(400).json({ error: 'display_name is required' });
       const { rows } = await pool.query(
         'INSERT INTO sections (display_name, is_active, name) VALUES ($1, $2, $3) RETURNING id, display_name, is_active, created_at, updated_at, name',
-        [displayName, isActive, name || null]
+        [display_name, is_active, name || null]
       );
       const row = rows[0];
       res.status(201).json({
@@ -483,10 +474,10 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
   router.put('/sections/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { displayName, isActive, name } = req.body;
+      const { display_name, is_active, name } = req.body;
       const { rows } = await pool.query(
         'UPDATE sections SET display_name = COALESCE($1, display_name), is_active = COALESCE($2, is_active), name = COALESCE($3, name), updated_at = now() WHERE id = $4 RETURNING id, display_name, is_active, created_at, updated_at, name',
-        [displayName, isActive, name, id]
+        [display_name, is_active, name, id]
       );
       if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
       const row = rows[0];
@@ -508,10 +499,10 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
   router.patch('/sections/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { displayName, isActive, name } = req.body;
+      const { display_name, is_active, name } = req.body;
       const { rows } = await pool.query(
         'UPDATE sections SET display_name = COALESCE($1, display_name), is_active = COALESCE($2, is_active), name = COALESCE($3, name), updated_at = now() WHERE id = $4 RETURNING id, display_name, is_active, created_at, updated_at, name',
-        [displayName, isActive, name, id]
+        [display_name, is_active, name, id]
       );
       if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
       const row = rows[0];

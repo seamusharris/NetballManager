@@ -89,6 +89,8 @@ export default function DivisionForm({ division, seasonId, onSubmit, onCancel, i
   const selectedSectionId = form.watch('sectionId');
   const selectedSeasonId = form.watch('seasonId');
 
+  const prevAutoDisplayName = React.useRef<string>("");
+
   // Set default season to active season when creating new division
   React.useEffect(() => {
     if (!division && activeSeason && !selectedSeasonId) {
@@ -101,11 +103,15 @@ export default function DivisionForm({ division, seasonId, onSubmit, onCancel, i
     if (selectedAgeGroupId && selectedSectionId) {
       const ageGroup = ageGroups.find(ag => ag.id === selectedAgeGroupId);
       const section = sections.find(s => s.id === selectedSectionId);
-      
-      if (ageGroup && section) {
-        // Display name: e.g. 15U/1 (using short age group name and section name)
-        const autoDisplayName = `${ageGroup.name}/${section.name}`;
+      const displayName = form.getValues('displayName');
+      const autoDisplayName = ageGroup && section ? `${ageGroup.name}/${section.name}` : '';
+      // Only auto-set if displayName is empty or matches the previous auto-generated value
+      if (
+        ageGroup && section &&
+        (!displayName || displayName === prevAutoDisplayName.current)
+      ) {
         form.setValue('displayName', autoDisplayName);
+        prevAutoDisplayName.current = autoDisplayName;
       }
     }
   }, [selectedAgeGroupId, selectedSectionId, ageGroups, sections, form]);

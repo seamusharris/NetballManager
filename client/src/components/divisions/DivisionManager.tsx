@@ -91,7 +91,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
 
   // Create mutations
   const createAgeGroupMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/age-groups', data),
+    mutationFn: (data: any) => apiClient.post('/api/age-groups', snakecaseKeys(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['age-groups'] });
       setIsCreateDialogOpen(false);
@@ -107,7 +107,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   });
 
   const createSectionMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/sections', data),
+    mutationFn: (data: any) => apiClient.post('/api/sections', snakecaseKeys(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections'] });
       setIsCreateDialogOpen(false);
@@ -140,8 +140,8 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
 
   // Update mutations
   const updateAgeGroupMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiClient.patch(`/api/age-groups/${id}`, data),
+    mutationFn: (args: { id: number; data: any }) => 
+      apiClient.patch(`/api/age-groups/${args.id}`, snakecaseKeys(args.data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['age-groups'] });
       setEditingItem(null);
@@ -158,8 +158,8 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   });
 
   const updateSectionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiClient.patch(`/api/sections/${id}`, data),
+    mutationFn: (args: { id: number; data: any }) => 
+      apiClient.patch(`/api/sections/${args.id}`, snakecaseKeys(args.data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections'] });
       setEditingItem(null);
@@ -405,7 +405,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
                           {division.teamCount} teams
                         </div>
                         <Badge variant="default">
-                          {division.ageGroupName} / {division.sectionName}
+                          {division.displayName}
                         </Badge>
                       </div>
                     </div>

@@ -39,9 +39,26 @@ export default function SectionForm({
       ageGroup: section?.ageGroup || '',
       sectionName: section?.sectionName || '',
       displayName: section?.displayName || '',
-      description: section?.description || '',
+      // description intentionally omitted from defaultValues if editing
     },
   });
+
+  const prevAutoDisplayName = React.useRef<string>("");
+
+  React.useEffect(() => {
+    const ageGroup = form.watch('ageGroup');
+    const sectionName = form.watch('sectionName');
+    const displayName = form.getValues('displayName');
+    const autoDisplayName = ageGroup && sectionName ? `${ageGroup}/${sectionName}` : '';
+    // Only auto-set if displayName is empty or matches the previous auto-generated value
+    if (
+      ageGroup && sectionName &&
+      (!displayName || displayName === prevAutoDisplayName.current)
+    ) {
+      form.setValue('displayName', autoDisplayName);
+      prevAutoDisplayName.current = autoDisplayName;
+    }
+  }, [form.watch('ageGroup'), form.watch('sectionName')]);
 
   const handleSubmit = async (data: SectionFormData) => {
     await onSubmit(data);
