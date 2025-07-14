@@ -7,6 +7,8 @@ import {
   requireClubAccess 
 } from "./auth-middleware";
 import { transformToApiFormat } from './api-utils';
+import snakecaseKeys from 'snakecase-keys';
+import camelcaseKeys from 'camelcase-keys';
 
 export function registerTeamRoutes(app: Express) {
   // Get all teams for a season
@@ -268,20 +270,10 @@ export function registerTeamRoutes(app: Express) {
   app.patch("/api/teams/:id", async (req, res) => {
     try {
       const teamId = parseInt(req.params.id);
-      const { name, divisionId, isActive, seasonId } = req.body;
+      // Convert incoming data to snake_case for DB
+      const updateData = snakecaseKeys(req.body);
+      updateData.updated_at = new Date();
 
-      console.log(`Team update request for team ${teamId}:`, { name, divisionId, isActive, seasonId });
-
-      // Build update object only with provided fields, using camelCase for Drizzle ORM
-      const updateData: any = {};
-      if (name !== undefined) updateData.name = name;
-      if (divisionId !== undefined) updateData.divisionId = divisionId;
-      if (isActive !== undefined) updateData.isActive = isActive;
-      if (seasonId !== undefined) updateData.seasonId = seasonId;
-      // Always update the timestamp
-      updateData.updatedAt = new Date();
-
-      // Use Drizzle ORM update method
       const result = await db.update(teams)
         .set(updateData)
         .where(eq(teams.id, teamId))
@@ -291,8 +283,8 @@ export function registerTeamRoutes(app: Express) {
         return res.status(404).json({ message: "Team not found" });
       }
 
-      console.log(`Team ${teamId} updated successfully:`, result[0]);
-      res.json(transformToApiFormat(result[0]));
+      // Convert DB result to camelCase for frontend
+      res.json(camelcaseKeys(result[0]));
     } catch (error) {
       console.error("Error updating team:", error);
       res.status(500).json({ message: "Failed to update team" });

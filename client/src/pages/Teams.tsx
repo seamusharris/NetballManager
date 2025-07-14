@@ -143,6 +143,12 @@ export default function Teams() {
                       </div>
                       <div className="text-xs text-blue-600">Season</div>
                     </div>
+                    <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-300">
+                      <div className="font-bold text-xl text-green-700">
+                        {team.divisionName || 'No Division'}
+                      </div>
+                      <div className="text-xs text-green-600">Division</div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
