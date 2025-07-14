@@ -12,41 +12,40 @@ import { Plus, Edit, Trash2, Users } from 'lucide-react';
 
 interface Section {
   id: number;
-  seasonId: number;
-  ageGroup: string;
-  sectionName: string;
+  name: string;
   displayName: string;
-  description?: string;
   isActive: boolean;
-  teamCount: number;
+  createdAt: string;
+  updatedAt: string;
+  divisionCount: number; // <-- Add this
 }
 
 interface SectionManagerProps {
-  seasonId: number;
   seasonName: string;
 }
 
-export default function SectionManager({ seasonId, seasonName }: SectionManagerProps) {
+export default function SectionManager({ seasonName }: SectionManagerProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: sections = [], isLoading } = useQuery({
-    queryKey: ['sections', seasonId],
-    queryFn: () => apiClient.get(`/api/seasons/${seasonId}/sections`),
+  const { data: sections = [], isLoading } = useQuery<Section[]>({
+    queryKey: ['sections'],
+    queryFn: () => apiClient.get('/api/sections'),
     select: (data) => {
       return (data || []).map((section: any) => ({
         ...section,
-        displayName: section.displayName || `${section.ageGroup} - ${section.sectionName}`
+        displayName: section.displayName || section.name,
+        divisionCount: typeof section.divisionCount === 'number' ? section.divisionCount : (typeof section.division_count === 'number' ? section.division_count : 0)
       }));
     }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post(`/api/seasons/${seasonId}/sections`, data),
+    mutationFn: (data: any) => apiClient.post('/api/sections', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', seasonId] });
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
       setIsCreateDialogOpen(false);
       toast({ title: "Section created successfully" });
     },
@@ -60,11 +59,14 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiClient.patch(`/api/sections/${id}`, data),
+    mutationFn: ({ id, data }: { id: number; data: any }) => {
+      console.log('PATCH /api/sections/' + id, data);
+      return apiClient.patch(`/api/sections/${id}`, data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', seasonId] });
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
       setEditingSection(null);
+      setIsCreateDialogOpen(false);
       toast({ title: "Section updated successfully" });
     },
     onError: (error: any) => {
@@ -79,7 +81,7 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiClient.delete(`/api/sections/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', seasonId] });
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
       toast({ title: "Section deleted successfully" });
     },
     onError: (error: any) => {
@@ -102,15 +104,6 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
   };
 
   const handleDelete = (section: Section) => {
-    if (section.teamCount > 0) {
-      toast({
-        title: "Cannot delete section",
-        description: "This section has teams assigned. Please reassign teams first.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (confirm(`Are you sure you want to delete section ${section.displayName}?`)) {
       deleteMutation.mutate(section.id);
     }
@@ -133,7 +126,7 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
         <div>
           <h2 className="text-2xl font-bold">Sections - {seasonName}</h2>
           <p className="text-muted-foreground">
-            Manage age groups and sections for the season
+            Manage sections for the season
           </p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -171,7 +164,6 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
                       size="sm"
                       variant="outline"
                       onClick={() => handleDelete(section)}
-                      disabled={section.teamCount > 0}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -180,20 +172,13 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {section.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {section.description}
-                    </p>
-                  )}
-                  
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm">
-                      <Users className="h-4 w-4 mr-1" />
-                      {section.teamCount} teams
-                    </div>
                     <Badge variant="default">
-                      Active
+                      {section.isActive ? "Active" : "Inactive"}
                     </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {section.divisionCount} division{section.divisionCount === 1 ? '' : 's'}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -202,36 +187,18 @@ export default function SectionManager({ seasonId, seasonName }: SectionManagerP
         </div>
       )}
 
-      {/* Create Section Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      {/* Edit/Create Section Dialog */}
+      <Dialog open={isCreateDialogOpen || !!editingSection} onOpenChange={() => { setIsCreateDialogOpen(false); setEditingSection(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Section</DialogTitle>
+            <DialogTitle>{editingSection ? 'Edit Section' : 'Create Section'}</DialogTitle>
           </DialogHeader>
           <SectionForm
-            seasonId={seasonId}
-            onSubmit={handleCreate}
-            onCancel={() => setIsCreateDialogOpen(false)}
-            isSubmitting={createMutation.isPending}
+            section={editingSection || undefined}
+            onSubmit={editingSection ? handleUpdate : handleCreate}
+            onCancel={() => { setIsCreateDialogOpen(false); setEditingSection(null); }}
+            isSubmitting={createMutation.isPending || updateMutation.isPending}
           />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Section Dialog */}
-      <Dialog open={!!editingSection} onOpenChange={() => setEditingSection(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Section</DialogTitle>
-          </DialogHeader>
-          {editingSection && (
-            <SectionForm
-              section={editingSection}
-              seasonId={seasonId}
-              onSubmit={handleUpdate}
-              onCancel={() => setEditingSection(null)}
-              isSubmitting={updateMutation.isPending}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>

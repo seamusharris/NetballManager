@@ -11,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 const ageGroupFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   displayName: z.string().min(1, 'Display name is required'),
-  description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -21,7 +20,6 @@ interface AgeGroup {
   id: number;
   name: string;
   displayName: string;
-  description?: string;
   isActive: boolean;
 }
 
@@ -38,7 +36,6 @@ export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmittin
     defaultValues: {
       name: ageGroup?.name || '',
       displayName: ageGroup?.displayName || '',
-      description: ageGroup?.description || '',
       isActive: ageGroup?.isActive ?? true,
     },
   });
@@ -72,23 +69,6 @@ export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmittin
               <FormLabel required>Display Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Under 15" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Optional description of this age group" 
-                  {...field} 
-                />
               </FormControl>
               <FormMessage />
             </FormItem>

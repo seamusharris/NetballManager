@@ -739,7 +739,6 @@ export class DatabaseStorage implements IStorage {
         code: row.code,
         address: row.address,
         contactInfo: row.contact_info,
-        description: row.description,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         joinedDate: row.joined_date,

@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { sql, eq, and, desc } from "drizzle-orm";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { 
   ageGroups, 
   divisions, 
@@ -9,6 +9,7 @@ import {
   insertDivisionSchema
 } from "@shared/schema";
 import { AuthenticatedRequest, standardAuth } from "./auth-middleware";
+import express from "express";
 
 export function registerAgeGroupsSectionsRoutes(app: Express) {
   console.log("🔧 Registering age groups sections routes...");
@@ -39,7 +40,6 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         id: row.id as number,
         name: row.name as string,
         displayName: row.display_name as string,
-        description: row.description as string,
         isActive: row.is_active as boolean,
         createdAt: row.created_at as string,
         updatedAt: row.updated_at as string,
@@ -156,18 +156,18 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         JOIN age_groups ag ON d.age_group_id = ag.id
         LEFT JOIN teams t ON d.id = t.division_id AND t.is_active = true
         WHERE d.season_id = ${seasonId} AND d.is_active = true
-        GROUP BY d.id, ag.name, ag.display_name
+        GROUP BY d.id, d.section_id, ag.name, ag.display_name
         ORDER BY ag.name
       `);
 
       const divisionsWithDetails = result.rows.map(row => ({
         id: row.id,
         ageGroupId: row.age_group_id,
+        sectionId: row.section_id, // <-- Add this line
         ageGroupName: row.age_group_name,
         ageGroupDisplayName: row.age_group_display_name,
         seasonId: row.season_id,
         displayName: row.display_name,
-        description: row.description,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
@@ -191,16 +191,18 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid season ID" });
       }
 
-      console.log("Creating division with data:", req.body);
-      console.log("Season ID:", seasonId);
+      // Log the raw request body and its keys
+      console.log("Raw req.body:", req.body);
+      console.log("req.body keys:", Object.keys(req.body));
+      console.log("req.body.age_group_id:", req.body.age_group_id);
+      console.log("req.body.ageGroupId:", req.body.ageGroupId);
 
       // If no display name provided, generate one from age group and section names
       let displayName = req.body.displayName;
       if (!displayName) {
-        const ageGroup = await db.select().from(ageGroups).where(eq(ageGroups.id, req.body.ageGroupId));
-        
+        const ageGroupId = req.body.age_group_id ?? req.body.ageGroupId;
+        const ageGroup = await db.select().from(ageGroups).where(eq(ageGroups.id, ageGroupId));
         console.log("Found age group:", ageGroup);
-        
         if (ageGroup.length > 0) {
           displayName = ageGroup[0].name;
         } else {
@@ -208,10 +210,12 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         }
       }
 
+      // Use snake_case for all DB fields, including section_id
       const divisionData = {
         ...req.body,
-        seasonId,
-        displayName
+        season_id: seasonId,
+        display_name: displayName,
+        section_id: req.body.section_id // Ensure section_id is included
       };
 
       console.log("Final division data:", divisionData);
@@ -396,4 +400,148 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch division options" });
     }
   });
+
+  // --- SECTION ENDPOINTS ---
+
+  const router = express.Router();
+
+  // List all sections (global only)
+  router.get('/sections', async (req, res) => {
+    try {
+      const query = `
+        SELECT s.id, s.display_name, s.is_active, s.created_at, s.updated_at, s.name, COUNT(d.id) as division_count
+        FROM sections s
+        LEFT JOIN divisions d ON s.id = d.section_id AND d.is_active = true
+        GROUP BY s.id, s.display_name, s.is_active, s.created_at, s.updated_at, s.name
+        ORDER BY s.id ASC
+      `;
+      const { rows } = await pool.query(query);
+      res.json(rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        name: row.name,
+        divisionCount: parseInt(row.division_count, 10) || 0
+      })));
+    } catch (err) {
+      console.error('Error fetching sections:', err);
+      res.status(500).json({ error: 'Failed to fetch sections' });
+    }
+  });
+
+  // Get section by id
+  router.get('/sections/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { rows } = await pool.query(
+        'SELECT id, display_name, is_active, created_at, updated_at, name FROM sections WHERE id = $1',
+        [id]
+      );
+      if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
+      const row = rows[0];
+      res.json({
+        id: row.id,
+        displayName: row.display_name,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        name: row.name
+      });
+    } catch (err) {
+      console.error('Error fetching section:', err);
+      res.status(500).json({ error: 'Failed to fetch section' });
+    }
+  });
+
+  // Create section
+  router.post('/sections', async (req, res) => {
+    try {
+      const { displayName, isActive = true, name } = req.body;
+      if (!displayName) return res.status(400).json({ error: 'displayName is required' });
+      const { rows } = await pool.query(
+        'INSERT INTO sections (display_name, is_active, name) VALUES ($1, $2, $3) RETURNING id, display_name, is_active, created_at, updated_at, name',
+        [displayName, isActive, name || null]
+      );
+      const row = rows[0];
+      res.status(201).json({
+        id: row.id,
+        displayName: row.display_name,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        name: row.name
+      });
+    } catch (err) {
+      console.error('Error creating section:', err);
+      res.status(500).json({ error: 'Failed to create section' });
+    }
+  });
+
+  // Update section
+  router.put('/sections/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { displayName, isActive, name } = req.body;
+      const { rows } = await pool.query(
+        'UPDATE sections SET display_name = COALESCE($1, display_name), is_active = COALESCE($2, is_active), name = COALESCE($3, name), updated_at = now() WHERE id = $4 RETURNING id, display_name, is_active, created_at, updated_at, name',
+        [displayName, isActive, name, id]
+      );
+      if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
+      const row = rows[0];
+      res.json({
+        id: row.id,
+        displayName: row.display_name,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        name: row.name
+      });
+    } catch (err) {
+      console.error('Error updating section:', err);
+      res.status(500).json({ error: 'Failed to update section' });
+    }
+  });
+
+  // PATCH /api/sections/:id - partial update
+  router.patch('/sections/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { displayName, isActive, name } = req.body;
+      const { rows } = await pool.query(
+        'UPDATE sections SET display_name = COALESCE($1, display_name), is_active = COALESCE($2, is_active), name = COALESCE($3, name), updated_at = now() WHERE id = $4 RETURNING id, display_name, is_active, created_at, updated_at, name',
+        [displayName, isActive, name, id]
+      );
+      if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
+      const row = rows[0];
+      res.json({
+        id: row.id,
+        displayName: row.display_name,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        name: row.name
+      });
+    } catch (err) {
+      console.error('Error patching section:', err);
+      res.status(500).json({ error: 'Failed to update section' });
+    }
+  });
+
+  // Delete section
+  router.delete('/sections/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { rowCount } = await pool.query('DELETE FROM sections WHERE id = $1', [id]);
+      if (rowCount === 0) return res.status(404).json({ error: 'Section not found' });
+      res.status(204).send();
+    } catch (err) {
+      console.error('Error deleting section:', err);
+      res.status(500).json({ error: 'Failed to delete section' });
+    }
+  });
+
+  // Mount the router at /api
+  app.use('/api', router);
 } 

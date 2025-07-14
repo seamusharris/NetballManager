@@ -20,7 +20,6 @@ export interface ApiDivision {
   seasonId: number;
   seasonName: string;
   displayName: string;
-  description?: string;
   isActive: boolean;
   teamCount: number;
   ageGroupName: string;

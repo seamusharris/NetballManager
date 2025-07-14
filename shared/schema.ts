@@ -3,6 +3,41 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// --- Accurate interfaces based on DB schema ---
+// NOTE: Use a case translation utility to convert between camelCase (frontend) and snake_case (backend API)
+
+export interface Division {
+  id: number;
+  ageGroupId: number;
+  seasonId: number;
+  displayName: string;
+  isActive: boolean;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+}
+
+export interface Section {
+  id: number;
+  seasonId: number;
+  ageGroup: string;
+  sectionName: string;
+  displayName: string;
+  isActive: boolean;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+  teamCount?: number; // Optional, for endpoints that include it
+}
+
+export interface AgeGroup {
+  id: number;
+  seasonId: number;
+  name: string;
+  displayName: string;
+  isActive: boolean;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+}
+
 // Valid netball positions
 
 // Game status model
@@ -162,7 +197,6 @@ export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   code: text("code").notNull().unique(),
-  description: text("description"),
   address: text("address"),
   contact_email: text("contact_email"),
   contact_phone: text("contact_phone"),
@@ -182,7 +216,6 @@ export const ageGroups = pgTable("age_groups", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 10 }).notNull().unique(), // e.g., "15U", "13U", "Open"
   display_name: varchar("display_name", { length: 20 }).notNull(), // e.g., "15 & Under", "13 & Under", "Open"
-  description: text("description"),
   is_active: boolean("is_active").notNull().default(true),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
@@ -192,9 +225,9 @@ export const ageGroups = pgTable("age_groups", {
 export const divisions = pgTable("divisions", {
   id: serial("id").primaryKey(),
   age_group_id: integer("age_group_id").notNull().references(() => ageGroups.id, { onDelete: "cascade" }),
+  section_id: integer("section_id").notNull().references(() => sections.id, { onDelete: "cascade" }), // <-- Added
   season_id: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
   display_name: varchar("display_name", { length: 50 }).notNull(), // e.g., "15U/1", "13U/2"
-  description: text("description"),
   is_active: boolean("is_active").notNull().default(true),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
@@ -221,10 +254,10 @@ export const teams = pgTable("teams", {
 });
 
 export const insertAgeGroupSchema = createInsertSchema(ageGroups).omit({ id: true });
-export type AgeGroup = typeof ageGroups.$inferSelect;
+// export type AgeGroup = typeof ageGroups.$inferSelect;
 
 export const insertDivisionSchema = createInsertSchema(divisions).omit({ id: true });
-export type Division = typeof divisions.$inferSelect;
+// export type Division = typeof divisions.$inferSelect;
 
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true });
 export type Team = typeof teams.$inferSelect;
@@ -484,3 +517,19 @@ export const playerPlayingTimes = pgTable("player_playing_times", {
 export const insertPlayerPlayingTimeSchema = createInsertSchema(playerPlayingTimes).omit({ id: true });
 export type InsertPlayerPlayingTime = z.infer<typeof insertPlayerPlayingTimeSchema>;
 export type PlayerPlayingTime = typeof playerPlayingTimes.$inferSelect;
+
+// Sections table - groups teams within a season and age group
+export const sections = pgTable("sections", {
+  id: serial("id").primaryKey(),
+  season_id: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
+  age_group: varchar("age_group", { length: 10 }).notNull(), // e.g., "15U"
+  section_name: varchar("section_name", { length: 20 }).notNull(), // e.g., "1", "2"
+  display_name: varchar("display_name", { length: 50 }).notNull(), // e.g., "15U/1"
+  is_active: boolean("is_active").notNull().default(true),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
+export type InsertSection = z.infer<typeof insertSectionSchema>;
+export type SectionDb = typeof sections.$inferSelect;

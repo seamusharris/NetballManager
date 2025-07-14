@@ -16,7 +16,6 @@ const divisionFormSchema = z.object({
   sectionId: z.number().min(1, 'Section is required'),
   seasonId: z.number().min(1, 'Season is required'),
   displayName: z.string().min(1, 'Display name is required'),
-  description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -28,7 +27,6 @@ interface Division {
   sectionId: number;
   seasonId: number;
   displayName: string;
-  description?: string;
   isActive: boolean;
 }
 
@@ -72,7 +70,6 @@ export default function DivisionForm({ division, seasonId, onSubmit, onCancel, i
       sectionId: division?.sectionId || 0,
       seasonId: division?.seasonId || seasonId || activeSeason?.id || 0,
       displayName: division?.displayName || '',
-      description: division?.description || '',
       isActive: division?.isActive ?? true, // Default to true for new divisions
     },
   });
@@ -114,6 +111,7 @@ export default function DivisionForm({ division, seasonId, onSubmit, onCancel, i
   }, [selectedAgeGroupId, selectedSectionId, ageGroups, sections, form]);
 
   const handleSubmit = (data: DivisionFormData) => {
+    console.log('DivisionForm submit data:', data);
     onSubmit(data);
   };
 
@@ -216,23 +214,6 @@ export default function DivisionForm({ division, seasonId, onSubmit, onCancel, i
               <FormLabel required>Display Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., 15U/1" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Optional description of this division" 
-                  {...field} 
-                />
               </FormControl>
               <FormMessage />
             </FormItem>

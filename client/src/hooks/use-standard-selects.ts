@@ -41,13 +41,13 @@ export function useSeasonsSelect(options: StandardSelectHookOptions = {}) {
   });
 }
 
-// Sections for a specific season
-export function useSectionsSelect(seasonId: number | undefined, options: StandardSelectHookOptions = {}) {
+// Sections for all (global, not season-scoped)
+export function useSectionsSelect(options: StandardSelectHookOptions = {}) {
   const { transform, ...queryOptions } = options;
   
   return useQuery({
-    queryKey: ['sections', seasonId],
-    queryFn: () => seasonId ? apiClient.get(`/api/seasons/${seasonId}/sections`) : Promise.resolve([]),
+    queryKey: ['sections'],
+    queryFn: () => apiClient.get('/api/sections'),
     select: (data) => {
       const sections = data || [];
       return transform ? transform(sections) : sections.map((section: any) => ({
@@ -60,7 +60,6 @@ export function useSectionsSelect(seasonId: number | undefined, options: Standar
         ...section
       }));
     },
-    enabled: !!seasonId,
     ...queryOptions
   });
 }

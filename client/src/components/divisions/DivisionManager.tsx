@@ -11,12 +11,13 @@ import { Plus, Edit, Trash2, Users, Layers } from 'lucide-react';
 import AgeGroupForm from './AgeGroupForm';
 import SectionForm from './SectionForm';
 import DivisionForm from './DivisionForm';
+import camelcaseKeys from 'camelcase-keys';
+import snakecaseKeys from 'snakecase-keys';
 
 interface AgeGroup {
   id: number;
   name: string;
   displayName: string;
-  description?: string;
   isActive: boolean;
   divisionCount: number;
 }
@@ -25,7 +26,6 @@ interface Section {
   id: number;
   name: string;
   displayName: string;
-  description?: string;
   isActive: boolean;
   divisionCount: number;
 }
@@ -36,7 +36,6 @@ interface Division {
   sectionId: number;
   seasonId: number;
   displayName: string;
-  description?: string;
   isActive: boolean;
   teamCount: number;
   ageGroupName: string;
@@ -47,6 +46,16 @@ interface DivisionManagerProps {
   seasonId: number;
   seasonName: string;
 }
+
+// Helper to map camelCase to snake_case for division data
+const mapDivisionData = (data: any) => ({
+  ...data,
+  age_group_id: data.ageGroupId,
+  section_id: data.sectionId,
+  season_id: data.seasonId,
+  display_name: data.displayName,
+  is_active: data.isActive,
+});
 
 export default function DivisionManager({ seasonId, seasonName }: DivisionManagerProps) {
   const [activeTab, setActiveTab] = useState('divisions');
@@ -69,10 +78,16 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   });
 
   // Fetch divisions for this season
-  const { data: divisions = [], isLoading: divisionsLoading } = useQuery<Division[]>({
+  const { data: rawDivisions = [], isLoading: divisionsLoading } = useQuery<any[]>({
     queryKey: ['divisions', seasonId],
-    queryFn: () => apiClient.get(`/api/seasons/${seasonId}/divisions`),
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/seasons/${seasonId}/divisions`);
+      // Convert all division objects to camelCase
+      return Array.isArray(response) ? response.map((d) => camelcaseKeys(d, { deep: true })) : [];
+    },
   });
+  const divisions: Division[] = rawDivisions;
+  console.log('Divisions after camelcaseKeys:', divisions);
 
   // Create mutations
   const createAgeGroupMutation = useMutation({
@@ -108,7 +123,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   });
 
   const createDivisionMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post(`/api/seasons/${seasonId}/divisions`, data),
+    mutationFn: (data: any) => apiClient.post(`/api/seasons/${seasonId}/divisions`, snakecaseKeys(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['divisions', seasonId] });
       setIsCreateDialogOpen(false);
@@ -130,6 +145,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['age-groups'] });
       setEditingItem(null);
+      setIsCreateDialogOpen(false);
       toast({ title: "Age group updated successfully" });
     },
     onError: (error: any) => {
@@ -147,6 +163,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections'] });
       setEditingItem(null);
+      setIsCreateDialogOpen(false);
       toast({ title: "Section updated successfully" });
     },
     onError: (error: any) => {
@@ -159,11 +176,11 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   });
 
   const updateDivisionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiClient.patch(`/api/divisions/${id}`, data),
+    mutationFn: ({ id, data }: { id: number; data: any }) => apiClient.patch(`/api/divisions/${id}`, snakecaseKeys(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['divisions', seasonId] });
       setEditingItem(null);
+      setIsCreateDialogOpen(false);
       toast({ title: "Division updated successfully" });
     },
     onError: (error: any) => {
@@ -288,7 +305,12 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
 
   const openEditDialog = (item: any, type: 'ageGroup' | 'section' | 'division') => {
     setDialogType(type);
-    setEditingItem(item);
+    // For divisions, ensure editingItem is camelCase
+    const editing = type === 'division' ? camelcaseKeys(item, { deep: true }) : item;
+    if (type === 'division') {
+      console.log('Editing division object:', editing);
+    }
+    setEditingItem(editing);
     setIsCreateDialogOpen(true);
   };
 
@@ -376,11 +398,6 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {division.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {division.description}
-                        </p>
-                      )}
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center text-sm">
@@ -438,11 +455,6 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {ageGroup.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {ageGroup.description}
-                        </p>
-                      )}
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center text-sm">
@@ -500,11 +512,6 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {section.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {section.description}
-                        </p>
-                      )}
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center text-sm">
@@ -532,41 +539,29 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
               {editingItem ? `Edit ${dialogType}` : `Create ${dialogType}`}
             </DialogTitle>
           </DialogHeader>
-          
           {dialogType === 'ageGroup' && (
             <AgeGroupForm
               ageGroup={editingItem}
-              onSubmit={handleCreate}
+              onSubmit={editingItem ? handleUpdate : handleCreate}
               onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={
-                createAgeGroupMutation.isPending || 
-                updateAgeGroupMutation.isPending
-              }
+              isSubmitting={createAgeGroupMutation.isPending || updateAgeGroupMutation.isPending}
             />
           )}
-          
           {dialogType === 'section' && (
             <SectionForm
               section={editingItem}
-              onSubmit={handleCreate}
+              onSubmit={editingItem ? handleUpdate : handleCreate}
               onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={
-                createSectionMutation.isPending || 
-                updateSectionMutation.isPending
-              }
+              isSubmitting={createSectionMutation.isPending || updateSectionMutation.isPending}
             />
           )}
-          
           {dialogType === 'division' && (
             <DivisionForm
               division={editingItem}
               seasonId={seasonId}
-              onSubmit={handleCreate}
+              onSubmit={editingItem ? handleUpdate : handleCreate}
               onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={
-                createDivisionMutation.isPending || 
-                updateDivisionMutation.isPending
-              }
+              isSubmitting={createDivisionMutation.isPending || updateDivisionMutation.isPending}
             />
           )}
         </DialogContent>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 const sectionFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   displayName: z.string().min(1, 'Display name is required'),
-  description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -21,15 +20,21 @@ interface Section {
   id: number;
   name: string;
   displayName: string;
-  description?: string;
   isActive: boolean;
 }
 
-interface SectionFormProps {
-  section?: Section;
-  onSubmit: (data: SectionFormData) => void;
+export interface SectionFormProps {
+  section?: {
+    id: number;
+    name: string;
+    displayName: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  onSubmit: (data: any) => void;
   onCancel: () => void;
-  isSubmitting?: boolean;
+  isSubmitting: boolean;
 }
 
 export default function SectionForm({ section, onSubmit, onCancel, isSubmitting }: SectionFormProps) {
@@ -38,10 +43,18 @@ export default function SectionForm({ section, onSubmit, onCancel, isSubmitting 
     defaultValues: {
       name: section?.name || '',
       displayName: section?.displayName || '',
-      description: section?.description || '',
       isActive: section?.isActive ?? true,
     },
   });
+
+  // Reset form values when section changes (edit vs create)
+  useEffect(() => {
+    form.reset({
+      name: section?.name || '',
+      displayName: section?.displayName || '',
+      isActive: section?.isActive ?? true,
+    });
+  }, [section, form]);
 
   const handleSubmit = (data: SectionFormData) => {
     onSubmit(data);
@@ -72,23 +85,6 @@ export default function SectionForm({ section, onSubmit, onCancel, isSubmitting 
               <FormLabel required>Display Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Division 1" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Optional description of this section" 
-                  {...field} 
-                />
               </FormControl>
               <FormMessage />
             </FormItem>

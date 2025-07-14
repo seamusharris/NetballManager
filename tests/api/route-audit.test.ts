@@ -15,12 +15,11 @@ describe('API Route Audit', () => {
         '/api/games/:gameId/stats',
         '/api/games/:gameId/rosters',
         '/api/seasons',
-        '/api/seasons/:seasonId/sections',
         '/api/players',
         '/api/teams'
       ];
 
-      expect(currentEndpoints).toHaveLength(13);
+      expect(currentEndpoints).toHaveLength(12);
       
       // Check for plural consistency
       const pluralEndpoints = currentEndpoints.filter(endpoint => 
@@ -48,7 +47,6 @@ describe('API Route Audit', () => {
         '/api/games/:gameId/stats',
         '/api/games/:gameId/rosters',
         '/api/seasons',
-        '/api/seasons/:seasonId/sections',
         '/api/players',
         '/api/teams'
       ];
