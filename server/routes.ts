@@ -2192,7 +2192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stats = await db.select()
         .from(gameStats)
-        .where(inArray(gameStats.gameId, gameIdInts));
+        .where(inArray(gameStats.game_id, gameIdInts));
 
       // Group stats by game ID - ensure consistent format
       const statsMap: Record<string, any[]> = {};
@@ -2202,7 +2202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       stats.forEach((stat) => {
-        const gameId = stat.gameId.toString();
+        const gameId = stat.game_id.toString();
         if (statsMap[gameId]) {
           statsMap[gameId].push(stat);
         } else {
