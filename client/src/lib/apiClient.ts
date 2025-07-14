@@ -1,4 +1,6 @@
 import { queryClient } from './queryClient';
+import camelcaseKeys from 'camelcase-keys';
+import snakecaseKeys from 'snakecase-keys';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -83,9 +85,10 @@ class ApiClient {
     console.log(`API Client: Final headers:`, headers);
 
     if (data) {
-      const dataString = JSON.stringify(data);
+      const snakeData = snakecaseKeys(data, { deep: true });
+      const dataString = JSON.stringify(snakeData);
       console.log('API Client: Request data size:', dataString.length + ' bytes');
-      console.log(`API Client: Request data:`, JSON.stringify(data, null, 2));
+      console.log(`API Client: Request data (snake_case):`, JSON.stringify(snakeData, null, 2));
     } else {
       console.log('API Client: No request data.');
     }
@@ -96,7 +99,7 @@ class ApiClient {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method,
         headers,
-        body: data ? JSON.stringify(data) : undefined,
+        body: data ? JSON.stringify(snakecaseKeys(data, { deep: true })) : undefined,
       });
 
       console.log(`API Client: Response status: ${response.status} ${response.statusText} at ${new Date().toISOString()}`);
@@ -133,7 +136,8 @@ class ApiClient {
       }
 
       const result = await response.json();
-      console.log(`API Client: SUCCESS Response:`, result);
+      const camelResult = camelcaseKeys(result, { deep: true });
+      console.log(`API Client: SUCCESS Response (camelCase):`, camelResult);
       console.log(`=== API CLIENT REQUEST SUCCESS END ===\n`);
 
       // Auto-invalidate cache for mutation operations
@@ -148,7 +152,7 @@ class ApiClient {
         }
       }
 
-      return result;
+      return camelResult;
     } catch (error) {
       console.error(`API Client: Request failed with error:`, error);
       console.error('\n=== API CLIENT ERROR ===');
