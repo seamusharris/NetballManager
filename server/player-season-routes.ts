@@ -16,9 +16,7 @@ export async function updatePlayerSeasonRelationships(req: Request, res: Respons
   const playerId = parseInt(req.params.id, 10);
   let seasonIds = req.body.seasonIds || [];
 
-  console.log("\n === DIRECT PLAYER-SEASON UPDATE ===");
-  console.log("Player ID:", playerId);
-  console.log("Raw season IDs:", JSON.stringify(seasonIds));
+
 
   if (isNaN(playerId)) {
     return res.status(400).json({ message: "Invalid player ID" });
@@ -37,7 +35,7 @@ export async function updatePlayerSeasonRelationships(req: Request, res: Respons
     // Convert seasonIds to an array if it's not already
     if (!Array.isArray(seasonIds)) {
       seasonIds = [seasonIds].filter(Boolean);
-      console.log("Converted non-array seasonIds to:", seasonIds);
+
     }
 
     // Filter and convert season IDs to ensure they are valid numbers
@@ -45,7 +43,7 @@ export async function updatePlayerSeasonRelationships(req: Request, res: Respons
       .map((id: any) => typeof id === 'string' ? parseInt(id, 10) : id)
       .filter((id: number) => !isNaN(id) && id > 0);
 
-    console.log("Processed season IDs:", processedSeasonIds);
+
 
     // Update the player-season relationships
     const success = await updatePlayerSeasons(playerId, processedSeasonIds);
@@ -137,9 +135,7 @@ export async function getPlayerSeasons(req: Request, res: Response) {
  */
 export async function updatePlayerSeasons(playerId: number, seasonIds: number[]): Promise<boolean> {
   try {
-    console.log("\n==== UPDATE PLAYER SEASONS ====");
-    console.log(`Player ID: ${playerId}`);
-    console.log(`Season IDs: ${seasonIds.join(', ')}`);
+
     
     // Use the direct implementation from db.ts to avoid duplication
     const { updatePlayerSeasons } = await import('./db');

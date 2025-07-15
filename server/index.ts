@@ -88,8 +88,7 @@ export default app;
 // Start server with health check only if run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const server = app.listen(PORT, async () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+
     
     // Perform initial health check
     await checkDatabaseHealth();

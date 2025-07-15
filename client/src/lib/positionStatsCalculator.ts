@@ -29,8 +29,7 @@ export function calculatePositionAverages(
   batchStats: Record<string, any[]>,
   currentTeamId: number
 ): PositionAverages {
-  console.log(`🎯 POSITION CALC START: ${games.length} games, currentTeamId=${currentTeamId}`);
-  console.log(`🎯 POSITION CALC batchStats keys:`, Object.keys(batchStats));
+
 
   // Simplified calculation - assume stats are already filtered by the API for the correct team
   let gsGoalsFor = 0;
@@ -42,10 +41,7 @@ export function calculatePositionAverages(
   games.forEach((game, gameIndex) => {
     const gameStats = batchStats[game.id.toString()] || batchStats[game.id];
 
-    console.log(`🎯 GAME ${game.id} (${gameIndex + 1}/${games.length}): Found ${gameStats?.length || 0} stats`);
-
     if (!gameStats || gameStats.length === 0) {
-      console.log(`🎯 GAME ${game.id}: No stats found, skipping`);
       return;
     }
 
@@ -55,54 +51,34 @@ export function calculatePositionAverages(
     let gameGdGoals = 0;
     let gameGkGoals = 0;
 
-    // Log team breakdown
-    const teamBreakdown = {};
-    gameStats.forEach(stat => {
-      if (!teamBreakdown[stat.teamId]) teamBreakdown[stat.teamId] = 0;
-      teamBreakdown[stat.teamId]++;
-    });
-    console.log(`🎯 GAME ${game.id} team breakdown:`, teamBreakdown);
-
     // Filter to current team only
     const teamStats = gameStats.filter(stat => Number(stat.teamId) === Number(currentTeamId));
-    console.log(`🎯 GAME ${game.id}: ${teamStats.length} stats for team ${currentTeamId}`);
-
-    if (teamStats.length > 0) {
-      console.log(`🎯 GAME ${game.id} team stats positions:`, teamStats.map(s => `${s.position}:F${s.goalsFor}/A${s.goalsAgainst}`));
-    }
 
     teamStats.forEach(stat => {
       if (stat.position === 'GS' && typeof stat.goalsFor === 'number') {
         gsGoalsFor += stat.goalsFor;
         gameGsGoals += stat.goalsFor;
         hasPositionStats = true;
-        console.log(`🎯 GAME ${game.id}: GS added ${stat.goalsFor} goals (total now ${gsGoalsFor})`);
       }
       if (stat.position === 'GA' && typeof stat.goalsFor === 'number') {
         gaGoalsFor += stat.goalsFor;
         gameGaGoals += stat.goalsFor;
         hasPositionStats = true;
-        console.log(`🎯 GAME ${game.id}: GA added ${stat.goalsFor} goals (total now ${gaGoalsFor})`);
       }
       if (stat.position === 'GD' && typeof stat.goalsAgainst === 'number') {
         gdGoalsAgainst += stat.goalsAgainst;
         gameGdGoals += stat.goalsAgainst;
         hasPositionStats = true;
-        console.log(`🎯 GAME ${game.id}: GD added ${stat.goalsAgainst} goals against (total now ${gdGoalsAgainst})`);
       }
       if (stat.position === 'GK' && typeof stat.goalsAgainst === 'number') {
         gkGoalsAgainst += stat.goalsAgainst;
         gameGkGoals += stat.goalsAgainst;
         hasPositionStats = true;
-        console.log(`🎯 GAME ${game.id}: GK added ${stat.goalsAgainst} goals against (total now ${gkGoalsAgainst})`);
       }
     });
 
     if (hasPositionStats) {
       gamesWithPositionStats++;
-      console.log(`🎯 GAME ${game.id}: HAS POSITION STATS - GS:${gameGsGoals}, GA:${gameGaGoals}, GD:${gameGdGoals}, GK:${gameGkGoals} (games with stats: ${gamesWithPositionStats})`);
-    } else {
-      console.log(`🎯 GAME ${game.id}: NO POSITION STATS FOUND`);
     }
   });
 
@@ -114,11 +90,6 @@ export function calculatePositionAverages(
   const attackingPositionsTotal = gsAvgGoalsFor + gaAvgGoalsFor;
   const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
 
-  console.log(`🎯 POSITION CALC FINAL: Team ${currentTeamId}`);
-  console.log(`🎯 TOTALS: GS=${gsGoalsFor}, GA=${gaGoalsFor}, GD=${gdGoalsAgainst}, GK=${gkGoalsAgainst}`);
-  console.log(`🎯 AVERAGES: GS=${gsAvgGoalsFor.toFixed(2)}, GA=${gaAvgGoalsFor.toFixed(2)}, GD=${gdAvgGoalsAgainst.toFixed(2)}, GK=${gkAvgGoalsAgainst.toFixed(2)}`);
-  console.log(`🎯 COMBINED: Attack=${attackingPositionsTotal.toFixed(2)}, Defense=${defendingPositionsTotal.toFixed(2)}, Games=${gamesWithPositionStats}`);
-
   const result = {
     gsAvgGoalsFor,
     gaAvgGoalsFor,
@@ -129,7 +100,6 @@ export function calculatePositionAverages(
     gamesWithPositionStats
   };
 
-  console.log(`🎯 POSITION CALC RESULT:`, result);
   return result;
 }
 

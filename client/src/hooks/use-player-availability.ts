@@ -50,11 +50,10 @@ export function useSetPlayerAvailability(teamId?: number) {
       // Check if there's already a request in progress for this game
       const existingRequest = requestQueueRef.current.get(gameId);
       if (existingRequest) {
-        console.log(`⏳ Waiting for existing request to complete for game ${gameId}`);
         try {
           await existingRequest;
         } catch (error) {
-          console.log(`Previous request failed, continuing with new request`);
+          // Previous request failed, continue with new request
         }
       }
       

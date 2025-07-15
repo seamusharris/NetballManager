@@ -63,12 +63,7 @@ export default function SpacingDiagnostic({ className }: SpacingDiagnosticProps)
     if (container) {
       const computedStyles = window.getComputedStyle(container);
       const classList = container.className;
-      console.log('=== SPACING DIAGNOSTIC ===');
-      console.log('Container classes:', classList);
-      console.log('Container computed margin-bottom:', computedStyles.marginBottom);
-      console.log('Container computed gap:', computedStyles.gap);
-      console.log('Container computed display:', computedStyles.display);
-      console.log('Container computed flex-direction:', computedStyles.flexDirection);
+
       
       // Check children spacing
       const children = container.children;
