@@ -247,7 +247,6 @@ export default function TeamPlayersManager() {
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
-        breadcrumbs={breadcrumbs}
         actions={
           <div className="w-64">
             <Select

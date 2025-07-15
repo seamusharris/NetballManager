@@ -740,7 +740,6 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     <PageTemplate
       title="Quick Tap Stats"
       subtitle={`Round ${game.round} | ${formatShortDate(game.date)} vs ${opponentDisplayName}`}
-      breadcrumbs={breadcrumbs}
       showBackButton={true}
       backButtonProps={{ 
         fallbackPath: `/game/${gameId}`,

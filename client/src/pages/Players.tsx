@@ -131,10 +131,7 @@ export default function Players() {
   // CLUB VIEW RENDERING
   const pageTitle = club?.name ? `${club.name} Players` : 'Players';
   const pageSubtitle = club?.name ? `Manage players for ${club.name}` : 'Manage club players';
-  const breadcrumbs = [
-    { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
-    { label: 'Players' }
-  ];
+
 
   return (
     <>
@@ -145,7 +142,7 @@ export default function Players() {
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
-        breadcrumbs={breadcrumbs}
+
         actions={
           <PageActions>
             <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>

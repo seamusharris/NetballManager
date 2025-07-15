@@ -124,10 +124,6 @@ export default function RosterGame() {
       <PageTemplate
         title="Roster Management"
         subtitle="No game specified"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Roster Management' }
-        ]}
       >
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -144,10 +140,6 @@ export default function RosterGame() {
       <PageTemplate
         title="Roster Management"
         subtitle="Game not found"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Roster Management' }
-        ]}
       >
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -183,7 +175,6 @@ export default function RosterGame() {
     <PageTemplate
       title="Roster Management"
       subtitle={`Manage roster for ${selectedGame.homeTeamName} vs ${selectedGame.awayTeamName || 'BYE'}`}
-      breadcrumbs={<DynamicBreadcrumbs />}
       actions={pageActions}
     >
       <Helmet>

@@ -429,11 +429,9 @@ export default function ClubDashboard() {
                     <div 
                       key={team.id} 
                       onClick={async () => {
-                        console.log(`ClubDashboard: Setting team context to ${team.id} (${team.name})`);
                         setCurrentTeamId(team.id);
                         await new Promise(resolve => setTimeout(resolve, 50));
-                        console.log(`ClubDashboard: Navigating to team ${team.id} dashboard`);
-                        navigate(`/team/${team.id}/dashboard`);
+                        navigate(`/club/${effectiveClubId}/team/${team.id}`);
                       }}
                       className="group p-6 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 cursor-pointer transition-all duration-300 transform hover:scale-[1.01]"
                     >
@@ -552,7 +550,6 @@ export default function ClubDashboard() {
               </div>
               
               <CardContent className="p-6">
-                {console.log('ClubDashboard: Passing games to GameAnalysisWidget:', games?.length, 'completed games:', games?.filter(g => g.statusIsCompleted === true || g.statusName === 'completed').length)}
                 <GameAnalysisWidget
                   historicalGames={games?.filter(game => 
                     game.statusIsCompleted

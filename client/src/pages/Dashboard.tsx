@@ -28,6 +28,7 @@ import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import { cn } from '@/lib/utils';
 import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import OpponentFormWidget from '@/components/dashboard/OpponentFormWidget';
+import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 
 export default function Dashboard() {
   const params = useParams();
@@ -186,7 +187,6 @@ export default function Dashboard() {
 
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClubId) {
-    console.log('Dashboard waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub, currentClubId });
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -242,6 +242,9 @@ export default function Dashboard() {
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="container py-8 mx-auto space-y-8">
+          {/* Breadcrumbs */}
+          <DynamicBreadcrumbs />
+          
           {/* Clean Header */}
           <Card className="border-0 shadow-lg text-white" style={{backgroundColor: '#1e3a8a'}}>
             <CardContent className="p-6">

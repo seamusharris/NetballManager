@@ -257,10 +257,7 @@ export default function Reference() {
   return (
     <PageTemplate 
       title="Component Reference" 
-      breadcrumbs={[
-        { label: "Development", href: "/component-examples" },
-        { label: "Reference" }
-      ]}
+      // Removed breadcrumbs prop
     >
       <div className="space-y-8">
         <div className="prose max-w-none">

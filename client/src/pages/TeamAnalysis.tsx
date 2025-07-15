@@ -608,18 +608,7 @@ export default function TeamAnalysis() {
       </Helmet>
 
       <div className="container py-6 mx-auto space-y-6">
-        {/* Breadcrumbs */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Team Analysis</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {/* Removed manual breadcrumbs - using PageTemplate's default dynamic breadcrumbs */}
 
         {/* Header */}
         <div className="flex items-center justify-between">

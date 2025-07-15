@@ -214,11 +214,7 @@ export default function TeamLadder() {
 
       <PageTemplate
         title="Team Ladder"
-        description="Current standings and team positions"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Team Ladder' }
-        ]}
+        subtitle="Current standings and team positions"
       >
         <div className="space-y-6">
           {/* Filter Controls */}

@@ -589,7 +589,6 @@ export default function RosterManagementExamples() {
     <PageTemplate
       title="Roster Management Examples"
       subtitle="Interactive roster assignment interfaces for netball teams"
-      breadcrumbs={breadcrumbs}
     >
       <Helmet>
         <title>Roster Management Examples | Team Manager</title>

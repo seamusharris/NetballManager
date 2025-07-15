@@ -12,6 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { DynamicBreadcrumbs } from './DynamicBreadcrumbs';
 
 // ============================================================================
 // PAGE TEMPLATE COMPONENT
@@ -20,10 +21,10 @@ import {
 interface PageTemplateProps {
   title: string;
   subtitle?: string;
-  breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  showBreadcrumbs?: boolean;
   showBackButton?: boolean;
   backButtonProps?: {
     fallbackPath?: string;
@@ -31,15 +32,10 @@ interface PageTemplateProps {
   };
 }
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
-
 function PageTemplate({ 
   title, 
   subtitle, 
-  breadcrumbs, 
+  showBreadcrumbs = true,
   actions, 
   children, 
   className,
@@ -55,7 +51,7 @@ function PageTemplate({
         />
       )}
 
-      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
+      {showBreadcrumbs && <DynamicBreadcrumbs />}
 
       <div className={PAGE_STRUCTURE.headerSection}>
         <div className="flex items-start justify-between">
@@ -71,54 +67,6 @@ function PageTemplate({
         {children}
       </div>
     </div>
-  );
-}
-
-// ============================================================================
-// BREADCRUMB NAVIGATION
-// ============================================================================
-
-interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
-}
-
-function Breadcrumbs({ items }: BreadcrumbsProps) {
-  const [, navigate] = useLocation();
-
-  // Safety check to ensure items is an array
-  if (!items || !Array.isArray(items)) {
-    return null;
-  }
-
-  return (
-    <Breadcrumb className="mb-6">
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink 
-            onClick={() => navigate('/dashboard')}
-            className="cursor-pointer flex items-center"
-          >
-            <Home className="h-4 w-4" />
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        
-        {items.map((item, index) => [
-          <BreadcrumbSeparator key={`separator-${index}`} />,
-          <BreadcrumbItem key={`item-${index}`}>
-            {index === items.length - 1 ? (
-              <BreadcrumbPage>{item.label}</BreadcrumbPage>
-            ) : (
-              <BreadcrumbLink 
-                onClick={() => item.href && navigate(item.href)}
-                className={item.href ? "cursor-pointer" : ""}
-              >
-                {item.label}
-              </BreadcrumbLink>
-            )}
-          </BreadcrumbItem>
-        ]).flat()}
-      </BreadcrumbList>
-    </Breadcrumb>
   );
 }
 

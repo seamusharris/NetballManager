@@ -468,7 +468,6 @@ export default function DragDropExamples() {
     <PageTemplate
       title="Drag & Drop Examples"
       subtitle="Interactive drag and drop interfaces for roster management"
-      breadcrumbs={breadcrumbs}
     >
       <Helmet>
         <title>Drag & Drop Examples | Team Manager</title>

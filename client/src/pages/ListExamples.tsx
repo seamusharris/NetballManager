@@ -39,10 +39,7 @@ export default function ListExamples() {
   return (
     <PageTemplate 
       title="List Examples" 
-      breadcrumbs={[
-        { label: "Component Examples", href: "/component-examples" },
-        { label: "List Examples" }
-      ]}
+      // Removed breadcrumbs prop
     >
       <div className="space-y-8">
         <Helmet>

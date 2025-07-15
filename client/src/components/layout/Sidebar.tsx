@@ -29,7 +29,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   // Create team-aware navigation links following proposed architecture
   const getNavLinks = () => {
     const clubWideLinks = [
-      { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" />, section: 'club' },
+      { path: `/club/${currentClubId}`, label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" />, section: 'club' },
       { path: `/club/${currentClubId}/players`, label: 'All Players', icon: <Users className="w-5 h-5" />, section: 'club' },
       { path: `/club/${currentClubId}/teams`, label: 'All Teams', icon: <Users className="w-5 h-5" />, section: 'club' },
       { path: `/club/${currentClubId}/games`, label: 'All Games', icon: <Calendar className="w-5 h-5" />, section: 'club' },
@@ -53,7 +53,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     // Team-specific links following proposed architecture
     const teamLinks = currentTeamId ? [
       { 
-        path: `/team/${currentTeamId}/dashboard`, 
+        path: `/club/${currentClubId}/team/${currentTeamId}`, 
         label: 'Team Dashboard', 
         icon: <Home className="w-5 h-5" />,
         section: 'team'

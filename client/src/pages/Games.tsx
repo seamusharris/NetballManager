@@ -19,7 +19,7 @@ import { useOptimizedTeams, useOptimizedTeamGames, useOptimizedSeasons, useOptim
 import { useApiErrorHandler } from '@/hooks/use-api-error-handler';
 
 // Import new UI standards
-import { ContentBox, ActionButton, ResponsiveGrid } from '@/components/ui/ui-standards';
+import { ContentBox, ActionButton } from '@/components/ui/ui-standards';
 import PageTemplate from '@/components/layout/PageTemplate';
 
 interface QueryParams {
@@ -354,10 +354,6 @@ export default function Games() {
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Games' }
-        ]}
         actions={
           <>
             {isClubWideGamesView ? (

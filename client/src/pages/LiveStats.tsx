@@ -1015,7 +1015,6 @@ export default function LiveStats() {
     <PageTemplate
       title="Live Stats Tracking"
       subtitle={`Round ${game.round} | ${formatShortDate(game.date)} vs ${opponentDisplayName}`}
-      breadcrumbs={breadcrumbs}
       actions={pageActions}
       showBackButton={true}
       backButtonProps={{ 

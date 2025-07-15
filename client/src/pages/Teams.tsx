@@ -15,6 +15,8 @@ import { TEAM_NAME } from '@/lib/settings';
 import { ContentSection, ActionButton } from '@/components/ui/ui-standards';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { CrudDialog } from '@/components/ui/crud-dialog';
+import React from 'react';
+import { getClubDisplayName } from '../lib/utils';
 
 export default function Teams() {
   const params = useParams();
@@ -24,37 +26,72 @@ export default function Teams() {
     currentClubId, 
     clubTeams, 
     setCurrentTeamId,
+    switchClub,
     isLoading: clubLoading 
   } = useClub();
 
-  // Redirect to club-scoped URL if accessing /teams without club ID
+  // Handle clubId from URL parameter for /teams/:clubId route
+  const urlClubId = React.useMemo(() => {
+    if (params && 'clubId' in params && params.clubId) {
+      const id = parseInt(params.clubId as string);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+
+  // Set club context if URL has a different clubId than current
   useEffect(() => {
-    if (location === '/teams' && currentClubId) {
+    if (urlClubId && urlClubId !== currentClubId) {
+      console.log(`Teams: Switching to club ${urlClubId} from URL parameter`);
+      switchClub(urlClubId);
+    }
+  }, [urlClubId, currentClubId, switchClub]);
+
+  // Redirect to club-scoped URL if accessing /teams without club ID
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  useEffect(() => {
+    if (location === '/teams' && currentClubId && !isRedirecting) {
+      setIsRedirecting(true);
       setLocation(`/clubs/${currentClubId}/teams`);
       return;
     }
-  }, [location, currentClubId, setLocation]);
+  }, [location, currentClubId, setLocation, isRedirecting]);
+
+  // Show loading during redirect
+  if (isRedirecting) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Use the effective club ID (from URL or context)
+  const effectiveClubId = urlClubId || currentClubId;
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams', currentClubId],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
-    enabled: !!currentClubId,
+    queryKey: ['teams', effectiveClubId],
+    queryFn: () => apiClient.get(`/api/clubs/${effectiveClubId}/teams`),
+    enabled: !!effectiveClubId,
   });
 
   const { data: seasons = [] } = useQuery<any[]>({
-    queryKey: ['/api/seasons', currentClubId],
+    queryKey: ['/api/seasons', effectiveClubId],
     queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!currentClubId,
+    enabled: !!effectiveClubId,
   });
 
   const { data: activeSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active', currentClubId],
+    queryKey: ['/api/seasons/active', effectiveClubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!currentClubId,
+    enabled: !!effectiveClubId,
   });
 
   const deleteTeamMutation = useMutation({
@@ -68,7 +105,8 @@ export default function Teams() {
 
 
 
-  if (clubLoading || !currentClubId) {
+  // Don't render anything until club context is fully loaded
+  if (clubLoading || !effectiveClubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -91,14 +129,14 @@ export default function Teams() {
     );
   }
 
+  const clubName = getClubDisplayName(currentClub);
+  const pageSubtitle = `Manage teams for ${clubName}`;
+
   return (
     <PageTemplate
       title="Teams"
-      subtitle={`Manage teams for ${currentClub?.name}`}
-      breadcrumbs={[
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Teams' }
-      ]}
+      subtitle={pageSubtitle}
+
       actions={
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
@@ -155,7 +193,7 @@ export default function Teams() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setLocation(`/team/${team.id}/dashboard`)}
+                      onClick={() => setLocation(`/club/${effectiveClubId}/team/${team.id}`)}
                       className="group-hover:border-primary group-hover:text-primary transition-all duration-300"
                     >
                       <Activity className="h-4 w-4 mr-1" />
@@ -223,7 +261,7 @@ export default function Teams() {
       >
         <TeamForm
           seasons={seasons}
-          clubId={currentClubId!}
+          clubId={effectiveClubId!}
           onSuccess={() => {
             setIsCreateDialogOpen(false);
             queryClient.invalidateQueries({ queryKey: ['teams'] });
@@ -242,7 +280,7 @@ export default function Teams() {
           <TeamForm
             team={editingTeam}
             seasons={seasons}
-            clubId={editingTeam.clubId || currentClubId!}
+            clubId={editingTeam.clubId || effectiveClubId!}
             onSuccess={() => {
               setEditingTeam(null);
               queryClient.invalidateQueries({ queryKey: ['teams'] });

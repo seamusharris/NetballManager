@@ -62,10 +62,6 @@ export default function PlayerAvailability() {
       <PageTemplate
         title="Player Availability"
         subtitle="Invalid URL"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Player Availability' }
-        ]}
       >
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -82,7 +78,6 @@ export default function PlayerAvailability() {
       <PageTemplate
         title="Player Availability"
         subtitle="Loading..."
-        breadcrumbs={<DynamicBreadcrumbs />}
       >
         <Card>
           <CardContent className="pt-6">
@@ -98,7 +93,6 @@ export default function PlayerAvailability() {
       <PageTemplate
         title="Player Availability"
         subtitle="Error loading data"
-        breadcrumbs={<DynamicBreadcrumbs />}
       >
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -115,7 +109,6 @@ export default function PlayerAvailability() {
       <PageTemplate
         title="Player Availability"
         subtitle="Game not found"
-        breadcrumbs={<DynamicBreadcrumbs />}
       >
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -131,7 +124,6 @@ export default function PlayerAvailability() {
     <PageTemplate
       title="Player Availability"
       subtitle={`${selectedGame?.homeTeamName} vs ${selectedGame?.awayTeamName || 'BYE'} - ${selectedGame?.date}`}
-      breadcrumbs={<DynamicBreadcrumbs />}
     >
       <Helmet>
         <title>{`Player Availability - Game ${gameId} | Netball Manager`}</title>

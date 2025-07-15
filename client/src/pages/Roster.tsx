@@ -228,7 +228,6 @@ export default function Roster() {
     <PageTemplate
       title="Roster Management"
       subtitle={`Manage game rosters for ${currentClub?.name || 'your club'}`}
-      breadcrumbs={breadcrumbs}
       actions={pageActions}
     >
       {renderStepIndicator()}

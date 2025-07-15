@@ -406,3 +406,7 @@ export function getForfeitGameScore(game: { status?: string | null } | string | 
     finalScore: { for: isWin ? 10 : 0, against: isWin ? 0 : 10 }
   };
 }
+
+export function getClubDisplayName(club: { name?: string } | null | undefined): string {
+  return club?.name || 'your club';
+}

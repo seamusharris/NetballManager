@@ -210,19 +210,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
     isInitialized
   ]);
 
-  console.log('ClubContext: Rendering with:', {
-    currentClubId,
-    currentTeamId,
-    hasCurrentClub: !!currentClub,
-    userClubsCount: userClubs.length,
-    clubTeamsCount: clubTeams?.length || 0,
-    clubTeams: clubTeams?.map(t => ({ id: t.id, name: t.name })) || [],
-    isLoading: contextValue.isLoading,
-    isInitialized,
-    isLoadingClubs,
-    isLoadingClub,
-    isLoadingTeams
-  });
+  // Removed console.log to prevent object rendering issues
 
   return (
     <ClubContext.Provider value={contextValue}>

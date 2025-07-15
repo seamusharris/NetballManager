@@ -453,12 +453,11 @@ export default function GamePreparation() {
   });
 
   return (
-    <PageTemplate 
-      title="Game Preparation" 
-      breadcrumbs={[
-        { label: "Games", href: "/games" },
-        { label: "Game Preparation" }
-      ]}
+    <PageTemplate
+      title="Game Preparation"
+      subtitle={`${game?.homeTeamName} vs ${game?.awayTeamName || 'BYE'} - Round ${game?.round}`}
+      // Removed breadcrumbs prop
+      actions={pageActions}
     >
       <Helmet>
         <title>{`Game Preparation - ${opponent} | Team Management`}</title>

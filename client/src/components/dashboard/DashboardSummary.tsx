@@ -66,7 +66,6 @@ export default function DashboardSummary({
 
   // Early return if club context isn't ready
   if (clubLoading || !currentClub) {
-    console.log('DashboardSummary waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub });
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

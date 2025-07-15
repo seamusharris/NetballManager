@@ -124,7 +124,29 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={withErrorBoundary(HomePage, 'HomePage')} />
+        
+        {/* New club-scoped routes */}
         <Route path="/club/:clubId" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
+        <Route path="/club/:clubId/teams" component={withErrorBoundary(Teams, 'Teams')} />
+        <Route path="/club/:clubId/team/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/club/:clubId/team/:teamId/games" component={withErrorBoundary(Games, 'Games')} />
+        <Route path="/club/:clubId/team/:teamId/players" component={withErrorBoundary(TeamPlayersManager, 'TeamPlayersManager')} />
+        <Route path="/club/:clubId/team/:teamId/roster" component={withErrorBoundary(Roster, 'Roster')} />
+        <Route path="/club/:clubId/team/:teamId/game/:gameId" component={withErrorBoundary(GameDetails, 'GameDetails')} />
+        <Route path="/club/:clubId/team/:teamId/game/:gameId/stats/:action">
+          {(params) => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading stats recorder..." />}>
+                <StatsRecorder 
+                  gameId={parseInt(params?.gameId || '0', 10)} 
+                  teamId={parseInt(params?.teamId || '0', 10)} 
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        
+        {/* Legacy routes for backward compatibility */}
         <Route path="/team/:teamId/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/team/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
@@ -163,7 +185,10 @@ function Router() {
           {(params) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading stats recorder..." />}>
-                <StatsRecorder gameId={parseInt(params.gameId, 10)} teamId={parseInt(params.teamId, 10)} />
+                <StatsRecorder 
+                  gameId={parseInt(params?.gameId || '0', 10)} 
+                  teamId={parseInt(params?.teamId || '0', 10)} 
+                />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -174,7 +199,7 @@ function Router() {
           {(params) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading debugging tools..." />}>
-                <StatsDebug id={parseInt(params.id, 10)} />
+                <StatsDebug id={parseInt(params?.id || '0', 10)} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -335,8 +360,8 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
-        <Route path="/examples/game-results" element={<GameResultExamples />} />
-            <Route path="/examples/score-progression" element={<ScoreProgressionExamples />} />
+        <Route path="/examples/game-results" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
+        <Route path="/examples/score-progression" component={withErrorBoundary(ScoreProgressionExamples, 'ScoreProgressionExamples')} />
             <Route path="/live-score-tracking-examples" component={LiveScoreTrackingExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>

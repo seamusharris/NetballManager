@@ -157,7 +157,6 @@ export default function Seasons() {
       <PageTemplate
         title="Seasons"
         subtitle="Manage your club's seasons and set the active season"
-        breadcrumbs={breadcrumbs}
       >
         <Card>
           <CardContent className="pt-6">
