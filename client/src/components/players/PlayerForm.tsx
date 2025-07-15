@@ -62,7 +62,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   const getPositionDefaults = () => {
     if (!player) return { position1: "", position2: "none", position3: "none", position4: "none" };
 
-    const preferences = player.position_preferences as Position[];
+    const preferences = player.positionPreferences as Position[];
     return {
       position1: preferences[0] || "",
       position2: preferences[1] || "none",
@@ -75,13 +75,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
   const createPlayer = useMutation({
     mutationFn: (data: any) => {
-      console.log('\n=== PLAYER FORM MUTATION START ===');
-      console.log('PlayerForm: Timestamp:', new Date().toISOString());
-      console.log('PlayerForm: Creating player with club context:', clubId, 'team context:', teamId);
-      console.log('PlayerForm: Raw form data received:', JSON.stringify(data, null, 2));
-
       if (!clubId) {
-        console.error('PlayerForm: ERROR - No club context available');
         throw new Error('Club context is required for player creation');
       }
 
@@ -91,40 +85,12 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         teamId: teamId || undefined // Include team ID if in team context
       };
 
-      console.log('PlayerForm: Final payload being sent:', JSON.stringify(playerData, null, 2));
-      console.log('PlayerForm: Headers being sent:', {
-        'x-current-club-id': clubId.toString(),
-        ...(teamId && { 'x-current-team-id': teamId.toString() })
-      });
-
-      // Log the API call details
-      console.log('PlayerForm: About to make API call to /api/players');
-      console.log('PlayerForm: Request details:', {
-        url: '/api/players',
-        method: 'POST',
-        timestamp: new Date().toISOString(),
-        bodySize: JSON.stringify(playerData).length + ' bytes'
-      });
-
-      const apiPromise = apiClient.post('/api/players', playerData, {
+      return apiClient.post('/api/players', playerData, {
         headers: {
           'x-current-club-id': clubId.toString(),
           ...(teamId && { 'x-current-team-id': teamId.toString() })
         } as any
       });
-
-      console.log('PlayerForm: API call initiated, promise created');
-      
-      // Add promise logging
-      apiPromise
-        .then((response: any) => {
-          console.log('PlayerForm: API call succeeded with response:', response.status);
-        })
-        .catch(error => {
-          console.error('PlayerForm: API call failed with error:', error);
-        });
-
-      return apiPromise;
     },
     onSuccess: () => {
       // Invalidate all player-related queries - simplified like working forms
@@ -183,18 +149,37 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      display_name: player?.display_name || "",
-      first_name: player?.first_name || "",
-      last_name: player?.last_name || "",
-      date_of_birth: player?.date_of_birth || "",
+      display_name: player?.displayName || "",
+      first_name: player?.firstName || "",
+      last_name: player?.lastName || "",
+      date_of_birth: player?.dateOfBirth || "",
       position1: positionDefaults.position1,
       position2: positionDefaults.position2,
       position3: positionDefaults.position3,
       position4: positionDefaults.position4,
       active: player?.active !== undefined ? player.active : true,
-      avatar_color: player?.avatar_color || 'bg-blue-600',
+      avatar_color: player?.avatarColor || 'bg-blue-600',
     },
   });
+
+  // Reset form when player data changes (for edit mode)
+  useEffect(() => {
+    if (player) {
+      const newPositionDefaults = getPositionDefaults();
+      form.reset({
+        display_name: player.displayName || "",
+        first_name: player.firstName || "",
+        last_name: player.lastName || "",
+        date_of_birth: player.dateOfBirth || "",
+        position1: newPositionDefaults.position1,
+        position2: newPositionDefaults.position2,
+        position3: newPositionDefaults.position3,
+        position4: newPositionDefaults.position4,
+        active: player.active !== undefined ? player.active : true,
+        avatar_color: player.avatarColor || 'bg-blue-600',
+      });
+    }
+  }, [player, form]);
 
   // Watch position selections to filter out duplicates
   const position1 = useWatch({ control: form.control, name: "position1" });
@@ -255,29 +240,14 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   }, [position1, position2, position3, position4, form]);
 
   const handleSubmit = (values: FormValues) => {
-    console.log('\n=== PLAYER FORM SUBMISSION START ===');
-    console.log('PlayerForm: handleSubmit called at:', new Date().toISOString());
-    console.log('PlayerForm: handleSubmit called with values:', JSON.stringify(values, null, 2));
-    console.log('PlayerForm: Club context:', clubId, 'Team context:', teamId);
-    console.log('PlayerForm: Is editing mode:', isEditing);
-    console.log('PlayerForm: Form validation state:', {
-      isValid: form.formState.isValid,
-      isDirty: form.formState.isDirty,
-      isSubmitting: form.formState.isSubmitting,
-      errors: form.formState.errors
-    });
-
     // Validate at least one position is selected
     if (!values.position1) {
-      console.log('PlayerForm: VALIDATION FAILED - No primary position selected');
       form.setError("position1", { 
         type: "required", 
         message: "Primary position is required" 
       });
       return;
     }
-
-    console.log('PlayerForm: Primary position validation passed:', values.position1);
 
     // Construct position preferences array from individual selections
     const positionPreferences: Position[] = [
@@ -287,20 +257,15 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     // Only add secondary positions if they're not "none"
     if (values.position2 !== "none") {
       positionPreferences.push(values.position2 as Position);
-      console.log('PlayerForm: Added position2:', values.position2);
     }
 
     if (values.position3 !== "none") {
       positionPreferences.push(values.position3 as Position);
-      console.log('PlayerForm: Added position3:', values.position3);
     }
 
     if (values.position4 !== "none") {
       positionPreferences.push(values.position4 as Position);
-      console.log('PlayerForm: Added position4:', values.position4);
     }
-
-    console.log('PlayerForm: Final position preferences array:', positionPreferences);
 
     // Remove position fields from the data object
     const { position1, position2, position3, position4, ...rest } = values;
@@ -311,43 +276,20 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       positionPreferences,
     };
 
-    console.log('PlayerForm: Final player data being submitted:', JSON.stringify(playerData, null, 2));
-    console.log('PlayerForm: Club context being sent:', clubId, 'Team context:', teamId);
-
     try {
       if (player) {
-        console.log('PlayerForm: Calling updateMutation.mutate for existing player');
         updateMutation.mutate(playerData, {
           onSuccess: () => {
-            console.log('PlayerForm: Update mutation succeeded');
             form.reset();
             onSuccess?.();
           }
         });
       } else {
-        console.log('PlayerForm: Calling createPlayer.mutate for new player');
-        console.log('PlayerForm: About to call createPlayer mutation at:', new Date().toISOString());
-        console.log('PlayerForm: Mutation state before call:', {
-          isPending: createPlayer.isPending,
-          isError: createPlayer.isError,
-          isSuccess: createPlayer.isSuccess
-        });
-        
         createPlayer.mutate(playerData);
-        
-        console.log('PlayerForm: createPlayer.mutate call completed (async)');
-        console.log('PlayerForm: Mutation state after call:', {
-          isPending: createPlayer.isPending,
-          isError: createPlayer.isError,
-          isSuccess: createPlayer.isSuccess
-        });
       }
     } catch (error) {
       console.error('PlayerForm: Exception during mutation call:', error);
-      console.error('PlayerForm: Exception stack trace:', error.stack);
     }
-
-    console.log('=== PLAYER FORM SUBMISSION END ===');
   };
 
   // Season management is now handled on the player details page
@@ -559,12 +501,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
             type="submit" 
             className="bg-primary text-white" 
             disabled={isSubmitting}
-            onClick={() => {
-              console.log('PlayerForm: Submit button clicked');
-              console.log('PlayerForm: Current form state:', form.getValues());
-              console.log('PlayerForm: Form errors:', form.formState.errors);
-              console.log('PlayerForm: Is form valid:', form.formState.isValid);
-            }}
+
           >
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Player' : 'Add Player'}
           </Button>

@@ -1209,13 +1209,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create a sanitized version of the update data (only include valid fields)
       const validPlayerData = {
-        displayName: updateData.displayName,
-        firstName: updateData.firstName,
-        lastName: updateData.lastName,
-        dateOfBirth: updateData.dateOfBirth,
-        positionPreferences: updateData.positionPreferences,
+        displayName: updateData.display_name,
+        firstName: updateData.first_name,
+        lastName: updateData.last_name,
+        dateOfBirth: updateData.date_of_birth,
+        positionPreferences: updateData.position_preferences,
         active: updateData.active,
-        avatarColor: updateData.avatarColor
+        avatarColor: updateData.avatar_color
       };
 
       console.log("Sanitized player data for update:", validPlayerData);

@@ -248,26 +248,26 @@ export class DatabaseStorage implements IStorage {
       // Handle type-safe update to avoid TS errors
       const updateData: Record<string, any> = {};
 
-      if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
-      if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
-      if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
-      if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
+      if (updatePlayer.displayName !== undefined) updateData.display_name = updatePlayer.displayName;
+      if (updatePlayer.firstName !== undefined) updateData.first_name = updatePlayer.firstName;
+      if (updatePlayer.lastName !== undefined) updateData.last_name = updatePlayer.lastName;
+      if (updatePlayer.dateOfBirth !== undefined) updateData.date_of_birth = updatePlayer.dateOfBirth;
       if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active === true;
 
       // Ensure position preferences is always an array
       if (updatePlayer.positionPreferences !== undefined) {
         if (Array.isArray(updatePlayer.positionPreferences)) {
-          updateData.positionPreferences = updatePlayer.positionPreferences;
+          updateData.position_preferences = updatePlayer.positionPreferences;
         } else if (typeof updatePlayer.positionPreferences === 'string') {
           // Handle case where it might come as a string
-          updateData.positionPreferences = [updatePlayer.positionPreferences];
+          updateData.position_preferences = [updatePlayer.positionPreferences];
         } else {
           // Default to empty array if invalid
-          updateData.positionPreferences = [];
+          updateData.position_preferences = [];
         }
       }
 
-      if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
+      if (updatePlayer.avatarColor !== undefined) updateData.avatar_color = updatePlayer.avatarColor;
 
       console.log("Storage: Processed update data:", JSON.stringify(updateData, null, 2));
 
