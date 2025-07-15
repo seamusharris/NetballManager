@@ -3809,6 +3809,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Canonical club-scoped batch roster save endpoint
+  app.post('/api/clubs/:clubId/teams/:teamId/games/:gameId/rosters/batch', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { clubId, teamId, gameId } = req.params;
+      const { rosters: rosterData } = req.body;
+
+      // Normalize all roster entries to use playerId (support both playerId and player_id)
+      const normalizedRosterData = Array.isArray(rosterData)
+        ? rosterData.map(r => ({ ...r, playerId: r.playerId ?? r.player_id }))
+        : [];
+
+      // Log the incoming normalizedRosterData for debugging
+      console.log('Received normalizedRosterData:', JSON.stringify(normalizedRosterData, null, 2));
+
+      if (!Array.isArray(normalizedRosterData)) {
+        return res.status(400).json({ error: 'Rosters data must be an array' });
+      }
+
+      // Fail-fast check for missing playerId
+      const missingPlayerId = normalizedRosterData.find(r => r.playerId == null);
+      if (missingPlayerId) {
+        console.error('Roster entry missing playerId:', missingPlayerId);
+        return res.status(400).json({ error: 'All roster entries must have a playerId' });
+      }
+
+      const clubIdNum = parseInt(clubId);
+      const teamIdNum = parseInt(teamId);
+      const gameIdNum = parseInt(gameId);
+
+      // Validate club/team relationship
+      const teamResult = await pool.query('SELECT club_id FROM teams WHERE id = $1', [teamIdNum]);
+      if (teamResult.rowCount === 0 || teamResult.rows[0].club_id !== clubIdNum) {
+        return res.status(400).json({ error: 'Team does not belong to the specified club' });
+      }
+
+      // Validate team/game relationship
+      const gameResult = await pool.query('SELECT id FROM games WHERE id = $1 AND (home_team_id = $2 OR away_team_id = $2)', [gameIdNum, teamIdNum]);
+      if (gameResult.rowCount === 0) {
+        return res.status(400).json({ error: 'Team is not playing in this game' });
+      }
+
+      // Log the mapped insert values for debugging
+      const insertValues = normalizedRosterData.flatMap(roster => [gameIdNum, roster.playerId, roster.position, roster.quarter]);
+      console.log('Insert values:', insertValues);
+
+      // Use a single transaction for the entire operation
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        // Delete all existing roster entries for this game
+        await client.query('DELETE FROM rosters WHERE game_id = $1', [gameIdNum]);
+        // Insert new roster entries
+        if (normalizedRosterData.length > 0) {
+          const insertQuery = `
+            INSERT INTO rosters (game_id, player_id, position, quarter)
+            VALUES ${normalizedRosterData.map((_, index) => `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${index * 4 + 4})`).join(', ')};
+          `;
+          await client.query(insertQuery, insertValues);
+        }
+        await client.query('COMMIT');
+        res.json({ success: true, message: `Successfully saved ${normalizedRosterData.length} roster entries for game ${gameIdNum}` });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error in club-scoped batch roster save:', error);
+      res.status(500).json({ error: 'Failed to save roster entries' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;

@@ -138,6 +138,7 @@ export default function PreviousGamesDisplay({
                 key={game.id}
                 game={game}
                 currentTeamId={currentTeamId}
+                currentClubId={currentClubId}
                 centralizedScores={gameScores}
                 gameStats={batchStats?.[game.id] || []}
                 showLink={true}

@@ -39,6 +39,7 @@ import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
 import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
+import RecordStatsButton from '@/components/games/RecordStatsButton';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -113,7 +114,6 @@ const getPlayerColorForBackground = (avatarColor?: string): string => {
   return colorMap[avatarColor] || "rgb(245, 243, 255)";
 };
 import { GameStatus, Position, POSITIONS } from '@shared/schema';
-import { primaryPositionStats, secondaryPositionStats, statLabels } from '@/lib/positionStats';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -146,7 +146,6 @@ import {
   getGameStatusColor 
   } from '@/lib/statisticsService';
 import { GameStatusButton } from '@/components/games/GameStatusButton';
-import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { apiClient } from '@/lib/apiClient';
@@ -726,8 +725,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             // If no player stats but we have position stats, create a stats object
             if (!playerStats && positionStat) {
               playerStats = {
+                playerId: entry?.playerId || null,
+                name: playerName || '',
                 stats: {
-                  goalsFor: positionStat.goalsFor || 0,
                   goalsAgainst: positionStat.goalsAgainst || 0,
                   missedGoals: positionStat.missedGoals || 0,
                   rebounds: positionStat.rebounds || 0,
@@ -1094,9 +1094,9 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
 };
 
 export default function GameDetails() {
-  const params = useParams();
+  const params = useParams<{ id?: string; gameId?: string; teamId?: string; clubId?: string }>();
   // Handle both /game/:id and /team/:teamId/games/:gameId URL patterns
-  const gameId = params.gameId ? parseInt(params.gameId) : parseInt(params.id);
+  const gameId = params.gameId ? parseInt(params.gameId) : (params.id ? parseInt(params.id) : NaN);
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -1211,6 +1211,14 @@ export default function GameDetails() {
       queryKey: ['/api/clubs/current'],
       queryFn: () => apiClient.get('/api/clubs/current'),
     });
+
+  // Fetch all clubs before using them
+  const { data: clubs = [] } = useQuery({
+    queryKey: ['/api/clubs'],
+    queryFn: () => apiClient.get('/api/clubs'),
+    select: (data) => Array.isArray(data) ? data : [],
+    enabled: true
+  });
 
   // Extract club ID from URL as fallback when club context is not available
   const currentClubId = currentClub?.id || 54;
@@ -1545,6 +1553,18 @@ export default function GameDetails() {
     return "—";
   };
 
+  // Extract clubId and teamId from URL params first
+  const urlClubId = params.clubId ? parseInt(params.clubId) : null;
+  const urlTeamId = params.teamId ? parseInt(params.teamId) : null;
+
+  // Find the club and team objects from fetched data if available
+  const clubFromUrl = urlClubId && Array.isArray(clubs) ? (clubs as any[]).find((c) => c.id === urlClubId) : null;
+  const teamFromUrl = urlTeamId && Array.isArray(teams) ? (teams as any[]).find((t) => t.id === urlTeamId) : null;
+
+  // Use URL-derived club/team first, then context, then fallback
+  const effectiveClub = clubFromUrl || currentClub || (Array.isArray(clubs) && clubs[0]) || null;
+  const effectiveTeam = teamFromUrl || currentTeam || (Array.isArray(teams) && teams[0]) || null;
+
   return (
     <div className="container py-8 mx-auto">
       
@@ -1608,14 +1628,14 @@ export default function GameDetails() {
           <div className="flex flex-wrap gap-2 mt-4 mb-4">
 
             {/* Player Availability Button */}
-            {!game.isBye && currentTeam && (
+            {!game.isBye && effectiveTeam && effectiveClub && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 asChild
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900"
               >
-                <Link to={`/team/${currentTeam.id}/availability/${gameId}`}>
+                <Link to={`/club/${effectiveClub.id}/team/${effectiveTeam.id}/availability/${gameId}`}>
                   <CalendarRange className="mr-2 h-4 w-4" />
                   Player Availability
                 </Link>
@@ -1623,22 +1643,24 @@ export default function GameDetails() {
             )}
 
             {/* Record Stats Button */}
-            {!game.isBye && !game.completed && (
-              <LiveStatsButton 
+            {!game.isBye && !game.completed && effectiveTeam && effectiveClub && (
+              <RecordStatsButton 
                 game={game} 
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900"
+                currentTeamId={effectiveTeam.id}
+                currentClubId={effectiveClub.id}
               />
             )}
 
             {/* Manage Roster Button */}
-            {currentTeam?.id && (
+            {!game.isBye && effectiveTeam && effectiveClub && (
               <Button 
                 variant="outline" 
                 size="sm" 
-                asChild 
-                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-900"
+                asChild
+                className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
               >
-                <Link to={`/team/${currentTeam.id}/roster/game/${gameId}`}>
+                <Link to={`/club/${effectiveClub.id}/team/${effectiveTeam.id}/roster/${gameId}`}>
                   <ClipboardList className="mr-2 h-4 w-4" />
                   Manage Roster
                 </Link>

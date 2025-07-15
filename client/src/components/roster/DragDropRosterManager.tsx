@@ -48,6 +48,7 @@ interface DragDropRosterManagerProps {
   gameInfo: GameInfo;
   gameId?: number;
   teamId?: number;
+  clubId: number; // Add clubId as required
   onRosterChange?: (roster: Record<number, Record<string, number | null>>) => void;
   onRosterSaved?: () => void;
   initialRoster?: Record<number, Record<string, number | null>>;
@@ -133,6 +134,7 @@ export default function DragDropRosterManager({
   gameInfo, 
   gameId,
   teamId,
+  clubId,
   onRosterChange,
   onRosterSaved,
   initialRoster 
@@ -335,7 +337,7 @@ export default function DragDropRosterManager({
       return;
     }
 
-    if (rosters && rosters.length >= 0) { // Allow empty arrays
+    if (rosters && Array.isArray(rosters) && rosters.length >= 0) { // Allow empty arrays
       console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
       console.log(`DragDropRosterManager: Received ${rosters.length} roster entries:`, rosters);
 
@@ -348,16 +350,18 @@ export default function DragDropRosterManager({
       };
 
       // Fill in roster assignments
-      rosters.forEach((roster: any) => {
-        if (roster.quarter && roster.position && roster.playerId) {
-          const quarter = roster.quarter as number;
-          const position = roster.position as string;
-          if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
-            loadedAssignments[quarter][position] = roster.playerId;
-            console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
+      if (Array.isArray(rosters)) {
+        rosters.forEach((roster: any) => {
+          if (roster.quarter && roster.position && roster.playerId) {
+            const quarter = roster.quarter as number;
+            const position = roster.position as string;
+            if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
+              loadedAssignments[quarter][position] = roster.playerId;
+              console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
+            }
           }
-        }
-      });
+        });
+      }
 
       console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
       setAssignments(loadedAssignments);
@@ -399,6 +403,8 @@ export default function DragDropRosterManager({
 
     setIsSaving(true);
     try {
+      // Debug: Log assignments before building rosterData
+      console.log('Assignments before save:', JSON.stringify(assignments, null, 2));
       // Convert assignments to roster format expected by API
       const rosterData = [];
 
@@ -415,15 +421,20 @@ export default function DragDropRosterManager({
         }
       }
 
+      // Debug: Log rosterData before sending to API
+      console.log('Roster data to send:', JSON.stringify(rosterData, null, 2));
+
       console.log(`DragDropRosterManager: Saving ${rosterData.length} roster entries for game ${gameId}`);
 
       if (!teamId) {
         throw new Error('TeamId is required for roster operations in team-based routing');
       }
-
-      console.log(`DragDropRosterManager: Saving via team endpoint /api/teams/${teamId}/games/${gameId}/rosters/batch`);
-      console.log('DragDropRosterManager: Roster data being sent:', rosterData);
-      const response = await apiClient.post(`/api/teams/${teamId}/games/${gameId}/rosters/batch`, {
+      if (!clubId) {
+        throw new Error('ClubId is required for roster operations in club-based routing');
+      }
+      // Use canonical club/team/game endpoint
+      console.log(`DragDropRosterManager: Saving via canonical endpoint /api/clubs/${clubId}/teams/${teamId}/games/${gameId}/rosters/batch`);
+      const response = await apiClient.post(`/api/clubs/${clubId}/teams/${teamId}/games/${gameId}/rosters/batch`, {
         rosters: rosterData
       });
       console.log('DragDropRosterManager: Save response:', response);

@@ -155,6 +155,7 @@ export function UnifiedGameWidget({
               key={game.id}
               game={game}
               currentTeamId={currentTeamId || 0}
+              currentClubId={currentClubId}
               centralizedScores={batchScores[game.id] || []}
               gameStats={batchStats[game.id] || []}
               showLink={true}

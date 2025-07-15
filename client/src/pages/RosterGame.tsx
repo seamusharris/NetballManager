@@ -222,6 +222,7 @@ export default function RosterGame() {
         }}
         gameId={gameId}
         teamId={teamId}
+        clubId={currentClub?.id}
         onRosterChange={() => {}}
         onRosterSaved={() => {
           // Optional: Add success toast or other feedback

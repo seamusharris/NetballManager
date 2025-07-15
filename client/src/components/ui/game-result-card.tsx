@@ -447,11 +447,13 @@ export default function GameResultCard({
   );
 
   if (showLink) {
-    // Use team-based URL when currentTeamId is available, otherwise fall back to game-only URL
-    const gameUrl = currentTeamId 
-      ? `/team/${currentTeamId}/games/${game.id}`
-      : `/game/${game.id}`;
-
+    // Use canonical club/team/game route when IDs are available
+    const clubId = propCurrentClubId || currentClubId || urlClubId;
+    const teamId = propCurrentTeamId || currentTeamId || game.homeTeamId;
+    let gameUrl = `/game/${game.id}`;
+    if (clubId && teamId) {
+      gameUrl = `/club/${clubId}/team/${teamId}/game/${game.id}`;
+    }
     return (
       <Link href={gameUrl} className="block">
         <CardContent />

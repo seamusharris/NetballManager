@@ -482,7 +482,6 @@ export function GamesList({
                       currentTeamId={urlTeamId || currentTeamId}
                       clubTeams={teams || []}
                       currentClubId={currentClub?.id}
-                      availabilityLink={`/team/${game.homeTeamId}/availability/${game.id}`}
                     />
 
                     {/* Action buttons overlay */}

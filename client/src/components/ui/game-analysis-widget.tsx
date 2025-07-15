@@ -137,6 +137,7 @@ export function GameAnalysisWidget({
                 key={game.id}
                 game={game}
                 currentTeamId={currentTeamId}
+                currentClubId={currentClubId}
                 centralizedScores={gameScores}
                 gameStats={batchStats?.[game.id] || []}
                 showLink={true}

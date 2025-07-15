@@ -48,6 +48,7 @@ export default function UpcomingGamesWidget({
               game={game}
               layout="medium"
               currentTeamId={teamId}
+              currentClubId={clubId}
               centralizedScores={centralizedScores}
               gameStats={gameStats}
               clubTeams={clubTeams}
