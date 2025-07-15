@@ -54,7 +54,7 @@ app.get('/api/health', async (req, res) => {
 
 // Database health monitoring on startup
 async function checkDatabaseHealth() {
-  console.log('🔍 Checking database health on startup...');
+
   try {
     const health = await enhancedHealthCheck();
     if (health.healthy) {

@@ -169,7 +169,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  console.log(`StatsRecorder: Initialized with gameId=${gameId}, teamId=${teamId}, currentTeamId=${currentTeamId}`);
+
 
   // Fetch game details using team-based endpoint
   const { data: game, isLoading: gameLoading } = useQuery({

@@ -126,8 +126,7 @@ export default function PlayerAvailability() {
   });
 
   // Add debugging logs
-  console.log('homeTeam', homeTeam);
-  console.log('awayTeam', awayTeam);
+
 
   if (gameLoading || playersLoading) {
     return (
