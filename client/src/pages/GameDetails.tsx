@@ -459,7 +459,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
     if (!roster || !Array.isArray(roster)) {
-      console.log('Roster is not an array:', roster);
+
       return {};
     }
     
@@ -469,8 +469,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       return acc;
     }, {});
     
-    console.log('Grouped roster by quarter:', grouped);
-    console.log('Quarter 1 positions:', Object.keys(grouped[1] || {}));
+
     return grouped;
   }, [roster]);
 
@@ -1140,17 +1139,17 @@ export default function GameDetails() {
 
   // Set initial award winner from team awards
   useEffect(() => {
-    console.log('Team awards effect triggered:', { teamAwards, gameId, currentTeamId: currentTeam?.id });
+
 
     if (teamAwards !== undefined) {
       if (teamAwards.length > 0) {
         const playerOfMatch = teamAwards.find((award: any) => award.awardType === 'player_of_match');
         const winnerId = playerOfMatch?.playerId || null;
-        console.log('Setting award winner from team awards:', winnerId);
+
         setSelectedAwardWinner(winnerId);
       } else {
         // Clear selection if no awards exist
-        console.log('No team awards found, clearing selection');
+
         setSelectedAwardWinner(null);
       }
     }

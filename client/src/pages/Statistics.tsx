@@ -40,14 +40,14 @@ export default function Statistics() {
     const gameIdFromPath = path.match(/^\/game\/(\d+)\/stats$/);
 
     if (gameIdQuery && !isNaN(Number(gameIdQuery))) {
-      console.log(`Setting selected game ID to ${gameIdQuery} from URL parameter`);
+
       // Set the selected game ID
       setSelectedGameId(Number(gameIdQuery));
       // Replace the URL without the query parameter for cleaner navigation
       navigate(`/game/${gameIdQuery}/stats`, { replace: true });
     }
     else if (gameIdFromPath && gameIdFromPath[1] && !isNaN(Number(gameIdFromPath[1]))) {
-      console.log(`Setting selected game ID to ${gameIdFromPath[1]} from URL path`);
+
       // Set the selected game ID from the path
       setSelectedGameId(Number(gameIdFromPath[1]));
       // We don't navigate away since this is the proper path format
@@ -108,7 +108,7 @@ export default function Statistics() {
         const rosterArrays = await Promise.all(rosterPromises);
         const data = rosterArrays.flat();
         
-        console.log(`Manually fetched ${data.length} roster entries`);
+
         setRosterData(data);
       } catch (error) {
         console.error('Error fetching roster data:', error);
@@ -139,7 +139,7 @@ export default function Statistics() {
         const response = await fetch(`/api/games/${selectedGameId}/stats`);
         if (!response.ok) throw new Error('Failed to fetch game stats');
         const data = await response.json();
-        console.log(`Loaded ${data.length} game stat entries for game ${selectedGameId}`);
+
         setGameStatsData(data);
       } catch (error) {
         console.error('Error fetching game stats:', error);
@@ -163,11 +163,7 @@ export default function Statistics() {
   const fixedRosters = hasValidRosterEntries ? rosters : [];
 
   // Debug log showing the data we're working with
-  console.log("Statistics roster data:", {
-    hasValidRosterEntries,
-    entries: fixedRosters.length,
-    sample: fixedRosters.length > 0 ? fixedRosters[0] : null
-  });
+
 
   const isLoading = isLoadingGames || isLoadingOpponents || isLoadingPlayers || 
     (selectedGameId ? (isLoadingRosters || loadingGameStats) : false);

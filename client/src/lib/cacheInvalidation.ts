@@ -89,7 +89,7 @@ export class SmartCacheInvalidator {
     isLiveGame?: boolean;
     isCriticalChange?: boolean;
   }) {
-    console.log(`🔄 Smart invalidation for game ${gameId}, type: ${changeType}`);
+
 
     const patterns = INVALIDATION_PATTERNS[changeType];
     const { teamId, clubId, isLiveGame = false, isCriticalChange = false } = context || {};
@@ -133,7 +133,7 @@ export class SmartCacheInvalidator {
   ) {
     const queries = this.expandPatterns(patterns, context);
     
-    console.log(`🔄 Executing ${tier} invalidation:`, queries);
+
 
     for (const query of queries) {
       await queryClient.invalidateQueries({
@@ -172,7 +172,7 @@ export class SmartCacheInvalidator {
   private async executePendingInvalidations() {
     if (this.pendingInvalidations.size === 0) return;
 
-    console.log(`🔄 Executing ${this.pendingInvalidations.size} deferred invalidations`);
+
 
     const invalidations = Array.from(this.pendingInvalidations);
     this.pendingInvalidations.clear();

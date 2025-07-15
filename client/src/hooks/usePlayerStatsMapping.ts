@@ -28,7 +28,7 @@ export function usePlayerStatsMapping(
 ): Record<number, PlayerStats> {
 
   return useMemo(() => {
-    console.log('usePlayerStatsMapping: Starting calculation for', players?.length || 0, 'players');
+
 
     const playerStatsMap: Record<number, PlayerStats> = {};
 
@@ -54,7 +54,7 @@ export function usePlayerStatsMapping(
     });
 
     if (!gameRostersMap || !gameStatsMap) {
-      console.log('usePlayerStatsMapping: Missing roster or stats data');
+
       return playerStatsMap;
     }
 
@@ -103,7 +103,7 @@ export function usePlayerStatsMapping(
 
         // Additional validation: ensure the stat actually belongs to this game
         if (stat.gameId !== gameId) {
-          console.log(`usePlayerStatsMapping: Stat game ID ${stat.gameId} doesn't match expected game ID ${gameId}`);
+
           return;
         }
 
@@ -114,7 +114,7 @@ export function usePlayerStatsMapping(
         );
 
         if (!rosterEntry || !rosterEntry.playerId) {
-          console.log(`usePlayerStatsMapping: No roster entry found for position ${stat.position}, quarter ${stat.quarter} in game ${gameId}`);
+
           return;
         }
 
@@ -122,11 +122,11 @@ export function usePlayerStatsMapping(
 
         // Skip if this player is not in our tracked players
         if (!playerStatsMap[playerId]) {
-          console.log(`usePlayerStatsMapping: Player ${playerId} not found in tracked players for stat mapping`);
+
           return;
         }
 
-        console.log(`usePlayerStatsMapping: Mapping stat for position ${stat.position}, quarter ${stat.quarter} to player ${playerId} in game ${gameId}`);
+
 
         const uniqueKey = `${stat.gameId}-${stat.quarter}-${stat.position}`;
 
@@ -196,7 +196,7 @@ export function usePlayerStatsMapping(
       }
     });
 
-    console.log('usePlayerStatsMapping: Calculation complete. Stats for', Object.keys(playerStatsMap).length, 'players');
+
     return playerStatsMap;
 
   }, [players, gameStatsMap, gameRostersMap]);

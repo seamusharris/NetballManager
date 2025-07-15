@@ -162,7 +162,7 @@ export default function DataManagement() {
       // Create a backup first
       try {
         const backupResult = await exportAllData();
-        console.log("Backup created before deletion:", backupResult.filename);
+
 
         toast({
           title: "Backup Created",

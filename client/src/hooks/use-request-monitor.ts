@@ -75,13 +75,7 @@ export function useRequestMonitor(componentName: string) {
         duplicates.map(q => q.queryKey));
     }
 
-    console.log(`[${componentName}] Query Status:`, {
-      loading: loadingQueries.length,
-      success: successQueries.length,
-      errors: errorQueries.length,
-      duplicates: duplicates.length,
-      total: queries.length
-    });
+    // Query status monitoring complete
   }, [componentName, queryClient]);
 
   return metrics;

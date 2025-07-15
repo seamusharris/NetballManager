@@ -42,7 +42,7 @@ export default function Teams() {
   // Set club context if URL has a different clubId than current
   useEffect(() => {
     if (urlClubId && urlClubId !== currentClubId) {
-      console.log(`Teams: Switching to club ${urlClubId} from URL parameter`);
+
       switchClub(urlClubId);
     }
   }, [urlClubId, currentClubId, switchClub]);

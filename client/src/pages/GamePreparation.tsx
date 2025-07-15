@@ -247,7 +247,7 @@ export default function GamePreparation() {
         return gameOpponentId === targetOpponentId;
       });
 
-      console.log(`Historical games against opponent team ${opponentTeamId}:`, historicalMatches);
+
       return historicalMatches;
     },
     enabled: !!game && !!currentTeamId
@@ -294,7 +294,7 @@ export default function GamePreparation() {
         return g.seasonId === game.seasonId;
       });
 
-      console.log(`Season games for team ${currentTeamId} in season ${game.seasonId}:`, seasonMatches);
+
       return seasonMatches;
     },
     enabled: !!game && !!currentTeamId
@@ -322,7 +322,7 @@ export default function GamePreparation() {
       if (!currentTeamId || !gameId) {
         throw new Error('Team ID and Game ID are required for roster operations');
       }
-      console.log(`GamePreparation: Loading roster via team endpoint /api/teams/${currentTeamId}/games/${gameId}/rosters`);
+
       return apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}/rosters`);
     },
     enabled: !!gameId && !!currentTeamId,
@@ -1414,7 +1414,7 @@ export default function GamePreparation() {
 
                               // Calculate position-based statistics using shared utility
                               const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats || {}, currentTeamId);
-                              console.log('Season position averages calculated:', positionAverages);
+              
                               
                               if (positionAverages.gamesWithPositionStats === 0) {
                                 return (
@@ -1593,7 +1593,7 @@ export default function GamePreparation() {
               players={players || []}
               rosters={gameRosters}
               onRosterUpdate={(rosters) => {
-                console.log('Roster updated:', rosters);
+
                 // Refetch roster data to ensure UI stays synchronized
                 refetchRosters();
               }}

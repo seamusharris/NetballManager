@@ -49,7 +49,7 @@ export async function apiRequest(
     // Handle batch endpoint (special case)
     if (url.startsWith('/api/games/stats/batch')) {
       correctedUrl = '/api/games/stats/batch';
-      console.log(`Standardized batch URL path from ${url} to ${correctedUrl}`);
+
     }
     // Handle legacy direct game stats endpoints
     else if (url.includes('/api/game-stats/')) {
@@ -62,7 +62,7 @@ export async function apiRequest(
         // URL without ID - just standardize the base endpoint
         correctedUrl = url.replace('/api/game-stats/', '/api/games/stats/');
       }
-      console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
+
     } 
     else if (url.includes('/api/gamestats/')) {
         const match = url.match(/\/api\/gamestats\/(\d+)/);
@@ -71,7 +71,6 @@ export async function apiRequest(
         } else {
           correctedUrl = url.replace('/api/gamestats/', '/api/games/stats/');
         }
-      console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
     }
   }
 
@@ -100,11 +99,11 @@ export async function apiRequest(
           // Ensure at least one position is present (required by schema)
           processedData.positionPreferences = ["GS"];
         }
-        console.log("Formatted positionPreferences for API request:", processedData.positionPreferences);
+
       } else if (method === 'POST') {
         // For new players, ensure positionPreferences is set (required field)
         processedData.positionPreferences = ["GS"];
-        console.log("Added default positionPreferences for new player:", processedData.positionPreferences);
+
       }
     }
   }
@@ -123,7 +122,7 @@ export async function apiRequest(
     const queryString = params.toString();
     if (queryString) {
       correctedUrl += (correctedUrl.includes('?') ? '&' : '?') + queryString;
-      console.log(`Added query params to URL: ${correctedUrl}`);
+
     }
   }
 
@@ -140,7 +139,7 @@ export async function apiRequest(
     options.body = JSON.stringify(processedData);
   }
 
-  console.log(`Making GET request to ${correctedUrl}`);
+
   const res = await fetch(correctedUrl, options);
   await throwIfResNotOk(res);
 
@@ -163,7 +162,7 @@ export const getQueryFn: <T>(options: {
       // Handle batch endpoint (special case)
       if (url.startsWith('/api/games/stats/batch')) {
         url = '/api/games/stats/batch';
-        console.log(`Standardized batch URL from ${queryKey[0]} to ${url}`);
+
       }
       // Handle legacy direct game stats endpoints
       else if (url.includes('/api/game-stats/')) {
@@ -176,7 +175,6 @@ export const getQueryFn: <T>(options: {
           // URL without ID - just standardize the base endpoint
           url = url.replace('/api/game-stats/', '/api/games/stats/');
         }
-        console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
       } 
       else if (url.includes('/api/gamestats/')) {
           const match = url.match(/\/api\/gamestats\/(\d+)/);
@@ -185,7 +183,6 @@ export const getQueryFn: <T>(options: {
           } else {
             url = url.replace('/api/gamestats/', '/api/games/stats/');
           }
-        console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
       }
     }
 

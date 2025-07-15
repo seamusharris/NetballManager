@@ -21,10 +21,10 @@ export default function Roster() {
 
   // Extract gameId from URL params more reliably
   const gameIdFromUrl = React.useMemo(() => {
-    console.log('Roster URL params:', params);
+
     if (params && 'gameId' in params && params.gameId) {
       const id = parseInt(params.gameId as string);
-      console.log('Extracted gameId from URL:', id);
+
       return isNaN(id) ? null : id;
     }
     return null;
@@ -72,7 +72,7 @@ export default function Roster() {
         try {
           const state = JSON.parse(prepState);
           if (state.gameId === gameIdFromUrl && state.fromPreparation) {
-            console.log('Restoring preparation state for game:', gameIdFromUrl);
+
 
             // Convert availability data format
             if (state.availability) {
@@ -120,7 +120,7 @@ export default function Roster() {
 
   // Handle game selection
   const handleGameSelection = (gameId: number) => {
-    console.log('Game selected:', gameId);
+
     // Only update if different to prevent loops
     if (gameId !== selectedGameId) {
       setSelectedGameId(gameId);

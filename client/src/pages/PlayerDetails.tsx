@@ -74,14 +74,14 @@ export default function PlayerDetails() {
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
-      console.log(`PlayerDetails: Using batch endpoint for stats fetch of ${completedGameIds.length} completed games`);
+
 
       try {
         // Use batch endpoint for better performance and cache consistency
         const batchResponse = await apiClient.post('/api/games/stats/batch', {
           gameIds: completedGameIds
         });
-        console.log(`PlayerDetails: Batch stats fetch completed for ${Object.keys(batchResponse).length} games`);
+
         return batchResponse;
       } catch (error) {
         console.error('PlayerDetails: Batch stats fetch failed, falling back to individual requests:', error);
@@ -111,7 +111,7 @@ export default function PlayerDetails() {
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
-      console.log(`PlayerDetails: Using individual requests for roster fetch of ${completedGameIds.length} games`);
+
       const rostersMap: Record<number, any[]> = {};
 
       // Fetch rosters for all completed games
@@ -125,7 +125,7 @@ export default function PlayerDetails() {
         }
       }
 
-      console.log(`PlayerDetails: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
+
       return rostersMap;
     },
     enabled: !!currentClubId && completedGameIds.length > 0,

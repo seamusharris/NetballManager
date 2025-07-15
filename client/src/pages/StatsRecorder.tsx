@@ -202,18 +202,12 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     enabled: !!currentTeamId
   });
 
-  console.log('StatsRecorder players query:', {
-    gameId,
-    teamId,
-    currentTeamId,
-    allPlayersLength: allPlayers?.length,
-    enabled: !!currentTeamId
-  });
+
 
   // Filter to only show players assigned to the current team
   const players = useMemo(() => {
     if (!allPlayers || !currentTeamId) {
-      console.log('players: Missing allPlayers or currentTeamId', { allPlayersLength: allPlayers?.length, currentTeamId });
+
       return [];
     }
 
@@ -226,12 +220,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       player.active && teamPlayerIds.has(player.id)
     );
 
-    console.log('players: Filtered players', {
-      allPlayersCount: allPlayers.length,
-      teamPlayerIds: Array.from(teamPlayerIds),
-      filteredPlayersCount: filteredPlayers.length,
-      filteredPlayerNames: filteredPlayers.map(p => `${p.id}: ${p.displayName}`)
-    });
+
 
     return filteredPlayers;
   }, [allPlayers, currentTeamId, rosters]);
@@ -242,7 +231,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Initialize the position stats when existing data is loaded
   useEffect(() => {
     if (existingStats) {
-      console.log(`Initializing position-based stats with ${existingStats.length} existing stats`);
+
 
       const initialStats: PositionStats = {};
 
@@ -311,7 +300,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Initialize current positions from roster data
   useEffect(() => {
     if (rosters && Array.isArray(rosters) && rosters.length > 0) {
-      console.log(`Setting up positions for quarter ${currentQuarter} from ${rosters.length} roster entries`);
+
 
       const latestPositions: Record<Position, number | null> = {
         'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null
@@ -319,16 +308,16 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
       // Find roster entries for the current quarter
       const currentQuarterRosters = rosters.filter((entry: any) => entry.quarter === currentQuarter);
-      console.log(`Found ${currentQuarterRosters.length} roster entries for quarter ${currentQuarter}:`, currentQuarterRosters);
+
 
       currentQuarterRosters.forEach((entry: any) => {
         if (entry.position && allPositions.includes(entry.position as Position)) {
           latestPositions[entry.position as Position] = entry.playerId;
-          console.log(`Mapped Q${currentQuarter} ${entry.position} to player ${entry.playerId}`);
+
         }
       });
 
-      console.log(`Final position mapping for Q${currentQuarter}:`, latestPositions);
+
       setCurrentPositions(latestPositions);
     }
   }, [rosters, currentQuarter]);
@@ -345,10 +334,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       const playerId = currentPositions[position];
       if (playerId) {
         const player = getPlayer(playerId);
-        console.log(`getPlayerForPosition: Q${quarter} ${position} -> Player ${playerId} (${player?.displayName || 'Unknown'})`);
+
         return player;
       }
-      console.log(`getPlayerForPosition: Q${quarter} ${position} -> No player assigned`);
+
       return undefined;
     }
 
@@ -450,7 +439,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Save all stats mutation
   const saveAllStatsMutation = useMutation({
     mutationFn: async () => {
-      console.log('=== SAVING ALL POSITION STATS ===');
+
 
       if (!currentTeamId) {
         throw new Error('Cannot determine team context for saving stats');

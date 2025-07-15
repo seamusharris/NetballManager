@@ -36,21 +36,21 @@ export function useBatchGameStats(gameIds: number[]) {
     queryKey: ['/api/games/stats/batch', validGameIds.sort(), currentClub?.id],
     queryFn: async () => {
       if (!validGameIds || validGameIds.length === 0) {
-        console.log('No valid game IDs provided for batch request, returning empty object');
+
         return {};
       }
 
       const gameIdsParam = validGameIds.join(',');
-      console.log(`Fetching batch stats for games: ${gameIdsParam}`);
+
 
       if (!gameIdsParam || gameIdsParam === '') {
-        console.log('Empty game IDs parameter, returning empty object');
+
         return {};
       }
 
       try {
         const url = '/api/games/stats/batch';
-        console.log(`Making batch request to: ${url} with gameIds:`, validGameIds);
+
 
         return await apiClient.post(url, { gameIds: validGameIds }, {
           headers: {

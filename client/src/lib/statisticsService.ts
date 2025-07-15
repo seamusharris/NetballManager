@@ -149,7 +149,7 @@ class UnifiedStatisticsService {
    * Get stats for multiple games efficiently using batch endpoint
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
-    console.log(`🚀 BATCH STATS CALLED with games:`, gameIds);
+
     if (!gameIds || gameIds.length === 0) {
       return {};
     }
@@ -163,18 +163,18 @@ class UnifiedStatisticsService {
     try {
       // Use POST method with proper authentication via apiRequest
       const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
-      console.log(`🔍 RAW BATCH STATS RESULT for games ${validIds}:`, result);
+
       
       // ALWAYS process through opponent perspective to ensure Matrix team gets stats
-      console.log(`🎯 ABOUT TO PROCESS OPPONENT PERSPECTIVE - Raw result:`, result);
+
       const processedResult = await this.processStatsWithOpponentPerspective(result || {});
-      console.log(`✅ PROCESSED BATCH STATS RESULT: Found stats for ${Object.keys(processedResult).length} games`);
+
       
       // Special check for game 80 Matrix team
       if (processedResult[80]) {
         const team1Stats = processedResult[80].filter(s => s.teamId === 1);
         const team123Stats = processedResult[80].filter(s => s.teamId === 123);
-        console.log(`🏀 GAME 80 FINAL CHECK: Team 1 has ${team1Stats.length} stats, Team 123 has ${team123Stats.length} stats`);
+
       }
       
       return processedResult;
@@ -189,17 +189,17 @@ class UnifiedStatisticsService {
    * Process stats to generate missing team perspectives from opponent data
    */
   private async processStatsWithOpponentPerspective(statsMap: Record<number, GameStat[]>): Promise<Record<number, GameStat[]>> {
-    console.log(`🎯 PROCESSING OPPONENT PERSPECTIVE for ${Object.keys(statsMap).length} games`);
+
     const processedStats: Record<number, GameStat[]> = {};
 
     for (const [gameIdStr, stats] of Object.entries(statsMap)) {
       const gameId = parseInt(gameIdStr);
       processedStats[gameId] = [...stats]; // Start with existing stats
 
-      console.log(`🏀 Processing game ${gameId} with ${stats.length} stats`);
+
       
       if (stats.length === 0) {
-        console.log(`⚠️ Skipping game ${gameId} - no stats found`);
+
         continue;
       }
 
@@ -237,16 +237,16 @@ class UnifiedStatisticsService {
           teamStatsCompletion[awayTeamId] = { hasOffensive: false, hasDefensive: false, total: 0 };
         }
 
-        console.log(`🔍 Game ${gameId}: Team stats completion:`, teamStatsCompletion);
+
 
         // Force Matrix team issue fix: Check if Team 1 has no stats but Team 123 has stats
         if (gameId === 80) {
           const team1Stats = stats.filter(s => s.teamId === 1);
           const team123Stats = stats.filter(s => s.teamId === 123);
-          console.log(`🎯 MATRIX GAME 80 CHECK: Team 1 has ${team1Stats.length} stats, Team 123 has ${team123Stats.length} stats`);
+
           
           if (team1Stats.length === 0 && team123Stats.length > 0) {
-            console.log(`🚨 MATRIX ISSUE DETECTED! Generating Team 1 stats from Team 123 opponent data`);
+
             
             // Generate Matrix team stats from WNC Emus data with correct position mapping
             const generatedStats = [];
@@ -297,32 +297,25 @@ class UnifiedStatisticsService {
             });
             
             processedStats[gameId].push(...generatedStats);
-            console.log(`✨ GENERATED ${generatedStats.length} Matrix stats:`, generatedStats.map(s => `${s.position}:${s.goalsFor}/${s.goalsAgainst}`));
+
           }
         }
 
         // Generate missing stats for teams that have incomplete data
         for (const teamId of [homeTeamId, awayTeamId]) {
           const completion = teamStatsCompletion[teamId] || { hasOffensive: false, hasDefensive: false, total: 0 };
-          console.log(`📊 Team ${teamId}: hasOffensive=${completion.hasOffensive}, hasDefensive=${completion.hasDefensive}, total=${completion.total}`);
+
           if (!completion.hasOffensive || !completion.hasDefensive || completion.total < 8) {
             // This team needs opponent perspective stats
-            console.log(`🚨 TEAM ${teamId} NEEDS OPPONENT PERSPECTIVE STATS! Completion:`, completion);
+
             const missingTeamId = teamId;
             const opponentTeamId = missingTeamId === homeTeamId ? awayTeamId : homeTeamId;
             const opponentStats = stats.filter(stat => stat.teamId === opponentTeamId);
 
-            console.log(`🔄 GENERATING missing stats for team ${missingTeamId} from opponent ${opponentTeamId} with ${opponentStats.length} stats`);
+
             
             // Special debug logging for Team 124 (Gems)
-            if (missingTeamId === 124) {
-              console.log(`🎯 GEMS TEAM 124 DEBUG - Game ${gameId}:`, {
-                missingTeamId,
-                opponentTeamId,
-                opponentStatsCount: opponentStats.length,
-                opponentStats: opponentStats.map(s => `${s.position} Q${s.quarter}: For=${s.goalsFor} Against=${s.goalsAgainst}`)
-              });
-            }
+
 
             // Clear existing stats for this team to avoid duplicates
             processedStats[gameId] = processedStats[gameId].filter(s => s.teamId !== missingTeamId);
@@ -349,12 +342,9 @@ class UnifiedStatisticsService {
                   rating: null
                 };
                 processedStats[gameId].push(offensiveStat);
-                console.log(`✨ Generated offensive stat: Team ${missingTeamId} ${offensiveStat.position} Q${offensiveStat.quarter} scored ${offensiveStat.goalsFor} goals (from opponent ${opponentStat.position} conceding)`);
+
                 
-                // Special debug for Team 124 (Gems)
-                if (missingTeamId === 124) {
-                  console.log(`🎯 GEMS OFFENSE: Generated ${offensiveStat.position} Q${offensiveStat.quarter} with ${offensiveStat.goalsFor} goals from opponent ${opponentStat.position} conceding ${opponentStat.goalsAgainst}`);
-                }
+
               }
               
               // Generate our defensive stats from opponent's offensive data  
@@ -377,12 +367,9 @@ class UnifiedStatisticsService {
                   rating: null
                 };
                 processedStats[gameId].push(defensiveStat);
-                console.log(`🛡️ Generated defensive stat: Team ${missingTeamId} ${defensiveStat.position} Q${defensiveStat.quarter} conceded ${defensiveStat.goalsAgainst} goals (from opponent ${opponentStat.position} scoring)`);
+
                 
-                // Special debug for Team 124 (Gems)
-                if (missingTeamId === 124) {
-                  console.log(`🎯 GEMS DEFENSE: Generated ${defensiveStat.position} Q${defensiveStat.quarter} with ${defensiveStat.goalsAgainst} goals against from opponent ${opponentStat.position} scoring ${opponentStat.goalsFor}`);
-                }
+
               }
             }
           }

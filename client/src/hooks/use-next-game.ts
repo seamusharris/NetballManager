@@ -35,13 +35,13 @@ export function useNextGame() {
           
           const isUpcoming = !isCompleted && !game.isBye && gameDate >= today;
           
-          console.log(`Game ${game.id} (${game.date}): completed=${isCompleted}, isBye=${game.isBye}, gameDate=${gameDate.toISOString()}, today=${today.toISOString()}, isUpcoming=${isUpcoming}`);
+
           
           return isUpcoming;
         })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-      console.log('Next game hook - filtered upcoming games:', upcomingGames.map(g => `${g.id}: ${g.date} ${g.homeTeamName} vs ${g.awayTeamName}`));
+
       return upcomingGames[0] || null;
     },
     enabled: !!currentTeamId,

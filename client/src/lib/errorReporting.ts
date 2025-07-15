@@ -187,7 +187,7 @@ class ErrorReportingService {
     try {
       // In a real implementation, you would send this to your error reporting service
       // like Sentry, LogRocket, or your own error tracking endpoint
-      console.log('Sending error report to server:', errorReport.id);
+
       
       // Example: await fetch('/api/errors', {
       //   method: 'POST',

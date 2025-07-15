@@ -92,28 +92,11 @@ export default function TeamPreparation() {
     enabled: !!currentClubId,
   });
 
-  // Debug logging
-  console.log('Team loading debug:', {
-    currentClubId,
-    clubTeams,
-    teamsLoading,
-    teamsError,
-    dataLength: clubTeams?.length,
-    currentTeamId,
-    gamesCount: allGames?.length,
-    gamesLoading,
-    allGamesRaw: allGames
-  });
+
 
   // Get teams that the selected team has played against
   const opponentTeamsFromGames = useMemo(() => {
-    console.log('=== OPPONENT ANALYSIS START ===');
-    console.log('currentTeamId:', currentTeamId);
-    console.log('allGames.length:', allGames.length);
-    console.log('gamesLoading:', gamesLoading);
-
     if (!currentTeamId || !allGames.length || gamesLoading) {
-      console.log('Early return - no team selected, no games, or still loading');
       return [];
     }
 
@@ -122,16 +105,15 @@ export default function TeamPreparation() {
       game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
     );
 
-    console.log('Games for selected team:', gamesForTeam.length);
-    console.log('First few games for team:', gamesForTeam.slice(0, 3));
+
 
     gamesForTeam.forEach(game => {
       if (game.homeTeamId === currentTeamId && game.awayTeamId) {
         opponentIds.add(game.awayTeamId);
-        console.log('Found opponent (away):', game.awayTeamName, 'ID:', game.awayTeamId);
+
       } else if (game.awayTeamId === currentTeamId && game.homeTeamId) {
         opponentIds.add(game.homeTeamId);
-        console.log('Found opponent (home):', game.homeTeamName, 'ID:', game.homeTeamId);
+
       }
     });
 
@@ -163,10 +145,7 @@ export default function TeamPreparation() {
       }
     });
 
-    console.log('=== FINAL OPPONENT RESULTS ===');
-    console.log('Opponent IDs found:', Array.from(opponentIds));
-    console.log('Opponent teams:', opponents);
-    console.log('=== OPPONENT ANALYSIS END ===');
+
 
     return opponents;
   }, [currentTeamId, allGames, gamesLoading]);
@@ -275,7 +254,7 @@ export default function TeamPreparation() {
                   <TeamSwitcher 
                     mode="required" 
                     onTeamChange={(teamId) => {
-                      console.log('Team selection changed via TeamSwitcher:', teamId);
+
                       // Reset opponent when team changes
                       setSelectedOpponentId(null);
                     }}

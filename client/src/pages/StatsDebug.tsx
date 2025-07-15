@@ -14,7 +14,7 @@ export default function StatsDebug() {
   const { data: stats = [], isLoading } = useQuery<GameStat[]>({
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => {
-      console.log(`StatsDebug: Fetching stats via legacy endpoint /api/games/${gameId}/stats`);
+
       return apiClient.get(`/api/games/${gameId}/stats`);
     },
     enabled: !!gameId && !isNaN(gameId),

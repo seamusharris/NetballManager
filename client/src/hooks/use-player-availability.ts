@@ -58,7 +58,7 @@ export function useSetPlayerAvailability(teamId?: number) {
       }
       
       // Create and track the new request
-      console.log(`🚀 Starting availability update for game ${gameId}: ${data.availablePlayerIds.length} players`);
+
       
       const requestPromise = (async () => {
         try {
@@ -66,7 +66,7 @@ export function useSetPlayerAvailability(teamId?: number) {
             ? await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, data)
             : await apiClient.post(`/api/games/${gameId}/availability`, data);
           
-          console.log(`✅ Availability update completed for game ${gameId}`);
+
           return result;
         } finally {
           // Always remove from queue when done
@@ -80,7 +80,7 @@ export function useSetPlayerAvailability(teamId?: number) {
       return requestPromise;
     },
     onMutate: async ({ gameId, data }) => {
-      console.log(`🎯 Optimistic update for game ${gameId}: ${data.availablePlayerIds.length} players`);
+
       
       // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ['availability', teamId, gameId] });
@@ -96,7 +96,7 @@ export function useSetPlayerAvailability(teamId?: number) {
       return { previousData };
     },
     onSuccess: (_, { gameId }) => {
-      console.log(`🔄 Invalidating cache for game ${gameId}`);
+
       
       // Invalidate to get fresh data
       queryClient.invalidateQueries({ queryKey: ['availability', teamId, gameId] });

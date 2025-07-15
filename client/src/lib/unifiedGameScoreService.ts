@@ -65,13 +65,7 @@ export class UnifiedGameScoreService {
     perspective: 'team' | 'club-wide' = 'team',
     clubTeamIds: number[] = []
   ): GameScoreResult {
-    console.log(`🔍 UNIFIED SERVICE - calculateGameScore called for game ${game.id}:`, {
-      perspective,
-      clubTeamIds,
-      officialScoresCount: officialScores.length,
-      gameHomeTeam: game.homeTeamId,
-      gameAwayTeam: game.awayTeamId
-    });
+    // Calculate game score for perspective analysis
 
     // Handle BYE games
     if (game.isBye) {
@@ -93,17 +87,12 @@ export class UnifiedGameScoreService {
     const awayIsOurs = clubTeamIds.includes(game.awayTeamId || 0);
     const isInterClubGame = homeIsOurs && awayIsOurs;
 
-    console.log(`🔍 UNIFIED SERVICE - Team perspective analysis:`, {
-      teamIds,
-      homeIsOurs,
-      awayIsOurs,
-      isInterClubGame
-    });
+    // Team perspective analysis complete
 
     // PRIORITY 1: Try official scores first
     if (officialScores && officialScores.length > 0) {
       const officialResult = this.calculateFromOfficialScores(game, officialScores, teamIds, clubTeamIds);
-      console.log(`🔍 UNIFIED SERVICE - Official scores result:`, officialResult);
+
 
       // For club-wide perspective, we need to return home/away scores properly
       if (perspective === 'club-wide') {
@@ -123,7 +112,7 @@ export class UnifiedGameScoreService {
 
     // PRIORITY 2: Fall back to status scores
     const statusResult = this.calculateFromStatusScores(game, teamIds, clubTeamIds);
-    console.log(`🔍 UNIFIED SERVICE - Status scores result:`, statusResult);
+
     return statusResult;
   }
 
@@ -271,23 +260,9 @@ export class UnifiedGameScoreService {
     const homeTeamId = game.homeTeamId || 0;
     const awayTeamId = game.awayTeamId || 0;
 
-    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} official scores calculation:`, {
-      teamIds,
-      homeTeamId: game.homeTeamId,
-      awayTeamId: game.awayTeamId,
-      scoresCount: officialScores.length
-    });
 
-    // Debug logging for Team 128 games regardless of perspective
-    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
-      console.log(`🔍 UNIFIED SERVICE - Team 128 official scores for game ${game.id}:`, {
-        homeTeamId: game.homeTeamId,
-        awayTeamId: game.awayTeamId,
-        teamIds,
-        officialScoresCount: officialScores.length,
-        officialScores: officialScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`)
-      });
-    }
+
+
 
 
 
@@ -343,14 +318,7 @@ export class UnifiedGameScoreService {
       result = this.determineHomeAwayResult(homeTotalScore, awayTotalScore);
     }
 
-    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} OFFICIAL final calculation:`, {
-      homeTotalScore,
-      awayTotalScore,
-      result,
-      isInterClubGame,
-      hasValidScore: true,
-      quarterBreakdown: quarterBreakdown.length
-    });
+
 
     return {
       homeScore: homeTotalScore,
@@ -398,17 +366,7 @@ export class UnifiedGameScoreService {
 
     const hasValidScore = homeScore >= 0 && awayScore >= 0;
 
-    console.log(`🔍 UNIFIED SERVICE - Game ${game.id} STATUS final calculation:`, {
-      homeTeamId: game.homeTeamId,
-      awayTeamId: game.awayTeamId,
-      statusName: game.statusName,
-      statusTeamGoals: game.statusTeamGoals,
-      statusOpponentGoals: game.statusOpponentGoals,
-      homeScore,
-      awayScore,
-      result,
-      hasValidScore
-    });
+
 
     return {
       homeScore,
@@ -430,7 +388,7 @@ export class UnifiedGameScoreService {
         return { ourTeamId: perspective, theirTeamId: game.homeTeamId || 0 };
       } else {
         // Perspective team not in this game - this should not happen for valid team perspectives
-        console.warn(`Team ${perspective} not found in game ${game.id} (${game.homeTeamId} vs ${game.awayTeamId})`);
+
         return { ourTeamId: 0, theirTeamId: 0 }; // Invalid game for this team
       }
     }
@@ -440,32 +398,25 @@ export class UnifiedGameScoreService {
       const homeIsOurs = clubTeamIds.includes(game.homeTeamId || 0);
       const awayIsOurs = clubTeamIds.includes(game.awayTeamId || 0);
 
-      console.log(`🔍 UNIFIED SERVICE - Game ${game.id} getTeamIds:`, {
-        homeTeamId: game.homeTeamId,
-        awayTeamId: game.awayTeamId,
-        clubTeamIds,
-        homeIsOurs,
-        awayIsOurs,
-        perspective
-      });
+
 
       if (homeIsOurs && awayIsOurs) {
         // Inter-club game: both teams are ours
-        console.log('🔍 UNIFIED SERVICE - Game ' + game.id + ' INTER-CLUB: our=' + game.homeTeamId + ', their=' + game.awayTeamId);
+
         return { 
           ourTeamId: game.homeTeamId || 0, 
           theirTeamId: game.awayTeamId || 0 
         };
       } else if (homeIsOurs) {
         // Home team is ours
-        console.log('🔍 UNIFIED SERVICE - Game ' + game.id + ' HOME IS OURS: our=' + game.homeTeamId + ', their=' + game.awayTeamId);
+
         return { 
           ourTeamId: game.homeTeamId || 0, 
           theirTeamId: game.awayTeamId || 0 
         };
       } else if (awayIsOurs) {
         // Away team is ours
-        console.log('🔍 UNIFIED SERVICE - Game ' + game.id + ' AWAY IS OURS: our=' + game.awayTeamId + ', their=' + game.homeTeamId);
+
         return { 
           ourTeamId: game.awayTeamId || 0, 
           theirTeamId: game.homeTeamId || 0 
@@ -481,12 +432,7 @@ export class UnifiedGameScoreService {
   }
 
   private static determineResult(ourScore: number, theirScore: number, isInterClubGame: boolean = false): 'win' | 'loss' | 'draw' {
-    console.log(`🔍 UNIFIED SERVICE - determineResult:`, {
-      ourScore,
-      theirScore,
-      isInterClubGame,
-      calculation: ourScore > theirScore ? 'WIN' : ourScore < theirScore ? 'LOSS' : 'DRAW'
-    });
+
 
     if (isInterClubGame) {
       return 'inter-club';
