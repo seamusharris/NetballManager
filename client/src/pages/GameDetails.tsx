@@ -39,7 +39,6 @@ import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
 import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
-import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -1332,7 +1331,7 @@ export default function GameDetails() {
       console.log("Roster first entry:", roster?.[0]);
       console.log("Players data:", { players, isLoadingPlayers, playersLength: players?.length });
       console.log("Teams data:", { teams, isLoadingTeams, teamsLength: teams?.length });
-      console.log("Current club ID:", currentClub?.id);
+      console.log("Current club:", currentClub);
       console.log("Current team:", currentTeam);
       console.log("Effective team ID:", effectiveTeamId);
       // Always refetch roster data when navigating to this page
@@ -1547,14 +1546,41 @@ export default function GameDetails() {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Game Details | {TEAM_NAME} Stats Tracker</title>
-        <meta name="description" content="View detailed statistics and information for this game." />
-      </Helmet>
-      <DynamicBreadcrumbs />
-      <div className="container py-8 mx-auto">
+    <div className="container py-8 mx-auto">
       
+<Helmet>
+        <title>{`Game Details | Netball Stats Tracker`}</title>
+      </Helmet>
+
+      {/* Breadcrumbs */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={currentTeam ? `/team/${currentTeam.id}/games` : "/games"}>Games</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {game?.statusName === 'bye' || game?.isBye ? (
+                  'BYE Round'
+                ) : (
+                  `${game?.homeTeamName || 'Home'} vs ${game?.awayTeamName || 'Away'}`
+                )}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
         {/* Team Context Switcher */}
         <TeamSwitcher />
 
@@ -2275,6 +2301,5 @@ export default function GameDetails() {
         </Tabs>
       </div>
     </div>
-  </>
   );
 }

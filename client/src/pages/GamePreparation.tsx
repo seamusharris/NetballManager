@@ -34,10 +34,10 @@ import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 import PreviousGamesDisplay from '@/components/ui/previous-games-display';
-import { unifiedDataFetcher } from '@/lib/unifiedDataFetcher';
-import { calculatePositionStats } from '@/lib/gameScoreService';
 import { calculatePositionAverages } from '@/lib/positionStatsCalculator';
 import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
+import { TeamGameResult } from '@/hooks/use-team-game';
+import { OfficialScore } from '@/lib/winRateCalculator';
 
 type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
 
@@ -191,7 +191,7 @@ export default function GamePreparation() {
   const [gameObjectives, setGameObjectives] = useState<GameObjective[]>([]);
 
   // Load game data using team-specific endpoint for better context
-  const { data: game, isLoading: loadingGame } = useQuery({
+  const { data: game, isLoading: loadingGame } = useQuery<TeamGameResult | null>({
     queryKey: ['teams', currentTeamId, 'games', gameId],
     queryFn: () => {
       if (currentTeamId && gameId) {
@@ -225,7 +225,7 @@ export default function GamePreparation() {
   });
 
   // Load historical games against this opponent using team-specific endpoint
-  const { data: historicalGames = [], isLoading: loadingHistory } = useQuery({
+  const { data: historicalGames = [], isLoading: loadingHistory } = useQuery<TeamGameResult[]>({
     queryKey: ['teams', currentTeamId, 'historicalGames', game?.opponentTeamId],
     queryFn: async () => {
       if (!game || !currentTeamId) return [];
@@ -234,7 +234,7 @@ export default function GamePreparation() {
       const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
 
       // Filter for completed games against this specific opponent
-      const historicalMatches = allGames.filter((g: any) => {
+      const historicalMatches = (allGames as TeamGameResult[]).filter((g: any) => {
         // Skip the current game
         if (g.id === game.id) return false;
 
@@ -259,8 +259,8 @@ export default function GamePreparation() {
   const strategyError = null;
 
   // Use existing batch scores data from the unified data fetcher
-  const gameIdsArray = historicalGames?.map(g => g.id) || [];
-  const { data: batchScores, isLoading: isLoadingBatchScores } = useQuery({
+  const gameIdsArray = historicalGames.map(g => g.id) || [];
+  const { data: batchScores, isLoading: isLoadingBatchScores } = useQuery<Record<number, OfficialScore[]>>({
     queryKey: ['games', 'scores', 'batch', gameIdsArray.join(',')],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return {};
@@ -274,7 +274,7 @@ export default function GamePreparation() {
   const { statsMap: batchStats, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIdsArray);
 
   // Load all season games for the current team using team-specific endpoint
-  const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery({
+  const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery<TeamGameResult[]>({
     queryKey: ['teams', currentTeamId, 'seasonGames', game?.seasonId],
     queryFn: async () => {
       if (!currentTeamId || !game?.seasonId) return [];
@@ -283,7 +283,7 @@ export default function GamePreparation() {
       const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
 
       // Filter for completed games in the same season
-      const seasonMatches = allGames.filter((g: any) => {
+      const seasonMatches = (allGames as TeamGameResult[]).filter((g: any) => {
         // Skip the current game
         if (g.id === game.id) return false;
 
@@ -302,7 +302,7 @@ export default function GamePreparation() {
 
   // Get batch scores for season games
   const seasonGameIds = seasonGames?.map(g => g.id) || [];
-  const { data: seasonBatchScores, isLoading: isLoadingSeasonScores } = useQuery({
+  const { data: seasonBatchScores, isLoading: isLoadingSeasonScores } = useQuery<Record<number, OfficialScore[]>>({
     queryKey: ['games', 'scores', 'batch', seasonGameIds.join(',')],
     queryFn: async () => {
       if (seasonGameIds.length === 0) return {};
@@ -425,9 +425,15 @@ export default function GamePreparation() {
         <Card>
           <CardContent className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Game Not Found</h3>
-            <p className="text-gray-600">
-              The requested game could not be found.
+            <h3 className="text-lg font-semibold mb-2">No Upcoming Game Found</h3>
+            <p className="text-gray-600 mb-2">
+              There are currently no upcoming games scheduled for your team.
+            </p>
+            <p className="text-gray-500 text-sm mb-2">
+              Please check the season schedule or contact your team manager for more information.
+            </p>
+            <p className="text-xs text-gray-400">
+              If you believe this is an error, ensure your team and season are set up correctly in the system.
             </p>
           </CardContent>
         </Card>
@@ -457,7 +463,7 @@ export default function GamePreparation() {
       title="Game Preparation"
       subtitle={`${game?.homeTeamName} vs ${game?.awayTeamName || 'BYE'} - Round ${game?.round}`}
       // Removed breadcrumbs prop
-      actions={pageActions}
+      // Removed actions={pageActions} as it was undefined
     >
       <Helmet>
         <title>{`Game Preparation - ${opponent} | Team Management`}</title>
@@ -856,7 +862,7 @@ export default function GamePreparation() {
                   {/* Position Performance Stats */}
                   <div className="space-y-6">
                     {/* Historical vs Opponent Position Performance */}
-                    {historicalGames.length > 0 && batchStats && (
+                    {(historicalGames as any[]).length > 0 && batchStats && (
                       <Card>
                         <CardHeader>
                           <CardTitle>Historical vs {opponent} - Position Performance</CardTitle>
@@ -870,7 +876,7 @@ export default function GamePreparation() {
                                 <div className="text-center py-8">
                                   <div className="text-gray-500">No position statistics available for historical games vs {opponent}</div>
                                   <div className="text-xs text-gray-400 mt-2">
-                                    Historical games: {historicalGames.length}, Games with stats: {historicalPositionAverages.gamesWithPositionStats}
+                                    Historical games: {(historicalGames as any[]).length}, Games with stats: {historicalPositionAverages.gamesWithPositionStats}
                                   </div>
                                 </div>
                               );
@@ -888,7 +894,7 @@ export default function GamePreparation() {
                     )}
 
                     {/* Recent Season Position Performance */}
-                    {seasonGames.length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some(gameId => seasonBatchStats[gameId]?.length > 0) && (
+                    {(seasonGames as any[]).length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some(gameId => seasonBatchStats[gameId]?.length > 0) && (
                       <Card>
                         <CardHeader>
                           <CardTitle>Recent Season Position Performance</CardTitle>
@@ -903,7 +909,7 @@ export default function GamePreparation() {
                                 <div className="text-center py-8">
                                   <div className="text-gray-500">No position statistics available for season games</div>
                                   <div className="text-xs text-gray-400 mt-2">
-                                    Season games: {seasonGames.length}, Games with stats: {positionAverages.gamesWithPositionStats}
+                                    Season games: {(seasonGames as any[]).length}, Games with stats: {positionAverages.gamesWithPositionStats}
                                   </div>
                                 </div>
                               );
@@ -1002,10 +1008,10 @@ export default function GamePreparation() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {seasonGames.length > 0 ? (
+                    {(seasonGames as any[]).length > 0 ? (
                       <>
                         <div className="space-y-3">
-                          {seasonGames.map((seasonGame, index) => {
+                          {(seasonGames as any[]).map((seasonGame, index) => {
                             // Check for special status games (e.g., forfeit, bye)
                             const isSpecialStatus = seasonGame.statusName === 'forfeit-win' || seasonGame.statusName === 'forfeit-loss' || seasonGame.statusName === 'bye' || seasonGame.statusName === 'abandoned' || seasonGame.statusDisplayName === 'Forfeit Loss' || seasonGame.statusDisplayName === 'Forfeit Win';
 
@@ -1197,7 +1203,7 @@ export default function GamePreparation() {
                             let totalOpponentScore = 0;
                             let gamesWithData = 0;
 
-                            seasonGames.forEach(seasonGame => {
+                            (seasonGames as any[]).forEach(seasonGame => {
                               // Skip BYE games and forfeit games for goal statistics
                               if (seasonGame.statusName === 'bye' || 
                                   seasonGame.statusName === 'forfeit-win' || 
@@ -1294,7 +1300,7 @@ export default function GamePreparation() {
                             let totalGoalsAgainst = 0;
                             let gamesWithScores = 0;
 
-                            seasonGames.forEach(seasonGame => {
+                            (seasonGames as any[]).forEach(seasonGame => {
                               // Skip BYE and forfeit games for statistical calculations
                               if (seasonGame.statusName === 'bye' || 
                                   seasonGame.statusName === 'forfeit-win' || 
@@ -1398,7 +1404,7 @@ export default function GamePreparation() {
                                 );
                               }
 
-                              if (seasonGames.length === 0) {
+                              if ((seasonGames as any[]).length === 0) {
                                 return (
                                   <div className="text-center py-8">
                                     <div className="text-gray-500">No season games available</div>
@@ -1415,14 +1421,14 @@ export default function GamePreparation() {
                                   <div className="text-center py-8">
                                     <div className="text-gray-500">No position statistics available for season games</div>
                                     <div className="text-xs text-gray-400 mt-2">
-                                      Season games: {seasonGames.length}, Games with stats: {positionAverages.gamesWithPositionStats}
+                                      Season games: {(seasonGames as any[]).length}, Games with stats: {positionAverages.gamesWithPositionStats}
                                     </div>
                                   </div>
                                 );
                               }
 
                               // Calculate quarter-by-quarter breakdown
-                              const quarterBreakdown = seasonGames
+                              const quarterBreakdown = (seasonGames as any[])
                                 .filter(game => game.statusIsCompleted && seasonBatchStats && seasonBatchStats[game.id])
                                 .reduce((quarters: any[], game) => {
                                   const gameStats = seasonBatchStats[game.id] || [];
@@ -1504,16 +1510,16 @@ export default function GamePreparation() {
                   <CardTitle>Historical vs {opponent}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {historicalGames.length > 0 ? (
+                  {(historicalGames as any[]).length > 0 ? (
                     <div className="space-y-4">
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
                         <div className="text-2xl font-bold text-blue-700">
-                          {historicalGames.length}
+                          {(historicalGames as any[]).length}
                         </div>
                         <div className="text-sm text-blue-600">Previous Games vs {opponent}</div>
                       </div>
                       <div className="space-y-2">
-                        {historicalGames.slice(0, 5).map((game: any, index: number) => (
+                        {(historicalGames as any[]).slice(0, 5).map((game: any, index: number) => (
                           <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                             <span className="text-sm">{formatShortDate(game.date)}</span>
                             <div className="flex items-center gap-2">
@@ -1523,9 +1529,9 @@ export default function GamePreparation() {
                           </div>
                         ))}
                       </div>
-                      {historicalGames.length > 5 && (
+                      {(historicalGames as any[]).length > 5 && (
                         <p className="text-xs text-gray-500 text-center">
-                          ...and {historicalGames.length - 5} more games
+                          ...and {(historicalGames as any[]).length - 5} more games
                         </p>
                       )}
                     </div>

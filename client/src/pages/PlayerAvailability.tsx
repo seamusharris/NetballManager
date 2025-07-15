@@ -14,10 +14,18 @@ import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
-  const params = useParams();
+  const params = useParams<{ clubId?: string; teamId?: string; gameId?: string }>();
   const { isInitialized } = useClub();
 
-  // Extract parameters from URL: /team/:teamId/availability/:gameId
+  // Extract parameters from URL: /club/:clubId/team/:teamId/availability/:gameId? (gameId optional)
+  const clubId = React.useMemo(() => {
+    if (params && params.clubId) {
+      const id = parseInt(params.clubId);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+
   const teamId = React.useMemo(() => {
     if (params && params.teamId) {
       const id = parseInt(params.teamId);
@@ -33,6 +41,40 @@ export default function PlayerAvailability() {
     }
     return null;
   }, [params]);
+
+  // Early validation
+  if (!clubId || !teamId) {
+    return (
+      <PageTemplate
+        title="Player Availability"
+        subtitle="Invalid URL"
+      >
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Invalid URL format. Expected /club/[clubId]/team/[teamId]/availability or /club/[clubId]/team/[teamId]/availability/[gameId]
+          </AlertDescription>
+        </Alert>
+      </PageTemplate>
+    );
+  }
+
+  // If no gameId, prompt user to select a game
+  if (!gameId) {
+    return (
+      <PageTemplate
+        title="Player Availability"
+        subtitle="No Game Selected"
+      >
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please select a game to manage player availability. You can do this from the team games page.
+          </AlertDescription>
+        </Alert>
+      </PageTemplate>
+    );
+  }
 
   // Fetch specific game
   const { data: selectedGame, isLoading: gameLoading, error: gameError } = useQuery({
@@ -56,22 +98,36 @@ export default function PlayerAvailability() {
     enabled: !!teamId && isInitialized
   });
 
-  // Early validation
-  if (!teamId || !gameId) {
-    return (
-      <PageTemplate
-        title="Player Availability"
-        subtitle="Invalid URL"
-      >
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Invalid URL format. Expected /team/[teamId]/availability/[gameId]
-          </AlertDescription>
-        </Alert>
-      </PageTemplate>
-    );
-  }
+  // Fetch home and away team names
+  const { data: homeTeam } = useQuery<{ name: string } | null>({
+    queryKey: ['team', selectedGame?.home_team_id],
+    queryFn: async () => {
+      if (!selectedGame?.home_team_id) return null;
+      const result = await apiClient.get(`/api/teams/${selectedGame.home_team_id}`);
+      if (result && typeof result === 'object' && typeof (result as { name?: unknown }).name === 'string') {
+        return { name: (result as { name: string }).name };
+      }
+      return null;
+    },
+    enabled: !!selectedGame?.home_team_id
+  });
+
+  const { data: awayTeam } = useQuery<{ name: string } | null>({
+    queryKey: ['team', selectedGame?.away_team_id],
+    queryFn: async () => {
+      if (!selectedGame?.away_team_id) return null;
+      const result = await apiClient.get(`/api/teams/${selectedGame.away_team_id}`);
+      if (result && typeof result === 'object' && typeof (result as { name?: unknown }).name === 'string') {
+        return { name: (result as { name: string }).name };
+      }
+      return null;
+    },
+    enabled: !!selectedGame?.away_team_id
+  });
+
+  // Add debugging logs
+  console.log('homeTeam', homeTeam);
+  console.log('awayTeam', awayTeam);
 
   if (gameLoading || playersLoading) {
     return (
@@ -123,7 +179,7 @@ export default function PlayerAvailability() {
   return (
     <PageTemplate
       title="Player Availability"
-      subtitle={`${selectedGame?.homeTeamName} vs ${selectedGame?.awayTeamName || 'BYE'} - ${selectedGame?.date}`}
+      subtitle={`${homeTeam?.name || 'Unknown Team'} vs ${awayTeam?.name || 'Unknown Team'} - ${selectedGame?.date}`}
     >
       <Helmet>
         <title>{`Player Availability - Game ${gameId} | Netball Manager`}</title>

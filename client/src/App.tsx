@@ -133,13 +133,20 @@ function Router() {
         <Route path="/club/:clubId/team/:teamId/players" component={withErrorBoundary(TeamPlayersManager, 'TeamPlayersManager')} />
         <Route path="/club/:clubId/team/:teamId/roster" component={withErrorBoundary(Roster, 'Roster')} />
         <Route path="/club/:clubId/team/:teamId/game/:gameId" component={withErrorBoundary(GameDetails, 'GameDetails')} />
+        <Route path="/club/:clubId/team/:teamId/availability" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
+        <Route path="/club/:clubId/team/:teamId/availability/:gameId" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
+        <Route path="/club/:clubId/team/:teamId/roster/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />
+        <Route path="/club/:clubId/team/:teamId/preparation" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
+        <Route path="/club/:clubId/team/:teamId/preparation/:gameId" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
+        <Route path="/club/:clubId/team/:teamId/analysis" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />
+        <Route path="/club/:clubId/team/:teamId/analysis/:opponentId" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />
         <Route path="/club/:clubId/team/:teamId/game/:gameId/stats/:action">
-          {(params) => (
+          {(params = {} as Record<string, string>) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading stats recorder..." />}>
                 <StatsRecorder 
-                  gameId={parseInt(params?.gameId || '0', 10)} 
-                  teamId={parseInt(params?.teamId || '0', 10)} 
+                  gameId={parseInt(params.gameId || '0', 10)} 
+                  teamId={parseInt(params.teamId || '0', 10)} 
                 />
               </Suspense>
             </ErrorBoundary>
@@ -182,12 +189,12 @@ function Router() {
         <Route path="/game/:id/details" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
         <Route path="/game/:gameId/team/:teamId/stats/record">
-          {(params) => (
+          {(params = {} as Record<string, string>) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading stats recorder..." />}>
                 <StatsRecorder 
-                  gameId={parseInt(params?.gameId || '0', 10)} 
-                  teamId={parseInt(params?.teamId || '0', 10)} 
+                  gameId={parseInt(params.gameId || '0', 10)} 
+                  teamId={parseInt(params.teamId || '0', 10)} 
                 />
               </Suspense>
             </ErrorBoundary>
@@ -196,10 +203,10 @@ function Router() {
         <Route path="/game/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/livestats-legacy" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/game/:id/stats-debug">
-          {(params) => (
+          {(params = {} as Record<string, string>) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading debugging tools..." />}>
-                <StatsDebug id={parseInt(params?.id || '0', 10)} />
+                <StatsDebug id={parseInt(params.id || '0', 10)} />
               </Suspense>
             </ErrorBoundary>
           )}

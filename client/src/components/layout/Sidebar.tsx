@@ -59,37 +59,37 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         section: 'team'
       },
       { 
-        path: `/team/${currentTeamId}/games`, 
+        path: `/club/${currentClubId}/team/${currentTeamId}/games`, 
         label: 'Team Games', 
         icon: <Calendar className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/team/${currentTeamId}/availability/${nextGame.id}` : `/team/${currentTeamId}/availability`,
+        path: nextGame ? `/club/${currentClubId}/team/${currentTeamId}/availability/${nextGame.id}` : `/club/${currentClubId}/team/${currentTeamId}/availability`,
         label: 'Player Availability', 
         icon: <Users className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/team/${currentTeamId}/roster/${nextGame.id}` : `/team/${currentTeamId}/roster`,
+        path: nextGame ? `/club/${currentClubId}/team/${currentTeamId}/roster/${nextGame.id}` : `/club/${currentClubId}/team/${currentTeamId}/roster`,
         label: 'Roster Management', 
         icon: <ClipboardList className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/team/${currentTeamId}/preparation/${nextGame.id}` : `/team/${currentTeamId}/preparation`,
+        path: nextGame ? `/club/${currentClubId}/team/${currentTeamId}/preparation/${nextGame.id}` : `/club/${currentClubId}/team/${currentTeamId}/preparation`,
         label: 'Game Preparation', 
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: `/team/${currentTeamId}/analysis`, 
+        path: `/club/${currentClubId}/team/${currentTeamId}/analysis`, 
         label: 'Opponent Analysis', 
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: `/team/${currentTeamId}/players`, 
+        path: `/club/${currentClubId}/team/${currentTeamId}/players`, 
         label: 'Player Management', 
         icon: <Users className="w-5 h-5" />,
         section: 'team'

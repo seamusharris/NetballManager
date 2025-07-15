@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
 
-interface TeamGameResult {
+export interface TeamGameResult {
   id: number;
   date: string;
   time: string;
@@ -16,6 +16,9 @@ interface TeamGameResult {
   awayTeamName: string;
   statusIsCompleted: boolean;
   isBye?: boolean;
+  seasonId?: number;
+  round?: string | number;
+  statusDisplayName?: string;
 }
 
 export function useTeamGame(gameId: number) {
