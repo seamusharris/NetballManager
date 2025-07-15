@@ -1066,8 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
       const teamId = req.body.teamId || req.headers['x-current-team-id'];
 
-      console.log('Extracted club ID:', clubId);
-      console.log('Extracted team ID:', teamId);
+
 
       // Validate club context is available
       if (!clubId) {
