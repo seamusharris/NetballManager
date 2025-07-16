@@ -2658,22 +2658,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Club details endpoint (NEW, plural, explicit clubId)
+  // Club details endpoint (STANDARDIZED)
   app.get('/api/clubs/:clubId', async (req: any, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       if (isNaN(clubId)) {
-        return res.status(400).json({ error: 'Invalid club ID' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
       }
+      
       // Fetch club from database
       const result = await db.execute(sql`
         SELECT * FROM clubs WHERE id = ${clubId}
       `);
+      
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Club not found' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Club not found'
+        ));
       }
+      
       const club = result.rows[0];
-      res.json(transformToApiFormat({
+      const clubData = transformToApiFormat({
         id: club.id,
         name: club.name,
         code: club.code,
@@ -2686,10 +2697,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: club.is_active,
         createdAt: club.created_at,
         updatedAt: club.updated_at
-      }));
+      });
+      
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(clubData));
     } catch (error) {
       console.error('Error fetching club details:', error);
-      res.status(500).json({ error: 'Failed to fetch club details' });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch club details'
+      ));
     }
   });
 

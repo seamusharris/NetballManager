@@ -173,16 +173,19 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get all teams for a club (keep the original endpoint for compatibility)
+  // Get all teams for a club (STANDARDIZED)
   app.get("/api/clubs/:clubId/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       console.log(`Teams endpoint called for club ${clubId}`);
-      console.log(`User context:`, req.user?.clubs?.map(c => c.clubId));
 
       if (isNaN(clubId) || clubId <= 0) {
         console.log('Invalid club ID provided:', req.params.clubId);
-        return res.status(400).json({ error: "Club ID required" });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
       }
 
       console.log(`Fetching teams for club ${clubId}`);
@@ -208,13 +211,6 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY s.start_date DESC, t.name
       `);
 
-      console.log(`Raw team query results for club ${clubId}:`, clubTeams.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        division_id: row.division_id,
-        division_name: row.division_name
-      })));
-
       const teams = clubTeams.rows.map(row => ({
         id: row.id,
         name: row.name,
@@ -231,10 +227,16 @@ export function registerTeamRoutes(app: Express) {
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
-      res.json(transformToApiFormat(teams));
+      
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(teams)));
     } catch (error) {
       console.error("Error fetching teams:", error);
-      res.status(500).json({ message: "Failed to fetch teams" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch teams'
+      ));
     }
   });
 

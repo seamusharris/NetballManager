@@ -33,6 +33,29 @@ class ApiClient {
     console.log('API Client: Club context set to:', context.currentClubId, 'Team:', context.currentTeamId);
   }
 
+  /**
+   * Unwraps standardized API responses for backward compatibility
+   * Converts { data: [...], meta: {...} } back to [...]
+   */
+  private unwrapStandardizedResponse<T>(response: any): T {
+    // Check if this is a standardized success response
+    if (response && typeof response === 'object' && response.data !== undefined && response.meta !== undefined) {
+      console.log('API Client: Detected standardized response, unwrapping data');
+      return response.data;
+    }
+    
+    // Check if this is a standardized error response
+    if (response && typeof response === 'object' && response.error !== undefined && typeof response.error === 'object') {
+      console.log('API Client: Detected standardized error response');
+      // For errors, we might want to throw or handle differently
+      // For now, return as-is to maintain error handling
+      return response;
+    }
+    
+    // Return as-is for legacy responses
+    return response;
+  }
+
   async request<T>(method: string, endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
     console.log(`\n=== API CLIENT REQUEST START ===`);
     console.log(`API Client: ${method} ${endpoint} at ${new Date().toISOString()}`);
@@ -147,7 +170,14 @@ class ApiClient {
 
       const result = await response.json();
       const camelResult = camelcaseKeys(result, { deep: true });
+      
+      // Auto-unwrap standardized responses for backward compatibility
+      const unwrappedResult = this.unwrapStandardizedResponse(camelResult);
+      
       console.log(`API Client: SUCCESS Response (camelCase):`, camelResult);
+      if (unwrappedResult !== camelResult) {
+        console.log(`API Client: Unwrapped standardized response`);
+      }
       console.log(`=== API CLIENT REQUEST SUCCESS END ===\n`);
 
       // Auto-invalidate cache for mutation operations
@@ -162,7 +192,7 @@ class ApiClient {
         }
       }
 
-      return camelResult;
+      return unwrappedResult;
     } catch (error) {
       console.error(`API Client: Request failed with error:`, error);
       console.error('\n=== API CLIENT ERROR ===');

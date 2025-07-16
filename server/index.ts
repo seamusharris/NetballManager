@@ -36,10 +36,28 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Simple Usage Tracking Middleware
-import { trackEndpointUsage, registerUsageStatsEndpoint } from './usage-tracker';
+// Smart Response Middleware - Wraps legacy responses automatically
+import { smartResponseMiddleware, registerUsageStatsEndpoint } from './smart-response-middleware';
 
-app.use('/api', trackEndpointUsage());
+app.use('/api', smartResponseMiddleware({
+  enabled: process.env.STANDARDIZE_RESPONSES !== 'false', // Default enabled
+  wrapLegacyResponses: true, // Automatically wrap legacy responses
+  skipPatterns: [
+    '/api/debug/*',
+    '/api/admin/*', 
+    '/api/diagnostic/*',
+    '/api/bulk-import',
+    '/api/clear-data',
+    '/api/backup'
+  ],
+  forceStandardize: [
+    '/api/teams/*',
+    '/api/games/*',
+    '/api/clubs/*',
+    '/api/players/*'
+  ],
+  logUsage: true
+}));
 
 // Apply user permissions middleware only to API routes
 app.use('/api', loadUserPermissions);
