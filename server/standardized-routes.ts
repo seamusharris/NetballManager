@@ -485,6 +485,90 @@ export function registerStandardizedRoutes(app: Express) {
   });
 
   // ============================================================================
+  // INDIVIDUAL GAME APIS (Team Perspective)
+  // ============================================================================
+  
+  /**
+   * Individual team game rosters API
+   * NEW: /api/teams/:teamId/games/:gameId/rosters
+   */
+  app.get('/api/teams/:teamId/games/:gameId/rosters', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+      
+      console.log(`🆕 NEW STANDARDIZED: Team ${teamId} rosters for game ${gameId}`);
+      
+      // Get rosters for the specific team and game using proven pattern
+      const { rosters, teamPlayers } = await import('@shared/schema');
+      const { eq, and } = await import('drizzle-orm');
+      
+      const result = await db.select({
+        id: rosters.id,
+        gameId: rosters.game_id,
+        quarter: rosters.quarter,
+        position: rosters.position,
+        playerId: rosters.player_id,
+        teamId: teamPlayers.team_id
+      })
+      .from(rosters)
+      .innerJoin(teamPlayers, eq(rosters.player_id, teamPlayers.player_id))
+      .where(and(
+        eq(rosters.game_id, gameId),
+        eq(teamPlayers.team_id, teamId)
+      ))
+      .orderBy(rosters.quarter, rosters.position);
+      
+      res.json(transformToApiFormat(result));
+    } catch (error) {
+      console.error('Error in team game rosters endpoint:', error);
+      res.status(500).json({ error: 'Failed to fetch team game rosters' });
+    }
+  });
+
+  /**
+   * Neutral game rosters API (all teams)
+   * NEW: /api/games/:gameId/rosters
+   */
+  app.get('/api/games/:gameId/rosters', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+      
+      console.log(`🆕 NEW STANDARDIZED: All rosters for game ${gameId}`);
+      
+      // Get all rosters for the game (both teams) using proven pattern
+      const { rosters, teamPlayers } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const result = await db.select({
+        id: rosters.id,
+        gameId: rosters.game_id,
+        quarter: rosters.quarter,
+        position: rosters.position,
+        playerId: rosters.player_id,
+        teamId: teamPlayers.team_id
+      })
+      .from(rosters)
+      .innerJoin(teamPlayers, eq(rosters.player_id, teamPlayers.player_id))
+      .where(eq(rosters.game_id, gameId))
+      .orderBy(teamPlayers.team_id, rosters.quarter, rosters.position);
+      
+      res.json(transformToApiFormat(result));
+    } catch (error) {
+      console.error('Error in neutral game rosters endpoint:', error);
+      res.status(500).json({ error: 'Failed to fetch game rosters' });
+    }
+  });
+
+  // ============================================================================
   // TEAM-CENTRIC BATCH OPERATIONS (New Pattern)
   // ============================================================================
   
@@ -636,6 +720,8 @@ export function registerStandardizedRoutes(app: Express) {
         // Individual endpoints
         'GET /api/teams/:teamId/games/:gameId',
         'GET /api/teams/:teamId/games/:gameId/stats',
+        'GET /api/teams/:teamId/games/:gameId/rosters',
+        'GET /api/games/:gameId/rosters',
         
         // Comprehensive batch endpoints
         'POST /api/teams/:teamId/games/batch',
