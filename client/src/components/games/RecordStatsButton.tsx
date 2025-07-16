@@ -34,12 +34,8 @@ export default function RecordStatsButton({ game, className = "" }: RecordStatsB
       targetTeamId = game.home_team_id;
     }
 
-    if (clubId && targetTeamId) {
-      navigate(`/club/${clubId}/team/${targetTeamId}/game/${game.id}/stats/record`);
-    } else {
-      // fallback legacy route
-      navigate(`/game/${game.id}/team/${targetTeamId}/stats/record`);
-    }
+    // Use simplified URL pattern - no need for club/team context in URL
+    navigate(`/game/${game.id}/stats/record`);
   };
 
   return (

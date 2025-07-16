@@ -93,14 +93,14 @@ export default function Statistics() {
         
         if (game.homeClubId === currentClubId) {
           rosterPromises.push(
-            fetch(`/api/game/${selectedGameId}/team/${game.homeTeamId}/rosters`)
+            fetch(`/api/games/${selectedGameId}/rosters`)
               .then(res => res.json())
           );
         }
         
         if (game.awayClubId === currentClubId && game.awayTeamId) {
           rosterPromises.push(
-            fetch(`/api/game/${selectedGameId}/team/${game.awayTeamId}/rosters`)
+            fetch(`/api/games/${selectedGameId}/rosters`)
               .then(res => res.json())
           );
         }

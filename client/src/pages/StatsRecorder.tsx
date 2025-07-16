@@ -187,9 +187,9 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
   // Fetch existing stats for this game using game-centric endpoint
   const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['game-team-stats', gameId, teamId],
-    queryFn: () => apiClient.get(`/api/game/${gameId}/team/${teamId}/stats`),
-    enabled: !!gameId && !!teamId,
+    queryKey: ['game-stats', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
+    enabled: !!gameId,
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true
@@ -463,8 +463,8 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         ) : undefined;
 
         if (existingStat) {
-          // Use game-centric endpoint for updates too
-          const updatePromise = apiClient.patch(`/api/game/${gameId}/team/${currentTeamId}/stats/${existingStat.id}`, {
+          // Use standardized endpoint for updates
+          const updatePromise = apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, {
             goalsFor: stats.goalsFor || 0,
             goalsAgainst: stats.goalsAgainst || 0,
             missedGoals: stats.missedGoals || 0,
@@ -479,7 +479,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           });
           updates.push(updatePromise);
         } else {
-          const createPromise = apiClient.post(`/api/game/${gameId}/team/${currentTeamId}/stats`, {
+          const createPromise = apiClient.post(`/api/games/${gameId}/stats`, {
             gameId: gameId,
             teamId: currentTeamId,
             position: position,
