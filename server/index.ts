@@ -36,10 +36,10 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// API Standardization Middleware (temporarily disabled due to file corruption)
-// app.use('/api', standardizeUrls());        // URL redirects first
-// app.use('/api', extractRequestContext());  // Extract context from URLs
-// app.use('/api', standardCaseConversion()); // Case conversion last
+// Simple Usage Tracking Middleware
+import { trackEndpointUsage, registerUsageStatsEndpoint } from './usage-tracker';
+
+app.use('/api', trackEndpointUsage());
 
 // Apply user permissions middleware only to API routes
 app.use('/api', loadUserPermissions);
@@ -95,6 +95,12 @@ registerAgeGroupsSectionsRoutes(app);
 // Register new standardized routes (additive, non-breaking)
 import { registerStandardizedRoutes } from './standardized-routes';
 registerStandardizedRoutes(app);
+
+// Register endpoint usage tracking
+registerUsageStatsEndpoint(app);
+
+// Add smart error handling middleware (temporarily disabled)
+// app.use(smartErrorMiddleware());
 
 // Export app for testing
 export default app;
