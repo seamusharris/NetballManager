@@ -216,6 +216,7 @@ export default function DashboardSummary({
               games={filteredGames} 
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+              currentTeamId={currentTeamId}
             />
             <OpponentMatchups 
               games={filteredGames} 

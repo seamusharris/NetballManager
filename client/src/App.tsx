@@ -93,6 +93,7 @@ import TeamPlayersManager from '@/components/teams/TeamPlayersManager';
 const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
 import LiveScoreTrackingExamples from './pages/LiveScoreTrackingExamples';
+import ApiStandardizationTest from '@/pages/ApiStandardizationTest';
 
 
 /**
@@ -184,6 +185,7 @@ function Router() {
         <Route path="/settings" component={Settings} />
         <Route path="/performance-dashboard" component={withErrorBoundary(PerformanceDashboard, 'PerformanceDashboard')} />
         <Route path="/component-examples" component={ComponentExamples} />
+        <Route path="/api-tests" component={withErrorBoundary(ApiStandardizationTest, 'ApiStandardizationTest')} />
         <Route path="/seasons" component={withErrorBoundary(Seasons, 'Seasons')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
         <Route path="/game/:id/details" component={withErrorBoundary(LiveStats, 'LiveStats')} />
