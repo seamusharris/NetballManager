@@ -419,6 +419,15 @@ export function registerTeamRoutes(app: Express) {
   app.get('/api/teams/:id', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const teamId = parseInt(req.params.id);
+      
+      if (isNaN(teamId)) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
+      }
+      
       const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
 
       // Get team details and check if user has access to the team's club
@@ -427,20 +436,33 @@ export function registerTeamRoutes(app: Express) {
       `);
 
       if (team.rows.length === 0) {
-        return res.status(404).json({ error: 'Team not found' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Team not found'
+        ));
       }
 
       const teamData = team.rows[0];
 
       // Check if user has access to this team's club
       if (!userClubs.includes(teamData.club_id)) {
-        return res.status(403).json({ error: 'Access denied to this team' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(403).json(createErrorResponse(
+          ErrorCodes.FORBIDDEN,
+          'Access denied to this team'
+        ));
       }
 
-      res.json(transformToApiFormat(teamData));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(teamData)));
     } catch (error) {
       console.error("Error fetching team:", error);
-      res.status(500).json({ message: "Failed to fetch team" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch team'
+      ));
     }
   });
 
