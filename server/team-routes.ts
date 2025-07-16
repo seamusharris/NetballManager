@@ -349,7 +349,7 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get all teams across all clubs (for away team selection)
+  // Get all teams across all clubs (STANDARDIZED)
   app.get("/api/teams/all", async (req, res) => {
     try {
       const teams = await db.execute(sql`
@@ -396,10 +396,15 @@ export function registerTeamRoutes(app: Express) {
         seasonEndDate: row.season_end_date,
       }));
 
-      res.json(transformToApiFormat(mappedTeams));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(mappedTeams)));
     } catch (error) {
       console.error("Error fetching all teams:", error);
-      res.status(500).json({ message: "Failed to fetch all teams" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch all teams'
+      ));
     }
   });
 
@@ -586,13 +591,17 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get players for a specific team
+  // Get players for a specific team (STANDARDIZED)
   app.get("/api/teams/:teamId/players", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
 
       if (isNaN(teamId)) {
-        return res.status(400).json({ error: 'Invalid team ID' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
       }
 
       // Verify team exists
@@ -601,7 +610,11 @@ export function registerTeamRoutes(app: Express) {
       `);
 
       if (team.rows.length === 0) {
-        return res.status(404).json({ error: 'Team not found' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Team not found'
+        ));
       }
 
       const result = await db.execute(sql`
@@ -639,10 +652,16 @@ export function registerTeamRoutes(app: Express) {
       }));
 
       console.log(`Found ${players.length} players for team ${teamId}`);
-      res.json(transformToApiFormat(players));
+      
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(players)));
     } catch (error) {
       console.error("Error fetching team players:", error);
-      res.status(500).json({ message: "Failed to fetch team players" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch team players'
+      ));
     }
   });
 

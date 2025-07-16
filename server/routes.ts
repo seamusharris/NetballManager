@@ -536,21 +536,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- PLAYERS API -----
-  // REST endpoint for club players - Stage 4
+  // REST endpoint for club players (STANDARDIZED)
   app.get("/api/clubs/:clubId/players", standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
 
-      if (!clubId) {
-        return res.status(400).json({ message: "Invalid club ID" });
+      if (!clubId || isNaN(clubId)) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
       }
 
       console.log(`REST endpoint: Fetching players for club ${clubId}`);
       const players = await storage.getPlayersByClub(clubId);
-      res.json(transformToApiFormat(players));
+      
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(players)));
     } catch (error) {
       console.error('Error fetching players:', error);
-      res.status(500).json({ message: "Failed to fetch players" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch players'
+      ));
     }
   });
 
@@ -1495,7 +1505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Team-specific games endpoint - completely separate from club-wide queries
+  // Team-specific games endpoint (STANDARDIZED)
   app.get("/api/teams/:teamId/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const teamId = parseInt(req.params.teamId, 10);
@@ -1504,11 +1514,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Team-specific games endpoint: teamId=${teamId}, clubId=${clubId}`);
 
       if (isNaN(teamId)) {
-        return res.status(400).json({ error: 'Invalid team ID' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
       }
 
       if (!clubId) {
-        return res.status(400).json({ error: 'Club context required' });
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.UNAUTHORIZED,
+          'Club context required'
+        ));
       }
 
       // Set cache headers for team-specific data
@@ -1556,10 +1574,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use same transformation as main games endpoint
       const games = result.rows.map(transformGameRow);
 
-      res.json(transformToApiFormat(games));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(games)));
     } catch (error) {
       console.error('Error fetching team games:', error);
-      res.status(500).json({ message: "Failed to fetch team games" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch team games'
+      ));
     }
   });
 
