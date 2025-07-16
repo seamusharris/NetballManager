@@ -92,6 +92,10 @@ registerPlayerBorrowingRoutes(app);
 registerUserManagementRoutes(app);
 registerAgeGroupsSectionsRoutes(app);
 
+// Register new standardized routes (additive, non-breaking)
+import { registerStandardizedRoutes } from './standardized-routes';
+registerStandardizedRoutes(app);
+
 // Export app for testing
 export default app;
 
