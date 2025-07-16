@@ -11,11 +11,7 @@ import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
 import { loadUserPermissions } from './auth-middleware';
-// import { 
-//   standardCaseConversion, 
-//   extractRequestContext, 
-//   standardizeUrls 
-// } from './api-middleware';
+import { standardizeUrls, extractRequestContext, standardCaseConversion } from './api-middleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -58,6 +54,11 @@ app.use('/api', smartResponseMiddleware({
   ],
   logUsage: true
 }));
+
+// API Standardization Middleware (order matters!)
+app.use('/api', standardizeUrls()); // URL redirects first
+app.use('/api', extractRequestContext()); // Extract context
+app.use('/api', standardCaseConversion()); // Case conversion last
 
 // Apply user permissions middleware only to API routes
 app.use('/api', loadUserPermissions);
