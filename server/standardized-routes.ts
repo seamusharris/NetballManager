@@ -569,6 +569,146 @@ export function registerStandardizedRoutes(app: Express) {
   });
 
   // ============================================================================
+  // TEAM APIS (Standardized)
+  // ============================================================================
+  
+  /**
+   * Individual team details API
+   * NEW: /api/teams/:teamId
+   */
+  app.get('/api/teams/:teamId', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+      
+      console.log(`🆕 NEW STANDARDIZED: Team ${teamId} details`);
+      
+      // Get team details using proven Drizzle ORM pattern
+      const { teams, clubs, seasons, divisions } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const result = await db.select({
+        id: teams.id,
+        name: teams.name,
+        clubId: teams.club_id,
+        seasonId: teams.season_id,
+        divisionId: teams.division_id,
+        isActive: teams.is_active,
+        createdAt: teams.created_at,
+        updatedAt: teams.updated_at,
+        clubName: clubs.name,
+        seasonName: seasons.name,
+        divisionName: divisions.display_name
+      })
+      .from(teams)
+      .leftJoin(clubs, eq(teams.club_id, clubs.id))
+      .leftJoin(seasons, eq(teams.season_id, seasons.id))
+      .leftJoin(divisions, eq(teams.division_id, divisions.id))
+      .where(eq(teams.id, teamId))
+      .limit(1);
+      
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+      
+      res.json(transformToApiFormat(result[0]));
+    } catch (error) {
+      console.error('Error in team details endpoint:', error);
+      res.status(500).json({ error: 'Failed to fetch team details' });
+    }
+  });
+
+  /**
+   * Team players API
+   * NEW: /api/teams/:teamId/players
+   */
+  app.get('/api/teams/:teamId/players', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+      
+      console.log(`🆕 NEW STANDARDIZED: Team ${teamId} players`);
+      
+      // Get team players using proven Drizzle ORM pattern
+      const { teamPlayers, players } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const result = await db.select({
+        id: teamPlayers.id,
+        teamId: teamPlayers.team_id,
+        playerId: teamPlayers.player_id,
+        seasonId: teamPlayers.season_id,
+        isActive: teamPlayers.is_active,
+        createdAt: teamPlayers.created_at,
+        updatedAt: teamPlayers.updated_at,
+        playerDisplayName: players.display_name,
+        playerFirstName: players.first_name,
+        playerLastName: players.last_name,
+        playerDateOfBirth: players.date_of_birth,
+        playerIsActive: players.is_active
+      })
+      .from(teamPlayers)
+      .innerJoin(players, eq(teamPlayers.player_id, players.id))
+      .where(eq(teamPlayers.team_id, teamId))
+      .orderBy(players.display_name);
+      
+      res.json(transformToApiFormat(result));
+    } catch (error) {
+      console.error('Error in team players endpoint:', error);
+      res.status(500).json({ error: 'Failed to fetch team players' });
+    }
+  });
+
+  /**
+   * Club teams API
+   * NEW: /api/clubs/:clubId/teams
+   */
+  app.get('/api/clubs/:clubId/teams', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      
+      if (isNaN(clubId)) {
+        return res.status(400).json({ error: 'Invalid club ID' });
+      }
+      
+      console.log(`🆕 NEW STANDARDIZED: Club ${clubId} teams`);
+      
+      // Get club teams using proven Drizzle ORM pattern
+      const { teams, seasons, divisions } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const result = await db.select({
+        id: teams.id,
+        name: teams.name,
+        clubId: teams.club_id,
+        seasonId: teams.season_id,
+        divisionId: teams.division_id,
+        isActive: teams.is_active,
+        createdAt: teams.created_at,
+        updatedAt: teams.updated_at,
+        seasonName: seasons.name,
+        divisionName: divisions.display_name
+      })
+      .from(teams)
+      .leftJoin(seasons, eq(teams.season_id, seasons.id))
+      .leftJoin(divisions, eq(teams.division_id, divisions.id))
+      .where(eq(teams.club_id, clubId))
+      .orderBy(teams.name);
+      
+      res.json(transformToApiFormat(result));
+    } catch (error) {
+      console.error('Error in club teams endpoint:', error);
+      res.status(500).json({ error: 'Failed to fetch club teams' });
+    }
+  });
+
+  // ============================================================================
   // TEAM-CENTRIC BATCH OPERATIONS (New Pattern)
   // ============================================================================
   
@@ -722,6 +862,11 @@ export function registerStandardizedRoutes(app: Express) {
         'GET /api/teams/:teamId/games/:gameId/stats',
         'GET /api/teams/:teamId/games/:gameId/rosters',
         'GET /api/games/:gameId/rosters',
+        
+        // Team APIs
+        'GET /api/teams/:teamId',
+        'GET /api/teams/:teamId/players',
+        'GET /api/clubs/:clubId/teams',
         
         // Comprehensive batch endpoints
         'POST /api/teams/:teamId/games/batch',
