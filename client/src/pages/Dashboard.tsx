@@ -16,7 +16,7 @@ import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useEffect, useState, useMemo } from 'react';
 import { useRequestMonitor } from '@/hooks/use-request-monitor';
 import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
-import { useOptimizedTeams, useOptimizedTeamGames } from '@/hooks/use-optimized-queries';
+import { useOptimizedTeams, useOptimizedTeamGames, useOptimizedPlayers, useOptimizedSeasons } from '@/hooks/use-optimized-queries';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import TopPlayersWidget from '@/components/dashboard/TopPlayersWidget';
@@ -86,14 +86,8 @@ export default function Dashboard() {
     });
   }, [currentTeamId, currentTeam, clubTeams]);
 
-  // Players data using REST endpoint - Stage 4
-  const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
-    queryKey: ['players', currentClubId, 'rest'],
-    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/players`),
-    enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
-  });
+  // Players data using optimized hook
+  const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useOptimizedPlayers(currentClubId);
 
   // Fetch games with team context using optimized hook
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useOptimizedTeamGames(currentClubId, currentTeamId);
@@ -109,20 +103,17 @@ export default function Dashboard() {
 
   // Opponents system has been completely removed
 
-  const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
-    queryKey: ['seasons', currentClubId],
-    queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!currentClubId,
-    staleTime: 60 * 60 * 1000, // 1 hour cache for seasons (rarely change) - increased
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
-  });
+  // Seasons data using optimized hook
+  const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useOptimizedSeasons();
 
+  // Active season - keep this as a separate query since it's specific
   const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
-    queryKey: ['seasons', 'active', currentClubId],
+    queryKey: ['seasons', 'active'],
     queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!currentClubId,
-    staleTime: 60 * 60 * 1000, // 1 hour cache for active season - increased
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
+    staleTime: 60 * 60 * 1000, // 1 hour cache for active season
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Centralized roster fetching for all games - optimized for team switching
