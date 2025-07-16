@@ -18,6 +18,7 @@ import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { cn } from '@/lib/utils';
 import { winRateCalculator } from '@/lib/winRateCalculator';
 import { Button } from '@/components/ui/button';
+import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 
@@ -29,6 +30,13 @@ export default function ClubDashboard() {
 
   // Use URL club ID if available, otherwise fall back to context
   const effectiveClubId = clubIdFromUrl || currentClubId;
+
+  // Performance monitoring
+  const performanceMetrics = usePerformanceMonitor('ClubDashboard', {
+    trackApiCalls: true,
+    trackRenderTime: true,
+    logToConsole: true
+  });
 
   // Set club context from URL if different
   useEffect(() => {

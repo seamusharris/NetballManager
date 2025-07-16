@@ -21,6 +21,7 @@ import { clearGameCache } from '@/lib/scoresCache';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
 
 // Import centralized stat ordering
 import { getPositionOrderedStats, isStatRelevantForPosition } from '@/lib/statOrderUtils';
@@ -114,6 +115,13 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
   // Determine team context - use the teamId from URL params or current team
   const currentTeamId = teamId || currentTeam?.id;
+
+  // Performance monitoring
+  const performanceMetrics = usePerformanceMonitor('StatsRecorder', {
+    trackApiCalls: true,
+    trackRenderTime: true,
+    logToConsole: true
+  });
 
   // Timer effect - countdown timer
   useEffect(() => {
