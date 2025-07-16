@@ -111,11 +111,10 @@ export class UnifiedDataFetcher {
       } catch (error) {
         console.error('UnifiedDataFetcher: Batch scores fetch failed, falling back to individual requests:', error);
 
-        // Fallback to individual requests (limited)
-        const fallbackGameIds = gameIds.slice(0, 10);
+        // Fallback to individual requests
         const scoresMap: Record<number, any[]> = {};
 
-        for (const gameId of fallbackGameIds) {
+        for (const gameId of gameIds) {
           try {
             const scores = await apiClient.get(`/api/games/${gameId}/scores`);
             scoresMap[gameId] = scores || [];

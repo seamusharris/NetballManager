@@ -11,6 +11,11 @@ import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
 import { loadUserPermissions } from './auth-middleware';
+// import { 
+//   standardCaseConversion, 
+//   extractRequestContext, 
+//   standardizeUrls 
+// } from './api-middleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +35,11 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// API Standardization Middleware (temporarily disabled due to file corruption)
+// app.use('/api', standardizeUrls());        // URL redirects first
+// app.use('/api', extractRequestContext());  // Extract context from URLs
+// app.use('/api', standardCaseConversion()); // Case conversion last
 
 // Apply user permissions middleware only to API routes
 app.use('/api', loadUserPermissions);
