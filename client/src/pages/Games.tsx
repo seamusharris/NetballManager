@@ -3,20 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import GameForm from '@/components/games/GameForm';
-import UnifiedGamesList from '@/components/ui/unified-games-list';
+import SimplifiedGamesList from '@/components/ui/simplified-games-list';
+import { useSimplifiedGames } from '@/hooks/use-simplified-games';
 import { apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation, useParams } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
 import { Badge } from '@/components/ui/badge';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 import { Helmet } from 'react-helmet';
-import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
-import { useOptimizedTeams, useOptimizedTeamGames, useOptimizedSeasons, useOptimizedGameStatuses } from '@/hooks/use-optimized-queries';
-import { useApiErrorHandler } from '@/hooks/use-api-error-handler';
+
 
 // Import new UI standards
 import { ContentBox, ActionButton } from '@/components/ui/ui-standards';
@@ -28,37 +27,14 @@ interface QueryParams {
 }
 
 export default function Games() {
-  // Performance monitoring
-  const performanceMetrics = usePerformanceMonitor('Games', {
-    trackApiCalls: true,
-    trackRenderTime: true,
-    logToConsole: true
-  });
-
-  // Error handling
-  const { handleError, handleValidationError } = useApiErrorHandler({
-    showToast: true,
-    logToConsole: true
-  });
+  // Simple Games page - no complex monitoring or error handling
 
   const { currentClub, currentClubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const params = useParams();
   const [location] = useLocation();
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
 
-  // Detect if we're in club-wide games view
-  const isClubWideGamesView = location.includes(`/club/${currentClubId}/games`);
-
-  // For club-wide view, we should not use team context
-  const effectiveTeamId = isClubWideGamesView ? null : (teamIdFromUrl || currentTeamId);
-  const effectiveTeam = isClubWideGamesView ? null : currentTeam;
-
-  // Clear team context when in club-wide view
-  useEffect(() => {
-    if (isClubWideGamesView && currentTeamId) {
-      setCurrentTeamId(null);
-    }
-  }, [isClubWideGamesView, currentTeamId, setCurrentTeamId]);
+  // Simple: just use teamId from URL like GamePreparation page
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -87,114 +63,25 @@ export default function Games() {
     }
   }, []);
 
-  // Fetch teams - for club-wide view we need club teams, for team view we need all teams
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: isClubWideGamesView ? ['clubs', currentClubId, 'teams'] : ['teams', currentClubId],
-    queryFn: () => {
-      if (isClubWideGamesView) {
-        return apiClient.get(`/api/clubs/${currentClubId}/teams`);
-      } else {
-        return apiClient.get(`/api/clubs/${currentClubId}/teams`);
-      }
-    },
-    enabled: !!currentClubId,
-  });
+  // Simple data fetching like GamePreparation page - only what we need
+  const { data: games = [], isLoading: isLoadingGames } = useSimplifiedGames(
+    currentClubId!,
+    teamIdFromUrl
+  );
 
-  // Auto-select team from URL if provided - but not for club-wide view
-  useEffect(() => {
-    if (!isClubWideGamesView && teamIdFromUrl && teams.length > 0) {
-      const targetTeam = teams.find(t => t.id === teamIdFromUrl);
-      if (targetTeam && currentTeamId !== teamIdFromUrl) {
-        console.log(`Games: Setting team ${teamIdFromUrl} from URL`);
-        setCurrentTeamId(teamIdFromUrl);
-      }
-    }
-  }, [isClubWideGamesView, teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
-
-  // Fetch games - use team-specific endpoint when we have a team ID for better perspective handling
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, effectiveTeamId],
-    queryFn: () => {
-      if (isClubWideGamesView) {
-        return apiClient.get(`/api/clubs/${currentClubId}/games`);
-      } else if (effectiveTeamId) {
-        // Use team-specific endpoint for better filtering and automatic perspective calculation
-        return apiClient.get(`/api/teams/${effectiveTeamId}/games`);
-      } else {
-        return apiClient.get(`/api/clubs/${currentClubId}/games`);
-      }
-    },
-    enabled: !!currentClubId,
-  });
-
-  // Centralized batch data fetching (same as Dashboard)
-  const EMPTY_ARRAY = useMemo(() => [] as any[], []);
-  const EMPTY_OBJECT = useMemo(() => ({}), []);
-  const gameIdsArray = useMemo(() => games?.map(g => g.id).sort() || EMPTY_ARRAY, [games]);
-  const gameIds = gameIdsArray.join(',');
-
-  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
-    queryKey: ['games-batch-data', currentClubId, effectiveTeamId, gameIds],
-    queryFn: async () => {
-      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
-
-      console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${effectiveTeamId}:`, gameIdsArray);
-
-      try {
-        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
-        const result = await dataFetcher.batchFetchGameData({
-          gameIds: gameIdsArray,
-          clubId: currentClubId!,
-          teamId: effectiveTeamId ?? undefined,
-          includeStats: true,
-          includeRosters: true,
-          includeScores: true
-        });
-
-        console.log('Games page batch data result for team', effectiveTeamId, ':', result);
-        return result;
-      } catch (error) {
-        console.error('Games page batch data fetch error:', error);
-        throw error;
-      }
-    },
-    enabled: !!currentClubId && (isClubWideGamesView || !!effectiveTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
-    staleTime: 2 * 60 * 1000, // 2 minutes - shorter for dynamic game data
-    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: 1, // Allow one retry
-  });
-
-  // Use stable empty objects to prevent unnecessary re-renders - FIX FOR FLICKERING
-  const gameStatsMap = useMemo(() => batchData?.stats || EMPTY_OBJECT, [batchData?.stats, EMPTY_OBJECT]);
-  const gameRostersMap = useMemo(() => batchData?.rosters || EMPTY_OBJECT, [batchData?.rosters, EMPTY_OBJECT]);
-  const gameScoresMap = useMemo(() => batchData?.scores || EMPTY_OBJECT, [batchData?.scores, EMPTY_OBJECT]);
-
-  // Fetch seasons - no club context needed
+  // Only fetch additional data when needed for game creation/editing
   const { data: seasons = [] } = useQuery({
     queryKey: ['seasons'], 
-    queryFn: () => apiClient.get('/api/seasons')
+    queryFn: () => apiClient.get('/api/seasons'),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch active season - no club context needed
-  const { data: activeSeason } = useQuery({
-    queryKey: ['seasons', 'active'],
-    queryFn: () => apiClient.get('/api/seasons/active')
-  });
-
-  // Fetch game statuses
-  const { data: gameStatuses = [], isLoading: isLoadingGameStatuses } = useQuery({
+  const { data: gameStatuses = [] } = useQuery({
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch players
-  const { data: players = [] } = useQuery<Player[]>({
-    queryKey: ['players'],
-    queryFn: () => apiClient.get('/api/players'),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const handleCreate = async (game: Game) => {
@@ -218,16 +105,16 @@ export default function Games() {
       if (currentClubId) {
         // Invalidate the specific games query for current team (matches the actual query key pattern)
         queryClient.invalidateQueries({
-          queryKey: ['games', currentClubId, effectiveTeamId]
+          queryKey: ['simplified-games', currentClubId, teamIdFromUrl]
         });
 
         // Invalidate team-specific games queries if we have a team
-        if (effectiveTeamId) {
+        if (teamIdFromUrl) {
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey;
               return Array.isArray(key) && 
-                     key[0] === `team-games-${effectiveTeamId}`;
+                     key[0] === `team-games-${teamIdFromUrl}`;
             }
           });
         }
@@ -317,31 +204,17 @@ export default function Games() {
     setLocation(`/game/${gameId}`);
   };
 
-  // Fetch all teams for inter-club games
-  const { data: allTeams = [] } = useQuery<any[]>({
-    queryKey: ['teams', 'all'],
-    queryFn: () => apiClient.get('/api/teams/all')
-  });
+  // Remove unnecessary queries that cause flickering
 
-  // Debug club context
-  console.log('Games page club context:', {
-    currentClub: currentClub?.name,
-    currentClubId,
-    isClubWideGamesView,
-    clubLoading
-  });
+  // Debug club context (removed to stop spam)
 
-  // Generate page title with context
-  const pageTitle = isClubWideGamesView 
-    ? `All Games - ${currentClub?.name || 'Club'}` 
-    : effectiveTeam 
-      ? `Games - ${effectiveTeam.name}` 
-      : 'Games';
-  const pageSubtitle = isClubWideGamesView
-    ? `View all game schedules and results for ${currentClub?.name || 'the club'}`
-    : effectiveTeamId 
-      ? `Manage and view game schedules and results for ${effectiveTeam?.name || 'Selected Team'}`
-      : 'Manage and view game schedules and results';
+  // Generate page title with context - simplified
+  const pageTitle = currentTeam 
+    ? `Games - ${currentTeam.name}` 
+    : 'Games';
+  const pageSubtitle = currentTeam 
+    ? `Manage and view game schedules and results for ${currentTeam.name}`
+    : 'Manage and view game schedules and results';
 
   // Generate breadcrumbs
   const breadcrumbs = [
@@ -358,45 +231,23 @@ export default function Games() {
         title={pageTitle}
         subtitle={pageSubtitle}
         actions={
-          <>
-            {isClubWideGamesView ? (
-              <TeamSwitcher 
-                mode="optional" 
-                onTeamChange={(teamId) => {
-                  if (teamId) {
-                    setLocation(`/team/${teamId}/games`);
-                  }
-                }}
-              />
-            ) : (
-              <>
-                <div className="text-sm text-muted-foreground">
-                  Team Filter (Optional):
-                </div>
-                <TeamSwitcher />
-              </>
-            )}
-            <ActionButton 
-              action="create" 
-              onClick={() => setIsDialogOpen(true)}
-              icon={Plus}
-            >
-              Add Game
-            </ActionButton>
-          </>
+          <ActionButton 
+            action="create" 
+            onClick={() => setIsDialogOpen(true)}
+            icon={Plus}
+          >
+            Add Game
+          </ActionButton>
         }
       >
         <ContentBox>
-          <UnifiedGamesList
+          <SimplifiedGamesList
             games={games}
+            currentTeamId={teamIdFromUrl ?? 0}
             variant="all"
-            currentTeamId={effectiveTeamId ?? 0}
-            currentClubId={currentClubId ?? 0}
-            batchStats={gameStatsMap}
-            batchScores={gameScoresMap}
             layout="wide"
             showFilters={true}
-            clubTeams={teams}
+            showQuarterScores={true}
             className="w-full"
           />
         </ContentBox>
@@ -407,27 +258,13 @@ export default function Games() {
         setIsOpen={setIsDialogOpen}
         title="Add Game"
       >
-        {(isLoadingTeams || isLoadingGameStatuses) ? (
-          <div className="p-4 text-center">
-            <p className="text-gray-500 mb-4">
-              Loading {isLoadingTeams ? 'teams' : 'game status'} data...
-            </p>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        ) : (
-          <GameForm 
-            seasons={seasons}
-            activeSeason={activeSeason}
-            onSubmit={handleCreate}
-            isSubmitting={false}
-            onCancel={() => setIsDialogOpen(false)}
-            gameStatuses={gameStatuses}
-            teams={teams}
-            allTeams={allTeams}
-          />
-        )}
+        <GameForm 
+          seasons={seasons}
+          onSubmit={handleCreate}
+          isSubmitting={false}
+          onCancel={() => setIsDialogOpen(false)}
+          gameStatuses={gameStatuses}
+        />
       </CrudDialog>
 
       <CrudDialog
@@ -436,31 +273,15 @@ export default function Games() {
         title="Edit Game"
       >
         {editingGame && (
-          <>
-            {(teams.length === 0 || gameStatuses.length === 0) ? (
-              <div className="p-4 text-center">
-                <p className="text-gray-500 mb-4">
-                  Loading {teams.length === 0 ? 'teams' : 'game status'} data...
-                </p>
-                <Button variant="outline" onClick={() => setEditingGame(null)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <GameForm 
-                game={editingGame} 
-                seasons={seasons}
-                activeSeason={activeSeason}
-                onSubmit={handleUpdate}
-                isSubmitting={updateMutation.isPending}
-                onCancel={() => setEditingGame(null)}
-                gameStatuses={gameStatuses}
-                teams={teams}
-                allTeams={allTeams}
-                isEditing={true}
-              />
-            )}
-          </>
+          <GameForm 
+            game={editingGame} 
+            seasons={seasons}
+            onSubmit={handleUpdate}
+            isSubmitting={updateMutation.isPending}
+            onCancel={() => setEditingGame(null)}
+            gameStatuses={gameStatuses}
+            isEditing={true}
+          />
         )}
       </CrudDialog>
     </>

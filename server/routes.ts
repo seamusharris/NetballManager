@@ -33,6 +33,7 @@ import {
 } from "./auth-middleware";
 import { transformToApiFormat } from './api-utils';
 import camelcaseKeys from 'camelcase-keys';
+import { getBatchGameScores } from './game-scores-utils';
 
 // Database health check function
 async function checkPoolHealth(): Promise<boolean> {
@@ -1439,6 +1440,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching club games via REST:', error);
       res.status(500).json({ error: 'Failed to fetch club games' });
+    }
+  });
+
+  // Simplified games endpoint for display-only use cases
+  app.get("/api/clubs/:clubId/games/simplified", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      console.log(`Simplified games endpoint: clubId=${clubId}`);
+
+      // Single optimized query that returns only what we need for display
+      const result = await db.execute(sql`
+        SELECT 
+          g.id,
+          g.date,
+          g.round,
+          g.home_team_id,
+          g.away_team_id,
+          gs.name as status_name,
+          gs.is_completed as status_is_completed,
+          ht.name as home_team_name,
+          at.name as away_team_name,
+          -- Simple stats count
+          (SELECT COUNT(*) FROM game_stats WHERE game_id = g.id) as stats_count
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE ht.club_id = ${clubId} OR (at.id IS NOT NULL AND at.club_id = ${clubId})
+        ORDER BY g.date DESC, g.time DESC
+      `);
+
+      // Use utility function to get quarter scores efficiently
+      const gameIds = result.rows.map(row => row.id);
+      const { getBatchGameScores } = await import('./game-scores-utils');
+      const scoresMap = await getBatchGameScores(gameIds);
+
+      // Transform the results to include quarter scores
+      const transformedResults = result.rows.map(game => ({
+        ...game,
+        quarter_scores: scoresMap[game.id]?.quarterScores || []
+      }));
+
+      console.log(`Simplified endpoint found ${transformedResults.length} games for club ${clubId}`);
+      res.json(transformToApiFormat(transformedResults));
+    } catch (error) {
+      console.error('Error fetching simplified club games:', error);
+      res.status(500).json({ error: 'Failed to fetch simplified club games' });
+    }
+  });
+
+  // Team-specific simplified games endpoint
+  app.get("/api/teams/:teamId/games/simplified", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+      
+      // Single optimized query for team-specific games with scores included
+      const result = await db.execute(sql`
+        SELECT 
+          g.id,
+          g.date,
+          g.round,
+          g.home_team_id,
+          g.away_team_id,
+          gs.name as status_name,
+          gs.is_completed as status_is_completed,
+          ht.name as home_team_name,
+          at.name as away_team_name,
+          (SELECT COUNT(*) FROM game_stats WHERE game_id = g.id) as stats_count,
+          COALESCE(
+            (SELECT JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'homeScore', COALESCE((SELECT score FROM game_scores WHERE game_id = g.id AND team_id = g.home_team_id AND quarter = q.quarter), 0),
+                'awayScore', COALESCE((SELECT score FROM game_scores WHERE game_id = g.id AND team_id = g.away_team_id AND quarter = q.quarter), 0)
+              ) ORDER BY q.quarter
+            ) FROM (SELECT 1 as quarter UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) q),
+            '[]'::json
+          ) as quarter_scores
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE g.home_team_id = ${teamId} OR g.away_team_id = ${teamId}
+        ORDER BY g.date DESC, g.time DESC
+      `);
+
+      // Transform results and return
+      const transformedResults = result.rows.map(game => ({
+        ...game,
+        quarter_scores: Array.isArray(game.quarter_scores) ? game.quarter_scores : []
+      }));
+
+      res.json(transformToApiFormat(transformedResults));
+      
+    } catch (error) {
+      console.error('=== ERROR IN TEAM SIMPLIFIED ENDPOINT ===');
+      console.error('Error details:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ error: 'Failed to fetch simplified team games', details: error.message });
     }
   });
 

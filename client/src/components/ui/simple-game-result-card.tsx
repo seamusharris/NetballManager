@@ -208,7 +208,7 @@ export default function SimpleGameResultCard({
                             'bg-amber-100 text-amber-800 border-amber-400';
 
               return (
-                <span key={index} className={`w-18 px-1 py-0.5 ${qClass} border rounded font-mono font-medium text-center block`}>
+                <span key={index} className={`w-16 px-2 py-0.5 ${qClass} border rounded font-mono font-medium text-center block`}>
                   {quarter.homeScore}:{quarter.awayScore}
                 </span>
               );
@@ -224,7 +224,7 @@ export default function SimpleGameResultCard({
                             'bg-amber-200 text-amber-800 border-amber-500';
 
               return (
-                <span key={index} className={`w-18 px-1 py-0.5 ${cClass} border rounded font-mono text-xs text-center block`}>
+                <span key={index} className={`w-18 px-2 py-0.5 ${cClass} border rounded font-mono text-xs text-center block`}>
                   {cumulative.homeScore}:{cumulative.awayScore}
                 </span>
               );
