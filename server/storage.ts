@@ -212,15 +212,15 @@ export class DatabaseStorage implements IStorage {
 
     console.log("DatabaseStorage.createPlayer: Using avatar color:", avatarColor);
 
-    // Prepare the player data with guaranteed avatar color
+    // Prepare the player data with guaranteed avatar color (using snake_case for database)
     const playerData = {
-      displayName: insertPlayer.displayName,
-      firstName: insertPlayer.firstName,
-      lastName: insertPlayer.lastName,
-      dateOfBirth: insertPlayer.dateOfBirth || null,
-      positionPreferences: insertPlayer.positionPreferences,
+      display_name: insertPlayer.display_name,
+      first_name: insertPlayer.first_name,
+      last_name: insertPlayer.last_name,
+      date_of_birth: insertPlayer.date_of_birth || null,
+      position_preferences: insertPlayer.position_preferences,
       active: insertPlayer.active !== undefined ? insertPlayer.active : true,
-      avatarColor // Always include avatar color
+      avatar_color: avatarColor // Always include avatar color
     };
 
     console.log("DatabaseStorage.createPlayer: Final player data:", JSON.stringify(playerData, null, 2));
@@ -248,26 +248,26 @@ export class DatabaseStorage implements IStorage {
       // Handle type-safe update to avoid TS errors
       const updateData: Record<string, any> = {};
 
-      if (updatePlayer.displayName !== undefined) updateData.display_name = updatePlayer.displayName;
-      if (updatePlayer.firstName !== undefined) updateData.first_name = updatePlayer.firstName;
-      if (updatePlayer.lastName !== undefined) updateData.last_name = updatePlayer.lastName;
-      if (updatePlayer.dateOfBirth !== undefined) updateData.date_of_birth = updatePlayer.dateOfBirth;
+      if (updatePlayer.display_name !== undefined) updateData.display_name = updatePlayer.display_name;
+      if (updatePlayer.first_name !== undefined) updateData.first_name = updatePlayer.first_name;
+      if (updatePlayer.last_name !== undefined) updateData.last_name = updatePlayer.last_name;
+      if (updatePlayer.date_of_birth !== undefined) updateData.date_of_birth = updatePlayer.date_of_birth;
       if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active === true;
 
       // Ensure position preferences is always an array
-      if (updatePlayer.positionPreferences !== undefined) {
-        if (Array.isArray(updatePlayer.positionPreferences)) {
-          updateData.position_preferences = updatePlayer.positionPreferences;
-        } else if (typeof updatePlayer.positionPreferences === 'string') {
+      if (updatePlayer.position_preferences !== undefined) {
+        if (Array.isArray(updatePlayer.position_preferences)) {
+          updateData.position_preferences = updatePlayer.position_preferences;
+        } else if (typeof updatePlayer.position_preferences === 'string') {
           // Handle case where it might come as a string
-          updateData.position_preferences = [updatePlayer.positionPreferences];
+          updateData.position_preferences = [updatePlayer.position_preferences];
         } else {
           // Default to empty array if invalid
           updateData.position_preferences = [];
         }
       }
 
-      if (updatePlayer.avatarColor !== undefined) updateData.avatar_color = updatePlayer.avatarColor;
+      if (updatePlayer.avatar_color !== undefined) updateData.avatar_color = updatePlayer.avatar_color;
 
       console.log("Storage: Processed update data:", JSON.stringify(updateData, null, 2));
 
@@ -472,26 +472,40 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Creating game:", gameData);
 
+      // Convert camelCase to snake_case for database
+      const dbGameData = {
+        date: gameData.date,
+        time: gameData.time,
+        home_team_id: gameData.homeTeamId,
+        away_team_id: gameData.awayTeamId,
+        venue: gameData.venue,
+        is_inter_club: gameData.isInterClub || false,
+        status_id: gameData.statusId || 1,
+        round: gameData.round,
+        season_id: gameData.seasonId,
+        notes: gameData.notes
+      };
+
       // If no team IDs provided, try to assign to default team for the season
-      if (!gameData.homeTeamId && !gameData.awayTeamId && gameData.seasonId) {
+      if (!dbGameData.home_team_id && !dbGameData.away_team_id && dbGameData.season_id) {
         try {
           const defaultTeam = await db.execute(sql`
             SELECT t.id FROM teams t
             JOIN clubs c ON t.club_id = c.id
-            WHERE t.season_id = ${gameData.seasonId} AND c.code = 'DEFAULT'
+            WHERE t.season_id = ${dbGameData.season_id} AND c.code = 'DEFAULT'
             LIMIT 1
           `);
 
           if (defaultTeam.rows.length > 0) {
-            gameData.homeTeamId = defaultTeam.rows[0].id;
-            console.log(`Assigned game to default team ID: ${gameData.homeTeamId}`);
+            dbGameData.home_team_id = defaultTeam.rows[0].id;
+            console.log(`Assigned game to default team ID: ${dbGameData.home_team_id}`);
           }
         } catch (error) {
           console.warn("Could not assign default team to game:", error);
         }
       }
 
-      const [game] = await db.insert(games).values(gameData).returning();
+      const [game] = await db.insert(games).values(dbGameData).returning();
       console.log("Game created:", game);
 
       return game;

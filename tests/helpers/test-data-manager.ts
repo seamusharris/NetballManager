@@ -56,11 +56,11 @@ export class TestDataManager {
   async createTestPlayer(clubId: number, overrides: Partial<any> = {}): Promise<any> {
     const timestamp = Date.now();
     const playerData = {
-      displayName: `Test Player ${timestamp}`,
-      firstName: 'Test',
-      lastName: `Player${timestamp}`,
-      dateOfBirth: '1995-01-01',
-      positionPreferences: ['GS', 'GA'],
+      display_name: `Test Player ${timestamp}`,
+      first_name: 'Test',
+      last_name: `Player${timestamp}`,
+      date_of_birth: '1995-01-01',
+      position_preferences: ['GS', 'GA'],
       active: true,
       ...overrides
     };
@@ -72,7 +72,7 @@ export class TestDataManager {
       .expect(201);
 
     this.data.players.push(response.body.id);
-    console.log(`📝 Created test player ${response.body.id}: ${response.body.displayName}`);
+    console.log(`📝 Created test player ${response.body.id}: ${response.body.display_name}`);
     return response.body;
   }
 
@@ -102,12 +102,30 @@ export class TestDataManager {
   /**
    * Create a test game between teams
    */
-  async createTestGame(homeTeamId: number, seasonId: number, overrides: Partial<any> = {}): Promise<any> {
+  async createTestGame(homeTeamId: number, seasonId: number, overrides: Partial<any> = {}, clubId?: number): Promise<any> {
     const timestamp = Date.now();
+    
+    // Create a second team for away team if not provided in overrides
+    let awayTeamId = overrides.awayTeamId;
+    if (!awayTeamId) {
+      // Use provided clubId or get it from the home team
+      let teamClubId = clubId;
+      if (!teamClubId) {
+        const homeTeamResponse = await request(app).get(`/api/teams/${homeTeamId}`);
+        const homeTeam = homeTeamResponse.body;
+        teamClubId = homeTeam.clubId || homeTeam.club_id;
+      }
+      const awayTeam = await this.createTestTeam(teamClubId, seasonId, {
+        name: `Away Team ${timestamp}`
+      });
+      awayTeamId = awayTeam.id;
+    }
+    
     const gameData = {
       date: '2025-07-20',
       time: '10:00',
       homeTeamId: homeTeamId,
+      awayTeamId: awayTeamId,
       venue: `Test Venue ${timestamp}`,
       round: `Test Round ${timestamp}`,
       seasonId: seasonId,
@@ -236,7 +254,7 @@ export class TestDataManager {
     const club = await this.createTestClub();
     const team = await this.createTestTeam(club.id, season.id);
     const player = await this.createTestPlayer(club.id);
-    const game = await this.createTestGame(team.id, season.id);
+    const game = await this.createTestGame(team.id, season.id, {}, club.id);
 
     console.log('✅ Test ecosystem created successfully');
     return { club, team, player, game, season };

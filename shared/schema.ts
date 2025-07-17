@@ -100,9 +100,33 @@ export const players = pgTable("players", {
 });
 
 // Default schema without ID for normal creation
-export const insertPlayerSchema = createInsertSchema(players).omit({ id: true });
+export const insertPlayerSchema = createInsertSchema(players).omit({ id: true }).refine(
+  (data) => {
+    // Validate position preferences are valid positions
+    if (data.position_preferences && Array.isArray(data.position_preferences)) {
+      return data.position_preferences.every(pos => POSITIONS.includes(pos as Position));
+    }
+    return true;
+  },
+  {
+    message: "Invalid position preferences. Must be valid netball positions.",
+    path: ["position_preferences"]
+  }
+);
 // Schema with ID for import operations
-export const importPlayerSchema = createInsertSchema(players);
+export const importPlayerSchema = createInsertSchema(players).refine(
+  (data) => {
+    // Validate position preferences are valid positions
+    if (data.position_preferences && Array.isArray(data.position_preferences)) {
+      return data.position_preferences.every(pos => POSITIONS.includes(pos as Position));
+    }
+    return true;
+  },
+  {
+    message: "Invalid position preferences. Must be valid netball positions.",
+    path: ["position_preferences"]
+  }
+);
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 
