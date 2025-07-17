@@ -48,6 +48,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       { path: '/reference', label: 'Reference', icon: <Target className="w-5 h-5" />, section: 'dev' },
       { path: '/player-box-test', label: 'PlayerBox Tests', icon: <Users className="w-5 h-5" />, section: 'dev' },
       { path: '/drag-drop-examples', label: 'Drag Drop Examples', icon: <Users className="w-5 h-5" />, section: 'dev' },
+      { path: '/game-list-test', label: 'Game List Test', icon: <Calendar className="w-5 h-5" />, section: 'dev' },
     ];
 
     // Team-specific links following proposed architecture

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { isForfeitGame } from '@/lib/utils';
 import { 
@@ -149,7 +149,23 @@ export function GamesList({
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
   // Use centralized data when available, otherwise fall back to individual fetching (dashboard vs games page)
-  const scoresMap = centralizedScores || {};
+  const scoresMap = useMemo(() => centralizedScores || {}, [centralizedScores]);
+  
+  // Memoize teams array to prevent re-renders
+  const stableTeams = useMemo(() => teams || [], [teams]);
+  
+  // Memoize stats map to prevent re-renders
+  const stableStatsMap = useMemo(() => centralizedStats || {}, [centralizedStats]);
+  
+  // Pre-compute game stats to avoid creating new arrays in render
+  const EMPTY_ARRAY = useMemo(() => [] as any[], []);
+  const gameStatsLookup = useMemo(() => {
+    const lookup: Record<number, any[]> = {};
+    games.forEach(game => {
+      lookup[game.id] = stableStatsMap[game.id] || EMPTY_ARRAY;
+    });
+    return lookup;
+  }, [games, stableStatsMap, EMPTY_ARRAY]);
 
   // For roster status checking (only for non-dashboard and when no centralized data)
   const nonByeGameIds = games
@@ -457,30 +473,20 @@ export function GamesList({
           ) : (
             <div className="space-y-6">
               {finalGames.map((game) => {
-                // Debug: Check if we have stats for this game
-                const hasStats = centralizedStats?.[game.id]?.length > 0;
-                if (game.statusIsCompleted) {
-                  console.log(`Game ${game.id} stats check:`, {
-                    hasStats,
-                    statsCount: centralizedStats?.[game.id]?.length || 0,
-                    gameId: game.id
-                  });
-                }
-
                 return (
                   <div key={game.id} className="relative group">
                     <GameResultCard
                       game={game}
                       layout="wide"
-                      gameStats={centralizedStats?.[game.id] || []}
-                      centralizedScores={scoresMap?.[game.id]}
+                      gameStats={gameStatsLookup[game.id]}
+                      centralizedScores={scoresMap[game.id]}
                       useOfficialPriority={true}
                       showDate={true}
                       showRound={true}
                       showScore={true}
                       showLink={true}
                       currentTeamId={urlTeamId || currentTeamId}
-                      clubTeams={teams || []}
+                      clubTeams={stableTeams}
                       currentClubId={currentClub?.id}
                     />
 

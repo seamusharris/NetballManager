@@ -16,7 +16,7 @@ import { GamesList } from '@/components/games/GamesList';
 import PerformanceCharts from '@/components/dashboard/PerformanceCharts';
 
 import OpponentMatchups from './OpponentMatchups';
-import TopPlayersWidget from './TopPlayersWidget';
+
 import PlayerAvailabilityWidget from './PlayerAvailabilityWidget';
 import QuickActionsWidget from './QuickActionsWidget';
 import { Player, Game, Opponent, Season } from '@shared/schema';
@@ -224,13 +224,7 @@ export default function DashboardSummary({
               centralizedStats={centralizedStats}
               centralizedScores={centralizedScores}
             />
-            <TopPlayersWidget 
-              players={players} 
-              games={filteredGames}
-              seasonFilter={selectedSeasonId}
-              activeSeason={activeSeason}
-              teamId={currentTeam?.id}
-            />
+
             <PlayerAvailabilityWidget 
               games={filteredGames}
               players={players}

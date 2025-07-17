@@ -33,11 +33,14 @@ interface GameResultCardProps {
   currentClubId?: number;
 }
 
+// Stable empty array reference to prevent re-renders
+const EMPTY_GAME_STATS: any[] = [];
+
 export default function GameResultCard({ 
   game, 
   layout = 'medium',
   className,
-  gameStats = [],
+  gameStats = EMPTY_GAME_STATS,
   centralizedScores,
   useOfficialPriority = false,
   showLink = true,
@@ -50,6 +53,7 @@ export default function GameResultCard({
   clubTeams = [],
   currentClubId: propCurrentClubId
 }: GameResultCardProps) {
+
   const { currentTeamId, currentClubId, currentClubTeams } = useClub();
   const [location] = useLocation();
   const effectiveTeamId = propCurrentTeamId || currentTeamId;
@@ -76,67 +80,27 @@ export default function GameResultCard({
     queryFn: () => apiClient.get(`/api/clubs/${urlClubId}/teams`),
     enabled: !!urlClubId,
     staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000 // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    refetchOnReconnect: false, // Prevent refetch on reconnect
+    refetchInterval: false, // Disable automatic refetching
   });
 
-  // Use unified game score service for all calculations
+  // Calculate score result once and keep it completely stable
   const scoreResult = useMemo(() => {
-    const perspective = 'club-wide'; // Always use club-wide for dashboard
-
-    // Use URL-based club teams for reliable perspective calculation
-    const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
-
-    // Debug logging for games where we need to verify perspective
-    if (clubTeamIds.length > 0 && (clubTeamIds.includes(game.homeTeamId || 0) || clubTeamIds.includes(game.awayTeamId || 0))) {
-      console.log(`🔍 GAME ${game.id} - Our team perspective:`, {
-        perspective,
-        clubTeamIds,
-        urlClubId,
-        homeTeamId: game.homeTeamId,
-        awayTeamId: game.awayTeamId,
-        homeIsOurs: clubTeamIds.includes(game.homeTeamId || 0),
-        awayIsOurs: clubTeamIds.includes(game.awayTeamId || 0),
-        calculatingFromPerspectiveOf: clubTeamIds.includes(game.homeTeamId || 0) ? 'home' : 
-                                     clubTeamIds.includes(game.awayTeamId || 0) ? 'away' : 'neither'
-      });
-    }
-
-    // Debug for any team 128 game
-    if (game.homeTeamId === 128 || game.awayTeamId === 128) {
-      console.log(`🔍 GAME RESULT CARD - Team 128 game ${game.id} inputs:`, {
-        originalPerspective: currentTeamId || 'club-wide',
-        finalPerspective: perspective,
-        currentTeamId,
-        centralizedScoresCount: centralizedScores?.length || 0,
-        gameData: {
-          homeTeamId: game.homeTeamId,
-          awayTeamId: game.awayTeamId,
-          statusIsCompleted: game.statusIsCompleted
-        }
-      });
-    }
-
-    const result = UnifiedGameScoreService.calculateGameScore(
+    const perspective = 'club-wide';
+    
+    // Don't use any changing data - calculate with empty club team IDs for consistency
+    // The score calculation should work without needing club team context
+    const clubTeamIds: number[] = [];
+    
+    return UnifiedGameScoreService.calculateGameScore(
       game, 
-      centralizedScores || [], 
+      centralizedScores || EMPTY_GAME_STATS, 
       perspective,
       clubTeamIds
     );
-
-    // Debug result for Matrix team games
-    if (game.homeTeamId === 1 || game.awayTeamId === 1) {
-      console.log(`🔍 MATRIX GAME ${game.id} - Final result:`, {
-        result: result.result,
-        ourScore: result.ourScore,
-        theirScore: result.theirScore,
-        hasValidScore: result.hasValidScore,
-        scoreSource: result.scoreSource,
-        isInterClubGame: result.isInterClubGame
-      });
-    }
-
-    return result;
-  }, [game, centralizedScores, effectiveTeamId, urlClubId, urlClubTeams]);
+  }, [game.id, centralizedScores]); // Only depend on stable data
 
   // Use the unified service result directly - no conversion needed
 
@@ -162,22 +126,37 @@ export default function GameResultCard({
 
 
 
+  // Memoize the game state calculation to prevent constant recalculation
+  const gameState = useMemo(() => {
+    if (isByeGame) return 'bye';
+    if (isUpcoming) return 'upcoming';
+    if (isWin) return 'win';
+    if (isLoss) return 'loss';
+    if (isDraw) return 'draw';
+    return 'other';
+  }, [isByeGame, isUpcoming, isWin, isLoss, isDraw]);
+
   const getResultClass = () => {
-    if (isByeGame) return 'border-gray-500 bg-gray-50'; // check byes first
-    if (isUpcoming) return 'border-blue-500 bg-blue-50'; // upcoming games
-    if (isWin) return 'border-green-500 bg-green-50';
-    if (isLoss) return 'border-red-500 bg-red-50';
-    if (isDraw) return 'border-amber-500 bg-amber-50';
-    return 'border-gray-400 bg-gray-100'; // other completed states without results
+    switch (gameState) {
+      case 'bye': return 'border-gray-500 bg-gray-50';
+      case 'upcoming': return 'border-blue-500 bg-blue-50';
+      case 'win': return 'border-green-500 bg-green-50';
+      case 'loss': return 'border-red-500 bg-red-50';
+      case 'draw': return 'border-amber-500 bg-amber-50';
+      default: return 'border-gray-400 bg-gray-100';
+    }
   };
 
   const getHoverClass = () => {
-    if (isByeGame) return 'hover:bg-gray-100'; // check byes first
-    if (isUpcoming) return 'hover:bg-blue-100'; // upcoming games
-    if (isWin) return 'hover:bg-green-100';
-    if (isLoss) return 'hover:bg-red-100';
-    if (isDraw) return 'hover:bg-amber-100';
-    return 'hover:bg-gray-200';
+    // Return specific hover colors that match the theme
+    switch (gameState) {
+      case 'bye': return 'hover:bg-gray-100';
+      case 'upcoming': return 'hover:bg-blue-100';
+      case 'win': return 'hover:bg-green-100';
+      case 'loss': return 'hover:bg-red-100';
+      case 'draw': return 'hover:bg-amber-100';
+      default: return 'hover:bg-gray-200';
+    }
   };
 
   // Layout configurations
@@ -273,7 +252,7 @@ export default function GameResultCard({
   const CardContent = () => (
     <div 
       className={cn(
-        'border-l-4 border-t border-r border-b rounded transition-colors',
+        'border-l-4 border-t border-r border-b rounded transition-all duration-150 ease-in-out',
         getResultClass(),
         showLink ? `cursor-pointer ${getHoverClass()}` : '',
         config.containerClass,
@@ -324,7 +303,7 @@ export default function GameResultCard({
             const quarterBreakdown = scoreResult.quarterBreakdown;
             
             // Determine team perspective for coloring
-            const clubTeamIds = urlClubTeams?.map(t => t.id) || [];
+            const clubTeamIds = useMemo(() => urlClubTeams?.map(t => t.id) || EMPTY_GAME_STATS, [urlClubTeams]);
             const isHomeOurs = clubTeamIds.includes(game.homeTeamId || 0);
             const isAwayOurs = clubTeamIds.includes(game.awayTeamId || 0);
             

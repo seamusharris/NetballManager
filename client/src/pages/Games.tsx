@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import GameForm from '@/components/games/GameForm';
-import { GamesList } from '@/components/games/GamesList';
+import UnifiedGamesList from '@/components/ui/unified-games-list';
 import { apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
@@ -128,7 +128,9 @@ export default function Games() {
   });
 
   // Centralized batch data fetching (same as Dashboard)
-  const gameIdsArray = games?.map(g => g.id).sort() || [];
+  const EMPTY_ARRAY = useMemo(() => [] as any[], []);
+  const EMPTY_OBJECT = useMemo(() => ({}), []);
+  const gameIdsArray = useMemo(() => games?.map(g => g.id).sort() || EMPTY_ARRAY, [games]);
   const gameIds = gameIdsArray.join(',');
 
   const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
@@ -165,9 +167,10 @@ export default function Games() {
     retry: 1, // Allow one retry
   });
 
-  const gameStatsMap = batchData?.stats || {};
-  const gameRostersMap = batchData?.rosters || {};
-  const gameScoresMap = batchData?.scores || {};
+  // Use stable empty objects to prevent unnecessary re-renders - FIX FOR FLICKERING
+  const gameStatsMap = useMemo(() => batchData?.stats || EMPTY_OBJECT, [batchData?.stats, EMPTY_OBJECT]);
+  const gameRostersMap = useMemo(() => batchData?.rosters || EMPTY_OBJECT, [batchData?.rosters, EMPTY_OBJECT]);
+  const gameScoresMap = useMemo(() => batchData?.scores || EMPTY_OBJECT, [batchData?.scores, EMPTY_OBJECT]);
 
   // Fetch seasons - no club context needed
   const { data: seasons = [] } = useQuery({
@@ -384,20 +387,17 @@ export default function Games() {
         }
       >
         <ContentBox>
-          <GamesList 
-            games={games} 
-            opponents={[]} // Legacy prop - no longer used but component expects it
-            isLoading={isLoadingGames || isLoadingBatchData}
-            onDelete={handleDelete} 
-            onEdit={setEditingGame}
-            onViewStats={handleViewStats}
-            isDashboard={false}
+          <UnifiedGamesList
+            games={games}
+            variant="all"
+            currentTeamId={effectiveTeamId ?? 0}
+            currentClubId={currentClubId ?? 0}
+            batchStats={gameStatsMap}
+            batchScores={gameScoresMap}
+            layout="wide"
             showFilters={true}
-            showActions={true}
-            teams={teams}
-            centralizedStats={gameStatsMap}
-            centralizedScores={gameScoresMap}
-            urlTeamId={effectiveTeamId} // Pass URL team ID for proper perspective
+            clubTeams={teams}
+            className="w-full"
           />
         </ContentBox>
       </PageTemplate>

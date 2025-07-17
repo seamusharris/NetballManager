@@ -94,6 +94,7 @@ const RosterWithGameId = () => <div>Roster with Game ID Component</div>;
 import DragDropExamples from '@/pages/DragDropExamples';
 import LiveScoreTrackingExamples from './pages/LiveScoreTrackingExamples';
 import ApiStandardizationTest from '@/pages/ApiStandardizationTest';
+import GameListTestPage from '@/pages/GameListTestPage';
 
 
 /**
@@ -369,6 +370,7 @@ function Router() {
           )}
         </Route>
         <Route path="/player-box-test" component={PlayerBoxTestPage} />
+        <Route path="/game-list-test" component={withErrorBoundary(GameListTestPage, 'GameListTest')} />
         <Route path="/examples/game-results" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
         <Route path="/examples/score-progression" component={withErrorBoundary(ScoreProgressionExamples, 'ScoreProgressionExamples')} />
             <Route path="/live-score-tracking-examples" component={LiveScoreTrackingExamples} />

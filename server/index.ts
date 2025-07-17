@@ -10,7 +10,7 @@ import { registerUserManagementRoutes } from './user-management-routes';
 import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
-import { loadUserPermissions } from './auth-middleware';
+import { loadUserContext } from './unified-auth';
 import { standardizeUrls, extractRequestContext, standardCaseConversion } from './api-middleware';
 
 const app = express();
@@ -60,8 +60,8 @@ app.use('/api', standardizeUrls()); // URL redirects first
 app.use('/api', extractRequestContext()); // Extract context
 app.use('/api', standardCaseConversion()); // Case conversion last
 
-// Apply user permissions middleware only to API routes
-app.use('/api', loadUserPermissions);
+// Apply user context middleware only to API routes
+app.use('/api', loadUserContext);
 
 // Database health check endpoint
 app.get('/api/health', async (req, res) => {

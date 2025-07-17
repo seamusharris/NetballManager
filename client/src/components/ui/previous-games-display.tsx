@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle } from 'lucide-react';
@@ -53,6 +53,8 @@ export default function PreviousGamesDisplay({
   viewMoreHref,
   viewMoreText = "View more →"
 }: PreviousGamesDisplayProps) {
+  // Use stable empty array to prevent re-renders
+  const EMPTY_ARRAY = useMemo(() => [] as any[], []);
   if (!historicalGames || historicalGames.length === 0) {
     return (
       <Card className={className}>
@@ -140,7 +142,7 @@ export default function PreviousGamesDisplay({
                 currentTeamId={currentTeamId}
                 currentClubId={currentClubId}
                 centralizedScores={gameScores}
-                gameStats={batchStats?.[game.id] || []}
+                gameStats={batchStats?.[game.id] || EMPTY_ARRAY}
                 showLink={true}
                 showQuarterScores={showQuarterScores}
                 className="w-full"
