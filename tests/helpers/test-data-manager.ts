@@ -1,282 +1,328 @@
+import request from 'supertest';
+import app from '../../server/index';
+
 /**
- * Test Data Manager - Creates and cleans up test data
- * Ensures tests only operate on data they create
+ * Test Data Manager - Helps create and cleanup test data
+ * Ensures tests are isolated and don't interfere with each other
  */
 
-interface TestClub {
-  id: number;
-  name: string;
-  code: string;
-}
-
-interface TestTeam {
-  id: number;
-  name: string;
-  clubId: number;
-  seasonId: number;
-}
-
-interface TestPlayer {
-  id: number;
-  displayName: string;
-  firstName: string;
-  lastName: string;
-}
-
-interface TestGame {
-  id: number;
-  homeTeamId: number;
-  awayTeamId: number;
-  date: string;
+export interface TestDataTracker {
+  clubs: number[];
+  players: number[];
+  teams: number[];
+  games: number[];
+  seasons: number[];
+  gameStats: number[];
+  rosters: number[];
 }
 
 export class TestDataManager {
-  private baseUrl = 'http://localhost:3000';
-  private createdClubs: TestClub[] = [];
-  private createdTeams: TestTeam[] = [];
-  private createdPlayers: TestPlayer[] = [];
-  private createdGames: TestGame[] = [];
-  private createdSeasons: any[] = [];
+  private data: TestDataTracker = {
+    clubs: [],
+    players: [],
+    teams: [],
+    games: [],
+    seasons: [],
+    gameStats: [],
+    rosters: []
+  };
 
   /**
-   * Create a test club
+   * Create a test club with unique identifiers
    */
-  async createTestClub(name?: string): Promise<TestClub> {
+  async createTestClub(overrides: Partial<any> = {}): Promise<any> {
+    const timestamp = Date.now();
     const clubData = {
-      name: name || `Test Club ${Date.now()}`,
-      code: `TC${Date.now()}`,
-      address: '123 Test Street',
-      contactEmail: 'test@example.com',
-      primaryColor: '#1f2937',
-      secondaryColor: '#ffffff'
+      name: `Test Club ${timestamp}`,
+      code: `TC${timestamp}`,
+      address: '123 Test Street, Test City',
+      contactInfo: 'test@example.com',
+      ...overrides
     };
 
-    const response = await fetch(`${this.baseUrl}/api/clubs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(clubData)
-    });
+    const response = await request(app)
+      .post('/api/clubs')
+      .send(clubData)
+      .expect(201);
 
-    if (!response.ok) {
-      throw new Error(`Failed to create test club: ${response.status}`);
-    }
-
-    const club = await response.json();
-    this.createdClubs.push(club);
-    return club;
+    this.data.clubs.push(response.body.id);
+    console.log(`📝 Created test club ${response.body.id}: ${response.body.name}`);
+    return response.body;
   }
 
   /**
-   * Create a test season
+   * Create a test player for a specific club
    */
-  async createTestSeason(name?: string): Promise<any> {
-    const seasonData = {
-      name: name || `Test Season ${Date.now()}`,
-      startDate: '2025-01-01',
-      endDate: '2025-12-31',
-      isActive: true,
-      type: 'Test',
-      year: 2025,
-      displayOrder: 1
-    };
-
-    const response = await fetch(`${this.baseUrl}/api/seasons`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(seasonData)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create test season: ${response.status}`);
-    }
-
-    const season = await response.json();
-    this.createdSeasons.push(season);
-    return season;
-  }
-
-  /**
-   * Create a test team
-   */
-  async createTestTeam(clubId: number, seasonId: number, name?: string): Promise<TestTeam> {
-    const teamData = {
-      name: name || `Test Team ${Date.now()}`,
-      clubId,
-      seasonId,
-      isActive: true
-    };
-
-    const response = await fetch(`${this.baseUrl}/api/teams`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-current-club-id': clubId.toString()
-      },
-      body: JSON.stringify(teamData)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create test team: ${response.status}`);
-    }
-
-    const team = await response.json();
-    this.createdTeams.push(team);
-    return team;
-  }
-
-  /**
-   * Create a test player
-   */
-  async createTestPlayer(clubId: number, firstName?: string, lastName?: string): Promise<TestPlayer> {
+  async createTestPlayer(clubId: number, overrides: Partial<any> = {}): Promise<any> {
     const timestamp = Date.now();
     const playerData = {
-      firstName: firstName || `TestFirst${timestamp}`,
-      lastName: lastName || `TestLast${timestamp}`,
-      displayName: `${firstName || 'TestFirst'} ${lastName || 'TestLast'}`,
+      displayName: `Test Player ${timestamp}`,
+      firstName: 'Test',
+      lastName: `Player${timestamp}`,
+      dateOfBirth: '1995-01-01',
       positionPreferences: ['GS', 'GA'],
       active: true,
-      avatarColor: 'bg-blue-600'
+      ...overrides
     };
 
-    const response = await fetch(`${this.baseUrl}/api/players`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-current-club-id': clubId.toString()
-      },
-      body: JSON.stringify(playerData)
-    });
+    const response = await request(app)
+      .post('/api/players')
+      .set('x-current-club-id', clubId.toString())
+      .send(playerData)
+      .expect(201);
 
-    if (!response.ok) {
-      throw new Error(`Failed to create test player: ${response.status}`);
-    }
-
-    const player = await response.json();
-    this.createdPlayers.push(player);
-    return player;
+    this.data.players.push(response.body.id);
+    console.log(`📝 Created test player ${response.body.id}: ${response.body.displayName}`);
+    return response.body;
   }
 
   /**
-   * Create a test game
+   * Create a test team for a specific club
    */
-  async createTestGame(homeTeamId: number, awayTeamId: number, date?: string): Promise<TestGame> {
-    const gameData = {
-      date: date || '2025-07-20',
-      time: '10:00',
-      homeTeamId,
-      awayTeamId,
-      venue: 'Test Venue',
-      statusId: 1, // Upcoming
-      round: 'Test Round'
+  async createTestTeam(clubId: number, seasonId: number, overrides: Partial<any> = {}): Promise<any> {
+    const timestamp = Date.now();
+    const teamData = {
+      name: `Test Team ${timestamp}`,
+      clubId: clubId,
+      seasonId: seasonId,
+      division: 'Test Division',
+      ...overrides
     };
 
-    const response = await fetch(`${this.baseUrl}/api/games`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(gameData)
-    });
+    const response = await request(app)
+      .post('/api/teams')
+      .send(teamData)
+      .expect(201);
 
-    if (!response.ok) {
-      throw new Error(`Failed to create test game: ${response.status}`);
-    }
-
-    const game = await response.json();
-    this.createdGames.push(game);
-    return game;
+    this.data.teams.push(response.body.id);
+    console.log(`📝 Created test team ${response.body.id}: ${response.body.name}`);
+    return response.body;
   }
 
   /**
-   * Clean up all created test data
-   * Call this in afterEach or afterAll
+   * Create a test game between teams
+   */
+  async createTestGame(homeTeamId: number, seasonId: number, overrides: Partial<any> = {}): Promise<any> {
+    const timestamp = Date.now();
+    const gameData = {
+      date: '2025-07-20',
+      time: '10:00',
+      homeTeamId: homeTeamId,
+      venue: `Test Venue ${timestamp}`,
+      round: `Test Round ${timestamp}`,
+      seasonId: seasonId,
+      statusId: 1, // Assuming status 1 exists
+      ...overrides
+    };
+
+    const response = await request(app)
+      .post('/api/games')
+      .send(gameData)
+      .expect(201);
+
+    this.data.games.push(response.body.id);
+    console.log(`📝 Created test game ${response.body.id}`);
+    return response.body;
+  }
+
+  /**
+   * Create test game stats
+   */
+  async createTestGameStats(gameId: number, teamId: number, playerId: number, overrides: Partial<any> = {}): Promise<any> {
+    const statsData = {
+      gameId: gameId,
+      teamId: teamId,
+      playerId: playerId,
+      position: 'GS',
+      quarter: 1,
+      goalsFor: 5,
+      goalsAgainst: 0,
+      missedGoals: 1,
+      rebounds: 2,
+      intercepts: 1,
+      deflections: 3,
+      turnovers: 0,
+      gains: 4,
+      receives: 10,
+      penalties: 0,
+      rating: 8,
+      ...overrides
+    };
+
+    const response = await request(app)
+      .post(`/api/games/${gameId}/stats`)
+      .send(statsData)
+      .expect(201);
+
+    this.data.gameStats.push(response.body.id);
+    console.log(`📝 Created test game stats ${response.body.id}`);
+    return response.body;
+  }
+
+  /**
+   * Create test roster entry
+   */
+  async createTestRoster(gameId: number, playerId: number, overrides: Partial<any> = {}): Promise<any> {
+    const rosterData = {
+      gameId: gameId,
+      playerId: playerId,
+      position: 'GS',
+      quarter: 1,
+      ...overrides
+    };
+
+    const response = await request(app)
+      .post(`/api/games/${gameId}/rosters`)
+      .send(rosterData)
+      .expect(201);
+
+    this.data.rosters.push(response.body.id);
+    console.log(`📝 Created test roster entry ${response.body.id}`);
+    return response.body;
+  }
+
+  /**
+   * Get or create an active season for testing
+   */
+  async getOrCreateTestSeason(): Promise<any> {
+    try {
+      // Try to get active season first
+      const response = await request(app)
+        .get('/api/seasons/active')
+        .expect(200);
+
+      if (response.body && response.body.id) {
+        console.log(`📝 Using existing season ${response.body.id}`);
+        return response.body;
+      }
+    } catch (error) {
+      // Active season doesn't exist, create one
+    }
+
+    // Create a test season
+    const timestamp = Date.now();
+    const seasonData = {
+      name: `Test Season ${timestamp}`,
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      isActive: false, // Don't interfere with existing active season
+      type: 'regular',
+      year: 2025
+    };
+
+    const response = await request(app)
+      .post('/api/seasons')
+      .send(seasonData)
+      .expect(201);
+
+    this.data.seasons.push(response.body.id);
+    console.log(`📝 Created test season ${response.body.id}`);
+    return response.body;
+  }
+
+  /**
+   * Create a complete test ecosystem (club -> team -> player -> game)
+   */
+  async createTestEcosystem(): Promise<{
+    club: any;
+    team: any;
+    player: any;
+    game: any;
+    season: any;
+  }> {
+    console.log('🏗️ Creating test ecosystem...');
+
+    const season = await this.getOrCreateTestSeason();
+    const club = await this.createTestClub();
+    const team = await this.createTestTeam(club.id, season.id);
+    const player = await this.createTestPlayer(club.id);
+    const game = await this.createTestGame(team.id, season.id);
+
+    console.log('✅ Test ecosystem created successfully');
+    return { club, team, player, game, season };
+  }
+
+  /**
+   * Clean up all test data in proper dependency order
    */
   async cleanup(): Promise<void> {
-    const errors: string[] = [];
+    console.log('🧹 Starting test data cleanup...');
 
-    // Clean up in reverse order of creation to handle dependencies
+    // Clean up in reverse dependency order
+    const cleanupOrder = [
+      { type: 'rosters', ids: this.data.rosters, endpoint: '/api/rosters' },
+      { type: 'gameStats', ids: this.data.gameStats, endpoint: '/api/game-stats' },
+      { type: 'games', ids: this.data.games, endpoint: '/api/games' },
+      { type: 'teams', ids: this.data.teams, endpoint: '/api/teams' },
+      { type: 'players', ids: this.data.players, endpoint: '/api/players' },
+      { type: 'seasons', ids: this.data.seasons, endpoint: '/api/seasons' },
+      { type: 'clubs', ids: this.data.clubs, endpoint: '/api/clubs' }
+    ];
 
-    // Clean up games
-    for (const game of this.createdGames) {
-      try {
-        await fetch(`${this.baseUrl}/api/games/${game.id}`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        errors.push(`Failed to delete game ${game.id}: ${error}`);
+    for (const { type, ids, endpoint } of cleanupOrder) {
+      for (const id of ids) {
+        try {
+          await request(app).delete(`${endpoint}/${id}`);
+          console.log(`✅ Cleaned up ${type} ${id}`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to cleanup ${type} ${id}:`, error);
+        }
       }
     }
 
-    // Clean up players
-    for (const player of this.createdPlayers) {
-      try {
-        await fetch(`${this.baseUrl}/api/players/${player.id}`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        errors.push(`Failed to delete player ${player.id}: ${error}`);
-      }
-    }
+    // Reset tracking
+    this.data = {
+      clubs: [],
+      players: [],
+      teams: [],
+      games: [],
+      seasons: [],
+      gameStats: [],
+      rosters: []
+    };
 
-    // Clean up teams
-    for (const team of this.createdTeams) {
-      try {
-        await fetch(`${this.baseUrl}/api/teams/${team.id}`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        errors.push(`Failed to delete team ${team.id}: ${error}`);
-      }
-    }
-
-    // Clean up seasons
-    for (const season of this.createdSeasons) {
-      try {
-        await fetch(`${this.baseUrl}/api/seasons/${season.id}`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        errors.push(`Failed to delete season ${season.id}: ${error}`);
-      }
-    }
-
-    // Clean up clubs
-    for (const club of this.createdClubs) {
-      try {
-        await fetch(`${this.baseUrl}/api/clubs/${club.id}`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        errors.push(`Failed to delete club ${club.id}: ${error}`);
-      }
-    }
-
-    // Clear arrays
-    this.createdClubs = [];
-    this.createdTeams = [];
-    this.createdPlayers = [];
-    this.createdGames = [];
-    this.createdSeasons = [];
-
-    if (errors.length > 0) {
-      console.warn('Some test data cleanup failed:', errors);
-    }
+    console.log('🎉 Test data cleanup complete');
   }
 
   /**
-   * Get all created test data for assertions
+   * Get tracked data for inspection
    */
-  getCreatedData() {
+  getTrackedData(): TestDataTracker {
+    return { ...this.data };
+  }
+
+  /**
+   * Generate random test data
+   */
+  static generateRandomData() {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+
     return {
-      clubs: [...this.createdClubs],
-      teams: [...this.createdTeams],
-      players: [...this.createdPlayers],
-      games: [...this.createdGames],
-      seasons: [...this.createdSeasons]
+      club: {
+        name: `Random Club ${timestamp}`,
+        code: `RC${random}`,
+        address: `${random} Random Street, Random City`,
+        contactInfo: `random${random}@example.com`
+      },
+      player: {
+        displayName: `Random Player ${timestamp}`,
+        firstName: `Random${random}`,
+        lastName: `Player${timestamp}`,
+        dateOfBirth: '1990-01-01',
+        positionPreferences: ['GS', 'GA', 'WA'][Math.floor(Math.random() * 3)],
+        active: true
+      },
+      team: {
+        name: `Random Team ${timestamp}`,
+        division: ['A Grade', 'B Grade', 'C Grade'][Math.floor(Math.random() * 3)]
+      },
+      game: {
+        date: '2025-07-20',
+        time: ['09:00', '10:00', '11:00', '12:00'][Math.floor(Math.random() * 4)],
+        venue: `Random Venue ${random}`,
+        round: `Round ${Math.floor(Math.random() * 20) + 1}`
+      }
     };
   }
 }

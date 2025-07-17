@@ -848,6 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Club CRUD routes - removed duplicate endpoint (enhanced version below includes statistics)
 
+  // LEGACY: Singular endpoint (deprecated)
   app.post("/api/club", async (req, res) => {
     try {
       const { 
@@ -872,7 +873,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       if (codeCheck.rowCount > 0) {
-        return res.status(400).json({ message: "Club code already exists" });
+        return res.status(409).json({ message: "Club code already exists" });
+      }
+
+      const result = await pool.query(`
+        INSERT INTO clubs (name, code, description, address, contact_email, contact_phone, primary_color, secondary_color)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, name, code,description, address, contact_email, contact_phone, primary_color, secondary_color
+      `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
+
+      const club = result.rows[0];
+      res.status(201).json(transformToApiFormat({
+        id: club.id,
+        name: club.name,
+        code: club.code,
+        description: club.description,
+        address: club.address,
+        contactEmail: club.contact_email,
+        contactPhone: club.contact_phone,
+        primaryColor: club.primary_color,
+        secondaryColor: club.secondary_color
+      }));
+    } catch (error) {
+      console.error("Error creating club:", error);
+      res.status(500).json({ message: "Failed to create club" });
+    }
+  });
+
+  // STANDARD: Plural endpoint (preferred)
+  app.post("/api/clubs", async (req, res) => {
+    try {
+      const { 
+        name, 
+        code, 
+        description,
+        address, 
+        contactEmail,
+        contactPhone, 
+        primaryColor = '#1f2937', 
+        secondaryColor = '#ffffff' 
+      } = req.body;
+
+      if (!name || !code) {
+        return res.status(400).json({ message: "Name and code are required" });
+      }
+
+      // Check if club code already exists
+      const codeCheck = await pool.query(
+        'SELECT id FROM clubs WHERE UPPER(code) = UPPER($1)',
+        [code]
+      );
+
+      if (codeCheck.rowCount > 0) {
+        return res.status(409).json({ message: "Club code already exists" });
       }
 
       const result = await pool.query(`

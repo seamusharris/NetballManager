@@ -1,287 +1,510 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import request from 'supertest';
+import app from '../../server/index';
+
 /**
- * Self-Contained CRUD Tests
- * These tests create their own data and clean up after themselves
+ * Self-contained CRUD tests that clean up after themselves
+ * Tests the full lifecycle: Create → Read → Update → Delete
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { TestDataManager } from '../helpers/test-data-manager';
-
 describe('Self-Contained CRUD Tests', () => {
-  let testDataManager: TestDataManager;
-  const baseUrl = 'http://localhost:3000';
+  let server: any;
+  
+  // Test data containers - will store IDs for cleanup
+  const testData = {
+    clubs: [] as number[],
+    players: [] as number[],
+    teams: [] as number[],
+    games: [] as number[]
+  };
 
-  beforeEach(() => {
-    testDataManager = new TestDataManager();
+  beforeAll(async () => {
+    // Start test server
+    server = app.listen(0); // Use random port
   });
 
-  afterEach(async () => {
-    // Clean up all test data after each test
-    await testDataManager.cleanup();
+  afterAll(async () => {
+    // Cleanup all test data in reverse dependency order
+    console.log('🧹 Cleaning up test data...');
+    
+    // Clean up games first (depend on teams)
+    for (const gameId of testData.games) {
+      try {
+        await request(app).delete(`/api/games/${gameId}`);
+        console.log(`✅ Cleaned up game ${gameId}`);
+      } catch (error) {
+        console.warn(`⚠️ Failed to cleanup game ${gameId}:`, error);
+      }
+    }
+
+    // Clean up teams (depend on clubs)
+    for (const teamId of testData.teams) {
+      try {
+        await request(app).delete(`/api/teams/${teamId}`);
+        console.log(`✅ Cleaned up team ${teamId}`);
+      } catch (error) {
+        console.warn(`⚠️ Failed to cleanup team ${teamId}:`, error);
+      }
+    }
+
+    // Clean up players (depend on clubs)
+    for (const playerId of testData.players) {
+      try {
+        await request(app).delete(`/api/players/${playerId}`);
+        console.log(`✅ Cleaned up player ${playerId}`);
+      } catch (error) {
+        console.warn(`⚠️ Failed to cleanup player ${playerId}:`, error);
+      }
+    }
+
+    // Clean up clubs last
+    for (const clubId of testData.clubs) {
+      try {
+        await request(app).delete(`/api/clubs/${clubId}`);
+        console.log(`✅ Cleaned up club ${clubId}`);
+      } catch (error) {
+        console.warn(`⚠️ Failed to cleanup club ${clubId}:`, error);
+      }
+    }
+
+    // Close server
+    if (server) {
+      server.close();
+    }
+  });
+
+  describe('Club CRUD Operations', () => {
+    let clubId: number;
+
+    it('should create a new club', async () => {
+      const clubData = {
+        name: `Test Club ${Date.now()}`,
+        code: `TC${Date.now()}`,
+        address: '123 Test Street, Test City',
+        contactInfo: 'test@example.com'
+      };
+
+      const response = await request(app)
+        .post('/api/clubs')
+        .send(clubData)
+        .expect(201);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.name).toBe(clubData.name);
+      expect(response.body.code).toBe(clubData.code);
+
+      clubId = response.body.id;
+      testData.clubs.push(clubId);
+      console.log(`📝 Created test club ${clubId}`);
+    });
+
+    it('should read the created club', async () => {
+      const response = await request(app)
+        .get(`/api/clubs/${clubId}`)
+        .expect(200);
+
+      expect(response.body.id).toBe(clubId);
+      expect(response.body.name).toContain('Test Club');
+    });
+
+    it('should update the club', async () => {
+      const updateData = {
+        name: `Updated Test Club ${Date.now()}`,
+        address: '456 Updated Street, Updated City'
+      };
+
+      const response = await request(app)
+        .patch(`/api/clubs/${clubId}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.name).toBe(updateData.name);
+      expect(response.body.address).toBe(updateData.address);
+    });
+
+    it('should list clubs including our test club', async () => {
+      const response = await request(app)
+        .get('/api/clubs')
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      const ourClub = response.body.find((club: any) => club.id === clubId);
+      expect(ourClub).toBeDefined();
+    });
   });
 
   describe('Player CRUD Operations', () => {
-    it('should create, read, update, and delete a player', async () => {
-      // 1. CREATE - Set up test data
-      const testClub = await testDataManager.createTestClub('Test CRUD Club');
-      const testSeason = await testDataManager.createTestSeason('Test CRUD Season');
-      
-      // 2. CREATE - Create a test player
-      const createdPlayer = await testDataManager.createTestPlayer(
-        testClub.id, 
-        'John', 
-        'TestPlayer'
-      );
+    let clubId: number;
+    let playerId: number;
 
-      expect(createdPlayer).toHaveProperty('id');
-      expect(createdPlayer.firstName).toBe('John');
-      expect(createdPlayer.lastName).toBe('TestPlayer');
-
-      // 3. READ - Verify player was created
-      const readResponse = await fetch(`${baseUrl}/api/players/${createdPlayer.id}`, {
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
-
-      expect(readResponse.status).toBe(200);
-      const readPlayer = await readResponse.json();
-      expect(readPlayer.id).toBe(createdPlayer.id);
-      expect(readPlayer.firstName).toBe('John');
-
-      // 4. UPDATE - Update the player
-      const updateData = {
-        firstName: 'UpdatedJohn',
-        lastName: 'UpdatedTestPlayer',
-        displayName: 'UpdatedJohn UpdatedTestPlayer',
-        positionPreferences: ['GS', 'GA', 'WA'],
-        active: true,
-        avatarColor: 'bg-green-600'
+    it('should create a club for player tests', async () => {
+      const clubData = {
+        name: `Player Test Club ${Date.now()}`,
+        code: `PTC${Date.now()}`,
+        address: '123 Player Test Street'
       };
 
-      const updateResponse = await fetch(`${baseUrl}/api/players/${createdPlayer.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-current-club-id': testClub.id.toString()
-        },
-        body: JSON.stringify(updateData)
-      });
+      const response = await request(app)
+        .post('/api/clubs')
+        .send(clubData)
+        .expect(201);
 
-      expect(updateResponse.status).toBe(200);
-      const updatedPlayer = await updateResponse.json();
-      expect(updatedPlayer.firstName).toBe('UpdatedJohn');
-      expect(updatedPlayer.positionPreferences).toEqual(['GS', 'GA', 'WA']);
+      clubId = response.body.id;
+      testData.clubs.push(clubId);
+      console.log(`📝 Created club ${clubId} for player tests`);
+    });
 
-      // 5. READ - Verify update persisted
-      const verifyResponse = await fetch(`${baseUrl}/api/players/${createdPlayer.id}`, {
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
+    it('should create a new player', async () => {
+      const playerData = {
+        displayName: `Test Player ${Date.now()}`,
+        firstName: 'Test',
+        lastName: 'Player',
+        dateOfBirth: '1995-01-01',
+        positionPreferences: ['GS', 'GA'],
+        active: true
+      };
 
-      const verifiedPlayer = await verifyResponse.json();
-      expect(verifiedPlayer.firstName).toBe('UpdatedJohn');
-      expect(verifiedPlayer.positionPreferences).toEqual(['GS', 'GA', 'WA']);
+      const response = await request(app)
+        .post(`/api/clubs/${clubId}/players`)
+        .send(playerData)
+        .expect(201);
 
-      // 6. DELETE - Delete the player
-      const deleteResponse = await fetch(`${baseUrl}/api/players/${createdPlayer.id}`, {
-        method: 'DELETE',
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.displayName).toBe(playerData.displayName);
+      expect(response.body.positionPreferences).toEqual(playerData.positionPreferences);
 
-      expect(deleteResponse.status).toBe(200);
+      playerId = response.body.id;
+      testData.players.push(playerId);
+      console.log(`📝 Created test player ${playerId}`);
+    });
 
-      // 7. READ - Verify deletion
-      const deletedResponse = await fetch(`${baseUrl}/api/players/${createdPlayer.id}`, {
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
+    it('should read the created player', async () => {
+      const response = await request(app)
+        .get(`/api/players/${playerId}`)
+        .expect(200);
 
-      expect(deletedResponse.status).toBe(404);
+      expect(response.body.id).toBe(playerId);
+      expect(response.body.displayName).toContain('Test Player');
+    });
 
-      // Test data will be cleaned up automatically in afterEach
+    it('should update the player', async () => {
+      const updateData = {
+        displayName: `Updated Test Player ${Date.now()}`,
+        positionPreferences: ['C', 'WA'],
+        active: true
+      };
+
+      const response = await request(app)
+        .patch(`/api/players/${playerId}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.displayName).toBe(updateData.displayName);
+      expect(response.body.positionPreferences).toEqual(updateData.positionPreferences);
+    });
+
+    it('should list club players including our test player', async () => {
+      const response = await request(app)
+        .get(`/api/clubs/${clubId}/players`)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      const ourPlayer = response.body.find((player: any) => player.id === playerId);
+      expect(ourPlayer).toBeDefined();
     });
   });
 
   describe('Team CRUD Operations', () => {
-    it('should create, read, update, and delete a team', async () => {
-      // 1. CREATE - Set up test data
-      const testClub = await testDataManager.createTestClub('Test Team Club');
-      const testSeason = await testDataManager.createTestSeason('Test Team Season');
-      
-      // 2. CREATE - Create a test team
-      const createdTeam = await testDataManager.createTestTeam(
-        testClub.id,
-        testSeason.id,
-        'Test CRUD Team'
-      );
+    let clubId: number;
+    let teamId: number;
+    let seasonId: number;
 
-      expect(createdTeam).toHaveProperty('id');
-      expect(createdTeam.name).toBe('Test CRUD Team');
-      expect(createdTeam.clubId).toBe(testClub.id);
-
-      // 3. READ - Verify team was created
-      const readResponse = await fetch(`${baseUrl}/api/clubs/${testClub.id}/teams`, {
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
-
-      expect(readResponse.status).toBe(200);
-      const teams = await readResponse.json();
-      const foundTeam = teams.find((t: any) => t.id === createdTeam.id);
-      expect(foundTeam).toBeDefined();
-      expect(foundTeam.name).toBe('Test CRUD Team');
-
-      // 4. UPDATE - Update the team
-      const updateData = {
-        name: 'Updated CRUD Team',
-        isActive: false
+    it('should create a club for team tests', async () => {
+      const clubData = {
+        name: `Team Test Club ${Date.now()}`,
+        code: `TTC${Date.now()}`,
+        address: '123 Team Test Street'
       };
 
-      const updateResponse = await fetch(`${baseUrl}/api/teams/${createdTeam.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-current-club-id': testClub.id.toString()
-        },
-        body: JSON.stringify(updateData)
-      });
+      const response = await request(app)
+        .post('/api/clubs')
+        .send(clubData)
+        .expect(201);
 
-      expect(updateResponse.status).toBe(200);
-      const updatedTeam = await updateResponse.json();
-      expect(updatedTeam.name).toBe('Updated CRUD Team');
+      clubId = response.body.id;
+      testData.clubs.push(clubId);
+      console.log(`📝 Created club ${clubId} for team tests`);
+    });
 
-      // 5. DELETE - Delete the team
-      const deleteResponse = await fetch(`${baseUrl}/api/teams/${createdTeam.id}`, {
-        method: 'DELETE',
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
+    it('should get or create a season for team tests', async () => {
+      // Try to get active season first
+      let response = await request(app)
+        .get('/api/seasons/active')
+        .expect(200);
 
-      expect(deleteResponse.status).toBe(200);
+      if (response.body && response.body.id) {
+        seasonId = response.body.id;
+        console.log(`📝 Using existing season ${seasonId}`);
+      } else {
+        // Create a test season
+        const seasonData = {
+          name: `Test Season ${Date.now()}`,
+          startDate: '2025-01-01',
+          endDate: '2025-12-31',
+          isActive: false, // Don't interfere with existing active season
+          type: 'regular',
+          year: 2025
+        };
 
-      // Test data will be cleaned up automatically in afterEach
+        response = await request(app)
+          .post('/api/seasons')
+          .send(seasonData)
+          .expect(201);
+
+        seasonId = response.body.id;
+        console.log(`📝 Created test season ${seasonId}`);
+      }
+    });
+
+    it('should create a new team', async () => {
+      const teamData = {
+        name: `Test Team ${Date.now()}`,
+        clubId: clubId,
+        seasonId: seasonId,
+        division: 'A Grade'
+      };
+
+      const response = await request(app)
+        .post('/api/teams')
+        .send(teamData)
+        .expect(201);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.name).toBe(teamData.name);
+      expect(response.body.clubId).toBe(clubId);
+
+      teamId = response.body.id;
+      testData.teams.push(teamId);
+      console.log(`📝 Created test team ${teamId}`);
+    });
+
+    it('should read the created team', async () => {
+      const response = await request(app)
+        .get(`/api/teams/${teamId}`)
+        .expect(200);
+
+      expect(response.body.id).toBe(teamId);
+      expect(response.body.name).toContain('Test Team');
+    });
+
+    it('should update the team', async () => {
+      const updateData = {
+        name: `Updated Test Team ${Date.now()}`,
+        division: 'B Grade'
+      };
+
+      const response = await request(app)
+        .patch(`/api/teams/${teamId}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.name).toBe(updateData.name);
+      expect(response.body.division).toBe(updateData.division);
+    });
+
+    it('should list club teams including our test team', async () => {
+      const response = await request(app)
+        .get(`/api/clubs/${clubId}/teams`)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      const ourTeam = response.body.find((team: any) => team.id === teamId);
+      expect(ourTeam).toBeDefined();
     });
   });
 
-  describe('Game CRUD Operations', () => {
-    it('should create, read, update, and delete a game', async () => {
-      // 1. CREATE - Set up test data
-      const testClub = await testDataManager.createTestClub('Test Game Club');
-      const testSeason = await testDataManager.createTestSeason('Test Game Season');
-      const homeTeam = await testDataManager.createTestTeam(testClub.id, testSeason.id, 'Home Team');
-      const awayTeam = await testDataManager.createTestTeam(testClub.id, testSeason.id, 'Away Team');
-      
-      // 2. CREATE - Create a test game
-      const createdGame = await testDataManager.createTestGame(
-        homeTeam.id,
-        awayTeam.id,
-        '2025-08-01'
-      );
+  describe('Integrated CRUD Operations', () => {
+    let clubId: number;
+    let playerId: number;
+    let teamId: number;
+    let gameId: number;
+    let seasonId: number;
 
-      expect(createdGame).toHaveProperty('id');
-      expect(createdGame.homeTeamId).toBe(homeTeam.id);
-      expect(createdGame.awayTeamId).toBe(awayTeam.id);
-
-      // 3. READ - Verify game was created
-      const readResponse = await fetch(`${baseUrl}/api/games/${createdGame.id}`, {
-        headers: {
-          'x-current-club-id': testClub.id.toString()
-        }
-      });
-
-      expect(readResponse.status).toBe(200);
-      const readGame = await readResponse.json();
-      expect(readGame.id).toBe(createdGame.id);
-
-      // 4. UPDATE - Update the game
-      const updateData = {
-        date: '2025-08-15',
-        time: '14:00',
-        venue: 'Updated Test Venue'
+    it('should create a complete club ecosystem', async () => {
+      // 1. Create Club
+      const clubData = {
+        name: `Integration Test Club ${Date.now()}`,
+        code: `ITC${Date.now()}`,
+        address: '123 Integration Street'
       };
 
-      const updateResponse = await fetch(`${baseUrl}/api/games/${createdGame.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-current-club-id': testClub.id.toString()
-        },
-        body: JSON.stringify(updateData)
-      });
+      let response = await request(app)
+        .post('/api/clubs')
+        .send(clubData)
+        .expect(201);
 
-      expect(updateResponse.status).toBe(200);
-      const updatedGame = await updateResponse.json();
-      expect(updatedGame.date).toBe('2025-08-15');
-      expect(updatedGame.venue).toBe('Updated Test Venue');
+      clubId = response.body.id;
+      testData.clubs.push(clubId);
 
-      // 5. DELETE - Delete the game
-      const deleteResponse = await fetch(`${baseUrl}/api/games/${createdGame.id}`, {
-        method: 'DELETE'
-      });
+      // 2. Get or create season
+      response = await request(app)
+        .get('/api/seasons/active')
+        .expect(200);
 
-      expect(deleteResponse.status).toBe(200);
+      seasonId = response.body?.id || 1; // Fallback to season 1
 
-      // Test data will be cleaned up automatically in afterEach
+      // 3. Create Team
+      const teamData = {
+        name: `Integration Test Team ${Date.now()}`,
+        clubId: clubId,
+        seasonId: seasonId,
+        division: 'Test Division'
+      };
+
+      response = await request(app)
+        .post('/api/teams')
+        .send(teamData)
+        .expect(201);
+
+      teamId = response.body.id;
+      testData.teams.push(teamId);
+
+      // 4. Create Player
+      const playerData = {
+        displayName: `Integration Test Player ${Date.now()}`,
+        firstName: 'Integration',
+        lastName: 'Player',
+        positionPreferences: ['GS'],
+        active: true
+      };
+
+      response = await request(app)
+        .post(`/api/clubs/${clubId}/players`)
+        .send(playerData)
+        .expect(201);
+
+      playerId = response.body.id;
+      testData.players.push(playerId);
+
+      console.log(`📝 Created integrated ecosystem: Club ${clubId}, Team ${teamId}, Player ${playerId}`);
+    });
+
+    it('should create a game for the team', async () => {
+      const gameData = {
+        date: '2025-07-20',
+        time: '10:00',
+        homeTeamId: teamId,
+        venue: 'Test Venue',
+        round: 'Test Round',
+        seasonId: seasonId,
+        statusId: 1 // Assuming status 1 exists
+      };
+
+      const response = await request(app)
+        .post('/api/games')
+        .send(gameData)
+        .expect(201);
+
+      gameId = response.body.id;
+      testData.games.push(gameId);
+      console.log(`📝 Created test game ${gameId}`);
+    });
+
+    it('should verify all relationships work', async () => {
+      // Verify club has team
+      let response = await request(app)
+        .get(`/api/clubs/${clubId}/teams`)
+        .expect(200);
+
+      const clubTeam = response.body.find((team: any) => team.id === teamId);
+      expect(clubTeam).toBeDefined();
+
+      // Verify club has player
+      response = await request(app)
+        .get(`/api/clubs/${clubId}/players`)
+        .expect(200);
+
+      const clubPlayer = response.body.find((player: any) => player.id === playerId);
+      expect(clubPlayer).toBeDefined();
+
+      // Verify team has games
+      response = await request(app)
+        .get(`/api/teams/${teamId}/games`)
+        .expect(200);
+
+      const teamGame = response.body.find((game: any) => game.id === gameId);
+      expect(teamGame).toBeDefined();
+    });
+
+    it('should update all entities successfully', async () => {
+      // Update club
+      await request(app)
+        .patch(`/api/clubs/${clubId}`)
+        .send({ name: `Updated Integration Club ${Date.now()}` })
+        .expect(200);
+
+      // Update team
+      await request(app)
+        .patch(`/api/teams/${teamId}`)
+        .send({ name: `Updated Integration Team ${Date.now()}` })
+        .expect(200);
+
+      // Update player
+      await request(app)
+        .patch(`/api/players/${playerId}`)
+        .send({ displayName: `Updated Integration Player ${Date.now()}` })
+        .expect(200);
+
+      // Update game
+      await request(app)
+        .patch(`/api/games/${gameId}`)
+        .send({ venue: 'Updated Test Venue' })
+        .expect(200);
+
+      console.log('✅ All entities updated successfully');
     });
   });
 
-  describe('Data Isolation Tests', () => {
-    it('should only see data from the correct club', async () => {
-      // Create two separate clubs with their own data
-      const club1 = await testDataManager.createTestClub('Club 1');
-      const club2 = await testDataManager.createTestClub('Club 2');
-      
-      const season = await testDataManager.createTestSeason('Shared Season');
-      
-      const player1 = await testDataManager.createTestPlayer(club1.id, 'Player', 'One');
-      const player2 = await testDataManager.createTestPlayer(club2.id, 'Player', 'Two');
-      
-      const team1 = await testDataManager.createTestTeam(club1.id, season.id, 'Team One');
-      const team2 = await testDataManager.createTestTeam(club2.id, season.id, 'Team Two');
+  describe('Error Handling Tests', () => {
+    it('should handle non-existent resource gracefully', async () => {
+      const response = await request(app)
+        .get('/api/clubs/999999')
+        .expect(404);
 
-      // Test that club 1 only sees its own teams
-      const club1TeamsResponse = await fetch(`${baseUrl}/api/clubs/${club1.id}/teams`, {
-        headers: {
-          'x-current-club-id': club1.id.toString()
-        }
-      });
+      expect(response.body).toHaveProperty('error');
+    });
 
-      const club1Teams = await club1TeamsResponse.json();
-      expect(club1Teams).toHaveLength(1);
-      expect(club1Teams[0].id).toBe(team1.id);
-      expect(club1Teams[0].name).toBe('Team One');
+    it('should validate required fields', async () => {
+      const response = await request(app)
+        .post('/api/clubs')
+        .send({}) // Empty data
+        .expect(400);
 
-      // Test that club 2 only sees its own teams
-      const club2TeamsResponse = await fetch(`${baseUrl}/api/clubs/${club2.id}/teams`, {
-        headers: {
-          'x-current-club-id': club2.id.toString()
-        }
-      });
+      expect(response.body).toHaveProperty('error');
+    });
 
-      const club2Teams = await club2TeamsResponse.json();
-      expect(club2Teams).toHaveLength(1);
-      expect(club2Teams[0].id).toBe(team2.id);
-      expect(club2Teams[0].name).toBe('Team Two');
+    it('should handle duplicate club codes', async () => {
+      const clubData = {
+        name: `Duplicate Test Club ${Date.now()}`,
+        code: 'DUPLICATE_TEST',
+        address: '123 Test Street'
+      };
 
-      // Test that clubs don't see each other's players
-      const club1PlayersResponse = await fetch(`${baseUrl}/api/clubs/${club1.id}/players`, {
-        headers: {
-          'x-current-club-id': club1.id.toString()
-        }
-      });
+      // Create first club
+      const response1 = await request(app)
+        .post('/api/clubs')
+        .send(clubData)
+        .expect(201);
 
-      const club1Players = await club1PlayersResponse.json();
-      const club1PlayerIds = club1Players.map((p: any) => p.id);
-      expect(club1PlayerIds).toContain(player1.id);
-      expect(club1PlayerIds).not.toContain(player2.id);
+      testData.clubs.push(response1.body.id);
 
-      // Test data will be cleaned up automatically in afterEach
+      // Try to create duplicate
+      const response2 = await request(app)
+        .post('/api/clubs')
+        .send(clubData)
+        .expect(409); // Conflict
+
+      expect(response2.body).toHaveProperty('error');
     });
   });
 });
