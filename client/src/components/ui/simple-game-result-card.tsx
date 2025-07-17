@@ -291,7 +291,7 @@ export default function SimpleGameResultCard({
 
   if (showLink) {
     return (
-      <Link href={`/game/${gameInfo.id}`} className="block">
+      <Link href={`/team/${currentTeamId}/game/${gameInfo.id}`} className="block">
         <CardContent />
       </Link>
     );
