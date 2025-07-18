@@ -267,9 +267,6 @@ export default function TeamPreparation() {
                   <label className="text-sm font-medium">Your Team</label>
                   <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
                     <Badge variant="default">{teamName || 'Team'}</Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Analyzing from URL: /team/{currentTeamId}
-                    </span>
                   </div>
                 </div>
 
@@ -415,7 +412,7 @@ export default function TeamPreparation() {
                 <CardContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-blue-600">{selectedTeam?.name}</h4>
+                      <h4 className="font-semibold text-blue-600">{teamName || 'Team'}</h4>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span>Win Rate</span>

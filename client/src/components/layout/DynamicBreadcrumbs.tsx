@@ -246,6 +246,14 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
           { label: 'Roster' }
         ];
       }
+      if (pathSegments[2] === 'analysis') {
+        return [
+          { label: 'Home', href: '/' },
+          { label: clubName, href: `/club/${effectiveClubId || 54}` },
+          { label: (typeof teamName === 'string' ? teamName : 'Team'), href: `/team/${teamId}` },
+          { label: 'Team Analysis' }
+        ];
+      }
       if (pathSegments[2] === 'availability') {
         // If there's a game ID, show game details
         if (pathSegments[3] && !isNaN(Number(pathSegments[3]))) {

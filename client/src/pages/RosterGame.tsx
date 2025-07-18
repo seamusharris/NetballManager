@@ -55,7 +55,13 @@ export default function RosterGame() {
   // Fetch team-specific players
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery<Player[]>({
     queryKey: ['teamPlayers', teamId],
-    queryFn: () => apiClient.get(`/api/teams/${teamId}/players`),
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/teams/${teamId}/players`);
+      // Handle both standardized and legacy response formats
+      const playersData = Array.isArray(response) ? response : (response?.data || []);
+      // Only return players that are actually assigned to this team
+      return playersData.filter(player => player.teamId === teamId || player.team_id === teamId);
+    },
     enabled: !!teamId
   });
 
@@ -81,6 +87,9 @@ export default function RosterGame() {
     teamId,
     selectedGame: selectedGame?.id,
     playersCount: players.length,
+    availablePlayerIdsCount: availablePlayerIds.length,
+    availabilityData,
+    players: players.map(p => ({ id: p.id, name: p.display_name || p.displayName, teamId: p.teamId || p.team_id })),
     isLoading: gameLoading || playersLoading || availabilityLoading,
     hasError: gameError || playersError
   });
