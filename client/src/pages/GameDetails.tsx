@@ -1634,7 +1634,7 @@ export default function GameDetails() {
                 asChild
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900"
               >
-                <Link to={`/club/${effectiveClub.id}/team/${effectiveTeam.id}/availability/${gameId}`}>
+                <Link to={`/team/${effectiveTeam.id}/availability/${gameId}`}>
                   <CalendarRange className="mr-2 h-4 w-4" />
                   Player Availability
                 </Link>
@@ -1659,7 +1659,7 @@ export default function GameDetails() {
                 asChild
                 className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
               >
-                <Link to={`/club/${effectiveClub.id}/team/${effectiveTeam.id}/roster/${gameId}`}>
+                <Link to={`/team/${effectiveTeam.id}/roster/${gameId}`}>
                   <ClipboardList className="mr-2 h-4 w-4" />
                   Manage Roster
                 </Link>
@@ -1923,7 +1923,7 @@ export default function GameDetails() {
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                       {currentTeam && (
                         <Button asChild className="mr-2">
-                          <Link to={`/team/${currentTeam.id}/roster/game/${gameId}`}>
+                          <Link to={`/team/${currentTeam.id}/roster/${gameId}`}>
                             <ClipboardList className="mr-2 h-4 w-4" />
                             Manage Roster
                           </Link>

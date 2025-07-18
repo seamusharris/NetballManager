@@ -20,6 +20,23 @@ export default function RosterGame() {
   
   // Use standardized team context utility
   const { teamId, teamName, clubName } = useTeamContext();
+  
+  // Extract team ID directly from URL params for comparison
+  const urlTeamId = React.useMemo(() => {
+    const pathSegments = window.location.pathname.split('/');
+    const teamIndex = pathSegments.findIndex(segment => segment === 'team');
+    if (teamIndex !== -1 && pathSegments[teamIndex + 1]) {
+      return parseInt(pathSegments[teamIndex + 1]);
+    }
+    return null;
+  }, []);
+  
+  console.log('Team ID comparison:', {
+    contextTeamId: teamId,
+    urlTeamId: urlTeamId,
+    match: teamId === urlTeamId,
+    currentUrl: window.location.pathname
+  });
 
   // Extract game ID from URL params
   const gameId = React.useMemo(() => {
@@ -56,11 +73,30 @@ export default function RosterGame() {
   const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery<Player[]>({
     queryKey: ['teamPlayers', teamId],
     queryFn: async () => {
+      console.log(`Fetching players for team ${teamId}`);
       const response = await apiClient.get(`/api/teams/${teamId}/players`);
+      console.log('Raw API response for team players:', response);
+      
       // Handle both standardized and legacy response formats
       const playersData = Array.isArray(response) ? response : (response?.data || []);
-      // Only return players that are actually assigned to this team
-      return playersData.filter(player => player.teamId === teamId || player.team_id === teamId);
+      console.log('Extracted players data:', playersData);
+      console.log('Players data length:', playersData.length);
+      
+      if (playersData.length > 0) {
+        console.log('Sample player structure:', playersData[0]);
+        console.log('Player teamId values:', playersData.map(p => ({ 
+          id: p.id, 
+          name: p.displayName || p.display_name, 
+          teamId: p.teamId, 
+          team_id: p.team_id 
+        })));
+      }
+      
+      // Players returned by /api/teams/:teamId/players are already filtered to this team
+      // No additional filtering needed
+      console.log('Returning all players from team API:', playersData.length);
+      
+      return playersData;
     },
     enabled: !!teamId
   });
@@ -89,9 +125,28 @@ export default function RosterGame() {
     playersCount: players.length,
     availablePlayerIdsCount: availablePlayerIds.length,
     availabilityData,
-    players: players.map(p => ({ id: p.id, name: p.display_name || p.displayName, teamId: p.teamId || p.team_id })),
+    players: players.map(p => ({ 
+      id: p.id, 
+      name: p.display_name || p.displayName, 
+      teamId: p.teamId || p.team_id,
+      active: p.active,
+      fullPlayerObject: p 
+    })),
+    availablePlayerIds,
     isLoading: gameLoading || playersLoading || availabilityLoading,
     hasError: gameError || playersError
+  });
+  
+  // Debug the filtering logic specifically
+  console.log('RosterGame Filtering Debug:', {
+    playersBeforeFilter: players.length,
+    availablePlayerIds: availablePlayerIds,
+    playersAfterFilter: players.filter(p => availablePlayerIds.includes(p.id)).length,
+    filteringDetails: players.map(p => ({
+      playerId: p.id,
+      isIncluded: availablePlayerIds.includes(p.id),
+      playerName: p.displayName || p.display_name
+    }))
   });
 
   const isLoading = playersLoading || gameLoading || availabilityLoading;
@@ -217,8 +272,14 @@ export default function RosterGame() {
         </Alert>
       )}
 
+
+
       <DragDropRosterManager
-        availablePlayers={players.filter(p => availablePlayerIds.includes(p.id))}
+        availablePlayers={(() => {
+          const filteredPlayers = players.filter(p => availablePlayerIds.includes(p.id));
+          console.log('RosterGame: Filtered players for DragDropRosterManager:', filteredPlayers);
+          return filteredPlayers;
+        })()}
         gameInfo={{
           opponent: selectedGame?.awayTeamName || selectedGame?.homeTeamName || 'Unknown',
           date: selectedGame?.date || '',

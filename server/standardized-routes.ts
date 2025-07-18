@@ -639,24 +639,38 @@ export function registerStandardizedRoutes(app: Express) {
       const { teamPlayers, players } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
       
+      console.log(`Querying team_players table for team_id = ${teamId}`);
+      
       const result = await db.select({
-        id: teamPlayers.id,
+        id: players.id,                    // Use player ID as the main ID
+        teamPlayerId: teamPlayers.id,     // Keep team_players record ID for reference
         teamId: teamPlayers.team_id,
-        playerId: teamPlayers.player_id,
+        playerId: teamPlayers.player_id,  // Keep for backward compatibility
         seasonId: teamPlayers.season_id,
         isActive: teamPlayers.is_active,
+        active: players.active,           // Player active status
         createdAt: teamPlayers.created_at,
         updatedAt: teamPlayers.updated_at,
+        displayName: players.display_name,
+        firstName: players.first_name,
+        lastName: players.last_name,
+        dateOfBirth: players.date_of_birth,
+        positionPreferences: players.position_preferences,
+        avatarColor: players.avatar_color,
+        // Legacy field names for compatibility
         playerDisplayName: players.display_name,
         playerFirstName: players.first_name,
         playerLastName: players.last_name,
         playerDateOfBirth: players.date_of_birth,
-        playerIsActive: players.is_active
+        playerIsActive: players.active
       })
       .from(teamPlayers)
       .innerJoin(players, eq(teamPlayers.player_id, players.id))
       .where(eq(teamPlayers.team_id, teamId))
       .orderBy(players.display_name);
+      
+      console.log(`Team players API found ${result.length} players for team ${teamId}:`, 
+        result.map(p => p.displayName || p.playerDisplayName));
       
       res.json(transformToApiFormat(result));
     } catch (error) {

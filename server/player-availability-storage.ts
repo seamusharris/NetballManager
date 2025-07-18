@@ -48,13 +48,15 @@ export class PlayerAvailabilityStorage {
 
         // Get the specific team's players and return them as available (don't create records)
         const teamPlayersResult = await db.execute(sql`
-          SELECT p.id 
+          SELECT p.id, p.display_name
           FROM players p
           JOIN team_players tp ON p.id = tp.player_id
           WHERE tp.team_id = ${teamId} 
             AND p.active = true
         `);
 
+        console.log(`Team ${teamId} availability query found ${teamPlayersResult.rows.length} active players:`, 
+          teamPlayersResult.rows.map(row => row.display_name));
         console.log(`Returning ${teamPlayersResult.rows.length} active team players as available by default for game ${gameId}`);
         return teamPlayersResult.rows.map(row => row.id as number);
       } else {
