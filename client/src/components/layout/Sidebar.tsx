@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
+import { useTeamContext } from '@/hooks/use-team-context';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -17,8 +18,11 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  const { currentTeamId, currentTeam, currentClubId } = useClub();
+  const { currentClubId, clubTeams } = useClub();
   const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
+  
+  // Use standardized team context utility
+  const { teamId: currentTeamId, teamName, team: currentTeam } = useTeamContext();
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;
@@ -54,43 +58,43 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     // Team-specific links following proposed architecture
     const teamLinks = currentTeamId ? [
       { 
-        path: `/club/${currentClubId}/team/${currentTeamId}`, 
+        path: `/team/${currentTeamId}/dashboard`, 
         label: 'Team Dashboard', 
         icon: <Home className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: `/club/${currentClubId}/team/${currentTeamId}/games`, 
+        path: `/team/${currentTeamId}/games`, 
         label: 'Team Games', 
         icon: <Calendar className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/club/${currentClubId}/team/${currentTeamId}/availability/${nextGame.id}` : `/club/${currentClubId}/team/${currentTeamId}/availability`,
+        path: nextGame ? `/team/${currentTeamId}/availability/${nextGame.id}` : `/team/${currentTeamId}/availability`,
         label: 'Player Availability', 
         icon: <Users className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/club/${currentClubId}/team/${currentTeamId}/roster/${nextGame.id}` : `/club/${currentClubId}/team/${currentTeamId}/roster`,
+        path: nextGame ? `/team/${currentTeamId}/roster/${nextGame.id}` : `/team/${currentTeamId}/roster`,
         label: 'Roster Management', 
         icon: <ClipboardList className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: nextGame ? `/club/${currentClubId}/team/${currentTeamId}/preparation/${nextGame.id}` : `/club/${currentClubId}/team/${currentTeamId}/preparation`,
+        path: nextGame ? `/team/${currentTeamId}/preparation/${nextGame.id}` : `/team/${currentTeamId}/preparation`,
         label: 'Game Preparation', 
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: `/club/${currentClubId}/team/${currentTeamId}/analysis`, 
+        path: `/team/${currentTeamId}/analysis`, 
         label: 'Opponent Analysis', 
         icon: <Target className="w-5 h-5" />,
         section: 'team'
       },
       { 
-        path: `/club/${currentClubId}/team/${currentTeamId}/players`, 
+        path: `/team/${currentTeamId}/players`, 
         label: 'Player Management', 
         icon: <Users className="w-5 h-5" />,
         section: 'team'
@@ -115,7 +119,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       <div key={sectionName} className="mb-6">
         <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-3 px-2">
           {sectionName === 'club' ? 'Club Wide' : 
-           sectionName === 'team' ? `Team: ${currentTeam?.name || 'Select Team'}` :
+           sectionName === 'team' ? `Team: ${teamName || 'Select Team'}` :
            sectionName === 'admin' ? 'Administration' : 'Development'}
         </p>
         <div className="space-y-1">

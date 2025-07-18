@@ -9,7 +9,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation, useParams } from 'wouter';
-import { useClub } from '@/contexts/ClubContext';
+import { useTeamContext } from '@/hooks/use-team-context';
 import { Badge } from '@/components/ui/badge';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,30 +29,15 @@ interface QueryParams {
 export default function Games() {
   // Simple Games page - no complex monitoring or error handling
 
-  const { currentClub, currentClubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
-  const params = useParams();
-  const [location] = useLocation();
-  const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
-
-  // Simple: just use teamId from URL like GamePreparation page
-
-  // Don't render anything until club context is fully loaded
-  if (clubLoading || !currentClub) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
+  const [, setLocation] = useLocation();
+  
+  // Use standardized team context utility
+  const { teamId, teamName, clubId, clubName, isLoading: isLoadingContext } = useTeamContext();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
-  const [, setLocation] = useLocation();
 
   // Handle status filter from URL parameter
   useEffect(() => {
@@ -65,8 +50,8 @@ export default function Games() {
 
   // Simple data fetching like GamePreparation page - only what we need
   const { data: games = [], isLoading: isLoadingGames } = useSimplifiedGames(
-    currentClubId!,
-    teamIdFromUrl
+    clubId,
+    teamId
   );
 
   // Only fetch additional data when needed for game creation/editing
@@ -102,19 +87,19 @@ export default function Games() {
       await apiClient.post('/api/games', game);
 
       // Invalidate games queries using the correct query keys that match the actual queries
-      if (currentClubId) {
+      if (clubId) {
         // Invalidate the specific games query for current team (matches the actual query key pattern)
         queryClient.invalidateQueries({
-          queryKey: ['simplified-games', currentClubId, teamIdFromUrl]
+          queryKey: ['simplified-games', clubId, teamId]
         });
 
         // Invalidate team-specific games queries if we have a team
-        if (teamIdFromUrl) {
+        if (teamId) {
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey;
               return Array.isArray(key) && 
-                     key[0] === `team-games-${teamIdFromUrl}`;
+                     key[0] === `team-games-${teamId}`;
             }
           });
         }
@@ -125,7 +110,7 @@ export default function Games() {
             const key = query.queryKey;
             return Array.isArray(key) && 
                    key[0] === 'games' && 
-                   key[1] === currentClubId;
+                   key[1] === clubId;
           }
         });
 
@@ -135,7 +120,7 @@ export default function Games() {
             const key = query.queryKey;
             return Array.isArray(key) && 
                    (key[0] === 'games-batch-data' || key[0] === 'batch-game-data') && 
-                   key[1] === currentClubId;
+                   key[1] === clubId;
           }
         });
       }
@@ -208,12 +193,12 @@ export default function Games() {
 
   // Debug club context (removed to stop spam)
 
-  // Generate page title with context - simplified
-  const pageTitle = currentTeam 
-    ? `Games - ${currentTeam.name}` 
+  // Generate page title with context - simplified using standardized utility
+  const pageTitle = teamName 
+    ? `Games - ${teamName}` 
     : 'Games';
-  const pageSubtitle = currentTeam 
-    ? `Manage and view game schedules and results for ${currentTeam.name}`
+  const pageSubtitle = teamName 
+    ? `Manage and view game schedules and results for ${teamName}`
     : 'Manage and view game schedules and results';
 
   // Generate breadcrumbs
@@ -225,7 +210,7 @@ export default function Games() {
   return (
     <>
        <Helmet>
-        <title>{`Games - ${currentClub?.name || 'Club'}`}</title>
+        <title>{`Games - ${teamName || 'Team'}`}</title>
       </Helmet>
       <PageTemplate
         title={pageTitle}
@@ -243,7 +228,7 @@ export default function Games() {
         <ContentBox>
           <SimplifiedGamesList
             games={games}
-            currentTeamId={teamIdFromUrl ?? 0}
+            currentTeamId={teamId ?? 0}
             variant="all"
             layout="wide"
             showFilters={true}

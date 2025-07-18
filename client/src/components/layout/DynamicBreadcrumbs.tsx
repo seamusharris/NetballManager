@@ -9,11 +9,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { useClub } from '@/contexts/ClubContext';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { getClubDisplayName } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTeamContext } from '@/hooks/use-team-context';
 
 interface BreadcrumbItem {
   label: string;
@@ -27,68 +27,33 @@ interface DynamicBreadcrumbsProps {
 
 export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBreadcrumbsProps) {
   const [location, navigate] = useLocation();
-  const { currentClub } = useClub();
-
-  // Fetch club name if we have a club ID
-  const clubId = React.useMemo(() => {
-    const match = location.match(/\/club\/(\d+)/);
+  
+  // Use standardized team context utility
+  const { teamId, teamName, clubId, clubName, isLoading: isLoadingContext } = useTeamContext();
+  
+  // For legacy club-only routes, extract club ID directly from URL
+  const directClubId = React.useMemo(() => {
+    const match = location.match(/\/club\/(\d+)(?!\/team)/);
     return match ? parseInt(match[1]) : null;
   }, [location]);
-
-  // For legacy team routes, we need to get club ID from team data
-  const legacyTeamId = React.useMemo(() => {
-    const match = location.match(/\/team\/(\d+)/);
-    return match ? parseInt(match[1]) : null;
-  }, [location]);
-
-  const { data: teamClubId, isLoading: isLoadingTeam } = useQuery({
-    queryKey: ['team-club', legacyTeamId],
-    queryFn: async () => {
-      if (!legacyTeamId) return null;
-      const team = await apiClient.get(`/api/teams/${legacyTeamId}`) as any;
-      return team?.club_id || null;
-    },
-    enabled: !!legacyTeamId && !clubId,
-    staleTime: 300000, // 5 minutes
-  });
-
-  // Use team's club ID for legacy routes if we don't have a club ID from URL
-  const effectiveClubId = clubId || teamClubId;
-
-  const { data: clubData, isLoading: isLoadingClub } = useQuery({
-    queryKey: ['club', effectiveClubId],
-    queryFn: async () => {
-      if (!effectiveClubId) return null;
-      const club = await apiClient.get(`/api/clubs/${effectiveClubId}`) as any;
-      return club || null;
-    },
-    enabled: !!effectiveClubId,
-    staleTime: 300000, // 5 minutes
-  });
-
-  const clubName = getClubDisplayName(clubData);
-
-  // Fetch team name if we have a team ID
-  const teamId = React.useMemo(() => {
-    const match = location.match(/\/team\/(\d+)/);
-    return match ? parseInt(match[1]) : null;
-  }, [location]);
-
-  const { data: teamName, isLoading: isLoadingTeamName } = useQuery({
-    queryKey: ['team', teamId],
-    queryFn: async () => {
-      if (!teamId) return null;
-      const team = await apiClient.get(`/api/teams/${teamId}`) as any;
-      return team?.name || null;
-    },
-    enabled: !!teamId,
-    staleTime: 300000, // 5 minutes
-  });
+  
+  // Use direct club ID if no team context
+  const effectiveClubId = clubId || directClubId;
 
   // Fetch game details if we have a game ID
   const gameId = React.useMemo(() => {
-    const match = location.match(/\/game\/(\d+)/);
-    return match ? parseInt(match[1]) : null;
+    // Check for game ID in various URL patterns
+    const gameMatch = location.match(/\/game\/(\d+)/);
+    const availabilityMatch = location.match(/\/availability\/(\d+)/);
+    const rosterMatch = location.match(/\/roster\/(\d+)/);
+    const preparationMatch = location.match(/\/preparation\/(\d+)/);
+    
+    if (gameMatch) return parseInt(gameMatch[1]);
+    if (availabilityMatch) return parseInt(availabilityMatch[1]);
+    if (rosterMatch) return parseInt(rosterMatch[1]);
+    if (preparationMatch) return parseInt(preparationMatch[1]);
+    
+    return null;
   }, [location]);
 
   const { data: gameDetails, isLoading: isLoadingGame } = useQuery({
@@ -239,7 +204,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
       if (pathSegments.length === 2) {
         return [
           { label: 'Home', href: '/' },
-          { label: isLoadingTeam || isLoadingClub ? '' : clubName, href: `/club/${effectiveClubId || 54}` },
+          { label: clubName || 'Club', href: `/club/${effectiveClubId || 54}` },
           { label: teamName || 'Team Dashboard' }
         ];
       }
@@ -261,7 +226,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
         return [
           { label: 'Home', href: '/' },
           { label: clubName, href: `/club/${effectiveClubId || 54}` },
-          { label: teamName || 'Team', href: `/team/${teamId}` },
+          { label: (typeof teamName === 'string' ? teamName : 'Team'), href: `/team/${teamId}` },
           { label: 'Games' }
         ];
       }
@@ -269,7 +234,7 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
         return [
           { label: 'Home', href: '/' },
           { label: clubName, href: `/club/${effectiveClubId || 54}` },
-          { label: teamName || 'Team', href: `/team/${teamId}` },
+          { label: (typeof teamName === 'string' ? teamName : 'Team'), href: `/team/${teamId}` },
           { label: 'Players' }
         ];
       }
@@ -279,6 +244,28 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
           { label: clubName, href: `/club/${effectiveClubId || 54}` },
           { label: teamName || 'Team', href: `/team/${teamId}` },
           { label: 'Roster' }
+        ];
+      }
+      if (pathSegments[2] === 'availability') {
+        // If there's a game ID, show game details
+        if (pathSegments[3] && !isNaN(Number(pathSegments[3]))) {
+          const gameId = parseInt(pathSegments[3]);
+          const gameLabel = gameDetails 
+            ? `${gameDetails.home_team_name || gameDetails.homeTeamName || 'Home'} vs ${gameDetails.away_team_name || gameDetails.awayTeamName || 'Away'}`
+            : `Game ${gameId}`;
+          return [
+            { label: 'Home', href: '/' },
+            { label: clubName, href: `/club/${effectiveClubId || 54}` },
+            { label: (typeof teamName === 'string' ? teamName : 'Team'), href: `/team/${teamId}` },
+            { label: 'Availability', href: `/team/${teamId}/availability` },
+            { label: gameLabel }
+          ];
+        }
+        return [
+          { label: 'Home', href: '/' },
+          { label: clubName, href: `/club/${effectiveClubId || 54}` },
+          { label: teamName || 'Team', href: `/team/${teamId}` },
+          { label: 'Availability' }
         ];
       }
       // Legacy game routes
@@ -315,13 +302,8 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
 
   const breadcrumbItems = generateBreadcrumbs();
 
-  // Add loading state detection for club, team, and game
-  const isClubLoading = isLoadingClub;
-  const isTeamLoading = isLoadingTeam;
-  const isGameLoading = isLoadingGame;
-
   // If any required data is loading, show a skeleton
-  if (isClubLoading || isTeamLoading || isGameLoading) {
+  if (isLoadingContext || isLoadingGame) {
     return (
       <nav className="flex items-center space-x-2 mb-4" aria-label="Breadcrumb">
         <Skeleton className="h-6 w-2/3 rounded bg-gray-200 animate-pulse" />
@@ -336,13 +318,13 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
           index > 0 && <BreadcrumbSeparator key={`separator-${index}`} />,
           <BreadcrumbItem key={`item-${index}`}>
             {index === breadcrumbItems.length - 1 ? (
-              <BreadcrumbPage>{item.label}</BreadcrumbPage>
+              <BreadcrumbPage>{typeof item.label === 'string' ? item.label : 'Page'}</BreadcrumbPage>
             ) : (
               <BreadcrumbLink 
                 onClick={() => item.href && navigate(item.href)}
                 className={item.href ? "cursor-pointer" : ""}
               >
-                {item.label}
+                {typeof item.label === 'string' ? item.label : 'Link'}
               </BreadcrumbLink>
             )}
           </BreadcrumbItem>

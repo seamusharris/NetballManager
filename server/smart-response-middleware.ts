@@ -7,6 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { createSuccessResponse, createErrorResponse, ErrorCodes } from './api-response-standards';
+import camelcaseKeys from 'camelcase-keys';
 
 interface SmartMiddlewareOptions {
   enabled: boolean;
@@ -91,55 +92,69 @@ export function smartResponseMiddleware(options: SmartMiddlewareOptions) {
         matchesPattern(req.path, options.forceStandardize)
       );
       
-      if (!shouldWrap) {
-        return originalJson.call(this, data);
-      }
+      let responseData = data;
       
-      // Track response format
-      if (options.logUsage) {
-        const usage = endpointUsage.get(endpoint)!;
-        if (isStandardizedResponse(data)) {
-          usage.responseFormat = 'standardized';
-        } else {
-          usage.responseFormat = 'wrapped';
+      if (shouldWrap) {
+        // Track response format
+        if (options.logUsage) {
+          const usage = endpointUsage.get(endpoint)!;
+          if (isStandardizedResponse(data)) {
+            usage.responseFormat = 'standardized';
+          } else {
+            usage.responseFormat = 'wrapped';
+          }
+        }
+        
+        // Skip wrapping if already standardized
+        if (!isStandardizedResponse(data)) {
+          // Handle simple error format
+          if (isSimpleError(data)) {
+            responseData = createErrorResponse(
+              ErrorCodes.INTERNAL_ERROR,
+              data.error
+            );
+          }
+          // Handle success responses (wrap legacy format)
+          else if (res.statusCode >= 200 && res.statusCode < 300) {
+            responseData = createSuccessResponse(data, {
+              requestId: req.headers['x-request-id'] as string
+            });
+          }
+          // Handle error responses
+          else if (res.statusCode >= 400) {
+            const errorCode = res.statusCode >= 500 ? ErrorCodes.INTERNAL_ERROR : ErrorCodes.INVALID_REQUEST;
+            responseData = createErrorResponse(
+              errorCode,
+              data.message || data.error || 'An error occurred',
+              process.env.NODE_ENV === 'development' ? data : undefined
+            );
+          }
         }
       }
       
-      // Skip wrapping if already standardized
-      if (isStandardizedResponse(data)) {
-        return originalJson.call(this, data);
-      }
-      
-      // Handle simple error format
-      if (isSimpleError(data)) {
-        const standardError = createErrorResponse(
-          ErrorCodes.INTERNAL_ERROR,
-          data.error
-        );
-        return originalJson.call(this, standardError);
-      }
-      
-      // Handle success responses (wrap legacy format)
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        const standardResponse = createSuccessResponse(data, {
-          requestId: req.headers['x-request-id'] as string
+      // Apply case conversion to final response (integrated case conversion)
+      if (responseData && typeof responseData === 'object') {
+        // Skip conversion for specific endpoints that need to maintain original case
+        const skipConversionPaths = [
+          '/api/games/stats/batch',
+          '/api/games/scores/batch',
+          '/api/clubs/*/games/stats/batch',
+          '/api/clubs/*/games/scores/batch',
+          '/api/debug/*',
+          '/api/admin/*'
+        ];
+        
+        const shouldSkipConversion = skipConversionPaths.some(pattern => {
+          const regex = new RegExp(pattern.replace('*', '\\d+'));
+          return regex.test(req.path);
         });
-        return originalJson.call(this, standardResponse);
+        
+        if (!shouldSkipConversion) {
+          responseData = camelcaseKeys(responseData, { deep: true });
+        }
       }
       
-      // Handle error responses
-      if (res.statusCode >= 400) {
-        const errorCode = res.statusCode >= 500 ? ErrorCodes.INTERNAL_ERROR : ErrorCodes.INVALID_REQUEST;
-        const standardError = createErrorResponse(
-          errorCode,
-          data.message || data.error || 'An error occurred',
-          process.env.NODE_ENV === 'development' ? data : undefined
-        );
-        return originalJson.call(this, standardError);
-      }
-      
-      // Fallback - return as-is
-      return originalJson.call(this, data);
+      return originalJson.call(this, responseData);
     };
     
     next();

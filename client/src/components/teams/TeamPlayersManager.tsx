@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
-import { useURLClub } from '@/hooks/use-url-club';
+import { useTeamContext } from '@/hooks/use-team-context';
+
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,15 +19,8 @@ import { PageActions } from '@/components/layout/PageActions';
 import { apiClient } from '@/lib/apiClient';
 
 export default function TeamPlayersManager() {
-  const params = useParams<{ teamId?: string }>();
-  const teamId = params.teamId ? parseInt(params.teamId) : null;
-
-  const {
-    clubId,
-    clubTeams,
-    hasPermission,
-    isLoading: clubLoading
-  } = useURLClub();
+  // Use standardized team context utility
+  const { teamId, teamName, clubId, team: teamData, isLoading: isLoadingTeam } = useTeamContext();
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -44,17 +38,6 @@ export default function TeamPlayersManager() {
       const response = await apiClient.get('/api/seasons/active');
       return response;
     },
-  });
-
-  const { data: teamData, isLoading: isLoadingTeam } = useQuery({
-    queryKey: ['team', teamId],
-    queryFn: async () => {
-      const response = await apiClient.get(`/api/teams/${teamId}`);
-      return response;
-    },
-    enabled: !!teamId,
-    retry: 3,
-    staleTime: 5 * 60 * 1000,
   });
 
   const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
@@ -206,7 +189,7 @@ export default function TeamPlayersManager() {
   }, [optimisticAvailablePlayers, pendingActions, handleAddPlayer]);
 
   // Loading states
-  if (clubLoading || isLoadingTeam) {
+  if (isLoadingTeam) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -217,7 +200,7 @@ export default function TeamPlayersManager() {
     );
   }
 
-  if (!teamId || !teamData) {
+  if (!teamId || !teamName) {
     return (
       <div className="text-center py-12">
         <p className="text-red-500">Team not found</p>
@@ -225,13 +208,13 @@ export default function TeamPlayersManager() {
     );
   }
 
-  const pageTitle = `${teamData.name} Players`;
-  const pageSubtitle = `Manage players for ${teamData.name} (${teamData.division})`;
+  const pageTitle = `${teamName} Players`;
+  const pageSubtitle = `Manage players for ${teamName} (${teamData?.division || 'No Division'})`;
 
   const breadcrumbs = [
     { label: 'Dashboard', href: `/club/${clubId}/dashboard` },
     { label: 'Teams', href: `/club/${clubId}/teams` },
-    { label: teamData.name }
+    { label: teamName }
   ];
 
   // Get optimistic player lists
@@ -248,27 +231,8 @@ export default function TeamPlayersManager() {
         title={pageTitle}
         subtitle={pageSubtitle}
         actions={
-          <div className="w-64">
-            <Select
-              value={teamId?.toString() || ""}
-              onValueChange={(value) => {
-                const newTeamId = parseInt(value);
-                window.location.href = `/team/${newTeamId}/players`;
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Switch Team" />
-              </SelectTrigger>
-              <SelectContent>
-                {clubTeams
-                  .filter(team => team.name !== 'BYE')
-                  .map(team => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name} {team.division && `(${team.division})`}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Managing: {teamName}</span>
           </div>
         }
       >

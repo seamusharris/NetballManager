@@ -4,7 +4,7 @@ import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
-import { useClub } from '@/contexts/ClubContext';
+import { useTeamContext } from '@/hooks/use-team-context';
 import PageTemplate from '@/components/layout/PageTemplate';
 import PlayerAvailabilityManager from '@/components/availability/PlayerAvailabilityManager';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,25 +14,10 @@ import { DynamicBreadcrumbs } from '@/components/layout/DynamicBreadcrumbs';
 import { Helmet } from 'react-helmet';
 
 export default function PlayerAvailability() {
-  const params = useParams<{ clubId?: string; teamId?: string; gameId?: string }>();
-  const { isInitialized } = useClub();
-
-  // Extract parameters from URL: /club/:clubId/team/:teamId/availability/:gameId? (gameId optional)
-  const clubId = React.useMemo(() => {
-    if (params && params.clubId) {
-      const id = parseInt(params.clubId);
-      return isNaN(id) ? null : id;
-    }
-    return null;
-  }, [params]);
-
-  const teamId = React.useMemo(() => {
-    if (params && params.teamId) {
-      const id = parseInt(params.teamId);
-      return isNaN(id) ? null : id;
-    }
-    return null;
-  }, [params]);
+  const params = useParams<{ gameId?: string }>();
+  
+  // Use standardized team context utility
+  const { teamId, teamName } = useTeamContext();
 
   const gameId = React.useMemo(() => {
     if (params && params.gameId) {
@@ -43,7 +28,7 @@ export default function PlayerAvailability() {
   }, [params]);
 
   // Early validation
-  if (!clubId || !teamId) {
+  if (!teamId) {
     return (
       <PageTemplate
         title="Player Availability"
@@ -52,7 +37,7 @@ export default function PlayerAvailability() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Invalid URL format. Expected /club/[clubId]/team/[teamId]/availability or /club/[clubId]/team/[teamId]/availability/[gameId]
+            Invalid URL format. Expected /team/[teamId]/availability or /team/[teamId]/availability/[gameId]
           </AlertDescription>
         </Alert>
       </PageTemplate>
@@ -95,35 +80,12 @@ export default function PlayerAvailability() {
       const result = await apiClient.get(`/api/teams/${teamId}/players`) as Player[];
       return result;
     },
-    enabled: !!teamId && isInitialized
+    enabled: !!teamId
   });
 
-  // Fetch home and away team names
-  const { data: homeTeam } = useQuery<{ name: string } | null>({
-    queryKey: ['team', selectedGame?.home_team_id],
-    queryFn: async () => {
-      if (!selectedGame?.home_team_id) return null;
-      const result = await apiClient.get(`/api/teams/${selectedGame.home_team_id}`);
-      if (result && typeof result === 'object' && typeof (result as { name?: unknown }).name === 'string') {
-        return { name: (result as { name: string }).name };
-      }
-      return null;
-    },
-    enabled: !!selectedGame?.home_team_id
-  });
-
-  const { data: awayTeam } = useQuery<{ name: string } | null>({
-    queryKey: ['team', selectedGame?.away_team_id],
-    queryFn: async () => {
-      if (!selectedGame?.away_team_id) return null;
-      const result = await apiClient.get(`/api/teams/${selectedGame.away_team_id}`);
-      if (result && typeof result === 'object' && typeof (result as { name?: unknown }).name === 'string') {
-        return { name: (result as { name: string }).name };
-      }
-      return null;
-    },
-    enabled: !!selectedGame?.away_team_id
-  });
+  // Extract team names from game data (already included in API response)
+  const homeTeamName = (selectedGame as any)?.homeTeamName || 'Unknown Team';
+  const awayTeamName = (selectedGame as any)?.awayTeamName || 'Unknown Team';
 
   // Add debugging logs
 
@@ -178,7 +140,7 @@ export default function PlayerAvailability() {
   return (
     <PageTemplate
       title="Player Availability"
-      subtitle={`${homeTeam?.name || 'Unknown Team'} vs ${awayTeam?.name || 'Unknown Team'} - ${selectedGame?.date}`}
+      subtitle={`${homeTeamName} v ${awayTeamName} - ${selectedGame?.date}`}
     >
       <Helmet>
         <title>{`Player Availability - Game ${gameId} | Netball Manager`}</title>

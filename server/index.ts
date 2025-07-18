@@ -58,7 +58,7 @@ app.use('/api', smartResponseMiddleware({
 // API Standardization Middleware (order matters!)
 app.use('/api', standardizeUrls()); // URL redirects first
 app.use('/api', extractRequestContext()); // Extract context
-app.use('/api', standardCaseConversion()); // Case conversion last
+// Case conversion is now integrated into smart response middleware
 
 // Apply user context middleware only to API routes
 app.use('/api', loadUserContext);

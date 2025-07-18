@@ -45,7 +45,8 @@ export default function RosterGame() {
     queryKey: ['game', gameId],
     queryFn: async () => {
       console.log(`RosterGame: Fetching specific game ${gameId}`);
-      const result = await apiClient.get(`/api/games/${gameId}`) as Game;
+      const response = await apiClient.get(`/api/games/${gameId}`);
+      const result = (response as any)?.data || response;
       console.log(`RosterGame: Game ${gameId} response:`, result);
       return result;
     },
