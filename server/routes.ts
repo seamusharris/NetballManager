@@ -2129,7 +2129,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameId = Number(req.params.gameId);
       const teamId = Number(req.params.teamId);
-      const { availablePlayerIds, explicitlyEmpty } = req.body;
+      
+      // With bidirectional case conversion, request body is converted to snake_case
+      const { available_player_ids: availablePlayerIds, explicitly_empty: explicitlyEmpty } = req.body;
 
       if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });

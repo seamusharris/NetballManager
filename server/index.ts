@@ -11,7 +11,8 @@ import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
 import { loadUserContext } from './unified-auth';
-import { standardizeUrls, extractRequestContext, standardCaseConversion } from './api-middleware';
+import { standardizeUrls, extractRequestContext } from './api-middleware';
+import { standardCaseConversion } from './api-standards';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -58,7 +59,7 @@ app.use('/api', smartResponseMiddleware({
 // API Standardization Middleware (order matters!)
 app.use('/api', standardizeUrls()); // URL redirects first
 app.use('/api', extractRequestContext()); // Extract context
-// Case conversion is now integrated into smart response middleware
+app.use('/api', standardCaseConversion()); // Bidirectional case conversion
 
 // Apply user context middleware only to API routes
 app.use('/api', loadUserContext);

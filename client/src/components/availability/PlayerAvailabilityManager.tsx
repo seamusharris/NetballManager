@@ -89,6 +89,8 @@ export default function PlayerAvailabilityManager({
 
   const debouncedSave = useCallback(async (availablePlayerIds: number[]) => {
     setIsSaving(true);
+
+    
     try {
       await apiClient.post(`/api/teams/${teamId}/games/${gameId}/availability`, {
         availablePlayerIds
