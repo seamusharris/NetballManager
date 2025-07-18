@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { useClub } from '@/contexts/ClubContext';
+import { useTeamContext } from './use-team-context';
 
 interface Game {
   id: number;
@@ -13,15 +13,16 @@ interface Game {
 }
 
 export function useNextGame() {
-  const { currentTeamId } = useClub();
+  // Use standardized team context utility
+  const { teamId } = useTeamContext();
 
   return useQuery({
-    queryKey: ['next-game', currentTeamId],
+    queryKey: ['next-game', teamId],
     queryFn: async (): Promise<Game | null> => {
-      if (!currentTeamId) return null;
+      if (!teamId) return null;
 
       // Use team-specific endpoint for better filtering and perspective
-      const games = await apiClient.get<Game[]>(`/api/teams/${currentTeamId}/games`);
+      const games = await apiClient.get<Game[]>(`/api/teams/${teamId}/games`);
 
       // Filter for upcoming games (games endpoint already filters for team)
       const upcomingGames = games
@@ -44,7 +45,7 @@ export function useNextGame() {
 
       return upcomingGames[0] || null;
     },
-    enabled: !!currentTeamId,
+    enabled: !!teamId,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 }

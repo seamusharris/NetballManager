@@ -1,45 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'wouter';
-import { Helmet } from 'react-helmet';
-import { useQuery } from '@tanstack/react-query';
-import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Calendar, Clock, Target, Trophy, Users, FileText, 
-  TrendingUp, AlertCircle, CheckCircle, BarChart3, 
-  Zap, Star, ChevronRight, MapPin, Shield, Swords
-} from 'lucide-react';
-import { useClub } from '@/contexts/ClubContext';
-import { apiClient } from '@/lib/apiClient';
-import { useToast } from '@/hooks/use-toast';
-import { useNextGame } from '@/hooks/use-next-game';
-import { formatShortDate } from '@/lib/utils';
-import { calculateTeamWinRate } from '@/lib/winRateCalculator';
-import PageTemplate from '@/components/layout/PageTemplate';
-import TeamPositionAnalysis from '@/components/dashboard/TeamPositionAnalysis';
-import PlayerPerformance from '@/components/dashboard/PlayerPerformance';
-import OpponentPreparation from '@/pages/OpponentPreparation';
-import CourtDisplay from '@/components/ui/court-display';
-import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
-import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import AnalysisTab from '@/components/game-preparation/AnalysisTab';
-import LineupTab from '@/components/game-preparation/LineupTab';
-import StrategyTab from '@/components/game-preparation/StrategyTab';
-import GameResultCard from '@/components/ui/game-result-card';
-import { GamesContainer } from '@/components/ui/games-container';
-import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
-import PreviousGamesDisplay from '@/components/ui/previous-games-display';
-import { calculatePositionAverages } from '@/lib/positionStatsCalculator';
-import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
-import { TeamGameResult } from '@/hooks/use-team-game';
-import { OfficialScore } from '@/lib/winRateCalculator';
+import React, { useState, useEffect } from "react";
+import { useParams } from "wouter";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Calendar, Clock, Target, Trophy, Users, FileText, TrendingUp, AlertCircle, CheckCircle, BarChart3, Zap, Star, ChevronRight, MapPin, Shield, Swords } from "lucide-react";
+import { useTeamContext } from "@/hooks/use-team-context";
+import { apiClient } from "@/lib/apiClient";
+import { useToast } from "@/hooks/use-toast";
+import { useNextGame } from "@/hooks/use-next-game";
+import { formatShortDate } from "@/lib/utils";
+import { calculateTeamWinRate } from "@/lib/winRateCalculator";
+import PageTemplate from "@/components/layout/PageTemplate";
+import TeamPositionAnalysis from "@/components/dashboard/TeamPositionAnalysis";
+import PlayerPerformance from "@/components/dashboard/PlayerPerformance";
+import OpponentPreparation from "@/pages/OpponentPreparation";
+import CourtDisplay from "@/components/ui/court-display";
+import DragDropRosterManager from "@/components/roster/DragDropRosterManager";
+import PlayerAvailabilityManager from "@/components/roster/PlayerAvailabilityManager";
+import AnalysisTab from "@/components/game-preparation/AnalysisTab";
+import LineupTab from "@/components/game-preparation/LineupTab";
+import StrategyTab from "@/components/game-preparation/StrategyTab";
+import GameResultCard from "@/components/ui/game-result-card";
+import { GamesContainer } from "@/components/ui/games-container";
+import QuarterPerformanceWidget from "@/components/dashboard/QuarterPerformanceWidget";
+import PreviousGamesDisplay from "@/components/ui/previous-games-display";
+import { calculatePositionAverages } from "@/lib/positionStatsCalculator";
+import AttackDefenseDisplay from "@/components/ui/attack-defense-display";
+import { TeamGameResult } from "@/hooks/use-team-game";
+import { OfficialScore } from "@/lib/winRateCalculator";
 
-type Tab = 'overview' | 'season' | 'analysis' | 'lineup' | 'strategy';
+type Tab = "overview" | "season" | "analysis" | "lineup" | "strategy";
 
 interface GamePreparationProps {
   gameId?: number;
@@ -49,10 +45,10 @@ interface GamePreparationProps {
 
 interface TacticalNote {
   id: string;
-  category: 'offense' | 'defense' | 'general';
+  category: "offense" | "defense" | "general";
   title: string;
   content: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 interface GameObjective {
@@ -63,27 +59,31 @@ interface GameObjective {
 }
 
 // Enhanced diagnostic component with comprehensive visual debugging
-const DiagnosticWrapper = ({ children, label, color = 'red' }: { children: React.ReactNode; label: string; color?: string }) => {
+const DiagnosticWrapper = ({ children, label, color = "red" }: { children: React.ReactNode; label: string; color?: string }) => {
   return (
-    <div style={{ 
-      border: `2px dashed ${color}`, 
-      backgroundColor: `rgba(255, 0, 0, 0.1)`, 
-      padding: '8px',
-      margin: '4px',
-      position: 'relative'
-    }}>
-      <div style={{ 
-        position: 'absolute', 
-        top: '-12px', 
-        left: '8px', 
-        fontSize: '12px', 
-        color: color,
-        backgroundColor: 'white',
-        padding: '2px 6px',
-        fontWeight: 'bold',
-        border: `1px solid ${color}`,
-        borderRadius: '3px'
-      }}>
+    <div
+      style={{
+        border: `2px dashed ${color}`,
+        backgroundColor: `rgba(255, 0, 0, 0.1)`,
+        padding: "8px",
+        margin: "4px",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "-12px",
+          left: "8px",
+          fontSize: "12px",
+          color: color,
+          backgroundColor: "white",
+          padding: "2px 6px",
+          fontWeight: "bold",
+          border: `1px solid ${color}`,
+          borderRadius: "3px",
+        }}
+      >
         {label}
       </div>
       {children}
@@ -94,25 +94,29 @@ const DiagnosticWrapper = ({ children, label, color = 'red' }: { children: React
 // Progress bar specific diagnostic with margin/padding visualization
 const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode; label: string }) => {
   return (
-    <div style={{ 
-      border: '3px solid purple', 
-      backgroundColor: `rgba(128, 0, 128, 0.1)`, 
-      padding: '12px',
-      margin: '8px',
-      position: 'relative'
-    }}>
-      <div style={{ 
-        position: 'absolute', 
-        top: '-15px', 
-        left: '12px', 
-        fontSize: '14px', 
-        color: 'purple',
-        backgroundColor: 'white',
-        padding: '4px 8px',
-        fontWeight: 'bold',
-        border: '2px solid purple',
-        borderRadius: '4px'
-      }}>
+    <div
+      style={{
+        border: "3px solid purple",
+        backgroundColor: `rgba(128, 0, 128, 0.1)`,
+        padding: "12px",
+        margin: "8px",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "-15px",
+          left: "12px",
+          fontSize: "14px",
+          color: "purple",
+          backgroundColor: "white",
+          padding: "4px 8px",
+          fontWeight: "bold",
+          border: "2px solid purple",
+          borderRadius: "4px",
+        }}
+      >
         {label}
       </div>
       {children}
@@ -123,23 +127,27 @@ const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode;
 // Individual quarter box diagnostic
 const QuarterBoxDiagnostic = ({ children, quarter }: { children: React.ReactNode; quarter: number }) => {
   return (
-    <div style={{ 
-      border: '2px solid blue', 
-      backgroundColor: `rgba(0, 0, 255, 0.05)`, 
-      padding: '4px',
-      position: 'relative'
-    }}>
-      <div style={{ 
-        position: 'absolute', 
-        top: '-10px', 
-        right: '4px', 
-        fontSize: '10px', 
-        color: 'blue',
-        backgroundColor: 'white',
-        padding: '1px 4px',
-        border: '1px solid blue',
-        borderRadius: '2px'
-      }}>
+    <div
+      style={{
+        border: "2px solid blue",
+        backgroundColor: `rgba(0, 0, 255, 0.05)`,
+        padding: "4px",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "-10px",
+          right: "4px",
+          fontSize: "10px",
+          color: "blue",
+          backgroundColor: "white",
+          padding: "1px 4px",
+          border: "1px solid blue",
+          borderRadius: "2px",
+        }}
+      >
         Q{quarter} Box
       </div>
       {children}
@@ -150,24 +158,28 @@ const QuarterBoxDiagnostic = ({ children, quarter }: { children: React.ReactNode
 // Progress bar element diagnostic
 const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div style={{ 
-      border: '2px solid orange', 
-      backgroundColor: `rgba(255, 165, 0, 0.1)`, 
-      padding: '6px',
-      position: 'relative'
-    }}>
-      <div style={{ 
-        position: 'absolute', 
-        top: '-12px', 
-        left: '4px', 
-        fontSize: '11px', 
-        color: 'orange',
-        backgroundColor: 'white',
-        padding: '2px 4px',
-        fontWeight: 'bold',
-        border: '1px solid orange',
-        borderRadius: '2px'
-      }}>
+    <div
+      style={{
+        border: "2px solid orange",
+        backgroundColor: `rgba(255, 165, 0, 0.1)`,
+        padding: "6px",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "-12px",
+          left: "4px",
+          fontSize: "11px",
+          color: "orange",
+          backgroundColor: "white",
+          padding: "2px 4px",
+          fontWeight: "bold",
+          border: "1px solid orange",
+          borderRadius: "2px",
+        }}
+      >
         PROGRESS BAR
       </div>
       {children}
@@ -181,10 +193,12 @@ export default function GamePreparation() {
 
   // Use gameId from URL params, or fallback to next game ID
   const gameId = params.gameId ? parseInt(params.gameId) : nextGame?.id;
-  const { currentClubId, currentTeamId } = useClub();
+
+  // Use standardized team context utility
+  const { teamId: currentTeamId, clubId: currentClubId, teamName } = useTeamContext();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [selectedLineup, setSelectedLineup] = useState<Record<string, number | null>>({});
   const [playerAvailability, setPlayerAvailability] = useState<Record<number, boolean>>({});
   const [tacticalNotes, setTacticalNotes] = useState<TacticalNote[]>([]);
@@ -192,7 +206,7 @@ export default function GamePreparation() {
 
   // Load game data using team-specific endpoint for better context
   const { data: game, isLoading: loadingGame } = useQuery<TeamGameResult | null>({
-    queryKey: ['teams', currentTeamId, 'games', gameId],
+    queryKey: ["teams", currentTeamId, "games", gameId],
     queryFn: () => {
       if (currentTeamId && gameId) {
         return apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}`);
@@ -200,33 +214,33 @@ export default function GamePreparation() {
       // Fallback to regular game endpoint if no team context
       return apiClient.get(`/api/games/${gameId}`);
     },
-    enabled: !!gameId
+    enabled: !!gameId,
   });
 
   // Load team data
   const { data: team, isLoading: loadingTeam } = useQuery({
-    queryKey: ['team', currentTeamId],
+    queryKey: ["team", currentTeamId],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
-    enabled: !!currentTeamId
+    enabled: !!currentTeamId,
   });
 
   // Load players using team-specific endpoint
   const { data: players = [], isLoading: loadingPlayers } = useQuery({
-    queryKey: ['teams', currentTeamId, 'players'],
+    queryKey: ["teams", currentTeamId, "players"],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
-    enabled: !!currentTeamId
+    enabled: !!currentTeamId,
   });
 
   // Load game statistics for analysis
   const { data: gameStats = [], isLoading: loadingStats } = useQuery({
-    queryKey: ['gameStats', gameId],
+    queryKey: ["gameStats", gameId],
     queryFn: () => apiClient.get(`/api/games/${gameId}/statistics`),
-    enabled: !!gameId
+    enabled: !!gameId,
   });
 
   // Load historical games against this opponent using team-specific endpoint
   const { data: historicalGames = [], isLoading: loadingHistory } = useQuery<TeamGameResult[]>({
-    queryKey: ['teams', currentTeamId, 'historicalGames', game?.opponentTeamId],
+    queryKey: ["teams", currentTeamId, "historicalGames", game?.opponentTeamId],
     queryFn: async () => {
       if (!game || !currentTeamId) return [];
 
@@ -247,10 +261,9 @@ export default function GamePreparation() {
         return gameOpponentId === targetOpponentId;
       });
 
-
       return historicalMatches;
     },
-    enabled: !!game && !!currentTeamId
+    enabled: !!game && !!currentTeamId,
   });
 
   // Strategy data will be handled by StrategyTab component internally
@@ -259,9 +272,9 @@ export default function GamePreparation() {
   const strategyError = null;
 
   // Use existing batch scores data from the unified data fetcher
-  const gameIdsArray = historicalGames.map(g => g.id) || [];
+  const gameIdsArray = historicalGames.map((g) => g.id) || [];
   const { data: batchScores, isLoading: isLoadingBatchScores } = useQuery<Record<number, OfficialScore[]>>({
-    queryKey: ['games', 'scores', 'batch', gameIdsArray.join(',')],
+    queryKey: ["games", "scores", "batch", gameIdsArray.join(",")],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return {};
       return apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds: gameIdsArray });
@@ -275,7 +288,7 @@ export default function GamePreparation() {
 
   // Load all season games for the current team using team-specific endpoint
   const { data: seasonGames = [], isLoading: loadingSeasonGames } = useQuery<TeamGameResult[]>({
-    queryKey: ['teams', currentTeamId, 'seasonGames', game?.seasonId],
+    queryKey: ["teams", currentTeamId, "seasonGames", game?.seasonId],
     queryFn: async () => {
       if (!currentTeamId || !game?.seasonId) return [];
 
@@ -294,16 +307,15 @@ export default function GamePreparation() {
         return g.seasonId === game.seasonId;
       });
 
-
       return seasonMatches;
     },
-    enabled: !!game && !!currentTeamId
+    enabled: !!game && !!currentTeamId,
   });
 
   // Get batch scores for season games
-  const seasonGameIds = seasonGames?.map(g => g.id) || [];
+  const seasonGameIds = seasonGames?.map((g) => g.id) || [];
   const { data: seasonBatchScores, isLoading: isLoadingSeasonScores } = useQuery<Record<number, OfficialScore[]>>({
-    queryKey: ['games', 'scores', 'batch', seasonGameIds.join(',')],
+    queryKey: ["games", "scores", "batch", seasonGameIds.join(",")],
     queryFn: async () => {
       if (seasonGameIds.length === 0) return {};
       return apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, { gameIds: seasonGameIds });
@@ -316,11 +328,15 @@ export default function GamePreparation() {
   const { statsMap: seasonBatchStats, isLoading: loadingSeasonStats } = useBatchGameStatistics(seasonGameIds);
 
   // Load roster data for this specific game using team-based endpoint
-  const { data: gameRosters = [], isLoading: loadingRosters, refetch: refetchRosters } = useQuery({
-    queryKey: ['teams', currentTeamId, 'games', gameId, 'roster'],
+  const {
+    data: gameRosters = [],
+    isLoading: loadingRosters,
+    refetch: refetchRosters,
+  } = useQuery({
+    queryKey: ["teams", currentTeamId, "games", gameId, "roster"],
     queryFn: () => {
       if (!currentTeamId || !gameId) {
-        throw new Error('Team ID and Game ID are required for roster operations');
+        throw new Error("Team ID and Game ID are required for roster operations");
       }
 
       return apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}/rosters`);
@@ -335,75 +351,71 @@ export default function GamePreparation() {
     if (game && tacticalNotes.length === 0) {
       const defaultNotes: TacticalNote[] = [
         {
-          id: '1',
-          category: 'offense',
-          title: 'Shooting Circle Strategy',
-          content: 'Focus on quick passes into the circle and maintain strong positioning',
-          priority: 'high'
+          id: "1",
+          category: "offense",
+          title: "Shooting Circle Strategy",
+          content: "Focus on quick passes into the circle and maintain strong positioning",
+          priority: "high",
         },
         {
-          id: '2',
-          category: 'defense',
-          title: 'Defensive Pressure',
-          content: 'Apply consistent pressure in the mid-court to force turnovers',
-          priority: 'high'
+          id: "2",
+          category: "defense",
+          title: "Defensive Pressure",
+          content: "Apply consistent pressure in the mid-court to force turnovers",
+          priority: "high",
         },
         {
-          id: '3',
-          category: 'general',
-          title: 'Quarter Momentum',
-          content: 'Strong starts in Q1 and Q3 are crucial for maintaining game control',
-          priority: 'medium'
-        }
+          id: "3",
+          category: "general",
+          title: "Quarter Momentum",
+          content: "Strong starts in Q1 and Q3 are crucial for maintaining game control",
+          priority: "medium",
+        },
       ];
       setTacticalNotes(defaultNotes);
 
       const defaultObjectives: GameObjective[] = [
         {
-          id: '1',
-          description: 'Win first quarter',
-          target: 'Score more goals than opponent in Q1',
-          completed: false
+          id: "1",
+          description: "Win first quarter",
+          target: "Score more goals than opponent in Q1",
+          completed: false,
         },
         {
-          id: '2',
-          description: 'Maintain possession',
-          target: 'Keep turnovers under 15 for the game',
-          completed: false
+          id: "2",
+          description: "Maintain possession",
+          target: "Keep turnovers under 15 for the game",
+          completed: false,
         },
         {
-          id: '3',
-          description: 'Strong defensive performance',
-          target: 'Limit opponent to under 80% shooting accuracy',
-          completed: false
-        }
+          id: "3",
+          description: "Strong defensive performance",
+          target: "Limit opponent to under 80% shooting accuracy",
+          completed: false,
+        },
       ];
       setGameObjectives(defaultObjectives);
     }
   }, [game, tacticalNotes.length]);
 
-  const addTacticalNote = (note: Omit<TacticalNote, 'id'>) => {
+  const addTacticalNote = (note: Omit<TacticalNote, "id">) => {
     const newNote: TacticalNote = {
       ...note,
-      id: Date.now().toString()
+      id: Date.now().toString(),
     };
-    setTacticalNotes(prev => [...prev, newNote]);
+    setTacticalNotes((prev) => [...prev, newNote]);
   };
 
-  const addGameObjective = (objective: Omit<GameObjective, 'id'>) => {
+  const addGameObjective = (objective: Omit<GameObjective, "id">) => {
     const newObjective: GameObjective = {
       ...objective,
-      id: Date.now().toString()
+      id: Date.now().toString(),
     };
-    setGameObjectives(prev => [...prev, newObjective]);
+    setGameObjectives((prev) => [...prev, newObjective]);
   };
 
   const toggleObjectiveComplete = (id: string) => {
-    setGameObjectives(prev => 
-      prev.map(obj => 
-        obj.id === id ? { ...obj, completed: !obj.completed } : obj
-      )
-    );
+    setGameObjectives((prev) => prev.map((obj) => (obj.id === id ? { ...obj, completed: !obj.completed } : obj)));
   };
 
   if (loadingGame || loadingTeam) {
@@ -426,15 +438,9 @@ export default function GamePreparation() {
           <CardContent className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Upcoming Game Found</h3>
-            <p className="text-gray-600 mb-2">
-              There are currently no upcoming games scheduled for your team.
-            </p>
-            <p className="text-gray-500 text-sm mb-2">
-              Please check the season schedule or contact your team manager for more information.
-            </p>
-            <p className="text-xs text-gray-400">
-              If you believe this is an error, ensure your team and season are set up correctly in the system.
-            </p>
+            <p className="text-gray-600 mb-2">There are currently no upcoming games scheduled for your team.</p>
+            <p className="text-gray-500 text-sm mb-2">Please check the season schedule or contact your team manager for more information.</p>
+            <p className="text-xs text-gray-400">If you believe this is an error, ensure your team and season are set up correctly in the system.</p>
           </CardContent>
         </Card>
       </PageTemplate>
@@ -445,8 +451,8 @@ export default function GamePreparation() {
   const isHomeGame = game.homeTeamId === currentTeamId;
   const opponent = isHomeGame ? game.awayTeamName : game.homeTeamName;
   const opponentTeamId = isHomeGame ? game.awayTeamId : game.homeTeamId;
-  
-  console.log('Game Preparation opponent calculation:', {
+
+  console.log("Game Preparation opponent calculation:", {
     gameId: game.id,
     currentTeamId,
     homeTeamId: game.homeTeamId,
@@ -455,13 +461,13 @@ export default function GamePreparation() {
     awayTeamName: game.awayTeamName,
     isHomeGame,
     opponent,
-    opponentTeamId
+    opponentTeamId,
   });
 
   return (
     <PageTemplate
       title="Game Preparation"
-      subtitle={`${game?.homeTeamName} vs ${game?.awayTeamName || 'BYE'} - Round ${game?.round}`}
+      subtitle={`${game?.homeTeamName} vs ${game?.awayTeamName || "BYE"} - Round ${game?.round}`}
       // Removed breadcrumbs prop
       // Removed actions={pageActions} as it was undefined
     >
@@ -486,12 +492,12 @@ export default function GamePreparation() {
                 </div>
                 <Separator orientation="vertical" className="h-8" />
                 <div>
-                  <h1 className="text-2xl font-bold">{game.homeTeamName} vs {game.awayTeamName}</h1>
+                  <h1 className="text-2xl font-bold">
+                    {game.homeTeamName} vs {game.awayTeamName}
+                  </h1>
                   <div className="flex items-center gap-2 mt-1">
                     <MapPin className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      {isHomeGame ? 'Home Game' : 'Away Game'}
-                    </span>
+                    <span className="text-sm text-gray-600">{isHomeGame ? "Home Game" : "Away Game"}</span>
                     <Badge variant="outline">Round {game.round}</Badge>
                   </div>
                 </div>
@@ -515,19 +521,12 @@ export default function GamePreparation() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-
-
             {(() => {
               // Calculate actual statistics based on historical games using proper win rate calculator
               const recentGames = historicalGames.slice(0, Math.min(5, historicalGames.length));
 
               // Calculate win rate using official scores
-              const winRateResult = calculateTeamWinRate(
-                historicalGames,
-                currentTeamId,
-                currentClubId,
-                batchScores || {}
-              );
+              const winRateResult = calculateTeamWinRate(historicalGames, currentTeamId, currentClubId, batchScores || {});
 
               const winCount = winRateResult.wins;
               const winRate = winRateResult.winRate;
@@ -559,14 +558,14 @@ export default function GamePreparation() {
 
                           // Calculate recent form (last 3 games)
                           const recentGames = historicalGames.slice(0, 3);
-                          const recentResults = recentGames.map(game => {
+                          const recentResults = recentGames.map((game) => {
                             const gameScores = batchScores?.[game.id] || [];
-                            if (gameScores.length === 0) return 'U'; // Unknown
+                            if (gameScores.length === 0) return "U"; // Unknown
 
                             let ourScore = 0;
                             let theirScore = 0;
 
-                            gameScores.forEach(score => {
+                            gameScores.forEach((score) => {
                               if (score.teamId === currentTeamId) {
                                 ourScore += score.score;
                               } else {
@@ -574,7 +573,7 @@ export default function GamePreparation() {
                               }
                             });
 
-                            return ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D';
+                            return ourScore > theirScore ? "W" : ourScore < theirScore ? "L" : "D";
                           });
 
                           return (
@@ -582,14 +581,7 @@ export default function GamePreparation() {
                               <span className="text-sm text-muted-foreground">Recent Form:</span>
                               <div className="flex gap-1">
                                 {recentResults.map((result, index) => (
-                                  <span 
-                                    key={index} 
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                                      result === 'W' ? 'bg-green-500' : 
-                                      result === 'L' ? 'bg-red-500' : 
-                                      result === 'D' ? 'bg-amber-500' : 'bg-gray-400'
-                                    }`}
-                                  >
+                                  <span key={index} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${result === "W" ? "bg-green-500" : result === "L" ? "bg-red-500" : result === "D" ? "bg-amber-500" : "bg-gray-400"}`}>
                                     {result}
                                   </span>
                                 ))}
@@ -602,29 +594,29 @@ export default function GamePreparation() {
                         {(() => {
                           if (historicalGames.length === 0) return null;
 
-                          const homeGames = historicalGames.filter(g => g.homeTeamId === currentTeamId);
-                          const awayGames = historicalGames.filter(g => g.awayTeamId === currentTeamId);
+                          const homeGames = historicalGames.filter((g) => g.homeTeamId === currentTeamId);
+                          const awayGames = historicalGames.filter((g) => g.awayTeamId === currentTeamId);
 
-                          const homeWins = homeGames.filter(game => {
+                          const homeWins = homeGames.filter((game) => {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length === 0) return false;
 
                             let ourScore = 0;
                             let theirScore = 0;
-                            gameScores.forEach(score => {
+                            gameScores.forEach((score) => {
                               if (score.teamId === currentTeamId) ourScore += score.score;
                               else theirScore += score.score;
                             });
                             return ourScore > theirScore;
                           }).length;
 
-                          const awayWins = awayGames.filter(game => {
+                          const awayWins = awayGames.filter((game) => {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length === 0) return false;
 
                             let ourScore = 0;
                             let theirScore = 0;
-                            gameScores.forEach(score => {
+                            gameScores.forEach((score) => {
                               if (score.teamId === currentTeamId) ourScore += score.score;
                               else theirScore += score.score;
                             });
@@ -634,8 +626,12 @@ export default function GamePreparation() {
                           return (
                             <div className="text-xs text-gray-600 space-y-1">
                               <div className="flex justify-between">
-                                <span>Home: {homeWins}/{homeGames.length}</span>
-                                <span>Away: {awayWins}/{awayGames.length}</span>
+                                <span>
+                                  Home: {homeWins}/{homeGames.length}
+                                </span>
+                                <span>
+                                  Away: {awayWins}/{awayGames.length}
+                                </span>
                               </div>
                             </div>
                           );
@@ -643,9 +639,7 @@ export default function GamePreparation() {
 
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Most Recent:</span>
-                          <span className="font-medium">
-                            {historicalGames.length > 0 ? formatShortDate(historicalGames[0].date) : 'None'}
-                          </span>
+                          <span className="font-medium">{historicalGames.length > 0 ? formatShortDate(historicalGames[0].date) : "None"}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -665,9 +659,7 @@ export default function GamePreparation() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Record:</span>
-                          <span className="font-medium">
-                            {historicalGames.length > 0 ? `${winRateResult.wins}W-${winRateResult.losses}L${winRateResult.draws > 0 ? `-${winRateResult.draws}D` : ''}` : 'No history'}
-                          </span>
+                          <span className="font-medium">{historicalGames.length > 0 ? `${winRateResult.wins}W-${winRateResult.losses}L${winRateResult.draws > 0 ? `-${winRateResult.draws}D` : ""}` : "No history"}</span>
                         </div>
 
                         {(() => {
@@ -681,7 +673,7 @@ export default function GamePreparation() {
                           let highestScore = 0;
                           let lowestScore = 999;
 
-                          historicalGames.forEach(game => {
+                          historicalGames.forEach((game) => {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length > 0) {
                               gamesWithScores++;
@@ -689,7 +681,7 @@ export default function GamePreparation() {
                               let gameGoalsFor = 0;
                               let gameGoalsAgainst = 0;
 
-                              gameScores.forEach(score => {
+                              gameScores.forEach((score) => {
                                 if (score.teamId === currentTeamId) {
                                   gameGoalsFor += score.score;
                                 } else {
@@ -740,25 +732,14 @@ export default function GamePreparation() {
                                   <span className="text-sm text-muted-foreground">Dominance:</span>
                                   <div className="flex items-center gap-2">
                                     <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                      <div 
-                                        className={`h-full transition-all ${
-                                          goalDifference > 5 ? 'bg-green-500' :
-                                          goalDifference > 0 ? 'bg-green-400' :
-                                          goalDifference > -5 ? 'bg-amber-400' : 'bg-red-500'
-                                        }`}
-                                        style={{ 
-                                          width: `${Math.min(100, Math.max(0, ((goalDifference + 10) / 20) * 100))}%` 
+                                      <div
+                                        className={`h-full transition-all ${goalDifference > 5 ? "bg-green-500" : goalDifference > 0 ? "bg-green-400" : goalDifference > -5 ? "bg-amber-400" : "bg-red-500"}`}
+                                        style={{
+                                          width: `${Math.min(100, Math.max(0, ((goalDifference + 10) / 20) * 100))}%`,
                                         }}
                                       ></div>
                                     </div>
-                                    <span className={`text-xs font-medium ${
-                                      goalDifference > 0 ? 'text-green-600' : 
-                                      goalDifference < 0 ? 'text-red-600' : 'text-amber-600'
-                                    }`}>
-                                      {goalDifference > 5 ? 'Strong' :
-                                       goalDifference > 0 ? 'Slight' :
-                                       goalDifference > -5 ? 'Even' : 'Weak'}
-                                    </span>
+                                    <span className={`text-xs font-medium ${goalDifference > 0 ? "text-green-600" : goalDifference < 0 ? "text-red-600" : "text-amber-600"}`}>{goalDifference > 5 ? "Strong" : goalDifference > 0 ? "Slight" : goalDifference > -5 ? "Even" : "Weak"}</span>
                                   </div>
                                 </div>
                               </div>
@@ -780,11 +761,10 @@ export default function GamePreparation() {
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Player Availability</span>
-                            <span>{players.length > 0 ? `${Math.min(players.length, 7)}/${players.length}` : 'Loading...'}</span>
+                            <span>{players.length > 0 ? `${Math.min(players.length, 7)}/${players.length}` : "Loading..."}</span>
                           </div>
-                          <Progress value={players.length > 0 ? (Math.min(players.length, 7) / players.length * 100) : 0} className="h-2" />
+                          <Progress value={players.length > 0 ? (Math.min(players.length, 7) / players.length) * 100 : 0} className="h-2" />
                         </div>
-
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Lineup Completion</span>
@@ -792,15 +772,13 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={0} className="h-2" />
                         </div>
-
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Historical Analysis</span>
-                            <span>{historicalGames.length > 0 ? 'Complete' : 'Missing'}</span>
+                            <span>{historicalGames.length > 0 ? "Complete" : "Missing"}</span>
                           </div>
                           <Progress value={historicalGames.length > 0 ? 100 : 0} className="h-2" />
                         </div>
-
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Tactical Planning</span>
@@ -808,7 +786,6 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={(tacticalNotes.length / 5) * 100} className="h-2" />
                         </div>
-
                         {/* Game Readiness Indicator */}
                         <div className="pt-2 border-t">
                           <div className="flex items-center justify-between">
@@ -819,25 +796,15 @@ export default function GamePreparation() {
                                 const hasHistory = historicalGames.length > 0;
                                 const hasTactics = tacticalNotes.length >= 3;
 
-                                const readinessScore = (
-                                  (availableCount >= 7 ? 40 : (availableCount / 7) * 40) +
-                                  (hasHistory ? 30 : 0) +
-                                  (hasTactics ? 30 : (tacticalNotes.length / 3) * 30)
-                                );
+                                const readinessScore = (availableCount >= 7 ? 40 : (availableCount / 7) * 40) + (hasHistory ? 30 : 0) + (hasTactics ? 30 : (tacticalNotes.length / 3) * 30);
 
-                                const level = readinessScore >= 80 ? 'Excellent' :
-                                            readinessScore >= 60 ? 'Good' :
-                                            readinessScore >= 40 ? 'Fair' : 'Poor';
+                                const level = readinessScore >= 80 ? "Excellent" : readinessScore >= 60 ? "Good" : readinessScore >= 40 ? "Fair" : "Poor";
 
-                                const color = readinessScore >= 80 ? 'text-green-600' :
-                                            readinessScore >= 60 ? 'text-blue-600' :
-                                            readinessScore >= 40 ? 'text-amber-600' : 'text-red-600';
+                                const color = readinessScore >= 80 ? "text-green-600" : readinessScore >= 60 ? "text-blue-600" : readinessScore >= 40 ? "text-amber-600" : "text-red-600";
 
                                 return (
                                   <>
-                                    <span className={`text-sm font-medium ${color}`}>
-                                      {readinessScore.toFixed(0)}%
-                                    </span>
+                                    <span className={`text-sm font-medium ${color}`}>{readinessScore.toFixed(0)}%</span>
                                     <Badge variant="outline" className={color}>
                                       {level}
                                     </Badge>
@@ -846,18 +813,12 @@ export default function GamePreparation() {
                               })()}
                             </div>
                           </div>
-                        </div>                      </CardContent>
+                        </div>{" "}
+                      </CardContent>
                     </Card>
                   </div>
-                                    {/* Historical Games using shared component */}
-                  <PreviousGamesDisplay
-                    historicalGames={historicalGames}
-                    currentTeamId={currentTeamId!}
-                    currentClubId={currentClubId!}
-                    batchScores={batchScores || {}}
-                    batchStats={batchStats || {}}
-                    opponentName={opponent}
-                  />
+                  {/* Historical Games using shared component */}
+                  <PreviousGamesDisplay historicalGames={historicalGames} currentTeamId={currentTeamId!} currentClubId={currentClubId!} batchScores={batchScores || {}} batchStats={batchStats || {}} opponentName={opponent} />
 
                   {/* Position Performance Stats */}
                   <div className="space-y-6">
@@ -882,19 +843,14 @@ export default function GamePreparation() {
                               );
                             }
 
-                            return (
-                              <AttackDefenseDisplay
-                                averages={historicalPositionAverages}
-                                label={`Historical Attack vs Defense vs ${opponent} (${historicalPositionAverages.gamesWithPositionStats} games)`}
-                              />
-                            );
+                            return <AttackDefenseDisplay averages={historicalPositionAverages} label={`Historical Attack vs Defense vs ${opponent} (${historicalPositionAverages.gamesWithPositionStats} games)`} />;
                           })()}
                         </CardContent>
                       </Card>
                     )}
 
                     {/* Recent Season Position Performance */}
-                    {(seasonGames as any[]).length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some(gameId => seasonBatchStats[gameId]?.length > 0) && (
+                    {(seasonGames as any[]).length > 0 && seasonBatchStats && Object.keys(seasonBatchStats).some((gameId) => seasonBatchStats[gameId]?.length > 0) && (
                       <Card>
                         <CardHeader>
                           <CardTitle>Recent Season Position Performance</CardTitle>
@@ -903,7 +859,7 @@ export default function GamePreparation() {
                           {(() => {
                             // Calculate position-based statistics using shared utility
                             const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats, currentTeamId);
-                            
+
                             if (positionAverages.gamesWithPositionStats === 0) {
                               return (
                                 <div className="text-center py-8">
@@ -915,25 +871,12 @@ export default function GamePreparation() {
                               );
                             }
 
-                            return (
-                              <AttackDefenseDisplay
-                                averages={positionAverages}
-                                label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`}
-                              />
-                            );
+                            return <AttackDefenseDisplay averages={positionAverages} label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`} />;
                           })()}
                         </CardContent>
                       </Card>
                     )}
                   </div>
-
-
-
-
-
-
-
-
 
                   {/* Quick Actions */}
                   <Card>
@@ -945,42 +888,25 @@ export default function GamePreparation() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => setActiveTab('lineup')}
-                        >
+                        <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab("lineup")}>
                           <Users className="h-4 w-4" />
                           Set Lineup
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => setActiveTab('analysis')}
-                        >
+                        <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab("analysis")}>
                           <BarChart3 className="h-4 w-4" />
                           View Analysis
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => setActiveTab('strategy')}
-                        >
+                        <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab("strategy")}>
                           <FileText className="h-4 w-4" />
                           Game Plan
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                        >
+                        <Button variant="outline" className="flex items-center gap-2">
                           <Trophy className="h-4 w-4" />
                           Print Summary
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
-
-
                 </>
               );
             })()}
@@ -1003,9 +929,7 @@ export default function GamePreparation() {
               return (
                 <Card>
                   <CardHeader className="pb-6">
-                    <CardTitle>
-                      Season Games ({game?.seasonName || 'Current Season'})
-                    </CardTitle>
+                    <CardTitle>Season Games ({game?.seasonName || "Current Season"})</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {(seasonGames as any[]).length > 0 ? (
@@ -1013,21 +937,23 @@ export default function GamePreparation() {
                         <div className="space-y-3">
                           {(seasonGames as any[]).map((seasonGame, index) => {
                             // Check for special status games (e.g., forfeit, bye)
-                            const isSpecialStatus = seasonGame.statusName === 'forfeit-win' || seasonGame.statusName === 'forfeit-loss' || seasonGame.statusName === 'bye' || seasonGame.statusName === 'abandoned' || seasonGame.statusDisplayName === 'Forfeit Loss' || seasonGame.statusDisplayName === 'Forfeit Win';
+                            const isSpecialStatus = seasonGame.statusName === "forfeit-win" || seasonGame.statusName === "forfeit-loss" || seasonGame.statusName === "bye" || seasonGame.statusName === "abandoned" || seasonGame.statusDisplayName === "Forfeit Loss" || seasonGame.statusDisplayName === "Forfeit Win";
 
                             // Transform batch scores to calculate quarter breakdown
                             const gameScores = seasonBatchScores?.[seasonGame.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
-                            })) : [];
+                            const transformedScores = Array.isArray(gameScores)
+                              ? gameScores.map((score) => ({
+                                  id: score.id,
+                                  gameId: score.gameId,
+                                  teamId: score.teamId,
+                                  quarter: score.quarter,
+                                  score: score.score,
+                                  enteredBy: score.enteredBy,
+                                  enteredAt: score.enteredAt,
+                                  updatedAt: score.updatedAt,
+                                  notes: score.notes,
+                                }))
+                              : [];
 
                             // Calculate quarter scores for display
                             const calculateQuarterScores = () => {
@@ -1036,7 +962,7 @@ export default function GamePreparation() {
                               const teamScores = [0, 0, 0, 0];
                               const opponentScores = [0, 0, 0, 0];
 
-                              transformedScores.forEach(score => {
+                              transformedScores.forEach((score) => {
                                 const quarterIndex = score.quarter - 1;
                                 if (quarterIndex >= 0 && quarterIndex < 4) {
                                   if (score.teamId === currentTeamId) {
@@ -1065,7 +991,7 @@ export default function GamePreparation() {
                                 cumulative: teamCumulative,
                                 opponentQuarter: opponentScores,
                                 opponentCumulative: opponentCumulative,
-                                finalScore: { team: teamTotal, opponent: opponentTotal }
+                                finalScore: { team: teamTotal, opponent: opponentTotal },
                               };
                             };
 
@@ -1075,120 +1001,104 @@ export default function GamePreparation() {
                             return (
                               <div key={seasonGame.id} className="relative">
                                 {/* Use the standard GameResultCard for consistent styling and scoring */}
-                                <GameResultCard
-                                  game={seasonGame}
-                                  currentTeamId={currentTeamId}
-                                  centralizedScores={transformedScores}
-                                  showLink={true}
-                                  className="w-full"
-                                />
+                                <GameResultCard game={seasonGame} currentTeamId={currentTeamId} centralizedScores={transformedScores} showLink={true} className="w-full" />
 
                                 {/* Right side - quarter breakdown for non-special games */}
                                 <div className="ml-4 flex-shrink-0">
-                                  {!isSpecialStatus && hasQuarterData ? (
-                                    (() => {
-                                      // Calculate quarter scores for display
-                                      const teamScores = [0, 0, 0, 0];
-                                      const opponentScores = [0, 0, 0, 0];
+                                  {!isSpecialStatus && hasQuarterData
+                                    ? (() => {
+                                        // Calculate quarter scores for display
+                                        const teamScores = [0, 0, 0, 0];
+                                        const opponentScores = [0, 0, 0, 0];
 
-                                      transformedScores.forEach(score => {
-                                        const quarterIndex = score.quarter - 1;
-                                        if (quarterIndex >= 0 && quarterIndex < 4) {
-                                          if (score.teamId === currentTeamId) {
-                                            teamScores[quarterIndex] = score.score;
-                                          } else {
-                                            opponentScores[quarterIndex] = score.score;
+                                        transformedScores.forEach((score) => {
+                                          const quarterIndex = score.quarter - 1;
+                                          if (quarterIndex >= 0 && quarterIndex < 4) {
+                                            if (score.teamId === currentTeamId) {
+                                              teamScores[quarterIndex] = score.score;
+                                            } else {
+                                              opponentScores[quarterIndex] = score.score;
+                                            }
                                           }
+                                        });
+
+                                        // Calculate cumulative scores
+                                        const teamCumulative = [];
+                                        const opponentCumulative = [];
+                                        let teamTotal = 0;
+                                        let opponentTotal = 0;
+
+                                        for (let i = 0; i < 4; i++) {
+                                          teamTotal += teamScores[i];
+                                          opponentTotal += opponentScores[i];
+                                          teamCumulative.push(teamTotal);
+                                          opponentCumulative.push(opponentTotal);
                                         }
-                                      });
 
-                                      // Calculate cumulative scores
-                                      const teamCumulative = [];
-                                      const opponentCumulative = [];
-                                      let teamTotal = 0;
-                                      let opponentTotal = 0;
+                                        return (
+                                          <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                            <div className="text-xs space-y-1">
+                                              {/* Quarter-by-quarter scores on top (lighter) */}
+                                              <div className="grid grid-cols-4 gap-1">
+                                                {teamScores.map((teamScore, qIndex) => {
+                                                  const opponentScore = opponentScores[qIndex];
+                                                  const quarterWin = teamScore > opponentScore;
+                                                  const quarterLoss = teamScore < opponentScore;
 
-                                      for (let i = 0; i < 4; i++) {
-                                        teamTotal += teamScores[i];
-                                        opponentTotal += opponentScores[i];
-                                        teamCumulative.push(teamTotal);
-                                        opponentCumulative.push(opponentTotal);
-                                      }
+                                                  // Display in Home-Away format but color by team perspective
+                                                  let homeScore, awayScore;
+                                                  if (seasonGame.homeTeamId === currentTeamId) {
+                                                    // Current team is home
+                                                    homeScore = teamScore;
+                                                    awayScore = opponentScore;
+                                                  } else {
+                                                    // Current team is away
+                                                    homeScore = opponentScore;
+                                                    awayScore = teamScore;
+                                                  }
 
-                                      return (
-                                        <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
-                                          <div className="text-xs space-y-1">
-                                            {/* Quarter-by-quarter scores on top (lighter) */}
-                                            <div className="grid grid-cols-4 gap-1">
-                                              {teamScores.map((teamScore, qIndex) => {
-                                                const opponentScore = opponentScores[qIndex];
-                                                const quarterWin = teamScore > opponentScore;
-                                                const quarterLoss = teamScore < opponentScore;
+                                                  const quarterClass = quarterWin ? "bg-green-100 text-green-800 border border-green-400" : quarterLoss ? "bg-red-100 text-red-800 border border-red-400" : "bg-amber-100 text-amber-800 border border-amber-400";
 
-                                                // Display in Home-Away format but color by team perspective
-                                                let homeScore, awayScore;
-                                                if (seasonGame.homeTeamId === currentTeamId) {
-                                                  // Current team is home
-                                                  homeScore = teamScore;
-                                                  awayScore = opponentScore;
-                                                } else {
-                                                  // Current team is away
-                                                  homeScore = opponentScore;
-                                                  awayScore = teamScore;
-                                                }
+                                                  return (
+                                                    <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
+                                                      {homeScore}–{awayScore}
+                                                    </span>
+                                                  );
+                                                })}
+                                              </div>
+                                              {/* Cumulative scores underneath (darker) */}
+                                              <div className="grid grid-cols-4 gap-1">
+                                                {teamCumulative.map((teamCum, qIndex) => {
+                                                  const opponentCum = opponentCumulative[qIndex];
+                                                  const cumulativeWin = teamCum > opponentCum;
+                                                  const cumulativeLoss = teamCum < opponentCum;
 
-                                                const quarterClass = quarterWin 
-                                                  ? 'bg-green-100 text-green-800 border border-green-400' 
-                                                  : quarterLoss 
-                                                    ? 'bg-red-100 text-red-800 border border-red-400'
-                                                    : 'bg-amber-100 text-amber-800 border border-amber-400';
+                                                  // Display in Home-Away format but color by team perspective
+                                                  let homeCum, awayCum;
+                                                  if (seasonGame.homeTeamId === currentTeamId) {
+                                                    // Current team is home
+                                                    homeCum = teamCum;
+                                                    awayCum = opponentCum;
+                                                  } else {
+                                                    // Current team is away
+                                                    homeCum = opponentCum;
+                                                    awayCum = teamCum;
+                                                  }
 
-                                                return (
-                                                  <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                                    {homeScore}–{awayScore}
-                                                  </span>
-                                                );
-                                              })}
-                                            </div>
-                                            {/* Cumulative scores underneath (darker) */}
-                                            <div className="grid grid-cols-4 gap-1">
-                                              {teamCumulative.map((teamCum, qIndex) => {
-                                                const opponentCum = opponentCumulative[qIndex];
-                                                const cumulativeWin = teamCum > opponentCum;
-                                                const cumulativeLoss = teamCum < opponentCum;
+                                                  const cumulativeClass = cumulativeWin ? "bg-green-200 text-green-800 border border-green-500" : cumulativeLoss ? "bg-red-200 text-red-800 border border-red-500" : "bg-amber-200 text-amber-800 border border-amber-500";
 
-                                                // Display in Home-Away format but color by team perspective
-                                                let homeCum, awayCum;
-                                                if (seasonGame.homeTeamId === currentTeamId) {
-                                                  // Current team is home
-                                                  homeCum = teamCum;
-                                                  awayCum = opponentCum;
-                                                } else {
-                                                  // Current team is away
-                                                  homeCum = opponentCum;
-                                                  awayCum = teamCum;
-                                                }
-
-                                                const cumulativeClass = cumulativeWin 
-                                                  ? 'bg-green-200 text-green-800 border border-green-500' 
-                                                  : cumulativeLoss 
-                                                    ? 'bg-red-200 text-red-800 border border-red-500'
-                                                    : 'bg-amber-200 text-amber-800 border border-amber-500';
-
-                                                return (
-                                                  <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
-                                                    {homeCum}–{awayCum}
-                                                  </span>
-                                                );
-                                              })}
+                                                  return (
+                                                    <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
+                                                      {homeCum}–{awayCum}
+                                                    </span>
+                                                  );
+                                                })}
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      );
-                                    })()
-                                  ) : (
-                                    null
-                                  )}
+                                        );
+                                      })()
+                                    : null}
                                 </div>
                               </div>
                             );
@@ -1197,38 +1107,38 @@ export default function GamePreparation() {
 
                         {/* Season Quarter Average Performance Boxes + Goal Difference */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-                          {[1, 2, 3, 4].map(quarter => {
+                          {[1, 2, 3, 4].map((quarter) => {
                             // Calculate average scores for this quarter across all season games
                             let totalTeamScore = 0;
                             let totalOpponentScore = 0;
                             let gamesWithData = 0;
 
-                            (seasonGames as any[]).forEach(seasonGame => {
+                            (seasonGames as any[]).forEach((seasonGame) => {
                               // Skip BYE games and forfeit games for goal statistics
-                              if (seasonGame.statusName === 'bye' || 
-                                  seasonGame.statusName === 'forfeit-win' || 
-                                  seasonGame.statusName === 'forfeit-loss') return;
+                              if (seasonGame.statusName === "bye" || seasonGame.statusName === "forfeit-win" || seasonGame.statusName === "forfeit-loss") return;
 
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
-                              const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                                id: score.id,
-                                gameId: score.gameId,
-                                teamId: score.teamId,
-                                quarter: score.quarter,
-                                score: score.score,
-                                enteredBy: score.enteredBy,
-                                enteredAt: score.enteredAt,
-                                updatedAt: score.updatedAt,
-                                notes: score.notes
-                              })) : [];
+                              const transformedScores = Array.isArray(gameScores)
+                                ? gameScores.map((score) => ({
+                                    id: score.id,
+                                    gameId: score.gameId,
+                                    teamId: score.teamId,
+                                    quarter: score.quarter,
+                                    score: score.score,
+                                    enteredBy: score.enteredBy,
+                                    enteredAt: score.enteredAt,
+                                    updatedAt: score.updatedAt,
+                                    notes: score.notes,
+                                  }))
+                                : [];
 
-                              const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
-                              const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+                              const quarterTeamScore = transformedScores.find((s) => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                              const quarterOpponentScore = transformedScores.find((s) => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
                               totalTeamScore += quarterTeamScore;
                               totalOpponentScore += quarterOpponentScore;
 
-                              if(quarterTeamScore > 0 || quarterOpponentScore > 0){
+                              if (quarterTeamScore > 0 || quarterOpponentScore > 0) {
                                 gamesWithData++;
                               }
                             });
@@ -1241,50 +1151,34 @@ export default function GamePreparation() {
                             const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
 
                             const getBackgroundClass = () => {
-                              if (isDraw) return 'bg-amber-100 border-amber-300';
-                              if (isWinning) return 'bg-green-100 border-green-300';
-                              return 'bg-red-100 border-red-300';
+                              if (isDraw) return "bg-amber-100 border-amber-300";
+                              if (isWinning) return "bg-green-100 border-green-300";
+                              return "bg-red-100 border-red-300";
                             };
 
                             const getDiffTextColorClass = () => {
-                              if (isDraw) return 'text-amber-600 font-bold';
-                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                              if (isDraw) return "text-amber-600 font-bold";
+                              return isWinning ? "text-green-600 font-bold" : "text-red-600 font-bold";
                             };
 
                             return (
                               <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
                                 {/* Quarter badge in top-left corner */}
                                 <div className="absolute -top-2 -left-2">
-                                  <Badge 
-                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
-                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
-                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
-                                      'bg-red-500 text-white border-red-600'
-                                    }`}
-                                  >
-                                    Q{quarter}
-                                  </Badge>
+                                  <Badge className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${isDraw ? "bg-amber-500 text-white border-amber-600" : isWinning ? "bg-green-500 text-white border-green-600" : "bg-red-500 text-white border-red-600"}`}>Q{quarter}</Badge>
                                 </div>
 
                                 <div className="space-y-1 mt-1">
                                   <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
                                     {avgTeamScore.toFixed(1)}–{avgOpponentScore.toFixed(1)}
                                   </div>
-                                  <div className={`text-base ${getDiffTextColorClass()}`}>
-                                    {avgTeamScore - avgOpponentScore > 0 ? `+${(avgTeamScore - avgOpponentScore).toFixed(1)}` : (avgTeamScore - avgOpponentScore).toFixed(1)}
-                                  </div>
+                                  <div className={`text-base ${getDiffTextColorClass()}`}>{avgTeamScore - avgOpponentScore > 0 ? `+${(avgTeamScore - avgOpponentScore).toFixed(1)}` : (avgTeamScore - avgOpponentScore).toFixed(1)}</div>
 
-                                  <div 
-                                    className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
-                                    title="Our share of total quarter scoring"
-                                  >
-                                    <div 
-                                      className={`h-2 rounded-full ${
-                                        isWinning ? 'bg-green-500' : 
-                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
-                                      }`}
-                                      style={{ 
-                                        width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Our share of total quarter scoring">
+                                    <div
+                                      className={`h-2 rounded-full ${isWinning ? "bg-green-500" : isLosing ? "bg-red-500" : "bg-amber-500"}`}
+                                      style={{
+                                        width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`,
                                       }}
                                     ></div>
                                   </div>
@@ -1300,11 +1194,9 @@ export default function GamePreparation() {
                             let totalGoalsAgainst = 0;
                             let gamesWithScores = 0;
 
-                            (seasonGames as any[]).forEach(seasonGame => {
+                            (seasonGames as any[]).forEach((seasonGame) => {
                               // Skip BYE and forfeit games for statistical calculations
-                              if (seasonGame.statusName === 'bye' || 
-                                  seasonGame.statusName === 'forfeit-win' || 
-                                  seasonGame.statusName === 'forfeit-loss') return;
+                              if (seasonGame.statusName === "bye" || seasonGame.statusName === "forfeit-win" || seasonGame.statusName === "forfeit-loss") return;
 
                               const gameScores = seasonBatchScores?.[seasonGame.id] || [];
                               if (gameScores.length > 0) {
@@ -1313,7 +1205,7 @@ export default function GamePreparation() {
                                 let gameGoalsFor = 0;
                                 let gameGoalsAgainst = 0;
 
-                                gameScores.forEach(score => {
+                                gameScores.forEach((score) => {
                                   if (score.teamId === currentTeamId) {
                                     gameGoalsFor += score.score;
                                   } else {
@@ -1335,29 +1227,21 @@ export default function GamePreparation() {
                             const isDraw = Math.abs(goalDifference) < 0.1;
 
                             const getBackgroundClass = () => {
-                              if (isDraw) return 'bg-amber-100 border-amber-300';
-                              if (isWinning) return 'bg-green-100 border-green-300';
-                              return 'bg-red-100 border-red-300';
+                              if (isDraw) return "bg-amber-100 border-amber-300";
+                              if (isWinning) return "bg-green-100 border-green-300";
+                              return "bg-red-100 border-red-300";
                             };
 
                             const getDiffTextColorClass = () => {
-                              if (isDraw) return 'text-amber-600 font-bold';
-                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                              if (isDraw) return "text-amber-600 font-bold";
+                              return isWinning ? "text-green-600 font-bold" : "text-red-600 font-bold";
                             };
 
                             return (
                               <div className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
                                 {/* Goal difference badge in top-left corner */}
                                 <div className="absolute -top-2 -left-2">
-                                  <Badge 
-                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
-                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
-                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
-                                      'bg-red-500 text-white border-red-600'
-                                    }`}
-                                  >
-                                    AVG
-                                  </Badge>
+                                  <Badge className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${isDraw ? "bg-amber-500 text-white border-amber-600" : isWinning ? "bg-green-500 text-white border-green-600" : "bg-red-500 text-white border-red-600"}`}>AVG</Badge>
                                 </div>
 
                                 <div className="space-y-1 mt-1">
@@ -1365,20 +1249,15 @@ export default function GamePreparation() {
                                     {avgGoalsFor.toFixed(1)}–{avgGoalsAgainst.toFixed(1)}
                                   </div>
                                   <div className={`text-base ${getDiffTextColorClass()}`}>
-                                    {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                                    {goalDifference >= 0 ? "+" : ""}
+                                    {goalDifference.toFixed(1)}
                                   </div>
 
-                                  <div 
-                                    className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
-                                    title="Our share of total game scoring"
-                                  >
-                                    <div 
-                                      className={`h-2 rounded-full ${
-                                        isWinning ? 'bg-green-500' : 
-                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
-                                      }`}
-                                      style={{ 
-                                        width: `${Math.min(100, Math.max(0, (avgGoalsFor / (avgGoalsFor + avgGoalsAgainst)) * 100))}%`
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Our share of total game scoring">
+                                    <div
+                                      className={`h-2 rounded-full ${isWinning ? "bg-green-500" : isLosing ? "bg-red-500" : "bg-amber-500"}`}
+                                      style={{
+                                        width: `${Math.min(100, Math.max(0, (avgGoalsFor / (avgGoalsFor + avgGoalsAgainst)) * 100))}%`,
                                       }}
                                     ></div>
                                   </div>
@@ -1391,7 +1270,7 @@ export default function GamePreparation() {
                         {/* Season Position Performance */}
                         <Card className="mt-6">
                           <CardHeader>
-                            <CardTitle>Season Position Performance ({game?.seasonName || 'Current Season'})</CardTitle>
+                            <CardTitle>Season Position Performance ({game?.seasonName || "Current Season"})</CardTitle>
                           </CardHeader>
                           <CardContent>
                             {(() => {
@@ -1414,8 +1293,7 @@ export default function GamePreparation() {
 
                               // Calculate position-based statistics using shared utility
                               const positionAverages = calculatePositionAverages(seasonGames, seasonBatchStats || {}, currentTeamId);
-              
-                              
+
                               if (positionAverages.gamesWithPositionStats === 0) {
                                 return (
                                   <div className="text-center py-8">
@@ -1429,20 +1307,20 @@ export default function GamePreparation() {
 
                               // Calculate quarter-by-quarter breakdown
                               const quarterBreakdown = (seasonGames as any[])
-                                .filter(game => game.statusIsCompleted && seasonBatchStats && seasonBatchStats[game.id])
+                                .filter((game) => game.statusIsCompleted && seasonBatchStats && seasonBatchStats[game.id])
                                 .reduce((quarters: any[], game) => {
                                   const gameStats = seasonBatchStats[game.id] || [];
-                                  const teamStats = gameStats.filter(stat => Number(stat.teamId) === Number(currentTeamId));
+                                  const teamStats = gameStats.filter((stat) => Number(stat.teamId) === Number(currentTeamId));
 
                                   // Group by quarter
-                                  [1, 2, 3, 4].forEach(quarter => {
-                                    const quarterStats = teamStats.filter(stat => stat.quarter === quarter);
-                                    const existingQuarter = quarters.find(q => q.quarter === quarter);
+                                  [1, 2, 3, 4].forEach((quarter) => {
+                                    const quarterStats = teamStats.filter((stat) => stat.quarter === quarter);
+                                    const existingQuarter = quarters.find((q) => q.quarter === quarter);
 
-                                    const gsGoals = quarterStats.filter(s => s.position === 'GS').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
-                                    const gaGoals = quarterStats.filter(s => s.position === 'GA').reduce((sum, s) => sum + (s.goalsFor || 0), 0);
-                                    const gdGoals = quarterStats.filter(s => s.position === 'GD').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
-                                    const gkGoals = quarterStats.filter(s => s.position === 'GK').reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+                                    const gsGoals = quarterStats.filter((s) => s.position === "GS").reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                    const gaGoals = quarterStats.filter((s) => s.position === "GA").reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                    const gdGoals = quarterStats.filter((s) => s.position === "GD").reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+                                    const gkGoals = quarterStats.filter((s) => s.position === "GK").reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
 
                                     if (existingQuarter) {
                                       existingQuarter.gsGoalsFor += gsGoals;
@@ -1457,30 +1335,23 @@ export default function GamePreparation() {
                                         gaGoalsFor: gaGoals,
                                         gdGoalsAgainst: gdGoals,
                                         gkGoalsAgainst: gkGoals,
-                                        games: 1
+                                        games: 1,
                                       });
                                     }
                                   });
 
                                   return quarters;
                                 }, [])
-                                .map(q => ({
+                                .map((q) => ({
                                   quarter: q.quarter,
                                   gsGoalsFor: q.games > 0 ? q.gsGoalsFor / q.games : 0,
                                   gaGoalsFor: q.games > 0 ? q.gaGoalsFor / q.games : 0,
                                   gdGoalsAgainst: q.games > 0 ? q.gdGoalsAgainst / q.games : 0,
-                                  gkGoalsAgainst: q.games > 0 ? q.gkGoalsAgainst / q.games : 0
+                                  gkGoalsAgainst: q.games > 0 ? q.gkGoalsAgainst / q.games : 0,
                                 }))
                                 .sort((a, b) => a.quarter - b.quarter);
 
-                              return (
-                                <AttackDefenseDisplay
-                                  averages={positionAverages}
-                                  label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`}
-                                  showQuarterBreakdown={true}
-                                  quarterData={quarterBreakdown}
-                                />
-                              );
+                              return <AttackDefenseDisplay averages={positionAverages} label={`Season Attack vs Defense Performance (${positionAverages.gamesWithPositionStats} games)`} showQuarterBreakdown={true} quarterData={quarterBreakdown} />;
                             })()}
                           </CardContent>
                         </Card>
@@ -1489,9 +1360,7 @@ export default function GamePreparation() {
                       <div className="text-center py-8">
                         <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                         <p className="text-gray-600">No completed games found for this season</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Season games will appear here once they are completed
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Season games will appear here once they are completed</p>
                       </div>
                     )}
                   </CardContent>
@@ -1503,7 +1372,6 @@ export default function GamePreparation() {
           {/* Analysis Tab */}
           <TabsContent value="analysis" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
               {/* Historical Performance */}
               <Card>
                 <CardHeader>
@@ -1513,9 +1381,7 @@ export default function GamePreparation() {
                   {(historicalGames as any[]).length > 0 ? (
                     <div className="space-y-4">
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-700">
-                          {(historicalGames as any[]).length}
-                        </div>
+                        <div className="text-2xl font-bold text-blue-700">{(historicalGames as any[]).length}</div>
                         <div className="text-sm text-blue-600">Previous Games vs {opponent}</div>
                       </div>
                       <div className="space-y-2">
@@ -1529,19 +1395,13 @@ export default function GamePreparation() {
                           </div>
                         ))}
                       </div>
-                      {(historicalGames as any[]).length > 5 && (
-                        <p className="text-xs text-gray-500 text-center">
-                          ...and {(historicalGames as any[]).length - 5} more games
-                        </p>
-                      )}
+                      {(historicalGames as any[]).length > 5 && <p className="text-xs text-gray-500 text-center">...and {(historicalGames as any[]).length - 5} more games</p>}
                     </div>
                   ) : (
                     <div className="text-center py-8">
                       <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                       <p className="text-gray-600">No previous matches against {opponent}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        This will show completed games against the same opponent team
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">This will show completed games against the same opponent team</p>
                     </div>
                   )}
                 </CardContent>
@@ -1554,7 +1414,7 @@ export default function GamePreparation() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[1, 2, 3, 4].map(quarter => (
+                    {[1, 2, 3, 4].map((quarter) => (
                       <div key={quarter} className="flex items-center justify-between">
                         <span className="font-medium">Q{quarter}</span>
                         <div className="flex items-center gap-4">
@@ -1576,11 +1436,7 @@ export default function GamePreparation() {
                   <CardTitle>Position Performance Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TeamPositionAnalysis
-                    games={historicalGames}
-                    players={players}
-                    currentTeamId={currentTeamId}
-                  />
+                  <TeamPositionAnalysis games={historicalGames} players={players} currentTeamId={currentTeamId} />
                 </CardContent>
               </Card>
             </div>
@@ -1593,7 +1449,6 @@ export default function GamePreparation() {
               players={players || []}
               rosters={gameRosters}
               onRosterUpdate={(rosters) => {
-
                 // Refetch roster data to ensure UI stays synchronized
                 refetchRosters();
               }}
@@ -1608,19 +1463,15 @@ export default function GamePreparation() {
               teamId={currentTeamId!}
               opponentId={game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId}
               players={players || []}
-              previousNotes={[
-                "Focus on strong defensive pressure in mid-court",
-                "Quick ball movement through center court",
-                "Maintain shooting accuracy under pressure"
-              ]}
+              previousNotes={["Focus on strong defensive pressure in mid-court", "Quick ball movement through center court", "Maintain shooting accuracy under pressure"]}
               keyMatchups={[]}
               gamePlan={{
                 objectives: [],
                 keyTactics: [],
                 playerRoles: {},
-                preGameNotes: '',
-                inGameNotes: '',
-                postGameNotes: ''
+                preGameNotes: "",
+                inGameNotes: "",
+                postGameNotes: "",
               }}
             />
           </TabsContent>

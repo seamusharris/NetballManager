@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Player, Game } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
 import { CACHE_KEYS } from '@/lib/cacheKeys';
-import { useClub } from '@/contexts/ClubContext';
+import { useTeamContext } from '@/hooks/use-team-context';
 import PageTemplate from '@/components/layout/PageTemplate';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,22 +17,16 @@ import { Helmet } from 'react-helmet';
 export default function RosterGame() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { currentClub } = useClub();
+  
+  // Use standardized team context utility
+  const { teamId, teamName, clubName } = useTeamContext();
 
-  // Extract parameters from URL - always call these hooks first
+  // Extract game ID from URL params
   const gameId = React.useMemo(() => {
     console.log('RosterGame URL params:', params);
     if (params && params.gameId) {
       const id = parseInt(params.gameId);
       console.log('Extracted gameId from URL:', id);
-      return isNaN(id) ? null : id;
-    }
-    return null;
-  }, [params]);
-
-  const teamId = React.useMemo(() => {
-    if (params && params.teamId) {
-      const id = parseInt(params.teamId);
       return isNaN(id) ? null : id;
     }
     return null;
@@ -223,7 +217,7 @@ export default function RosterGame() {
         }}
         gameId={gameId}
         teamId={teamId}
-        clubId={currentClub?.id}
+        clubId={null} // Club ID not needed for roster management
         onRosterChange={() => {}}
         onRosterSaved={() => {
           // Optional: Add success toast or other feedback

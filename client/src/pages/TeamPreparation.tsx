@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useClub } from '@/contexts/ClubContext';
+import { useTeamContext } from '@/hooks/use-team-context';
 import { apiClient } from '@/lib/apiClient';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import SeasonGamesDisplay from '@/components/ui/season-games-display';
 import { useLocation, useParams } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, Minus, Target, Users, Trophy, Calendar } from 'lucide-react';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+
 
 interface Team {
   id: number;
@@ -51,7 +51,8 @@ interface Game {
 }
 
 export default function TeamPreparation() {
-  const { currentClubId, currentTeamId } = useClub();
+  // Use standardized team context utility
+  const { teamId: currentTeamId, clubId: currentClubId, teamName } = useTeamContext();
   const params = useParams();
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
@@ -69,27 +70,40 @@ export default function TeamPreparation() {
 
   // Get all teams from current club
   const { data: clubTeams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ['teams', currentClubId],
+    queryKey: ['club-teams', currentClubId],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
     enabled: !!currentClubId,
   });
 
-  // Get selected team details
+  // Get selected team details (already available from useTeamContext, but keeping for compatibility)
   const { data: selectedTeam } = useQuery<Team>({
-    queryKey: ['/api/teams', currentTeamId],
+    queryKey: ['team-details', currentTeamId],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
     enabled: !!currentTeamId,
   });
 
-  // Get games for analysis
+  // Get games for the specific team (not all games)
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ['games', currentClubId, currentTeamId],
-    queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId && !!currentTeamId,
+    queryKey: ['team-games', currentTeamId],
+    queryFn: async () => {
+      console.log('TeamPreparation: Fetching games for team', currentTeamId);
+      const response = await apiClient.get(`/api/teams/${currentTeamId}/games`);
+      console.log('TeamPreparation: Raw API response:', response);
+      
+      // Handle both standardized and legacy response formats
+      const games = Array.isArray(response) ? response : (response?.data || []);
+      console.log('TeamPreparation: Extracted games:', games);
+      console.log('TeamPreparation: Games count:', games?.length || 0);
+      return games;
+    },
+    enabled: !!currentTeamId,
   });
 
   // Get all teams across all clubs to find opponent teams
   const { data: allTeams = [] } = useQuery<Team[]>({
-    queryKey: ['/api/teams/all'],
-    enabled: !!currentClubId,
+    queryKey: ['all-teams'],
+    queryFn: () => apiClient.get('/api/teams/all'),
+    enabled: !!currentTeamId,
   });
 
 
@@ -250,15 +264,13 @@ export default function TeamPreparation() {
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Select Your Team</label>
-                  <TeamSwitcher 
-                    mode="required" 
-                    onTeamChange={(teamId) => {
-
-                      // Reset opponent when team changes
-                      setSelectedOpponentId(null);
-                    }}
-                  />
+                  <label className="text-sm font-medium">Your Team</label>
+                  <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
+                    <Badge variant="default">{teamName || 'Team'}</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Analyzing from URL: /team/{currentTeamId}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
