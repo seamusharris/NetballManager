@@ -160,6 +160,294 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     convertRequest: true,
     convertResponse: true,
     description: 'Club CRUD operations'
+  },
+
+  // ==========================================================================
+  // AVAILABILITY ENDPOINTS
+  // ==========================================================================
+  '/api/games/*/availability': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'availablePlayerIds': 'available_player_ids',
+      'explicitlyEmpty': 'explicitly_empty',
+      'isAvailable': 'is_available'
+    },
+    description: 'Game availability management'
+  },
+
+  // ==========================================================================
+  // STATISTICS ENDPOINTS
+  // ==========================================================================
+  '/api/games/*/stats': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'confirmCompleted': 'confirm_completed',
+      'gameId': 'game_id',
+      'teamId': 'team_id',
+      'playerId': 'player_id'
+    },
+    description: 'Game statistics management'
+  },
+
+  '/api/game/*/team/*/stats': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'gameId': 'game_id',
+      'teamId': 'team_id',
+      'playerId': 'player_id',
+      'statType': 'stat_type'
+    },
+    description: 'Legacy team stats endpoint'
+  },
+
+  // ==========================================================================
+  // ROSTER ENDPOINTS
+  // ==========================================================================
+  '/api/games/*/rosters': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'gameId': 'game_id',
+      'playerId': 'player_id',
+      'teamId': 'team_id',
+      'jerseyNumber': 'jersey_number'
+    },
+    description: 'Game roster management'
+  },
+
+  '/api/game/*/team/*/rosters': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'gameId': 'game_id',
+      'teamId': 'team_id',
+      'playerId': 'player_id',
+      'jerseyNumber': 'jersey_number'
+    },
+    description: 'Legacy team rosters endpoint'
+  },
+
+  '/api/rosters': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'gameId': 'game_id',
+      'playerId': 'player_id',
+      'teamId': 'team_id',
+      'jerseyNumber': 'jersey_number'
+    },
+    description: 'Roster CRUD operations'
+  },
+
+  // ==========================================================================
+  // SCORES ENDPOINTS
+  // ==========================================================================
+  '/api/games/*/scores': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'homeScore': 'home_score',
+      'awayScore': 'away_score',
+      'gameId': 'game_id'
+    },
+    description: 'Game scores management'
+  },
+
+  // ==========================================================================
+  // SEASONS & DIVISIONS
+  // ==========================================================================
+  '/api/seasons': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'startDate': 'start_date',
+      'endDate': 'end_date',
+      'isActive': 'is_active'
+    },
+    description: 'Season CRUD operations'
+  },
+
+  '/api/seasons/*/divisions': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'displayName': 'display_name',
+      'ageGroupId': 'age_group_id',
+      'sectionId': 'section_id',
+      'isActive': 'is_active'
+    },
+    description: 'Division creation under seasons'
+  },
+
+  '/api/divisions': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'displayName': 'display_name',
+      'ageGroupId': 'age_group_id',
+      'sectionId': 'section_id',
+      'isActive': 'is_active'
+    },
+    description: 'Division CRUD operations'
+  },
+
+  '/api/age-groups': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'displayName': 'display_name',
+      'isActive': 'is_active'
+    },
+    description: 'Age group CRUD operations'
+  },
+
+  // ==========================================================================
+  // PLAYER SEASONS & CLUBS
+  // ==========================================================================
+  '/api/players/*/seasons': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'seasonIds': 'season_ids',
+      'playerId': 'player_id'
+    },
+    description: 'Player season assignments'
+  },
+
+  '/api/players/*/clubs': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'clubIds': 'club_ids',
+      'playerId': 'player_id'
+    },
+    description: 'Player club assignments'
+  },
+
+  // ==========================================================================
+  // GAME ACTIONS
+  // ==========================================================================
+  '/api/games/*/award': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'playerId': 'player_id',
+      'awardType': 'award_type',
+      'teamId': 'team_id'
+    },
+    description: 'Game award management'
+  },
+
+  '/api/games/*/notes': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'teamId': 'team_id'
+    },
+    description: 'Game notes management'
+  },
+
+  // ==========================================================================
+  // USER MANAGEMENT
+  // ==========================================================================
+  '/api/clubs/*/users/invite': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'clubId': 'club_id',
+      'userId': 'user_id'
+    },
+    description: 'User invitation to clubs'
+  },
+
+  '/api/clubs/*/users/*': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'clubId': 'club_id',
+      'userId': 'user_id'
+    },
+    description: 'User management in clubs'
+  },
+
+  // ==========================================================================
+  // PLAYER BORROWING
+  // ==========================================================================
+  '/api/clubs/*/player-borrowing': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'clubId': 'club_id',
+      'playerId': 'player_id',
+      'borrowingId': 'borrowing_id',
+      'jerseyNumber': 'jersey_number'
+    },
+    description: 'Player borrowing management'
+  },
+
+  // ==========================================================================
+  // GAME PERMISSIONS
+  // ==========================================================================
+  '/api/games/*/permissions': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'gameId': 'game_id',
+      'clubId': 'club_id'
+    },
+    description: 'Game permissions management'
+  },
+
+  '/api/games/permissions/bulk': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'gameIds': 'game_ids',
+      'clubId': 'club_id'
+    },
+    description: 'Bulk game permissions'
+  },
+
+  // ==========================================================================
+  // ADDITIONAL BATCH ENDPOINTS
+  // ==========================================================================
+  '/api/teams/*/games/batch': {
+    convertRequest: false,
+    convertResponse: true,
+    description: 'Team-scoped batch games endpoint'
+  },
+
+  '/api/clubs/*/games/batch': {
+    convertRequest: false,
+    convertResponse: true,
+    description: 'Club-scoped batch games endpoint'
+  },
+
+  '/api/teams/*/games/stats/batch': {
+    convertRequest: false,
+    convertResponse: true,
+    description: 'Team-scoped batch stats endpoint'
+  },
+
+  '/api/teams/*/games/scores/batch': {
+    convertRequest: false,
+    convertResponse: true,
+    description: 'Team-scoped batch scores endpoint'
+  },
+
+  '/api/clubs/*/games/rosters/batch': {
+    convertRequest: false,
+    convertResponse: true,
+    description: 'Club-scoped batch rosters endpoint'
+  },
+
+  '/api/games/rosters/batch': {
+    convertRequest: false,
+    convertResponse: true,
+    description: 'Batch rosters endpoint'
   }
 };
 
