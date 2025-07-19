@@ -12,8 +12,7 @@ import { registerDebugRoutes } from './debug-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
 import { loadUserContext } from './unified-auth';
-import { standardizeUrls, extractRequestContext } from './api-middleware';
-import { standardCaseConversion } from './api-standards';
+import { standardizeUrls, extractRequestContext, standardCaseConversion } from './api-middleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,7 +59,7 @@ app.use('/api', smartResponseMiddleware({
 // API Standardization Middleware (order matters!)
 app.use('/api', standardizeUrls()); // URL redirects first
 app.use('/api', extractRequestContext()); // Extract context
-app.use('/api', standardCaseConversion()); // Bidirectional case conversion
+app.use('/api', standardCaseConversion()); // Smart case conversion for requests
 
 // Apply user context middleware only to API routes
 app.use('/api', loadUserContext);

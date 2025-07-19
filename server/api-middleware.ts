@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { smartCaseConversion } from './smart-case-conversion';
 
 // Legacy URL patterns that need to be redirected
 const URL_REDIRECTS = [
@@ -46,8 +47,6 @@ const extractRequestContext = () => {
 };
 
 const standardCaseConversion = () => {
-  // Import the smart case conversion
-  const { smartCaseConversion } = require('./smart-case-conversion');
   return smartCaseConversion();
 };
 
