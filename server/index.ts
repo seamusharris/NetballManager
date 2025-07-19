@@ -14,6 +14,27 @@ import { setupVite, serveStatic } from './vite';
 import { loadUserContext } from './unified-auth';
 import { standardizeUrls, extractRequestContext, standardCaseConversion } from './api-middleware';
 
+// Global error handler to prevent crashes
+function globalErrorHandler(err: any, req: any, res: any, next: any) {
+  console.error('🚨 Global error caught:', {
+    error: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+
+  // Don't crash the server - always respond
+  if (!res.headersSent) {
+    const statusCode = err.statusCode || err.status || 500;
+    res.status(statusCode).json({
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -120,11 +141,25 @@ registerStandardizedRoutes(app);
 // Register endpoint usage tracking
 registerUsageStatsEndpoint(app);
 
-// Add smart error handling middleware (temporarily disabled)
-// app.use(smartErrorMiddleware());
+// Add comprehensive error handling middleware
+app.use(globalErrorHandler);
 
 // Export app for testing
 export default app;
+
+// Global process error handlers to prevent crashes
+process.on('uncaughtException', (error) => {
+  console.error('🚨 Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Don't exit - keep server running
+  console.log('🔄 Server continuing despite uncaught exception...');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit - keep server running
+  console.log('🔄 Server continuing despite unhandled rejection...');
+});
 
 // Start server with health check only if run directly
 if (import.meta.url === `file://${process.argv[1]}`) {

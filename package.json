@@ -17,6 +17,7 @@
     "test:crud": "vitest run tests/api/crud-operations.test.ts",
     "test:crud-full": "vitest run tests/api/self-contained-crud.test.ts",
     "test:case-conversion": "vitest run tests/api/case-conversion.test.ts",
+    "test:error-handling": "vitest run tests/api/error-handling.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
