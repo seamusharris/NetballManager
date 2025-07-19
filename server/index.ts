@@ -8,6 +8,7 @@ import { registerGamePermissionsRoutes } from './game-permissions-routes';
 import { registerPlayerBorrowingRoutes } from './player-borrowing-routes';
 import { registerUserManagementRoutes } from './user-management-routes';
 import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
+import { registerDebugRoutes } from './debug-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
 import { loadUserContext } from './unified-auth';
@@ -111,6 +112,7 @@ registerGamePermissionsRoutes(app);
 registerPlayerBorrowingRoutes(app);
 registerUserManagementRoutes(app);
 registerAgeGroupsSectionsRoutes(app);
+registerDebugRoutes(app);
 
 // Register new standardized routes (additive, non-breaking)
 import { registerStandardizedRoutes } from './standardized-routes';

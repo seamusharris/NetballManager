@@ -115,9 +115,13 @@ export function standardCaseConversion() {
         return regex.test(req.path);
       });
       
-      if (!shouldSkipConversion) {
-        req.body = snakecaseKeys(req.body, { deep: true });
-      }
+      // TEMPORARILY DISABLED: Global bidirectional case conversion
+      // This was causing widespread issues across multiple endpoints
+      // We'll implement endpoint-specific conversion instead
+      
+      // if (!shouldSkipConversion) {
+      //   req.body = snakecaseKeys(req.body, { deep: true });
+      // }
     }
 
     // Override res.json to convert outgoing responses to camelCase
