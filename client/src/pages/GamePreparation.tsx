@@ -452,17 +452,7 @@ export default function GamePreparation() {
   const opponent = isHomeGame ? game.awayTeamName : game.homeTeamName;
   const opponentTeamId = isHomeGame ? game.awayTeamId : game.homeTeamId;
 
-  console.log("Game Preparation opponent calculation:", {
-    gameId: game.id,
-    currentTeamId,
-    homeTeamId: game.homeTeamId,
-    awayTeamId: game.awayTeamId,
-    homeTeamName: game.homeTeamName,
-    awayTeamName: game.awayTeamName,
-    isHomeGame,
-    opponent,
-    opponentTeamId,
-  });
+
 
   return (
     <PageTemplate

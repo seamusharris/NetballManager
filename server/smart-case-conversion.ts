@@ -21,14 +21,10 @@ export function smartCaseConversion() {
       if (config?.fieldMappings) {
         // Use specific field mappings for precise control
         req.body = applyFieldMappings(req.body, config.fieldMappings);
-        console.log(`🎯 Applied field mappings for ${req.path}:`, Object.keys(config.fieldMappings));
       } else {
         // Use general snake_case conversion
         req.body = snakecaseKeys(req.body, { deep: true });
-        console.log(`🔄 Applied snake_case conversion for ${req.path}`);
       }
-    } else if (req.body && typeof req.body === 'object') {
-      console.log(`⏭️ Skipped request conversion for ${req.path}`);
     }
 
     // Handle response conversion

@@ -25,7 +25,6 @@ const standardizeUrls = () => {
       const match = originalUrl.match(redirect.pattern);
       if (match) {
         const newUrl = redirect.redirect(match);
-        console.log(`🔄 URL Redirect: ${originalUrl} → ${newUrl}`);
         
         // Preserve query parameters
         const queryString = req.url.split('?')[1];
@@ -42,7 +41,6 @@ const standardizeUrls = () => {
 
 const extractRequestContext = () => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log('📋 Context Middleware active for:', req.path);
     next();
   };
 };

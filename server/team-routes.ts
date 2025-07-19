@@ -113,14 +113,10 @@ export function registerTeamRoutes(app: Express) {
   app.get("/api/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = req.user?.currentClubId;
-      console.log(`DEPRECATED /api/teams endpoint called for club ${clubId}`);
-      console.log(`User context:`, req.user?.clubs?.map(c => c.clubId));
 
       if (!clubId) {
         return res.status(400).json({ message: "Club context not available" });
       }
-
-      console.log(`Fetching teams for club ${clubId}`);
 
       const clubTeams = await db.execute(sql`
         SELECT 
@@ -143,13 +139,6 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY s.start_date DESC, t.name
       `);
 
-      console.log(`Raw team query results for club ${clubId}:`, clubTeams.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        division_id: row.division_id,
-        division_name: row.division_name
-      })));
-
       const teams = clubTeams.rows.map(row => ({
         id: row.id,
         name: row.name,
@@ -165,7 +154,6 @@ export function registerTeamRoutes(app: Express) {
         seasonEndDate: row.season_end_date,
       }));
 
-      console.log(`Found ${teams.length} teams for club ${clubId}`);
       res.json(transformToApiFormat(teams));
     } catch (error) {
       console.error("Error fetching teams:", error);
@@ -177,18 +165,14 @@ export function registerTeamRoutes(app: Express) {
   app.get("/api/clubs/:clubId/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
-      console.log(`Teams endpoint called for club ${clubId}`);
 
       if (isNaN(clubId) || clubId <= 0) {
-        console.log('Invalid club ID provided:', req.params.clubId);
         const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
         return res.status(400).json(createErrorResponse(
           ErrorCodes.INVALID_PARAMETER,
           'Invalid club ID format'
         ));
       }
-
-      console.log(`Fetching teams for club ${clubId}`);
 
       const clubTeams = await db.execute(sql`
         SELECT 
@@ -225,8 +209,6 @@ export function registerTeamRoutes(app: Express) {
         seasonStartDate: row.season_start_date,
         seasonEndDate: row.season_end_date,
       }));
-
-      console.log(`Found ${teams.length} teams for club ${clubId}`);
       
       const { createSuccessResponse } = await import('./api-response-standards');
       res.json(createSuccessResponse(transformToApiFormat(teams)));
@@ -243,11 +225,9 @@ export function registerTeamRoutes(app: Express) {
   // Create a new team
   app.post("/api/teams", async (req, res) => {
     try {
-      console.log('Team creation request body:', req.body);
       const { clubId, seasonId, name, divisionId, isActive } = req.body;
 
       if (!clubId || !seasonId || !name) {
-        console.log('Validation failed:', { clubId, seasonId, name });
         return res.status(400).json({ message: "Club ID, season ID, and name are required" });
       }
 
@@ -308,8 +288,6 @@ export function registerTeamRoutes(app: Express) {
 
       // If team has games, update those games to remove team references
       if (gameCount > 0) {
-        console.log(`Team ${teamId} has ${gameCount} games - updating game references before deletion`);
-
         // Update games to remove team references
         await db.execute(sql`
           UPDATE games 
@@ -322,8 +300,6 @@ export function registerTeamRoutes(app: Express) {
           SET away_team_id = NULL 
           WHERE away_team_id = ${teamId}
         `);
-
-        console.log(`Updated ${gameCount} games to remove references to team ${teamId}`);
       }
 
       // Delete the team
@@ -478,7 +454,14 @@ export function registerTeamRoutes(app: Express) {
   app.post("/api/teams/:teamId/players", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
-      const { playerId, isRegular } = req.body;
+      
+      // Handle both camelCase and snake_case field names
+      const playerId = req.body.playerId || req.body.player_id;
+      const isRegular = req.body.isRegular || req.body.is_regular;
+      
+      if (!playerId) {
+        return res.status(400).json({ message: "Player ID is required" });
+      }
 
       // Get the team's season
       const teamSeason = await db.execute(sql`
@@ -495,8 +478,8 @@ export function registerTeamRoutes(app: Express) {
       const existingAssignment = await db.select()
         .from(teamPlayers)
         .where(and(
-          eq(teamPlayers.teamId, teamId),
-          eq(teamPlayers.playerId, playerId)
+          eq(teamPlayers.team_id, teamId),
+          eq(teamPlayers.player_id, playerId)
         ))
         .limit(1);
 
@@ -506,13 +489,12 @@ export function registerTeamRoutes(app: Express) {
 
       const result = await db.insert(teamPlayers)
         .values({
-          teamId,
-          playerId,
-          isRegular: isRegular || true
+          team_id: teamId,
+          player_id: playerId,
+          is_regular: isRegular !== false
         })
         .returning();
 
-      console.log(`Auto-assigned player ${playerId} to season ${seasonId} when adding to team ${teamId}`);
       res.status(201).json(transformToApiFormat(result[0]));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
@@ -650,8 +632,6 @@ export function registerTeamRoutes(app: Express) {
         isRegular: row.is_regular,
         teamPositionPreferences: row.team_position_preferences ? JSON.parse(row.team_position_preferences) : []
       }));
-
-      console.log(`Found ${players.length} players for team ${teamId}`);
       
       const { createSuccessResponse } = await import('./api-response-standards');
       res.json(createSuccessResponse(transformToApiFormat(players)));
@@ -719,8 +699,6 @@ export function registerTeamRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
 
-      console.log(`Team-specific roster endpoint: teamId=${teamId}, gameId=${gameId}`);
-
       if (isNaN(teamId) || isNaN(gameId)) {
         return res.status(400).json({ error: 'Invalid team ID or game ID' });
       }
@@ -766,8 +744,6 @@ export function registerTeamRoutes(app: Express) {
         WHERE r.game_id = ${gameId}
         ORDER BY r.quarter, r.position
       `);
-
-      console.log(`Found ${roster.rows.length} roster entries for team ${teamId} game ${gameId}`);
 
       const mappedRoster = roster.rows.map(row => ({
         id: row.id,
@@ -993,8 +969,6 @@ export function registerTeamRoutes(app: Express) {
         return res.status(403).json({ error: 'Access denied to this team' });
       }
 
-      console.log(`Available players query for team ${teamId}, season ${seasonId}, club ${teamClubId}`);
-
       // First, let's check what players exist in the club
       const clubPlayers = await db.execute(sql`
         SELECT p.id, p.display_name, cp.is_active as club_active
@@ -1003,7 +977,6 @@ export function registerTeamRoutes(app: Express) {
         WHERE cp.club_id = ${teamClubId}
         ORDER BY p.display_name
       `);
-      console.log(`Club ${teamClubId} has ${clubPlayers.rows.length} players:`, clubPlayers.rows.map(r => `${r.display_name} (active: ${r.club_active})`));
 
       // Check player seasons
       const playerSeasons = await db.execute(sql`
@@ -1014,7 +987,6 @@ export function registerTeamRoutes(app: Express) {
         WHERE cp.club_id = ${teamClubId} AND ps.season_id = ${seasonId}
         ORDER BY p.display_name
       `);
-      console.log(`Players in season ${seasonId}:`, playerSeasons.rows.map(r => `${r.display_name} (player_id: ${r.player_id})`));
 
       // Check team assignments
       const teamAssignments = await db.execute(sql`
@@ -1025,7 +997,6 @@ export function registerTeamRoutes(app: Express) {
         WHERE t.season_id = ${seasonId}
         ORDER BY p.display_name
       `);
-      console.log(`Team assignments for season ${seasonId}:`, teamAssignments.rows.map(r => `${r.display_name} -> ${r.team_name} (team_id: ${r.team_id})`));
 
       // Get all active players from the team's club who are not assigned to any team in this season
       // This is more inclusive - players will be auto-assigned to seasons when added to teams
@@ -1047,8 +1018,6 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY p.display_name
       `);
 
-      console.log(`Available players query returned ${availablePlayers.rows.length} players:`, availablePlayers.rows.map(r => r.display_name));
-
       const mappedAvailablePlayers = availablePlayers.rows.map(row => ({
         id: row.id,
         displayName: row.display_name,
@@ -1062,7 +1031,6 @@ export function registerTeamRoutes(app: Express) {
         avatarColor: row.avatar_color
       }));
 
-      console.log(`Returning ${mappedAvailablePlayers.length} available players`);
       res.json(transformToApiFormat(mappedAvailablePlayers));
     } catch (error) {
       console.error("Error fetching available players:", error);

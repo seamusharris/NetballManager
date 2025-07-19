@@ -173,14 +173,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasRosters = Array.isArray(data.rosters);
       const hasGameStats = Array.isArray(data.gameStats);
 
-      console.log("Import validation:", { 
-        players: hasPlayers ? data.players.length : 0,
-        opponents: hasOpponents ? data.opponents.length : 0, 
-        games: hasGames ? data.games.length : 0,
-        rosters: hasRosters ? data.rosters.length : 0,
-        stats: hasGameStats ? data.gameStats.length : 0
-      });
-
       // Require players section at minimum
       if (!hasPlayers) {
         return res.status(400).json({ message: "Invalid data format - missing player data" });
@@ -364,9 +356,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // First, log the total we'll attempt to import
-      console.log(`Processing ${rostersData.length} roster entries...`);
-
       for (const roster of rostersData) {
         try {
           // Skip invalid relationships
@@ -383,8 +372,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Clean and normalize data
           const position = POSITIONS.includes(roster.position) ? roster.position : "GS";
           const quarter = roster.quarter >= 1 && roster.quarter <= 4 ? roster.quarter : 1;
-
-          console.log(`Found valid roster entry:`, roster);
 
           await db.execute(sql`
             INSERT INTO rosters (
@@ -407,8 +394,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const statsData = Array.isArray(data.gameStats) ? data.gameStats : [];
 
       // Get valid game and player IDs for reference (reusing from rosters)
-      console.log(`Processing ${statsData.length} game stat entries...`);
-
       for (const stat of statsData) {
         try {
           // Skip invalid relationships
@@ -439,8 +424,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             infringement: Math.max(0, parseInt(stat.infringement || 0)),
             rating: Math.min(10, Math.max(1, parseInt(stat.rating || 5)))
           };
-
-          console.log(`Processing stat for quarter ${cleanStat.quarter}, player ${cleanStat.player_id}:`, stat);
 
           await db.execute(sql`
             INSERT INTO game_stats (
@@ -589,10 +572,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = parseInt(req.params.id, 10);
       const seasonIds = req.body.seasonIds || [];
 
-      console.log(`POST /api/players/${playerId}/seasons - DIRECT HANDLER`);
-      console.log("Request body:", req.body);
-      console.log("Season IDs:", seasonIds);
-
       // Validate playerId
       if (isNaN(playerId) || playerId <= 0) {
         return res.status(400).json({ 
@@ -626,8 +605,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .map((id) => typeof id === 'string' ? parseInt(id, 10) : id)
           .filter((id) => !isNaN(id) && id > 0);
 
-        console.log("Valid season IDs:", validSeasonIds);
-
         await client.query(
           'DELETE FROM player_seasons WHERE player_id = $1',
           [playerId]
@@ -644,9 +621,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Execute insert
           const query = `INSERT INTO player_seasons (player_id, season_id) VALUES ${placeholders}`;
-          console.log("Insert query:", query);
-          console.log("Insert params:", params);
-
           await client.query(query, params);
         }
 
@@ -735,20 +709,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = parseInt(req.params.id, 10);
       const { clubIds = [] } = req.body;
 
-      console.log(`\n=== UPDATING PLAYER CLUBS ===`);
-      console.log(`Player ID: ${playerId}`);
-      console.log(`Club IDs received:`, clubIds);
-      console.log(`Club IDs type:`, typeof clubIds);
-      console.log(`Is array:`, Array.isArray(clubIds));
-
       if (isNaN(playerId)) {
-        console.log(`ERROR: Invalid player ID: ${req.params.id}`);
         return res.status(400).json({ message: "Invalid player ID" });
       }
 
       // Validate that clubIds is an array
       if (!Array.isArray(clubIds)) {
-        console.log(`ERROR: clubIds is not an array:`, clubIds);
         return res.status(400).json({ message: "clubIds must be an array" });
       }
 
@@ -765,26 +731,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (playerCheck.rowCount === 0) {
           await client.query('ROLLBACK');
-          console.log(`ERROR: Player ${playerId} not found`);
           return res.status(404).json({ message: "Player not found" });
         }
 
         const playerName = playerCheck.rows[0].display_name;
-        console.log(`Player found: ${playerName} (ID: ${playerId})`);
 
         // Check current associations
         const currentAssociations = await client.query(
           'SELECT club_id FROM club_players WHERE player_id = $1',
           [playerId]
         );
-        console.log(`Current club associations:`, currentAssociations.rows.map(r => r.club_id));
 
         // Remove existing club associations for this player
         const deleteResult = await client.query(
           'DELETE FROM club_players WHERE player_id = $1',
           [playerId]
         );
-        console.log(`Deleted ${deleteResult.rowCount} existing club associations for player ${playerId}`);
 
         // Add new club associations
         let insertedCount = 0;
@@ -802,7 +764,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (clubCheck.rowCount > 0) {
               const clubName = clubCheck.rows[0].name;
-              console.log(`Inserting club association: ${playerName} (${playerId}) -> ${clubName} (${numericClubId})`);
               
               await client.query(`
                 INSERT INTO club_players (club_id, player_id, is_active, joined_date)
@@ -820,9 +781,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         await client.query('COMMIT');
-        console.log(`Successfully updated player ${playerId} clubs: inserted ${insertedCount} associations`);
-        console.log(`Valid club IDs processed:`, validClubIds);
-        console.log(`=== PLAYER CLUBS UPDATE COMPLETE ===\n`);
         
         res.json({ 
           success: true, 
@@ -1083,7 +1041,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players/:id/seasons/debug", async (req, res) => {
     try {
       const playerId = Number(req.params.id);
-      console.log(`Fetching seasons for player ID: ${playerId}`);
 
       // Fetch the player's seasons from the junction table
       const result = await db.execute(sql`
@@ -1109,23 +1066,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/players", async (req, res) => {
     try {
-      console.log('\n=== PLAYER CREATION REQUEST START ===');
-      console.log('Server: POST /api/players endpoint reached at:', new Date().toISOString());
-      console.log('Headers:', {
-        'x-current-club-id': req.headers['x-current-club-id'],
-        'x-current-team-id': req.headers['x-current-team-id'],
-        'content-type': req.headers['content-type'],
-        'user-agent': req.headers['user-agent']?.substring(0, 50)
-      });
-      console.log('All headers:', Object.keys(req.headers));
-      console.log('Request body size:', JSON.stringify(req.body).length, 'bytes');
-      console.log('Request body:', JSON.stringify(req.body, null, 2));
-      console.log('Request method:', req.method);
-      console.log('Request URL:', req.url);
-      console.log('Request IP:', req.ip);
-      console.log('Request user agent:', req.headers['user-agent']);
-      console.log('Express middleware chain working:', true);
-
       // Extract club and team context using consistent approach
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
       const teamId = req.body.teamId || req.headers['x-current-team-id'];
@@ -1134,7 +1074,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate club context is available
       if (!clubId) {
-        console.log('ERROR: No club ID provided in headers or body');
         return res.status(400).json({ 
           message: "Club context required", 
           debug: {
@@ -1149,7 +1088,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const numericTeamId = teamId ? (typeof teamId === 'string' ? parseInt(teamId, 10) : teamId) : null;
 
       if (isNaN(numericClubId)) {
-        console.log('ERROR: Invalid club ID format:', clubId);
         return res.status(400).json({ message: "Invalid club ID format" });
       }
 
@@ -1221,14 +1159,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
 
-      console.log("\n\n======= PLAYER UPDATE START ========");
-      console.log("Player ID:", id);
-      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
-
       // Simplify - always use the direct format
       const updateData = {...req.body};
-
-      console.log("Player update data:", JSON.stringify(updateData, null, 2));
 
       // Season management is now handled separately on the player details page
       // We don't expect seasonIds in the request anymore
@@ -1236,7 +1168,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Remove season IDs from player update data if it exists
       delete updateData.seasonIds;
-      console.log("==================================");
 
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -1281,8 +1212,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarColor: updateData.avatar_color
       };
 
-      console.log("Sanitized player data for update:", validPlayerData);
-
       // Update the player first
       const updatedPlayer = await storage.updatePlayer(id, validPlayerData);
       if (!updatedPlayer) {
@@ -1291,7 +1220,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Season management is now handled separately on the player details page
       // We don't need to update player-season relationships here anymore
-      console.log(`Player ${id} updated successfully. Season management is handled separately now.`);
 
       // Fetch the updated player with season info before returning
       try {
@@ -1304,9 +1232,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...updatedPlayer,
           seasons: transformToApiFormat(playerSeasons || [])
         };
-
-        console.log(`Player ${id} successfully updated with seasons:`, playerSeasons);
-        console.log("======= PLAYER UPDATE COMPLETE ========\n\n");
 
         // Return the enhanced player object with seasons
         return res.json(enhancedResponse);
@@ -1396,8 +1321,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const clubId = parseInt(req.params.clubId);
       const { seasonId } = req.query;
 
-      console.log(`REST Club games endpoint: clubId=${clubId}, seasonId=${seasonId}`);
-
       // Updated SQL: include all games where either home or away team belongs to the club
       const result = await db.execute(sql`
         SELECT 
@@ -1433,8 +1356,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY g.date DESC, g.time DESC
       `);
 
-      console.log(`REST endpoint found ${result.rows.length} games for club ${clubId}`);
-
       const transformedGames = result.rows.map(transformGameRow);
       res.json(transformToApiFormat(transformedGames));
     } catch (error) {
@@ -1447,7 +1368,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/clubs/:clubId/games/simplified", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
-      console.log(`Simplified games endpoint: clubId=${clubId}`);
 
       // Single optimized query that returns only what we need for display
       const result = await db.execute(sql`
@@ -1649,8 +1569,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       }
 
-      console.log(`Found ${result.rows.length} games for club ${clubId}${teamId && !isClubWide ? `, team ${teamId}` : ' (club-wide)'}`);
-
       // UNIFIED TRANSFORMATION - guarantees consistent camelCase format including statusIsCompleted
       const games = result.rows.map(transformGameRow);
 
@@ -1666,8 +1584,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const teamId = parseInt(req.params.teamId, 10);
       const clubId = req.user?.currentClubId;
-
-      console.log(`Team-specific games endpoint: teamId=${teamId}, clubId=${clubId}`);
 
       if (isNaN(teamId)) {
         const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
@@ -1724,8 +1640,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
         ORDER BY g.date DESC, g.time DESC
       `);
-
-      console.log(`Found ${result.rows.length} games for team ${teamId}`);
 
       // Use same transformation as main games endpoint
       const games = result.rows.map(transformGameRow);
@@ -1831,8 +1745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unified endpoint for all games (BYE and regular)
   app.post("/api/games", async (req, res) => {
     try {
-      console.log("Game creation request:", req.body);
-
       // Handle BYE games using null away_team_id
       if (req.body.isBye === true || req.body.statusId === 6) { // statusId 6 is 'bye'
         // Ensure we have a home team
@@ -1942,9 +1854,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
 
-      console.log('Updating game with ID:', id);
-      console.log('Update payload:', req.body);
-
       // Handle BYE game updates using null away_team_id
       if (req.body.statusId === 6) { // BYE status
         // For BYE games, set away_team_id to null
@@ -1969,16 +1878,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle legacy status changes (no longer needed as we use statusId)
       if (req.body.status) {
         // Legacy status handling - just log for debugging
-        console.log(`Legacy status field received: ${req.body.status} - consider using statusId instead`);
       }
 
       const updatedGame = await storage.updateGame(id, req.body);
       if (!updatedGame) {
-        console.log('Game not found for update');
         return res.status(404).json({ message: "Game not found" });
       }
-
-      console.log('Game updated successfully:', updatedGame);
 
       res.json(transformToApiFormat(updatedGame));
     } catch (error) {
@@ -2130,8 +2035,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gameId = Number(req.params.gameId);
       const teamId = Number(req.params.teamId);
       
-      // With bidirectional case conversion, request body is converted to snake_case
-      const { available_player_ids: availablePlayerIds, explicitly_empty: explicitlyEmpty } = req.body;
+      // Handle both camelCase and snake_case field names
+      const availablePlayerIds = req.body.availablePlayerIds || req.body.available_player_ids;
+      const explicitlyEmpty = req.body.explicitlyEmpty || req.body.explicitly_empty;
 
       if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
