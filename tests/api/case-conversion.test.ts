@@ -1,0 +1,716 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import request from 'supertest';
+import app from '../../server/index';
+import { TestDataManager } from '../helpers/test-data-manager';
+
+/**
+ * Case Conversion System Tests
+ * 
+ * Tests the bidirectional case conversion system to ensure:
+ * 1. Frontend can send camelCase data
+ * 2. Backend converts to snake_case for database operations
+ * 3. Responses are converted back to camelCase
+ * 4. Field mappings work correctly
+ * 5. Batch endpoints are protected from conversion
+ */
+
+describe('Case Conversion System Tests', () => {
+  let server: any;
+  let testDataManager: TestDataManager;
+
+  beforeAll(async () => {
+    server = app.listen(0);
+    testDataManager = new TestDataManager();
+  });
+
+  afterAll(async () => {
+    await testDataManager.cleanup();
+    if (server) {
+      server.close();
+    }
+  });
+
+  beforeEach(() => {
+    // Fresh test data manager for each test group
+    testDataManager = new TestDataManager();
+  });
+
+  describe('Core CRUD Case Conversion', () => {
+    describe('Club Management', () => {
+      it('should handle camelCase input for club creation', async () => {
+        const clubData = {
+          name: `Case Test Club ${Date.now()}`,
+          code: `CTC${Date.now()}`,
+          address: '123 Case Test Street',
+          contactInfo: 'case@test.com',
+          isActive: true,
+          foundedYear: 2020
+        };
+
+        const response = await request(app)
+          .post('/api/clubs')
+          .send(clubData)
+          .expect(201);
+
+        // Response should be in camelCase
+        expect(response.body).toHaveProperty('id');
+        expect(response.body.name).toBe(clubData.name);
+        expect(response.body.code).toBe(clubData.code);
+        expect(response.body.isActive).toBe(true);
+        expect(response.body.foundedYear).toBe(2020);
+        
+        // Should NOT have snake_case fields in response
+        expect(response.body).not.toHaveProperty('is_active');
+        expect(response.body).not.toHaveProperty('founded_year');
+        expect(response.body).not.toHaveProperty('contact_info');
+
+        // Track for cleanup
+        testDataManager.getTrackedData().clubs.push(response.body.id);
+      });
+
+      it('should handle camelCase input for club updates', async () => {
+        // Create a club first
+        const club = await testDataManager.createTestClub();
+
+        const updateData = {
+          name: `Updated Case Test Club ${Date.now()}`,
+          isActive: false,
+          foundedYear: 2021,
+          contactInfo: 'updated@test.com'
+        };
+
+        const response = await request(app)
+          .patch(`/api/clubs/${club.id}`)
+          .send(updateData)
+          .expect(200);
+
+        // Response should be in camelCase
+        expect(response.body.name).toBe(updateData.name);
+        expect(response.body.isActive).toBe(false);
+        expect(response.body.foundedYear).toBe(2021);
+        expect(response.body.contactInfo).toBe(updateData.contactInfo);
+
+        // Should NOT have snake_case fields
+        expect(response.body).not.toHaveProperty('is_active');
+        expect(response.body).not.toHaveProperty('founded_year');
+      });
+    });
+
+    describe('Player Management', () => {
+      it('should handle camelCase input for player creation', async () => {
+        const club = await testDataManager.createTestClub();
+
+        const playerData = {
+          displayName: `Case Test Player ${Date.now()}`,
+          firstName: 'Case',
+          lastName: 'Test',
+          dateOfBirth: '1995-01-01',
+          positionPreferences: ['GS', 'GA'],
+          avatarColor: '#FF5733',
+          isActive: true
+        };
+
+        const response = await request(app)
+          .post('/api/players')
+          .set('x-current-club-id', club.id.toString())
+          .send(playerData)
+          .expect(201);
+
+        // Response should be in camelCase
+        expect(response.body.displayName).toBe(playerData.displayName);
+        expect(response.body.firstName).toBe(playerData.firstName);
+        expect(response.body.lastName).toBe(playerData.lastName);
+        expect(response.body.dateOfBirth).toBe(playerData.dateOfBirth);
+        expect(response.body.positionPreferences).toEqual(playerData.positionPreferences);
+        expect(response.body.avatarColor).toBe(playerData.avatarColor);
+        expect(response.body.isActive).toBe(true);
+
+        // Should NOT have snake_case fields
+        expect(response.body).not.toHaveProperty('display_name');
+        expect(response.body).not.toHaveProperty('first_name');
+        expect(response.body).not.toHaveProperty('last_name');
+        expect(response.body).not.toHaveProperty('date_of_birth');
+        expect(response.body).not.toHaveProperty('position_preferences');
+        expect(response.body).not.toHaveProperty('avatar_color');
+        expect(response.body).not.toHaveProperty('is_active');
+
+        testDataManager.getTrackedData().players.push(response.body.id);
+      });
+
+      it('should handle player-season assignments with camelCase', async () => {
+        const club = await testDataManager.createTestClub();
+        const player = await testDataManager.createTestPlayer(club.id);
+        const season = await testDataManager.getOrCreateTestSeason();
+
+        const assignmentData = {
+          seasonIds: [season.id]
+        };
+
+        const response = await request(app)
+          .post(`/api/players/${player.id}/seasons`)
+          .send(assignmentData)
+          .expect(200);
+
+        expect(response.body).toHaveProperty('success');
+        expect(response.body.success).toBe(true);
+      });
+
+      it('should handle player-club assignments with camelCase', async () => {
+        const club = await testDataManager.createTestClub();
+        const player = await testDataManager.createTestPlayer(club.id);
+
+        const assignmentData = {
+          clubIds: [club.id]
+        };
+
+        const response = await request(app)
+          .post(`/api/players/${player.id}/clubs`)
+          .send(assignmentData)
+          .expect(200);
+
+        expect(response.body).toHaveProperty('success');
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('Team Management', () => {
+      it('should handle camelCase input for team creation', async () => {
+        const club = await testDataManager.createTestClub();
+        const season = await testDataManager.getOrCreateTestSeason();
+
+        const teamData = {
+          name: `Case Test Team ${Date.now()}`,
+          clubId: club.id,
+          seasonId: season.id,
+          divisionId: null,
+          isActive: true
+        };
+
+        const response = await request(app)
+          .post('/api/teams')
+          .send(teamData)
+          .expect(201);
+
+        // Response should be in camelCase
+        expect(response.body.name).toBe(teamData.name);
+        expect(response.body.clubId).toBe(club.id);
+        expect(response.body.seasonId).toBe(season.id);
+        expect(response.body.isActive).toBe(true);
+
+        // Should NOT have snake_case fields
+        expect(response.body).not.toHaveProperty('club_id');
+        expect(response.body).not.toHaveProperty('season_id');
+        expect(response.body).not.toHaveProperty('division_id');
+        expect(response.body).not.toHaveProperty('is_active');
+
+        testDataManager.getTrackedData().teams.push(response.body.id);
+      });
+
+      it('should handle team-player assignment with field mappings', async () => {
+        const { club, team, player } = await testDataManager.createTestEcosystem();
+
+        const assignmentData = {
+          playerId: player.id,
+          isRegular: true
+        };
+
+        const response = await request(app)
+          .post(`/api/teams/${team.id}/players`)
+          .send(assignmentData)
+          .expect(201);
+
+        // Response should be in camelCase
+        expect(response.body.playerId).toBe(player.id);
+        expect(response.body.isRegular).toBe(true);
+
+        // Should NOT have snake_case fields
+        expect(response.body).not.toHaveProperty('player_id');
+        expect(response.body).not.toHaveProperty('is_regular');
+      });
+
+      it('should handle team-player updates with field mappings', async () => {
+        const { club, team, player } = await testDataManager.createTestEcosystem();
+
+        // First assign player to team
+        await request(app)
+          .post(`/api/teams/${team.id}/players`)
+          .send({ playerId: player.id, isRegular: true })
+          .expect(201);
+
+        // Then update the assignment
+        const updateData = {
+          isRegular: false,
+          positionPreferences: ['C', 'WA']
+        };
+
+        const response = await request(app)
+          .patch(`/api/teams/${team.id}/players/${player.id}`)
+          .send(updateData)
+          .expect(200);
+
+        expect(response.body.isRegular).toBe(false);
+        expect(response.body.positionPreferences).toEqual(['C', 'WA']);
+      });
+    });
+
+    describe('Game Management', () => {
+      it('should handle camelCase input for game creation', async () => {
+        const { club, team, season } = await testDataManager.createTestEcosystem();
+        const awayTeam = await testDataManager.createTestTeam(club.id, season.id, {
+          name: `Away Team ${Date.now()}`
+        });
+
+        const gameData = {
+          date: '2025-07-20',
+          time: '10:00',
+          homeTeamId: team.id,
+          awayTeamId: awayTeam.id,
+          venue: 'Case Test Venue',
+          round: 'Case Test Round',
+          seasonId: season.id,
+          statusId: 1,
+          isInterClub: false
+        };
+
+        const response = await request(app)
+          .post('/api/games')
+          .send(gameData)
+          .expect(201);
+
+        // Response should be in camelCase
+        expect(response.body.homeTeamId).toBe(team.id);
+        expect(response.body.awayTeamId).toBe(awayTeam.id);
+        expect(response.body.seasonId).toBe(season.id);
+        expect(response.body.statusId).toBe(1);
+        expect(response.body.isInterClub).toBe(false);
+
+        // Should NOT have snake_case fields
+        expect(response.body).not.toHaveProperty('home_team_id');
+        expect(response.body).not.toHaveProperty('away_team_id');
+        expect(response.body).not.toHaveProperty('season_id');
+        expect(response.body).not.toHaveProperty('status_id');
+        expect(response.body).not.toHaveProperty('is_inter_club');
+
+        testDataManager.getTrackedData().games.push(response.body.id);
+      });
+
+      it('should handle game updates with camelCase', async () => {
+        const { game } = await testDataManager.createTestEcosystem();
+
+        const updateData = {
+          venue: 'Updated Case Test Venue',
+          statusId: 2,
+          isInterClub: true
+        };
+
+        const response = await request(app)
+          .patch(`/api/games/${game.id}`)
+          .send(updateData)
+          .expect(200);
+
+        expect(response.body.venue).toBe(updateData.venue);
+        expect(response.body.statusId).toBe(2);
+        expect(response.body.isInterClub).toBe(true);
+      });
+    });
+  });
+
+  describe('Availability Management', () => {
+    it('should handle team-game availability with field mappings', async () => {
+      const { team, game, player } = await testDataManager.createTestEcosystem();
+
+      const availabilityData = {
+        availablePlayerIds: [player.id],
+        explicitlyEmpty: false
+      };
+
+      const response = await request(app)
+        .post(`/api/teams/${team.id}/games/${game.id}/availability`)
+        .send(availabilityData)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('success');
+      expect(response.body.success).toBe(true);
+    });
+
+    it('should handle game availability with field mappings', async () => {
+      const { game, player } = await testDataManager.createTestEcosystem();
+
+      const availabilityData = {
+        availablePlayerIds: [player.id],
+        explicitlyEmpty: false
+      };
+
+      const response = await request(app)
+        .post(`/api/games/${game.id}/availability`)
+        .send(availabilityData)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('success');
+      expect(response.body.success).toBe(true);
+    });
+
+    it('should handle individual player availability updates', async () => {
+      const { team, game, player } = await testDataManager.createTestEcosystem();
+
+      // First set availability
+      await request(app)
+        .post(`/api/teams/${team.id}/games/${game.id}/availability`)
+        .send({ availablePlayerIds: [player.id] })
+        .expect(200);
+
+      // Then update individual player
+      const updateData = {
+        isAvailable: false
+      };
+
+      const response = await request(app)
+        .patch(`/api/teams/${team.id}/games/${game.id}/availability/${player.id}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('success');
+      expect(response.body.success).toBe(true);
+    });
+  });
+
+  describe('Statistics and Scoring', () => {
+    it('should handle game statistics with camelCase', async () => {
+      const { game, team, player } = await testDataManager.createTestEcosystem();
+
+      const statsData = {
+        gameId: game.id,
+        teamId: team.id,
+        playerId: player.id,
+        position: 'GS',
+        quarter: 1,
+        goalsFor: 10,
+        goalsAgainst: 2,
+        missedGoals: 1,
+        rebounds: 5,
+        intercepts: 3,
+        deflections: 4,
+        turnovers: 1,
+        gains: 6,
+        receives: 15,
+        penalties: 0,
+        rating: 9
+      };
+
+      const response = await request(app)
+        .post(`/api/games/${game.id}/stats`)
+        .send(statsData)
+        .expect(201);
+
+      // Response should be in camelCase
+      expect(response.body.gameId).toBe(game.id);
+      expect(response.body.teamId).toBe(team.id);
+      expect(response.body.playerId).toBe(player.id);
+      expect(response.body.goalsFor).toBe(10);
+      expect(response.body.goalsAgainst).toBe(2);
+      expect(response.body.missedGoals).toBe(1);
+
+      // Should NOT have snake_case fields
+      expect(response.body).not.toHaveProperty('game_id');
+      expect(response.body).not.toHaveProperty('team_id');
+      expect(response.body).not.toHaveProperty('player_id');
+      expect(response.body).not.toHaveProperty('goals_for');
+      expect(response.body).not.toHaveProperty('goals_against');
+      expect(response.body).not.toHaveProperty('missed_goals');
+
+      testDataManager.getTrackedData().gameStats.push(response.body.id);
+    });
+
+    it('should handle game scores with camelCase', async () => {
+      const { game } = await testDataManager.createTestEcosystem();
+
+      const scoresData = {
+        homeScore: 45,
+        awayScore: 38,
+        gameId: game.id
+      };
+
+      const response = await request(app)
+        .post(`/api/games/${game.id}/scores`)
+        .send(scoresData)
+        .expect(201);
+
+      // Response should be in camelCase
+      expect(response.body.homeScore).toBe(45);
+      expect(response.body.awayScore).toBe(38);
+      expect(response.body.gameId).toBe(game.id);
+
+      // Should NOT have snake_case fields
+      expect(response.body).not.toHaveProperty('home_score');
+      expect(response.body).not.toHaveProperty('away_score');
+      expect(response.body).not.toHaveProperty('game_id');
+    });
+
+    it('should handle roster management with camelCase', async () => {
+      const { game, player } = await testDataManager.createTestEcosystem();
+
+      const rosterData = {
+        gameId: game.id,
+        playerId: player.id,
+        position: 'GS',
+        quarter: 1,
+        jerseyNumber: 7
+      };
+
+      const response = await request(app)
+        .post(`/api/games/${game.id}/rosters`)
+        .send(rosterData)
+        .expect(201);
+
+      // Response should be in camelCase
+      expect(response.body.gameId).toBe(game.id);
+      expect(response.body.playerId).toBe(player.id);
+      expect(response.body.jerseyNumber).toBe(7);
+
+      // Should NOT have snake_case fields
+      expect(response.body).not.toHaveProperty('game_id');
+      expect(response.body).not.toHaveProperty('player_id');
+      expect(response.body).not.toHaveProperty('jersey_number');
+
+      testDataManager.getTrackedData().rosters.push(response.body.id);
+    });
+  });
+
+  describe('Administrative Functions', () => {
+    it('should handle season creation with camelCase', async () => {
+      const seasonData = {
+        name: `Case Test Season ${Date.now()}`,
+        startDate: '2025-01-01',
+        endDate: '2025-12-31',
+        isActive: false,
+        type: 'regular',
+        year: 2025
+      };
+
+      const response = await request(app)
+        .post('/api/seasons')
+        .send(seasonData)
+        .expect(201);
+
+      // Response should be in camelCase
+      expect(response.body.name).toBe(seasonData.name);
+      expect(response.body.startDate).toBe(seasonData.startDate);
+      expect(response.body.endDate).toBe(seasonData.endDate);
+      expect(response.body.isActive).toBe(false);
+
+      // Should NOT have snake_case fields
+      expect(response.body).not.toHaveProperty('start_date');
+      expect(response.body).not.toHaveProperty('end_date');
+      expect(response.body).not.toHaveProperty('is_active');
+
+      testDataManager.getTrackedData().seasons.push(response.body.id);
+    });
+
+    it('should handle age group creation with camelCase', async () => {
+      const ageGroupData = {
+        displayName: `Case Test Age Group ${Date.now()}`,
+        isActive: true
+      };
+
+      const response = await request(app)
+        .post('/api/age-groups')
+        .send(ageGroupData)
+        .expect(201);
+
+      // Response should be in camelCase
+      expect(response.body.displayName).toBe(ageGroupData.displayName);
+      expect(response.body.isActive).toBe(true);
+
+      // Should NOT have snake_case fields
+      expect(response.body).not.toHaveProperty('display_name');
+      expect(response.body).not.toHaveProperty('is_active');
+    });
+  });
+
+  describe('Batch Endpoints Protection', () => {
+    it('should NOT convert request for batch stats endpoint', async () => {
+      const { game } = await testDataManager.createTestEcosystem();
+
+      // Batch endpoints should expect camelCase gameIds array
+      const batchData = {
+        gameIds: [game.id]
+      };
+
+      const response = await request(app)
+        .post('/api/games/stats/batch')
+        .send(batchData)
+        .expect(200);
+
+      // Should return data (even if empty)
+      expect(response.body).toBeDefined();
+    });
+
+    it('should NOT convert request for batch scores endpoint', async () => {
+      const { game } = await testDataManager.createTestEcosystem();
+
+      const batchData = {
+        gameIds: [game.id]
+      };
+
+      const response = await request(app)
+        .post('/api/games/scores/batch')
+        .send(batchData)
+        .expect(200);
+
+      expect(response.body).toBeDefined();
+    });
+
+    it('should NOT convert request for club-scoped batch endpoints', async () => {
+      const { club, game } = await testDataManager.createTestEcosystem();
+
+      const batchData = {
+        gameIds: [game.id]
+      };
+
+      const response = await request(app)
+        .post(`/api/clubs/${club.id}/games/stats/batch`)
+        .send(batchData)
+        .expect(200);
+
+      expect(response.body).toBeDefined();
+    });
+
+    it('should NOT convert request for team-scoped batch endpoints', async () => {
+      const { team, game } = await testDataManager.createTestEcosystem();
+
+      const batchData = {
+        gameIds: [game.id]
+      };
+
+      const response = await request(app)
+        .post(`/api/teams/${team.id}/games/stats/batch`)
+        .send(batchData)
+        .expect(200);
+
+      expect(response.body).toBeDefined();
+    });
+  });
+
+  describe('Legacy Endpoint Compatibility', () => {
+    it('should handle legacy game-team stats endpoint', async () => {
+      const { game, team, player } = await testDataManager.createTestEcosystem();
+
+      const statsData = {
+        gameId: game.id,
+        teamId: team.id,
+        playerId: player.id,
+        statType: 'goals',
+        value: 5
+      };
+
+      const response = await request(app)
+        .post(`/api/game/${game.id}/team/${team.id}/stats`)
+        .send(statsData)
+        .expect(201);
+
+      // Should handle the conversion properly
+      expect(response.body).toBeDefined();
+    });
+
+    it('should handle legacy game-team rosters endpoint', async () => {
+      const { game, team, player } = await testDataManager.createTestEcosystem();
+
+      const rosterData = {
+        gameId: game.id,
+        teamId: team.id,
+        playerId: player.id,
+        jerseyNumber: 10
+      };
+
+      const response = await request(app)
+        .post(`/api/game/${game.id}/team/${team.id}/rosters`)
+        .send(rosterData)
+        .expect(201);
+
+      expect(response.body).toBeDefined();
+    });
+  });
+
+  describe('Error Handling with Case Conversion', () => {
+    it('should return camelCase error responses', async () => {
+      const response = await request(app)
+        .get('/api/clubs/999999')
+        .expect(404);
+
+      // Error response should also be in camelCase
+      expect(response.body).toHaveProperty('error');
+      // Should not have snake_case error fields
+      expect(response.body).not.toHaveProperty('error_code');
+      expect(response.body).not.toHaveProperty('error_message');
+    });
+
+    it('should handle validation errors with camelCase', async () => {
+      const response = await request(app)
+        .post('/api/clubs')
+        .send({}) // Empty data to trigger validation
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      // Validation errors should be in camelCase format
+    });
+  });
+
+  describe('Complex Nested Data', () => {
+    it('should handle deeply nested objects with case conversion', async () => {
+      const club = await testDataManager.createTestClub();
+
+      const complexPlayerData = {
+        displayName: `Complex Player ${Date.now()}`,
+        firstName: 'Complex',
+        lastName: 'Player',
+        dateOfBirth: '1995-01-01',
+        positionPreferences: ['GS', 'GA'],
+        contactInfo: {
+          emailAddress: 'complex@test.com',
+          phoneNumber: '123-456-7890',
+          emergencyContact: {
+            fullName: 'Emergency Contact',
+            phoneNumber: '098-765-4321',
+            relationshipType: 'parent'
+          }
+        },
+        medicalInfo: {
+          hasAllergies: true,
+          allergyDetails: 'Peanuts',
+          hasInjuries: false,
+          injuryDetails: null
+        },
+        isActive: true
+      };
+
+      const response = await request(app)
+        .post('/api/players')
+        .set('x-current-club-id', club.id.toString())
+        .send(complexPlayerData)
+        .expect(201);
+
+      // All nested fields should be in camelCase
+      expect(response.body.displayName).toBe(complexPlayerData.displayName);
+      expect(response.body.positionPreferences).toEqual(complexPlayerData.positionPreferences);
+      
+      if (response.body.contactInfo) {
+        expect(response.body.contactInfo.emailAddress).toBe(complexPlayerData.contactInfo.emailAddress);
+        expect(response.body.contactInfo.phoneNumber).toBe(complexPlayerData.contactInfo.phoneNumber);
+        
+        if (response.body.contactInfo.emergencyContact) {
+          expect(response.body.contactInfo.emergencyContact.fullName).toBe(complexPlayerData.contactInfo.emergencyContact.fullName);
+          expect(response.body.contactInfo.emergencyContact.relationshipType).toBe(complexPlayerData.contactInfo.emergencyContact.relationshipType);
+        }
+      }
+
+      // Should NOT have any snake_case fields
+      expect(response.body).not.toHaveProperty('display_name');
+      expect(response.body).not.toHaveProperty('first_name');
+      expect(response.body).not.toHaveProperty('last_name');
+      expect(response.body).not.toHaveProperty('date_of_birth');
+      expect(response.body).not.toHaveProperty('position_preferences');
+
+      testDataManager.getTrackedData().players.push(response.body.id);
+    });
+  });
+});

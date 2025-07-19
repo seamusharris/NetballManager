@@ -1,53 +1,73 @@
+/**
+ * Test Setup Configuration
+ * 
+ * Global setup for all tests to ensure consistent environment
+ */
+
 import { beforeAll, afterAll } from 'vitest';
 
-// Global test setup
-beforeAll(async () => {
-  // Set up test environment variables
-  process.env.NODE_ENV = 'test';
-  process.env.PORT = '3001'; // Use different port for tests
+// Set test environment variables
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+
+// Global test timeout (30 seconds for API tests)
+const TEST_TIMEOUT = 30000;
+
+beforeAll(() => {
+  console.log('🧪 Starting test suite...');
+  console.log(`📊 Test timeout: ${TEST_TIMEOUT}ms`);
+  console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? 'Set' : 'Not set'}`);
+}, TEST_TIMEOUT);
+
+afterAll(() => {
+  console.log('✅ Test suite completed');
+});
+
+// Export test utilities
+export const testConfig = {
+  timeout: TEST_TIMEOUT,
+  apiBaseUrl: 'http://localhost:3000',
+  testDataPrefix: 'TEST_',
+  cleanupDelay: 100 // ms to wait between cleanup operations
+};
+
+export const testHelpers = {
+  /**
+   * Generate unique test identifier
+   */
+  generateTestId: () => `${testConfig.testDataPrefix}${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
   
-  // Wait for server to be ready (if needed)
-  await new Promise(resolve => setTimeout(resolve, 1000));
-});
-
-afterAll(async () => {
-  // Clean up test environment
-  console.log('Tests completed');
-});
-
-// Global test utilities
-export const testUtils = {
-  // Helper to wait for server to be ready
-  waitForServer: async (url: string, maxAttempts = 10) => {
-    for (let i = 0; i < maxAttempts; i++) {
+  /**
+   * Wait for a specified amount of time
+   */
+  wait: (ms: number) => new Promise(resolve => setTimeout(resolve, ms)),
+  
+  /**
+   * Retry an operation with exponential backoff
+   */
+  retry: async <T>(
+    operation: () => Promise<T>,
+    maxAttempts: number = 3,
+    baseDelay: number = 1000
+  ): Promise<T> => {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const response = await fetch(url);
-        if (response.ok) return true;
+        return await operation();
       } catch (error) {
-        // Server not ready yet
+        lastError = error as Error;
+        
+        if (attempt === maxAttempts) {
+          throw lastError;
+        }
+        
+        const delay = baseDelay * Math.pow(2, attempt - 1);
+        console.warn(`⚠️ Attempt ${attempt} failed, retrying in ${delay}ms...`);
+        await testHelpers.wait(delay);
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
-    throw new Error('Server not ready after maximum attempts');
-  },
-
-  // Helper to create test data
-  createTestData: () => ({
-    clubId: 54,
-    teamId: 116,
-    gameId: 72,
-    playerId: 60
-  }),
-
-  // Helper to make authenticated requests
-  makeAuthenticatedRequest: async (url: string, options: RequestInit = {}) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        'x-current-club-id': '54',
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    });
+    
+    throw lastError!;
   }
-}; 
+};
