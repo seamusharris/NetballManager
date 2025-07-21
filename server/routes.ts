@@ -32,7 +32,7 @@ import {
   requireAuth,
   standardAuth
 } from "./auth-middleware";
-import { transformToApiFormat } from './api-utils';
+import { transformToApiFormat, createSuccessResponse, createErrorResponse, createArrayResponse } from './api-utils';
 import camelcaseKeys from 'camelcase-keys';
 import { getBatchGameScores } from './game-scores-utils';
 
@@ -2559,10 +2559,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/seasons', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const allSeasons = await storage.getSeasons();
-      res.json(allSeasons);
+      res.json(createArrayResponse(allSeasons));
     } catch (error) {
       console.error('Error fetching seasons:', error);
-      res.status(500).json({ message: 'Failed to fetch seasons' });
+      res.status(500).json(createErrorResponse('FETCH_ERROR', 'Failed to fetch seasons'));
     }
   });
 
@@ -2571,12 +2571,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activeSeason = await storage.getActiveSeason();
       if (!activeSeason) {
-        return res.status(404).json({ message: 'No active season found' });
+        return res.status(404).json(createErrorResponse('NOT_FOUND', 'No active season found'));
       }
-      res.json(activeSeason);
+      res.json(createSuccessResponse(activeSeason));
     } catch (error) {
       console.error('Error fetching active season:', error);
-      res.status(500).json({ message: 'Failed to fetch active season' });
+      res.status(500).json(createErrorResponse('FETCH_ERROR', 'Failed to fetch active season'));
     }
   });
 
@@ -2586,12 +2586,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const season = await storage.getSeason(id);
       if (!season) {
-        return res.status(404).json({ message: 'Season not found' });
+        return res.status(404).json(createErrorResponse('NOT_FOUND', 'Season not found'));
       }
-      res.json(season);
+      res.json(createSuccessResponse(season));
     } catch (error) {
       console.error(`Error fetching season ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to fetch season' });
+      res.status(500).json(createErrorResponse('FETCH_ERROR', 'Failed to fetch season'));
     }
   });
 

@@ -30,9 +30,20 @@ describe('Case Conversion System Tests', () => {
     }
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Clean up any existing data before creating fresh manager
+    if (testDataManager) {
+      await testDataManager.cleanup();
+    }
     // Fresh test data manager for each test group
     testDataManager = new TestDataManager();
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    if (testDataManager) {
+      await testDataManager.cleanup();
+    }
   });
 
   describe('Core CRUD Case Conversion', () => {
@@ -62,7 +73,7 @@ describe('Case Conversion System Tests', () => {
         expect(response.body).not.toHaveProperty('contact_email');
 
         // Track for cleanup
-        testDataManager.getTrackedData().clubs.push(response.body.id);
+        testDataManager.track('clubs', response.body.id);
       });
 
       it('should handle camelCase input for club updates', async () => {
@@ -131,7 +142,7 @@ describe('Case Conversion System Tests', () => {
         expect(response.body).not.toHaveProperty('avatar_color');
         expect(response.body).not.toHaveProperty('is_active');
 
-        testDataManager.getTrackedData().players.push(response.body.id);
+        testDataManager.track('players', response.body.id);
       });
 
       it('should handle player-season assignments with camelCase', async () => {
@@ -202,7 +213,7 @@ describe('Case Conversion System Tests', () => {
         expect(response.body).not.toHaveProperty('division_id');
         expect(response.body).not.toHaveProperty('is_active');
 
-        testDataManager.getTrackedData().teams.push(response.body.id);
+        testDataManager.track('teams', response.body.id);
       });
 
       it('should handle team-player assignment with field mappings', async () => {
@@ -293,7 +304,7 @@ describe('Case Conversion System Tests', () => {
         expect(response.body).not.toHaveProperty('status_id');
         expect(response.body).not.toHaveProperty('is_inter_club');
 
-        testDataManager.getTrackedData().games.push(response.body.id);
+        testDataManager.track('games', response.body.id);
       });
 
       it('should handle game updates with camelCase', async () => {
@@ -437,7 +448,7 @@ describe('Case Conversion System Tests', () => {
       expect(response.body.data).not.toHaveProperty('goals_against');
       expect(response.body.data).not.toHaveProperty('missed_goals');
 
-      testDataManager.getTrackedData().gameStats.push(response.body.data.id);
+      testDataManager.track('gameStats', response.body.data.id);
     });
 
     it('should handle game scores with camelCase', async () => {
@@ -500,7 +511,7 @@ describe('Case Conversion System Tests', () => {
       expect(response.body.data).not.toHaveProperty('game_id');
       expect(response.body.data).not.toHaveProperty('player_id');
 
-      testDataManager.getTrackedData().rosters.push(response.body.data.id);
+      testDataManager.track('rosters', response.body.data.id);
     });
   });
 
@@ -531,7 +542,7 @@ describe('Case Conversion System Tests', () => {
       expect(response.body).not.toHaveProperty('end_date');
       expect(response.body).not.toHaveProperty('is_active');
 
-      testDataManager.getTrackedData().seasons.push(response.body.id);
+      testDataManager.track('seasons', response.body.id);
     });
 
     it('should handle age group creation with camelCase', async () => {
@@ -752,7 +763,7 @@ describe('Case Conversion System Tests', () => {
       expect(response.body).not.toHaveProperty('date_of_birth');
       expect(response.body).not.toHaveProperty('position_preferences');
 
-      testDataManager.getTrackedData().players.push(response.body.id);
+      testDataManager.track('players', response.body.id);
     });
   });
 });

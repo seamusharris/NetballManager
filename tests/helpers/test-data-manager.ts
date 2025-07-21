@@ -309,6 +309,14 @@ export class TestDataManager {
   }
 
   /**
+   * Track manually created entities for cleanup
+   */
+  track(type: keyof TestDataTracker, id: number): void {
+    this.data[type].push(id);
+    console.log(`📝 Tracking ${type} ${id} for cleanup`);
+  }
+
+  /**
    * Generate random test data
    */
   static generateRandomData() {
