@@ -5,10 +5,13 @@
  */
 
 import { beforeAll, afterAll } from 'vitest';
+import dotenv from 'dotenv';
+
+// Load test environment variables first
+dotenv.config({ path: '.env.test' });
 
 // Set test environment variables
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
 
 // Global test timeout (30 seconds for API tests)
 const TEST_TIMEOUT = 30000;

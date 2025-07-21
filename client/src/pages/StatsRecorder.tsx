@@ -1,34 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useLocation } from 'wouter';
-import { apiClient } from '@/lib/apiClient';
-import { useToast } from '@/hooks/use-toast';
-import { useClub } from '@/contexts/ClubContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/schema';
-import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
-import { 
-  Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, 
-  Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus,
-  RefreshCw, Users, Coffee, Clock, Timer, Pause
-} from 'lucide-react';
-import { STAT_LABELS, STAT_COLORS, POSITIONS, getAllOrderedStats, STAT_ICONS } from '@/lib/constants';
-import { Helmet } from 'react-helmet';
-import { clearGameCache } from '@/lib/scoresCache';
-import PageTemplate from '@/components/layout/PageTemplate';
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams, useLocation } from "wouter";
+import { apiClient } from "@/lib/apiClient";
+import { useToast } from "@/hooks/use-toast";
+import { useClub } from "@/contexts/ClubContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Game, Player, GameStat, Roster, Position, allPositions } from "@shared/schema";
+import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from "@/lib/utils";
+import { Target, Shield, RotateCcw, X, AlertCircle, ArrowUp, Ban, Play, Save, Undo, Redo, AlertTriangle, CheckCircle, Zap, Plus, Minus, RefreshCw, Users, Coffee, Clock, Timer, Pause } from "lucide-react";
+import { STAT_LABELS, STAT_COLORS, POSITIONS, getAllOrderedStats, STAT_ICONS } from "@/lib/constants";
+import { Helmet } from "react-helmet";
+import { clearGameCache } from "@/lib/scoresCache";
+import PageTemplate from "@/components/layout/PageTemplate";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
+import { usePerformanceMonitor } from "@/hooks/use-performance-monitor";
 
 // Import centralized stat ordering
-import { getPositionOrderedStats, isStatRelevantForPosition } from '@/lib/statOrderUtils';
+import { getPositionOrderedStats, isStatRelevantForPosition } from "@/lib/statOrderUtils";
 
 // Stat types that can be tracked
-type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
-                'intercepts' | 'deflections' | 'turnovers' | 'gains' | 'receives' | 'penalties';
+type StatType = "goalsFor" | "goalsAgainst" | "missedGoals" | "rebounds" | "intercepts" | "deflections" | "turnovers" | "gains" | "receives" | "penalties";
 
 // Quarter stats including both regular stats and position info
 interface QuarterStats {
@@ -62,20 +57,28 @@ const emptyQuarterStats = {
   receives: 0,
   penalties: 0,
   missedGoals: 0,
-  rating: 5 as number
+  rating: 5 as number,
 };
 
 // Get color for each netball position
-const getPositionColor = (position: Position | ''): string => {
-  switch(position) {
-    case 'GS': return '#ef4444'; // Goalers (red)
-    case 'GA': return '#f97316'; // Goalers (orange)
-    case 'WA': return '#eab308'; // Mid-court (yellow)
-    case 'C':  return '#22c55e'; // Mid-court (green)
-    case 'WD': return '#06b6d4'; // Defense (cyan)
-    case 'GD': return '#3b82f6'; // Defense (blue)
-    case 'GK': return '#8b5cf6'; // Defense (purple)
-    default:   return '#6b7280'; // Gray for unknown positions
+const getPositionColor = (position: Position | ""): string => {
+  switch (position) {
+    case "GS":
+      return "#ef4444"; // Goalers (red)
+    case "GA":
+      return "#f97316"; // Goalers (orange)
+    case "WA":
+      return "#eab308"; // Mid-court (yellow)
+    case "C":
+      return "#22c55e"; // Mid-court (green)
+    case "WD":
+      return "#06b6d4"; // Defense (cyan)
+    case "GD":
+      return "#3b82f6"; // Defense (blue)
+    case "GK":
+      return "#8b5cf6"; // Defense (purple)
+    default:
+      return "#6b7280"; // Gray for unknown positions
   }
 };
 
@@ -87,8 +90,8 @@ interface StatsRecorderProps {
 export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }: StatsRecorderProps = {}) {
   // Route params - extract both gameId and teamId from URL
   const { gameId: gameIdParam, teamId: teamIdParam } = useParams<{ gameId: string; teamId: string }>();
-  const gameId = propGameId || parseInt(gameIdParam || '0', 10);
-  const teamId = propTeamId || parseInt(teamIdParam || '0', 10);
+  const gameId = propGameId || parseInt(gameIdParam || "0", 10);
+  const teamId = propTeamId || parseInt(teamIdParam || "0", 10);
   const [, navigate] = useLocation();
 
   const { toast } = useToast();
@@ -97,7 +100,13 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [currentPositions, setCurrentPositions] = useState<Record<Position, number | null>>({
-    'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null
+    GS: null,
+    GA: null,
+    WA: null,
+    C: null,
+    WD: null,
+    GD: null,
+    GK: null,
   });
 
   // State for tracking the game - using position-quarter keys
@@ -117,10 +126,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   const currentTeamId = teamId || currentTeam?.id;
 
   // Performance monitoring
-  const performanceMetrics = usePerformanceMonitor('StatsRecorder', {
+  const performanceMetrics = usePerformanceMonitor("StatsRecorder", {
     trackApiCalls: true,
     trackRenderTime: true,
-    logToConsole: true
+    logToConsole: true,
   });
 
   // Timer effect - countdown timer
@@ -128,7 +137,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     let interval: NodeJS.Timeout;
     if (isTimerRunning && timeRemaining > 0) {
       interval = setInterval(() => {
-        setTimeRemaining(prev => {
+        setTimeRemaining((prev) => {
           if (prev <= 1) {
             setIsTimerRunning(false);
             return 0;
@@ -174,61 +183,56 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   const formatTimeRemaining = (): string => {
     const minutes = Math.floor(timeRemaining / 60);
     const seconds = timeRemaining % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
-
-
 
   // Fetch game details using team-based endpoint
   const { data: game, isLoading: gameLoading } = useQuery({
-    queryKey: ['/api/teams', currentTeamId, 'games', gameId],
+    queryKey: ["/api/teams", currentTeamId, "games", gameId],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}`),
-    enabled: !!gameId && !!currentTeamId && !isNaN(gameId) && !isNaN(currentTeamId)
+    enabled: !!gameId && !!currentTeamId && !isNaN(gameId) && !isNaN(currentTeamId),
   });
 
   // Fetch player roster for this game using team-based endpoint
   const { data: rosters, isLoading: rostersLoading } = useQuery({
-    queryKey: ['/api/teams', currentTeamId, 'games', gameId, 'rosters'],
+    queryKey: ["/api/teams", currentTeamId, "games", gameId, "rosters"],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/games/${gameId}/rosters`),
-    enabled: !!gameId && !!currentTeamId && !isNaN(gameId) && !isNaN(currentTeamId)
+    enabled: !!gameId && !!currentTeamId && !isNaN(gameId) && !isNaN(currentTeamId),
   });
 
   // Fetch existing stats for this game using game-centric endpoint
-  const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['game-stats', gameId],
+  const {
+    data: existingStats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useQuery({
+    queryKey: ["game-stats", gameId],
     queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !!gameId,
     staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   // Fetch players directly for the team - much simpler approach
   const { data: allPlayers, isLoading: allPlayersLoading } = useQuery({
-    queryKey: ['/api/teams', currentTeamId, 'players'],
+    queryKey: ["/api/teams", currentTeamId, "players"],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
-    enabled: !!currentTeamId
+    enabled: !!currentTeamId,
   });
-
-
 
   // Filter to only show players assigned to the current team
   const players = useMemo(() => {
     if (!allPlayers || !currentTeamId) {
-
       return [];
     }
 
     const teamPlayerIds = new Set();
     if (rosters && Array.isArray(rosters)) {
-        rosters.forEach((r: any) => teamPlayerIds.add(r.playerId));
+      rosters.forEach((r: any) => teamPlayerIds.add(r.playerId));
     }
 
-    const filteredPlayers = allPlayers.filter((player: any) => 
-      player.active && teamPlayerIds.has(player.id)
-    );
-
-
+    const filteredPlayers = allPlayers.filter((player: any) => player.active && teamPlayerIds.has(player.id));
 
     return filteredPlayers;
   }, [allPlayers, currentTeamId, rosters]);
@@ -239,12 +243,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Initialize the position stats when existing data is loaded
   useEffect(() => {
     if (existingStats) {
-
-
       const initialStats: PositionStats = {};
 
       // Initialize all position-quarter combinations with empty stats
-      allPositions.forEach(position => {
+      allPositions.forEach((position) => {
         for (let quarter = 1; quarter <= 4; quarter++) {
           const key = `${position}-${quarter}`;
           initialStats[key] = { ...emptyQuarterStats };
@@ -274,16 +276,16 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
           // Map database field names to component field names
           const fieldMapping = {
-            goalsFor: 'goalsFor',
-            goalsAgainst: 'goalsAgainst', 
-            missedGoals: 'missedGoals',
-            rebounds: 'rebounds',
-            intercepts: 'intercepts',
-            deflections: 'deflections',
-            turnovers: 'turnovers',
-            gains: 'gains',
-            receives: 'receives',
-            penalties: 'penalties'
+            goalsFor: "goalsFor",
+            goalsAgainst: "goalsAgainst",
+            missedGoals: "missedGoals",
+            rebounds: "rebounds",
+            intercepts: "intercepts",
+            deflections: "deflections",
+            turnovers: "turnovers",
+            gains: "gains",
+            receives: "receives",
+            penalties: "penalties",
           };
 
           Object.entries(fieldMapping).forEach(([componentField, dbField]) => {
@@ -308,23 +310,24 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Initialize current positions from roster data
   useEffect(() => {
     if (rosters && Array.isArray(rosters) && rosters.length > 0) {
-
-
       const latestPositions: Record<Position, number | null> = {
-        'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null
+        GS: null,
+        GA: null,
+        WA: null,
+        C: null,
+        WD: null,
+        GD: null,
+        GK: null,
       };
 
       // Find roster entries for the current quarter
       const currentQuarterRosters = rosters.filter((entry: any) => entry.quarter === currentQuarter);
 
-
       currentQuarterRosters.forEach((entry: any) => {
         if (entry.position && allPositions.includes(entry.position as Position)) {
           latestPositions[entry.position as Position] = entry.playerId;
-
         }
       });
-
 
       setCurrentPositions(latestPositions);
     }
@@ -352,9 +355,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     // For other quarters, look up from roster data
     if (!rosters || !Array.isArray(rosters)) return undefined;
 
-    const roster = rosters.find((r: any) => 
-      r.position === position && r.quarter === quarter
-    );
+    const roster = rosters.find((r: any) => r.position === position && r.quarter === quarter);
 
     return roster ? getPlayer(roster.playerId) : undefined;
   };
@@ -367,8 +368,8 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Record a new stat
   const recordStat = (position: Position, stat: StatType, value: number = 1) => {
     if (isGameCompleted) {
-        setPendingStatChange({ position, stat, value });
-        return;
+      setPendingStatChange({ position, stat, value });
+      return;
     }
 
     executeStatChange(position, stat, value);
@@ -380,7 +381,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
     const key = getPositionQuarterKey(position, currentQuarter);
 
-    setPositionStats(prev => {
+    setPositionStats((prev) => {
       const newStats = JSON.parse(JSON.stringify(prev));
       if (!newStats[key]) {
         newStats[key] = { ...emptyQuarterStats };
@@ -427,9 +428,9 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
     setRedoStack([]);
 
-    setPositionStats(prev => {
+    setPositionStats((prev) => {
       const newStats = JSON.parse(JSON.stringify(prev));
-      allPositions.forEach(position => {
+      allPositions.forEach((position) => {
         const key = getPositionQuarterKey(position, currentQuarter);
         newStats[key] = { ...emptyQuarterStats };
       });
@@ -440,23 +441,21 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     toast({
       title: "Quarter Reset",
       description: `All stats for Quarter ${currentQuarter} have been reset to zero.`,
-      variant: "default"
+      variant: "default",
     });
   };
 
   // Save all stats mutation
   const saveAllStatsMutation = useMutation({
     mutationFn: async () => {
-
-
       if (!currentTeamId) {
-        throw new Error('Cannot determine team context for saving stats');
+        throw new Error("Cannot determine team context for saving stats");
       }
 
       const updates = [];
 
       Object.entries(positionStats).forEach(([key, stats]) => {
-        const [position, quarterStr] = key.split('-');
+        const [position, quarterStr] = key.split("-");
         const quarter = parseInt(quarterStr);
 
         if (!position || !quarter || quarter < 1 || quarter > 4) {
@@ -464,11 +463,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           return;
         }
 
-        const existingStat = existingStats && Array.isArray(existingStats) ? existingStats.find((s: any) => 
-          s.position === position && 
-          s.quarter === quarter &&
-          s.teamId === currentTeamId
-        ) : undefined;
+        const existingStat = existingStats && Array.isArray(existingStats) ? existingStats.find((s: any) => s.position === position && s.quarter === quarter && s.teamId === currentTeamId) : undefined;
 
         if (existingStat) {
           // Use standardized endpoint for updates
@@ -483,7 +478,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             gains: stats.gains || 0,
             receives: stats.receives || 0,
             penalties: stats.penalties || 0,
-            rating: stats.rating
+            rating: stats.rating,
           });
           updates.push(updatePromise);
         } else {
@@ -502,14 +497,14 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
             gains: stats.gains || 0,
             receives: stats.receives || 0,
             penalties: stats.penalties || 0,
-            rating: stats.rating
+            rating: stats.rating,
           });
           updates.push(createPromise);
         }
       });
 
       if (updates.length === 0) {
-        throw new Error('No statistics found to save');
+        throw new Error("No statistics found to save");
       }
 
       await Promise.all(updates);
@@ -518,9 +513,9 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       clearGameCache(gameId);
 
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/teams', currentTeamId, 'games', gameId, 'stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams", currentTeamId, "games", gameId, "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["gameScores", gameId] });
 
       toast({
         title: "Success",
@@ -530,23 +525,23 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       refetchStats();
     },
     onError: (error: any) => {
-      console.error('Error saving position stats:', error);
+      console.error("Error saving position stats:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save statistics. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const saveAllStats = () => {
     if (!positionStats || Object.keys(positionStats).length === 0) {
-        toast({
-            title: "Nothing to save",
-            description: "No statistics have been recorded yet.",
-            variant: "destructive"
-        });
-        return;
+      toast({
+        title: "Nothing to save",
+        description: "No statistics have been recorded yet.",
+        variant: "destructive",
+      });
+      return;
     }
 
     saveAllStatsMutation.mutate();
@@ -555,7 +550,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Get quarter total for a specific stat
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
-    allPositions.forEach(position => {
+    allPositions.forEach((position) => {
       const key = getPositionQuarterKey(position, currentQuarter);
       const stats = positionStats[key];
       if (stats && stats[stat] !== undefined) {
@@ -568,7 +563,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   // Get game total for a specific stat
   const getGameTotal = (stat: StatType): number => {
     let total = 0;
-    allPositions.forEach(position => {
+    allPositions.forEach((position) => {
       for (let quarter = 1; quarter <= 4; quarter++) {
         const key = getPositionQuarterKey(position, quarter);
         const stats = positionStats[key];
@@ -592,21 +587,21 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
     // Use centralized stat colors from constants
     const getStatColorClasses = (stat: string) => {
-      return STAT_COLORS[stat] || 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-600';
+      return STAT_COLORS[stat] || "bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-600";
     };
 
     // Map stats to their labels (singular form)
     const statLabelMap = {
-      'goalsFor': 'Goal',
-      'goalsAgainst': 'Against',
-      'missedGoals': 'Miss',
-      'rebounds': 'Rebound',
-      'intercepts': 'Intercept',
-      'deflections': 'Deflection',
-      'turnovers': 'Turnover',
-      'gains': 'Gain',
-      'receives': 'Receive',
-      'penalties': 'Penalty'
+      goalsFor: "Goal",
+      goalsAgainst: "Against",
+      missedGoals: "Miss",
+      rebounds: "Rebound",
+      intercepts: "Intercept",
+      deflections: "Deflection",
+      turnovers: "Turnover",
+      gains: "Gain",
+      receives: "Receive",
+      penalties: "Penalty",
     };
 
     const StatIcon = statIconMap[stat] || Target;
@@ -661,10 +656,10 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
     return (
       <Button
         variant="outline"
-        className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-102 active:scale-95`}
+        className={`${important ? "h-16 w-full" : "h-12 w-full"} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-102 active:scale-95`}
         onClick={(e) => {
           // Only handle click if not in touch context
-          if (e.type === 'click' && !longPressTriggered) {
+          if (e.type === "click" && !longPressTriggered) {
             recordStat(position, stat, 1);
           }
         }}
@@ -673,13 +668,9 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchCancel}
       >
-        <StatIcon className={important ? 'h-5 w-5' : 'h-4 w-4'} />
-        <span className={`${important ? 'text-sm' : 'text-xs'} font-medium`}>{statLabel}</span>
-        {currentValue > 0 && (
-          <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">
-            {currentValue}
-          </Badge>
-        )}
+        <StatIcon className={important ? "h-5 w-5" : "h-4 w-4"} />
+        <span className={`${important ? "text-sm" : "text-xs"} font-medium`}>{statLabel}</span>
+        {currentValue > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">{currentValue}</Badge>}
       </Button>
     );
   };
@@ -700,7 +691,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       <div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Game not found</h1>
         <p>The requested game could not be found. Please check the game ID and try again.</p>
-        <Button className="mt-4" onClick={() => navigate('/games')}>
+        <Button className="mt-4" onClick={() => navigate("/games")}>
           Back to Games
         </Button>
       </div>
@@ -708,27 +699,27 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
   }
 
   // Determine team names
-  const ourTeamDisplayName = game.teamPerspective === 'home' ? game.homeTeamName : game.awayTeamName;
-  const opponentDisplayName = game.teamPerspective === 'home' ? game.awayTeamName : game.homeTeamName;
+  const ourTeamDisplayName = game.teamPerspective === "home" ? game.homeTeamName : game.awayTeamName;
+  const opponentDisplayName = game.teamPerspective === "home" ? game.awayTeamName : game.homeTeamName;
 
   // Build breadcrumbs
   const breadcrumbs = [
-    { label: 'Games', href: '/games' },
+    { label: "Games", href: "/games" },
     {
       label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`,
-      href: `/game/${gameId}`
+      href: `/game/${gameId}`,
     },
-    { label: 'Record Stats' }
+    { label: "Record Stats" },
   ];
 
   // Get all relevant stats for a position based on centralized ordering
-  const getRelevantStatsForPosition = (position: Position): { common: string[], specific: string[] } => {
+  const getRelevantStatsForPosition = (position: Position): { common: string[]; specific: string[] } => {
     const orderedStats = getPositionOrderedStats(position);
 
     // Split into common (all positions) and position-specific stats
-    const allStats = ['intercepts', 'deflections', 'gains', 'receives', 'turnovers', 'penalties'];
-    const common = orderedStats.filter(s => allStats.includes(s.key)).map(s => s.key);
-    const specific = orderedStats.filter(s => !allStats.includes(s.key)).map(s => s.key);
+    const allStats = ["intercepts", "deflections", "gains", "receives", "turnovers", "penalties"];
+    const common = orderedStats.filter((s) => allStats.includes(s.key)).map((s) => s.key);
+    const specific = orderedStats.filter((s) => !allStats.includes(s.key)).map((s) => s.key);
 
     return { common, specific };
   };
@@ -738,9 +729,9 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
       title="Quick Tap Stats"
       subtitle={`Round ${game.round} | ${formatShortDate(game.date)} vs ${opponentDisplayName}`}
       showBackButton={true}
-      backButtonProps={{ 
+      backButtonProps={{
         fallbackPath: `/game/${gameId}`,
-        className: "border-gray-200 text-gray-700 hover:bg-gray-50"
+        className: "border-gray-200 text-gray-700 hover:bg-gray-50",
       }}
     >
       <Helmet>
@@ -759,12 +750,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               {/* Quarter Length Dropdown */}
               <div className="text-center">
                 <div className="text-xs text-muted-foreground mb-1">Quarter Length</div>
-                <select 
-                  value={quarterLength}
-                  onChange={(e) => setQuarterLength(parseInt(e.target.value))}
-                  className="w-full h-7 px-2 text-xs border border-gray-300 rounded touch-manipulation"
-                  disabled={isTimerRunning}
-                >
+                <select value={quarterLength} onChange={(e) => setQuarterLength(parseInt(e.target.value))} className="w-full h-7 px-2 text-xs border border-gray-300 rounded touch-manipulation" disabled={isTimerRunning}>
                   <option value="15">15 minutes</option>
                   <option value="12">12 minutes</option>
                   <option value="10">10 minutes</option>
@@ -774,33 +760,16 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
               <div className="space-y-1">
                 <div className="grid grid-cols-2 gap-1">
-                  <Button
-                    variant="outline" 
-                    size="sm"
-                    onClick={startTimer}
-                    disabled={isTimerRunning}
-                    className="touch-manipulation"
-                  >
+                  <Button variant="outline" size="sm" onClick={startTimer} disabled={isTimerRunning} className="touch-manipulation">
                     <Play className="h-3 w-3 mr-1" />
                     Start
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={pauseTimer}
-                    disabled={!isTimerRunning}
-                    className="touch-manipulation"
-                  >
+                  <Button variant="outline" size="sm" onClick={pauseTimer} disabled={!isTimerRunning} className="touch-manipulation">
                     <Pause className="h-3 w-3 mr-1" />
                     Pause
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetTimer}
-                  className="w-full touch-manipulation border-amber-500 text-amber-700 hover:bg-amber-50"
-                >
+                <Button variant="outline" size="sm" onClick={resetTimer} className="w-full touch-manipulation border-amber-500 text-amber-700 hover:bg-amber-50">
                   <RotateCcw className="h-3 w-3 mr-1" />
                   Reset Timer
                 </Button>
@@ -817,23 +786,23 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               <div className="grid grid-cols-3 gap-2 items-center">
                 <div>
                   <p className="text-xs text-muted-foreground">{ourTeamDisplayName}</p>
-                  <p className="text-3xl font-bold">{getGameTotal('goalsFor')}</p>
+                  <p className="text-3xl font-bold">{getGameTotal("goalsFor")}</p>
                 </div>
                 <div className="text-2xl font-bold">-</div>
                 <div>
                   <p className="text-xs text-muted-foreground">{opponentDisplayName}</p>
-                  <p className="text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
+                  <p className="text-3xl font-bold">{getGameTotal("goalsAgainst")}</p>
                 </div>
               </div>
               <div className="border-t pt-2">
                 <div className="text-sm font-semibold">Quarter {currentQuarter} Score</div>
                 <div className="grid grid-cols-3 gap-2 items-center">
                   <div>
-                    <p className="text-xl font-bold">{getQuarterTotal('goalsFor')}</p>
+                    <p className="text-xl font-bold">{getQuarterTotal("goalsFor")}</p>
                   </div>
                   <div className="text-lg font-bold">-</div>
                   <div>
-                    <p className="text-xl font-bold">{getQuarterTotal('goalsAgainst')}</p>
+                    <p className="text-xl font-bold">{getQuarterTotal("goalsAgainst")}</p>
                   </div>
                 </div>
               </div>
@@ -849,14 +818,8 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               <div className="text-center">
                 <div className="text-sm font-semibold mb-2">Quarter</div>
                 <div className="grid grid-cols-4 gap-1">
-                  {[1, 2, 3, 4].map(quarter => (
-                    <Button
-                      key={quarter}
-                      variant={quarter === currentQuarter ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentQuarter(quarter)}
-                      className="h-8 touch-manipulation"
-                    >
+                  {[1, 2, 3, 4].map((quarter) => (
+                    <Button key={quarter} variant={quarter === currentQuarter ? "default" : "outline"} size="sm" onClick={() => setCurrentQuarter(quarter)} className="h-8 touch-manipulation">
                       {quarter}
                     </Button>
                   ))}
@@ -865,45 +828,24 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
               {/* Action Controls */}
               <div className="grid grid-cols-2 gap-1">
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleUndo}
-                  disabled={undoStack.length === 0}
-                  className="touch-manipulation"
-                >
+                <Button variant="outline" size="sm" onClick={handleUndo} disabled={undoStack.length === 0} className="touch-manipulation">
                   <Undo className="h-3 w-3 mr-1" />
                   Undo
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRedo}
-                  disabled={redoStack.length === 0}
-                  className="touch-manipulation"
-                >
+                <Button variant="outline" size="sm" onClick={handleRedo} disabled={redoStack.length === 0} className="touch-manipulation">
                   <Redo className="h-3 w-3 mr-1" />
                   Redo
                 </Button>
               </div>
 
-              <Button 
-                onClick={resetCurrentQuarter}
-                variant="outline"
-                size="sm"
-                className="w-full border-amber-500 text-amber-700 hover:bg-amber-50 touch-manipulation"
-              >
+              <Button onClick={resetCurrentQuarter} variant="outline" size="sm" className="w-full border-amber-500 text-amber-700 hover:bg-amber-50 touch-manipulation">
                 <RotateCcw className="h-3 w-3 mr-1" />
                 Reset Q{currentQuarter}
               </Button>
 
-              <Button
-                onClick={saveAllStats}
-                disabled={saveInProgress}
-                className="w-full bg-green-600 hover:bg-green-700 text-white touch-manipulation"
-              >
+              <Button onClick={saveAllStats} disabled={saveInProgress} className="w-full bg-green-600 hover:bg-green-700 text-white touch-manipulation">
                 <Save className="h-4 w-4 mr-1" />
-                {saveInProgress ? 'Saving...' : 'Save All Stats'}
+                {saveInProgress ? "Saving..." : "Save All Stats"}
               </Button>
             </div>
           </CardContent>
@@ -912,47 +854,39 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
       {/* Position Cards with Quick Tap Interface */}
       <div className="space-y-3">
-        {allPositions.map(position => {
+        {allPositions.map((position) => {
           const assignedPlayerId = currentPositions[position];
-          const assignedPlayer = players?.find(p => p.id === assignedPlayerId);
+          const assignedPlayer = players?.find((p) => p.id === assignedPlayerId);
           const { common, specific } = getRelevantStatsForPosition(position);
 
           // Check if this is a midcourt position for center alignment
-          const isMidcourt = ['WA', 'C', 'WD'].includes(position);
+          const isMidcourt = ["WA", "C", "WD"].includes(position);
 
           return (
             <Card key={position} className="overflow-hidden">
               <CardHeader className="py-2 pb-2">
-                <div className={`flex items-center gap-3 ${isMidcourt ? 'justify-center' : 'justify-start'}`}>
+                <div className={`flex items-center gap-3 ${isMidcourt ? "justify-center" : "justify-start"}`}>
                   {/* Position Identity */}
-                  <div 
+                  <div
                     className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                     style={{
                       backgroundColor: getPositionColor(position),
-                      border: '2px solid white',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      border: "2px solid white",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
                     }}
                   >
                     {position}
                   </div>
 
                   <div className="min-w-[100px]">
-                    {assignedPlayer ? (
-                      <p className="font-semibold text-sm">{assignedPlayer.displayName}</p>
-                    ) : (
-                      <p className="font-semibold text-sm text-gray-400">Unassigned</p>
-                    )}
+                    {assignedPlayer ? <p className="font-semibold text-sm">{assignedPlayer.displayName}</p> : <p className="font-semibold text-sm text-gray-400">Unassigned</p>}
                     <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                   </div>
 
                   {/* Common Stats Row - Quick Tap */}
                   <div className="flex-1 grid grid-cols-6 gap-2">
-                    {common.map(stat => (
-                      <QuickStatButton
-                        key={stat}
-                        position={position}
-                        stat={stat}
-                      />
+                    {common.map((stat) => (
+                      <QuickStatButton key={stat} position={position} stat={stat} />
                     ))}
                   </div>
                 </div>
@@ -967,13 +901,8 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
 
                   return (
                     <div className="flex justify-center gap-2">
-                      {specific.map(statType => (
-                        <QuickStatButton
-                          key={statType}
-                          position={position}
-                          stat={statType}
-                          important={true}
-                        />
+                      {specific.map((statType) => (
+                        <QuickStatButton key={statType} position={position} stat={statType} important={true} />
                       ))}
                     </div>
                   );
@@ -992,10 +921,7 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
               <AlertTriangle className="h-5 w-5 text-amber-600" />
               Confirm Edit to Completed Game
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This game is marked as completed. Are you sure you want to modify the statistics?
-              This change will affect final scores and records.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This game is marked as completed. Are you sure you want to modify the statistics? This change will affect final scores and records.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

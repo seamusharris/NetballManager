@@ -150,7 +150,6 @@ export class TestDataManager {
     const statsData = {
       gameId: gameId,
       teamId: teamId,
-      playerId: playerId,
       position: 'GS',
       quarter: 1,
       goalsFor: 5,

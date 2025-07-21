@@ -238,7 +238,7 @@ export type Club = typeof clubs.$inferSelect;
 // Age groups table - reusable age categories across seasons
 export const ageGroups = pgTable("age_groups", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 10 }).notNull().unique(), // e.g., "15U", "13U", "Open"
+  name: varchar("name", { length: 50 }).notNull().unique(), // e.g., "15U", "13U", "Open"
   display_name: varchar("display_name", { length: 20 }).notNull(), // e.g., "15 & Under", "13 & Under", "Open"
   is_active: boolean("is_active").notNull().default(true),
   created_at: timestamp("created_at").defaultNow().notNull(),

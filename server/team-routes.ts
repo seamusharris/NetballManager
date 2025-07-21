@@ -225,7 +225,7 @@ export function registerTeamRoutes(app: Express) {
   // Create a new team
   app.post("/api/teams", async (req, res) => {
     try {
-      const { clubId, seasonId, name, divisionId, isActive } = req.body;
+      const { club_id: clubId, season_id: seasonId, name, division_id: divisionId, is_active: isActive } = req.body;
 
       if (!clubId || !seasonId || !name) {
         return res.status(400).json({ message: "Club ID, season ID, and name are required" });
@@ -237,7 +237,7 @@ export function registerTeamRoutes(app: Express) {
         RETURNING *
       `);
 
-      res.status(201).json(transformToApiFormat(result.rows[0]));
+      res.status(201).json(transformToApiFormat(result.rows[0], '/api/teams'));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Team with this name already exists for this club and season" });
@@ -455,9 +455,7 @@ export function registerTeamRoutes(app: Express) {
     try {
       const teamId = parseInt(req.params.teamId);
       
-      // Handle both camelCase and snake_case field names
-      const playerId = req.body.playerId || req.body.player_id;
-      const isRegular = req.body.isRegular || req.body.is_regular;
+      const { player_id: playerId, is_regular: isRegular = true } = req.body;
       
       if (!playerId) {
         return res.status(400).json({ message: "Player ID is required" });
@@ -495,7 +493,7 @@ export function registerTeamRoutes(app: Express) {
         })
         .returning();
 
-      res.status(201).json(transformToApiFormat(result[0]));
+      res.status(201).json(transformToApiFormat(result[0], '/api/teams'));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Player is already on this team" });
@@ -534,39 +532,35 @@ export function registerTeamRoutes(app: Express) {
     try {
       const teamId = parseInt(req.params.teamId);
       const playerId = parseInt(req.params.playerId);
-      const { isRegular, positionPreferences } = req.body;
 
-      const updates = [];
-      const values = [];
-      let paramCount = 1;
+      const { is_regular: isRegular, position_preferences: positionPreferences } = req.body;
+
+      // Build update object dynamically
+      const updateData: any = {};
 
       if (isRegular !== undefined) {
-        updates.push(`is_regular = $${paramCount++}`);
-        values.push(isRegular);
+        updateData.is_regular = isRegular;
       }
       if (positionPreferences !== undefined) {
-        updates.push(`position_preferences = $${paramCount++}`);
-        values.push(JSON.stringify(positionPreferences));
+        updateData.position_preferences = positionPreferences;
       }
 
-      if (updates.length === 0) {
+      if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ message: "No valid fields to update" });
       }
 
-      values.push(teamId, playerId);
+      // Use proper Drizzle ORM update
+      const result = await db
+        .update(teamPlayers)
+        .set(updateData)
+        .where(and(eq(teamPlayers.team_id, teamId), eq(teamPlayers.player_id, playerId)))
+        .returning();
 
-      const result = await db.execute(sql.raw(`
-        UPDATE team_players 
-        SET ${updates.join(', ')}
-        WHERE team_id = $${paramCount++} AND player_id = $${paramCount}
-        RETURNING *
-      `, values));
-
-      if (result.rows.length === 0) {
+      if (result.length === 0) {
         return res.status(404).json({ message: "Team player not found" });
       }
 
-      res.json(transformToApiFormat(result.rows[0]));
+      res.json(transformToApiFormat(result[0]));
     } catch (error) {
       console.error("Error updating team player:", error);
       res.status(500).json({ message: "Failed to update team player" });

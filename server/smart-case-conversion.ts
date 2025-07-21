@@ -15,17 +15,24 @@ import { shouldConvertEndpoint, applyFieldMappings } from './endpoint-config';
 export function smartCaseConversion() {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { convertRequest, convertResponse, config } = shouldConvertEndpoint(req.path);
+      // Since middleware is mounted on /api, we need to reconstruct the full path
+      const fullPath = `/api${req.path}`;
+      
+      const { convertRequest, convertResponse, config } = shouldConvertEndpoint(fullPath);
 
       // Handle request body conversion with error handling
       if (convertRequest && req.body && typeof req.body === 'object') {
         try {
+
+          
           if (config?.fieldMappings) {
             // Use specific field mappings for precise control
             req.body = applyFieldMappings(req.body, config.fieldMappings);
+
           } else {
             // Use general snake_case conversion
             req.body = snakecaseKeys(req.body, { deep: true });
+
           }
         } catch (conversionError) {
           console.error('Request case conversion error:', conversionError);
@@ -38,8 +45,18 @@ export function smartCaseConversion() {
         const originalJson = res.json;
         res.json = function(data: any) {
           try {
+            if (req.path === '/players' && req.method === 'POST') {
+              console.log('🎯 CONVERTING RESPONSE');
+              console.log('🎯 Original response data:', JSON.stringify(data, null, 2));
+            }
+            
             if (data && typeof data === 'object') {
               const camelData = camelcaseKeys(data, { deep: true });
+              
+              if (req.path === '/players' && req.method === 'POST') {
+                console.log('🎯 Converted response data:', JSON.stringify(camelData, null, 2));
+              }
+              
               return originalJson.call(this, camelData);
             }
             return originalJson.call(this, data);

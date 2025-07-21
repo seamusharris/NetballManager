@@ -18,6 +18,7 @@ import {
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
 import { registerTeamRoutes } from './team-routes';
+import { validateSchema } from './validation-middleware';
 import { registerUserManagementRoutes } from "./user-management-routes";
 import { registerPlayerBorrowingRoutes } from "./player-borrowing-routes";
 import { registerGamePermissionsRoutes } from "./game-permissions-routes";
@@ -559,7 +560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Legacy endpoint: Fetching players for club ${clubId}`);
       const players = await storage.getPlayersByClub(clubId);
-      res.json(transformToApiFormat(players));
+      res.json(players);
     } catch (error) {
       console.error('Error fetching players:', error);
       res.status(500).json({ message: "Failed to fetch players" });
@@ -697,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE cp.player_id = $1 AND cp.is_active = true
       `, [playerId]);
 
-      res.json(transformToApiFormat(result.rows));
+      res.json(result.rows);
     } catch (error) {
       console.error("Error fetching player clubs:", error);
       res.status(500).json({ message: "Failed to fetch player clubs" });
@@ -838,21 +839,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         INSERT INTO clubs (name, code, description, address, contact_email, contact_phone, primary_color, secondary_color)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, name, code,description, address, contact_email, contact_phone, primary_color, secondary_color
+        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color, is_active, created_at, updated_at
       `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
 
       const club = result.rows[0];
-      res.status(201).json(transformToApiFormat({
-        id: club.id,
-        name: club.name,
-        code: club.code,
-        description: club.description,
-        address: club.address,
-        contactEmail: club.contact_email,
-        contactPhone: club.contact_phone,
-        primaryColor: club.primary_color,
-        secondaryColor: club.secondary_color
-      }));
+      res.status(201).json(transformToApiFormat(club, '/api/clubs'));
     } catch (error) {
       console.error("Error creating club:", error);
       res.status(500).json({ message: "Failed to create club" });
@@ -890,21 +881,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         INSERT INTO clubs (name, code, description, address, contact_email, contact_phone, primary_color, secondary_color)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, name, code,description, address, contact_email, contact_phone, primary_color, secondary_color
+        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color, is_active, created_at, updated_at
       `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
 
       const club = result.rows[0];
-      res.status(201).json(transformToApiFormat({
-        id: club.id,
-        name: club.name,
-        code: club.code,
-        description: club.description,
-        address: club.address,
-        contactEmail: club.contact_email,
-        contactPhone: club.contact_phone,
-        primaryColor: club.primary_color,
-        secondaryColor: club.secondary_color
-      }));
+      res.status(201).json(transformToApiFormat(club, '/api/clubs'));
     } catch (error) {
       console.error("Error creating club:", error);
       res.status(500).json({ message: "Failed to create club" });
@@ -1014,7 +995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!player) {
         return res.status(404).json({ message: "Player not found" });
       }
-      res.json(transformToApiFormat(player));
+      res.json(player);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch player" });
     }
@@ -1057,7 +1038,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Season IDs for player ${playerId}: ${result.rows.map(s => s.id).join(', ')}`);
       }
 
-      res.json(transformToApiFormat(result.rows));
+      res.json(result.rows);
     } catch (error) {
       console.error(`Error fetching player seasons: ${error}`);
       res.status(500).json({ message: "Failed to fetch player seasons" });
@@ -1066,11 +1047,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/players", async (req, res) => {
     try {
-      // Extract club and team context using consistent approach
+      console.log('🔍 Player endpoint - received body:', JSON.stringify(req.body, null, 2));
+      
+      // Extract club and team context
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
       const teamId = req.body.teamId || req.headers['x-current-team-id'];
-
-
 
       // Validate club context is available
       if (!clubId) {
@@ -1094,37 +1075,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
-      console.log('Server: Using schema for', hasId ? 'import' : 'create', 'operation');
-
-      // Remove context fields for validation (similar to working forms)
+      
+      // Remove context fields for validation
       const { clubId: _, teamId: __, ...playerDataForValidation } = req.body;
-
-      console.log('Server: Player data for validation:', JSON.stringify(playerDataForValidation, null, 2));
-      console.log('Server: Position preferences type:', typeof playerDataForValidation.positionPreferences);
-      console.log('Server: Position preferences value:', playerDataForValidation.positionPreferences);
+      
+      console.log('🔍 Data for validation:', JSON.stringify(playerDataForValidation, null, 2));
 
       const parsedData = schema.safeParse(playerDataForValidation);
 
       if (!parsedData.success) {
-        console.log('Server: VALIDATION FAILED');
-        console.log('Server: Validation errors:', JSON.stringify(parsedData.error.errors, null, 2));
-        console.log('Server: Error details:', parsedData.error.errors.map(err => ({
-          path: err.path,
-          message: err.message,
-          code: err.code,
-          expected: err.expected,
-          received: err.received
-        })));
+        console.log('🔍 Validation failed:', JSON.stringify(parsedData.error.errors, null, 2));
         return res.status(400).json({ 
           message: "Invalid player data", 
           errors: parsedData.error.errors 
         });
       }
 
-      console.log('Server: Validation successful!');
-      console.log('Server: Parsed data:', JSON.stringify(parsedData.data, null, 2));
+      console.log('🔍 Validation successful!');
 
-      // Create the player using storage layer (like teams/clubs)
+      // Create the player using storage layer
       const player = await storage.createPlayer(parsedData.data);
       console.log('Player created with ID:', player.id);
 
@@ -1140,7 +1109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('=== PLAYER CREATION REQUEST COMPLETE ===\n');
-      res.status(201).json(transformToApiFormat(player));
+      const responseData = transformToApiFormat(player, '/api/players');
+
+      res.status(201).json(responseData);
     } catch (error) {
       console.error("=== PLAYER CREATION ERROR ===");
       console.error("Error details:", error);
@@ -1238,7 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error getting player seasons for response:", error);
         // Still return the player data even if we couldn't get the seasons
-        return res.json(transformToApiFormat(updatedPlayer));
+        return res.json(updatedPlayer);
       }
     } catch (error) {
       console.error("Error updating player:", error);
@@ -1746,9 +1717,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/games", async (req, res) => {
     try {
       // Handle BYE games using null away_team_id
-      if (req.body.isBye === true || req.body.statusId === 6) { // statusId 6 is 'bye'
+      if (req.body.isBye === true || req.body.status_id === 6) { // status_id 6 is 'bye'
         // Ensure we have a home team
-        if (!req.body.homeTeamId) {
+        if (!req.body.home_team_id) {
           return res.status(400).json({ 
             message: "Home team is required for BYE games" 
           });
@@ -1756,7 +1727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Find the season_id from the home team
         const homeTeam = await db.execute(sql`
-          SELECT season_id, club_id FROM teams WHERE id = ${req.body.homeTeamId}
+          SELECT season_id, club_id FROM teams WHERE id = ${req.body.home_team_id}
         `);
 
         if (homeTeam.rows.length === 0) {
@@ -1770,7 +1741,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameData = {
           date: req.body.date,
           time: req.body.time,
-          homeTeamId: req.body.homeTeamId,          awayTeamId: null, // BYE games have no away team
+          homeTeamId: req.body.home_team_id,
+          awayTeamId: null, // BYE games have no away team
           statusId: 6, // BYE status
           seasonId: season_id,
           round: req.body.round || null,
@@ -1784,7 +1756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(201).json(transformToApiFormat(game));
       } else {
         // For regular games, ensure we have both home and away teams
-        if (!req.body.homeTeamId || !req.body.awayTeamId) {
+        if (!req.body.home_team_id || !req.body.away_team_id) {
           return res.status(400).json({ 
             message: "Invalid game data", 
             errors: [{ message: "Both home and away teams are required for regular games" }] 
@@ -1795,17 +1767,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameData = {
           date: req.body.date,
           time: req.body.time,
-          homeTeamId: typeof req.body.homeTeamId === 'string' 
-            ? parseInt(req.body.homeTeamId, 10) 
-            : req.body.homeTeamId,
-          awayTeamId: typeof req.body.awayTeamId === 'string' 
-            ? parseInt(req.body.awayTeamId, 10) 
-            : req.body.awayTeamId,
-          statusId: req.body.statusId || 1, // Default to 'upcoming'
-          seasonId: req.body.seasonId,
+          homeTeamId: typeof req.body.home_team_id === 'string' 
+            ? parseInt(req.body.home_team_id, 10) 
+            : req.body.home_team_id,
+          awayTeamId: typeof req.body.away_team_id === 'string' 
+            ? parseInt(req.body.away_team_id, 10) 
+            : req.body.away_team_id,
+          statusId: req.body.status_id || 1, // Default to 'upcoming'
+          seasonId: req.body.season_id,
           round: req.body.round || null,
           venue: req.body.venue || null,
-          isInterClub: req.body.isInterClub || false,
+          isInterClub: req.body.is_inter_club || false,
           notes: req.body.notes || null
         };
 
@@ -2397,8 +2369,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the request body to diagnose issues
       console.log("Creating game stat with data:", statData);
 
-      // Validate that teamId is provided
-      if (!statData.teamId) {
+      // Validate that team_id is provided (after case conversion)
+      if (!statData.team_id) {
         return res.status(400).json({ message: "teamId is required for game statistics" });
       }
 
@@ -2446,10 +2418,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             missedGoals: parsedData.data.missedGoals,
             rebounds: parsedData.data.rebounds,
             intercepts: parsedData.data.intercepts,
-            badPass: parsedData.data.badPass,
-            handlingError: parsedData.data.handlingError,
-            pickUp: parsedData.data.pickUp,
-            infringement: parsedData.data.infringement,
+            deflections: parsedData.data.deflections,
+            turnovers: parsedData.data.turnovers,
+            gains: parsedData.data.gains,
+            receives: parsedData.data.receives,
+            penalties: parsedData.data.penalties,
             rating: parsedData.data.rating
           });
         } else {
@@ -2459,7 +2432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log("Game stat created/updated successfully:", stat);
         res.set('Cache-Control', 'no-cache');
-        res.status(201).json(transformToApiFormat(stat));
+        res.status(201).json(transformToApiFormat(stat, '/api/games/*/stats'));
       } catch (innerError) {
         console.error("Inner error handling game stats:", innerError);
         throw innerError;
@@ -2553,7 +2526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/seasons', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const allSeasons = await storage.getSeasons();
-      res.json(transformToApiFormat(allSeasons));
+      res.json(allSeasons);
     } catch (error) {
       console.error('Error fetching seasons:', error);
       res.status(500).json({ message: 'Failed to fetch seasons' });
@@ -2567,7 +2540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!activeSeason) {
         return res.status(404).json({ message: 'No active season found' });
       }
-      res.json(transformToApiFormat(activeSeason));
+      res.json(activeSeason);
     } catch (error) {
       console.error('Error fetching active season:', error);
       res.status(500).json({ message: 'Failed to fetch active season' });
@@ -2582,7 +2555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!season) {
         return res.status(404).json({ message: 'Season not found' });
       }
-      res.json(transformToApiFormat(season));
+      res.json(season);
     } catch (error) {
       console.error(`Error fetching season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to fetch season' });
@@ -2626,7 +2599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!season) {
         return res.status(404).json({ message: 'Season not found' });
       }
-      res.json(transformToApiFormat(season));
+      res.json(season);
     } catch (error) {
       console.error(`Error activating season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to activate season' });
@@ -2699,7 +2672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log('Returning user clubs:', userClubs);
-      res.json(transformToApiFormat(userClubs));
+      res.json(userClubs);
     } catch (error) {
       console.error('Error fetching user clubs:', error);
       // Return empty array on error to prevent app crashes
@@ -2738,7 +2711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teamsCount: parseInt(row.teams_count) || 0
       }));
 
-      res.json(transformToApiFormat(clubs));
+      res.json(clubs);
     } catch (error) {
       console.error('Error fetching clubs:', error);
       res.status(500).json({ error: 'Failed to fetch clubs' });
@@ -3167,7 +3140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const playerId = parseInt(req.params.playerId);
       const clubs = await storage.getPlayerClubs(playerId);
-      res.json(transformToApiFormat(clubs));
+      res.json(clubs);
     } catch (error) {
       console.error('Error fetching player clubs:', error);
       res.status(500).json({ error: 'Failed to fetch player clubs' });

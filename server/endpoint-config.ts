@@ -52,9 +52,20 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     convertResponse: true,
     fieldMappings: {
       'playerId': 'player_id',
-      'isRegular': 'is_regular'
+      'isRegular': 'is_regular',
+      'positionPreferences': 'position_preferences'
     },
     description: 'Team player assignment - critical endpoint'
+  },
+
+  '/api/teams/*/players/*': {
+    convertRequest: true,
+    convertResponse: true,
+    fieldMappings: {
+      'isRegular': 'is_regular',
+      'positionPreferences': 'position_preferences'
+    },
+    description: 'Team player updates - PATCH endpoint'
   },
 
   '/api/teams/*/games/*/availability': {
@@ -99,8 +110,10 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
       'firstName': 'first_name',
       'lastName': 'last_name',
       'displayName': 'display_name',
+      'dateOfBirth': 'date_of_birth',
       'positionPreferences': 'position_preferences',
-      'avatarColor': 'avatar_color'
+      'avatarColor': 'avatar_color',
+      'isActive': 'active'
     },
     description: 'Player CRUD operations'
   },
@@ -135,30 +148,24 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
   // ==========================================================================
   // LEGACY ENDPOINTS - Maintain current behavior
   // ==========================================================================
-  '/api/game/*/team/*/stats': {
-    convertRequest: false,
-    convertResponse: true,
-    description: 'Legacy stats endpoint - to be deprecated'
-  },
-
-  '/api/game/*/team/*/rosters': {
-    convertRequest: false,
-    convertResponse: true,
-    description: 'Legacy rosters endpoint - to be deprecated'
-  },
 
   // ==========================================================================
   // SAFE ENDPOINTS - No request body or already working
   // ==========================================================================
-  '/api/seasons': {
-    convertRequest: false,
-    convertResponse: true,
-    description: 'Seasons endpoint - mostly GET operations'
-  },
 
   '/api/clubs': {
     convertRequest: true,
     convertResponse: true,
+    fieldMappings: {
+      'contactEmail': 'contact_email',
+      'contactPhone': 'contact_phone',
+      'logoUrl': 'logo_url',
+      'primaryColor': 'primary_color',
+      'secondaryColor': 'secondary_color',
+      'isActive': 'is_active',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at'
+    },
     description: 'Club CRUD operations'
   },
 
@@ -183,10 +190,11 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     convertRequest: true,
     convertResponse: true,
     fieldMappings: {
-      'confirmCompleted': 'confirm_completed',
       'gameId': 'game_id',
       'teamId': 'team_id',
-      'playerId': 'player_id'
+      'goalsFor': 'goals_for',
+      'goalsAgainst': 'goals_against',
+      'missedGoals': 'missed_goals'
     },
     description: 'Game statistics management'
   },
