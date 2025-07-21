@@ -271,24 +271,33 @@ export function registerGameStatsRoutes(app: Express) {
         return res.status(404).json({ error: 'Game not found or team not participating' });
       }
 
-      // Clear existing rosters for this game/team
-      await db.execute(sql`
-        DELETE FROM rosters 
-        WHERE game_id = ${gameId} AND team_id = ${teamId}
+      // Clear existing rosters for this game/team by finding players from this team
+      const teamPlayers = await db.execute(sql`
+        SELECT id FROM players WHERE id IN (
+          SELECT player_id FROM team_players WHERE team_id = ${teamId}
+        )
       `);
+      
+      const playerIds = teamPlayers.rows.map(p => p.id);
+      
+      if (playerIds.length > 0) {
+        await db.execute(sql`
+          DELETE FROM rosters 
+          WHERE game_id = ${gameId} AND player_id IN (${sql.join(playerIds.map(id => sql`${id}`), sql`, `)})
+        `);
+      }
 
       // Insert new rosters
       if (rosters.length > 0) {
         const values = rosters.map(roster => ({
           ...roster,
-          game_id: gameId,
-          team_id: teamId
+          game_id: gameId
         }));
 
         const result = await db.execute(sql`
-          INSERT INTO rosters (game_id, team_id, player_id, position, quarter)
+          INSERT INTO rosters (game_id, player_id, position, quarter)
           VALUES ${sql.join(
-            values.map(v => sql`(${v.game_id}, ${v.team_id}, ${v.playerId}, ${v.position}, ${v.quarter})`),
+            values.map(v => sql`(${v.game_id}, ${v.playerId}, ${v.position}, ${v.quarter})`),
             sql`, `
           )}
           RETURNING *

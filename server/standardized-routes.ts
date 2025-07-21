@@ -751,19 +751,14 @@ export function registerStandardizedRoutes(app: Express) {
       }
       
       // Fetch stats for the team across multiple games
-      const { gameStats, rosters } = await import('@shared/schema');
+      const { gameStats } = await import('@shared/schema');
       const { inArray, and, eq } = await import('drizzle-orm');
       
       const result = await db.select()
         .from(gameStats)
-        .innerJoin(rosters, and(
-          eq(gameStats.game_id, rosters.game_id),
-          eq(gameStats.quarter, rosters.quarter),
-          eq(gameStats.position, rosters.position)
-        ))
         .where(and(
           inArray(gameStats.game_id, validGameIds),
-          eq(rosters.team_id, teamId)
+          eq(gameStats.team_id, teamId)
         ))
         .orderBy(gameStats.game_id, gameStats.quarter, gameStats.position);
       
@@ -773,8 +768,7 @@ export function registerStandardizedRoutes(app: Express) {
         statsMap[gameId] = [];
       });
       
-      result.forEach((row) => {
-        const stat = row.game_stats;
+      result.forEach((stat) => {
         const gameId = stat.game_id;
         if (statsMap[gameId]) {
           statsMap[gameId].push(stat);

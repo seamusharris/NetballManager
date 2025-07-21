@@ -626,17 +626,27 @@ describe('Case Conversion System Tests', () => {
       const { game, team, player } = await testDataManager.createTestEcosystem();
 
       const statsData = {
-        gameId: game.id,
-        teamId: team.id,
-        playerId: player.id,
-        statType: 'goals',
-        value: 5
+        stats: [{
+          position: 'GS',
+          quarter: 1,
+          goalsFor: 5,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          deflections: 0,
+          turnovers: 0,
+          gains: 0,
+          receives: 0,
+          penalties: 0,
+          rating: 8
+        }]
       };
 
       const response = await request(app)
         .post(`/api/game/${game.id}/team/${team.id}/stats`)
         .send(statsData)
-        .expect(201);
+        .expect(200);
 
       // Should handle the conversion properly
       expect(response.body).toBeDefined();
@@ -646,16 +656,17 @@ describe('Case Conversion System Tests', () => {
       const { game, team, player } = await testDataManager.createTestEcosystem();
 
       const rosterData = {
-        gameId: game.id,
-        teamId: team.id,
-        playerId: player.id,
-        jerseyNumber: 10
+        rosters: [{
+          playerId: player.id,
+          position: 'GS',
+          quarter: 1
+        }]
       };
 
       const response = await request(app)
         .post(`/api/game/${game.id}/team/${team.id}/rosters`)
         .send(rosterData)
-        .expect(201);
+        .expect(200);
 
       expect(response.body).toBeDefined();
     });
