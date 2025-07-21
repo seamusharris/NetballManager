@@ -126,16 +126,16 @@ export function registerGameScoresRoutes(app: Express) {
   app.post('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
-    const { quarter, homeScore, awayScore, notes } = req.body;
+    const { quarter, home_score, away_score, notes } = req.body;
 
-    console.log('POST /api/games/scores - gameId:', gameId, 'quarter:', quarter, 'homeScore:', homeScore, 'awayScore:', awayScore);
+    console.log('POST /api/games/scores - gameId:', gameId, 'quarter:', quarter, 'homeScore:', home_score, 'awayScore:', away_score);
 
     // Validate input
     if (!quarter || quarter < 1 || quarter > 4) {
       return res.status(400).json({ error: 'Invalid quarter number' });
     }
 
-    if (homeScore === undefined || awayScore === undefined) {
+    if (home_score === undefined || away_score === undefined) {
       return res.status(400).json({ error: 'Both home and away scores are required' });
     }
 
@@ -157,14 +157,14 @@ export function registerGameScoresRoutes(app: Express) {
         game_id: gameId,
         team_id: home_team_id,
         quarter,
-        score: homeScore,
+        score: home_score,
         entered_by: req.user?.id,
         notes: notes || null,
       })
       .onConflictDoUpdate({
         target: [gameScores.game_id, gameScores.team_id, gameScores.quarter],
         set: {
-          score: homeScore,
+          score: home_score,
           notes: notes || null,
         }
       });
@@ -175,14 +175,14 @@ export function registerGameScoresRoutes(app: Express) {
         game_id: gameId,
         team_id: away_team_id,
         quarter,
-        score: awayScore,
+        score: away_score,
         entered_by: req.user?.id,
         notes: null, // Notes only on home team entry to avoid duplication
       })
       .onConflictDoUpdate({
         target: [gameScores.game_id, gameScores.team_id, gameScores.quarter],
         set: {
-          score: awayScore,
+          score: away_score,
         }
       });
 
@@ -192,7 +192,7 @@ export function registerGameScoresRoutes(app: Express) {
       .where(eq(gameScores.game_id, gameId));
 
     console.log('Successfully saved scores for game', gameId, 'quarter', quarter);
-    res.json(transformToApiFormat(updatedScores));
+    res.status(201).json(transformToApiFormat(updatedScores, '/api/games/*/scores'));
   } catch (error) {
     console.error('Error saving game scores:', error);
     console.error('Stack trace:', error.stack);

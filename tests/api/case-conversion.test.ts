@@ -446,7 +446,8 @@ describe('Case Conversion System Tests', () => {
       const scoresData = {
         homeScore: 45,
         awayScore: 38,
-        gameId: game.id
+        gameId: game.id,
+        quarter: 1
       };
 
       const response = await request(app)
@@ -454,15 +455,24 @@ describe('Case Conversion System Tests', () => {
         .send(scoresData)
         .expect(201);
 
-      // Response should be in camelCase
-      expect(response.body.homeScore).toBe(45);
-      expect(response.body.awayScore).toBe(38);
-      expect(response.body.gameId).toBe(game.id);
+      // Response should be in camelCase - contains array of score records
+      const scores = Object.values(response.body.data);
+      expect(scores).toHaveLength(2);
+      
+      // Find home and away scores by team ID
+      const homeScore = scores.find((score: any) => score.teamId === game.homeTeamId);
+      const awayScore = scores.find((score: any) => score.teamId === game.awayTeamId);
+      
+      expect(homeScore.score).toBe(45);
+      expect(awayScore.score).toBe(38);
+      expect(homeScore.gameId).toBe(game.id);
+      expect(awayScore.gameId).toBe(game.id);
 
       // Should NOT have snake_case fields
-      expect(response.body).not.toHaveProperty('home_score');
-      expect(response.body).not.toHaveProperty('away_score');
-      expect(response.body).not.toHaveProperty('game_id');
+      expect(homeScore).not.toHaveProperty('game_id');
+      expect(homeScore).not.toHaveProperty('team_id');
+      expect(awayScore).not.toHaveProperty('game_id');
+      expect(awayScore).not.toHaveProperty('team_id');
     });
 
     it('should handle roster management with camelCase', async () => {
@@ -472,8 +482,7 @@ describe('Case Conversion System Tests', () => {
         gameId: game.id,
         playerId: player.id,
         position: 'GS',
-        quarter: 1,
-        jerseyNumber: 7
+        quarter: 1
       };
 
       const response = await request(app)
@@ -482,16 +491,16 @@ describe('Case Conversion System Tests', () => {
         .expect(201);
 
       // Response should be in camelCase
-      expect(response.body.gameId).toBe(game.id);
-      expect(response.body.playerId).toBe(player.id);
-      expect(response.body.jerseyNumber).toBe(7);
+      expect(response.body.data.gameId).toBe(game.id);
+      expect(response.body.data.playerId).toBe(player.id);
+      expect(response.body.data.position).toBe('GS');
+      expect(response.body.data.quarter).toBe(1);
 
       // Should NOT have snake_case fields
-      expect(response.body).not.toHaveProperty('game_id');
-      expect(response.body).not.toHaveProperty('player_id');
-      expect(response.body).not.toHaveProperty('jersey_number');
+      expect(response.body.data).not.toHaveProperty('game_id');
+      expect(response.body.data).not.toHaveProperty('player_id');
 
-      testDataManager.getTrackedData().rosters.push(response.body.id);
+      testDataManager.getTrackedData().rosters.push(response.body.data.id);
     });
   });
 

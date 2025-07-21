@@ -220,8 +220,7 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     fieldMappings: {
       'gameId': 'game_id',
       'playerId': 'player_id',
-      'teamId': 'team_id',
-      'jerseyNumber': 'jersey_number'
+      'teamId': 'team_id'
     },
     description: 'Game roster management'
   },

@@ -1970,6 +1970,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create roster entry for a specific game (standardized endpoint)
+  app.post("/api/games/:gameId/rosters", standardAuth({ requireGameAccess: true }), async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+
+      // Ensure gameId matches the URL parameter
+      const rosterData = { ...req.body, game_id: gameId };
+
+      // Validate the data using the schema
+      const parsedData = insertRosterSchema.safeParse(rosterData);
+      if (!parsedData.success) {
+        console.error("Roster validation error:", parsedData.error.errors);
+        return res.status(400).json({ message: "Invalid roster data", errors: parsedData.error.errors });
+      }
+
+      // Validate position
+      if (!POSITIONS.includes(parsedData.data.position as any)) {
+        return res.status(400).json({ message: "Invalid position" });
+      }
+
+      // Validate quarter (1-4)
+      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
+        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
+      }
+
+      const roster = await storage.createRoster(parsedData.data);
+      res.status(201).json(transformToApiFormat(roster, '/api/games/*/rosters'));
+    } catch (error) {
+      console.error("Failed to create roster entry:", error);
+      res.status(500).json({ message: "Failed to create roster entry" });
+    }
+  });
+
   // ----- PLAYER AVAILABILITY API -----
 
   // Team-based availability endpoint (NEW - Stage 5)
