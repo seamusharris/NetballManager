@@ -1604,6 +1604,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register team routes
   registerTeamRoutes(app);
 
+  // Register season routes
+  registerSeasonRoutes(app);
+
   // Register user management routes
   registerUserManagementRoutes(app);
 
