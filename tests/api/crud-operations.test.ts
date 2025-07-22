@@ -117,8 +117,8 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         .get(`/api/players/${player.id}`)
         .expect(200);
 
-      expect(readResponse.body.id).toBe(player.id);
-      expect(readResponse.body.display_name).toBe('Lifecycle Player');
+      expect(readResponse.body.data.id).toBe(player.id);
+      expect(readResponse.body.data.display_name).toBe('Lifecycle Player');
 
       // Update
       const updateResponse = await request(app)
@@ -130,9 +130,9 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         })
         .expect(200);
 
-      expect(updateResponse.body.display_name).toBe('Updated Player');
-      expect(updateResponse.body.position_preferences).toEqual(['C', 'WA']);
-      expect(updateResponse.body.active).toBe(false);
+      expect(updateResponse.body.data.display_name).toBe('Updated Player');
+      expect(updateResponse.body.data.position_preferences).toEqual(['C', 'WA']);
+      expect(updateResponse.body.data.active).toBe(false);
 
       // Verify in club players list
       const clubPlayersResponse = await request(app)
@@ -188,8 +188,8 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         .get(`/api/teams/${team.id}`)
         .expect(200);
 
-      expect(readResponse.body.id).toBe(team.id);
-      expect(readResponse.body.name).toBe('Lifecycle Team');
+      expect(readResponse.body.data.id).toBe(team.id);
+      expect(readResponse.body.data.name).toBe('Lifecycle Team');
 
       // Update
       const updateResponse = await request(app)
@@ -200,8 +200,8 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         })
         .expect(200);
 
-      expect(updateResponse.body.name).toBe('Updated Team');
-      expect(updateResponse.body.division).toBe('B Grade');
+      expect(updateResponse.body.data.name).toBe('Updated Team');
+      expect(updateResponse.body.data.division).toBe('B Grade');
 
       // Verify in club teams list
       const clubTeamsResponse = await request(app)
@@ -236,8 +236,8 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         .get(`/api/games/${game.id}`)
         .expect(200);
 
-      expect(readResponse.body.id).toBe(game.id);
-      expect(readResponse.body.venue).toBe('Lifecycle Venue');
+      expect(readResponse.body.data.id).toBe(game.id);
+      expect(readResponse.body.data.venue).toBe('Lifecycle Venue');
 
       // Update
       const updateResponse = await request(app)
@@ -248,8 +248,8 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         })
         .expect(200);
 
-      expect(updateResponse.body.venue).toBe('Updated Venue');
-      expect(updateResponse.body.round).toBe('Updated Round');
+      expect(updateResponse.body.data.venue).toBe('Updated Venue');
+      expect(updateResponse.body.data.round).toBe('Updated Round');
 
       // Verify in team games list
       const teamGamesResponse = await request(app)
@@ -298,9 +298,9 @@ describe('CRUD Operations with Auto-Cleanup', () => {
         })
         .expect(200);
 
-      expect(updateResponse.body.goalsFor).toBe(15);
-      expect(updateResponse.body.missedGoals).toBe(2);
-      expect(updateResponse.body.rating).toBe(8);
+      expect(updateResponse.body.data.goalsFor).toBe(15);
+      expect(updateResponse.body.data.missedGoals).toBe(2);
+      expect(updateResponse.body.data.rating).toBe(8);
     });
   });
 

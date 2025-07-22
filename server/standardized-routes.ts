@@ -12,7 +12,7 @@ import {
 } from "./auth-middleware";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { transformToApiFormat } from './api-utils';
+import { transformToApiFormat, createSuccessResponse, createErrorResponse } from './api-utils';
 
 export function registerStandardizedRoutes(app: Express) {
   
@@ -68,7 +68,7 @@ export function registerStandardizedRoutes(app: Express) {
       ));
       
       if (result.length === 0) {
-        return res.status(404).json({ error: 'Game not found or team not involved' });
+        return res.status(404).json(createErrorResponse('gameNotFoundOrTeamNotInvolved', 'Game not found or team not involved'));
       }
       
       const game = result[0];
@@ -82,10 +82,10 @@ export function registerStandardizedRoutes(app: Express) {
         requestingTeamIsHome: game.home_team_id === teamId
       };
       
-      res.json(transformToApiFormat(gameData));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(gameData)));
     } catch (error) {
       console.error('Error in standardized team game endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team game' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamGame', 'Failed to fetch team game'));
     }
   });
   
@@ -113,10 +113,10 @@ export function registerStandardizedRoutes(app: Express) {
         ORDER BY gs.quarter, gs.position
       `);
       
-      res.json(transformToApiFormat(result.rows));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(result.rows)));
     } catch (error) {
       console.error('Error in standardized team stats endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team stats' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamStats', 'Failed to fetch team stats'));
     }
   });
   
@@ -153,7 +153,7 @@ export function registerStandardizedRoutes(app: Express) {
         .orderBy(desc(games.date), desc(games.id));
       
       if (teamGames.length === 0) {
-        return res.json({ games: [], stats: {}, scores: {}, rosters: {} });
+        return res.status(200).json(createSuccessResponse({ games: [], stats: {}, scores: {}, rosters: {} }));
       }
       
       const gameIds = teamGames.map(game => game.id);
@@ -266,10 +266,10 @@ export function registerStandardizedRoutes(app: Express) {
       // Wait for all data
       await Promise.all(promises);
       
-      res.json(response);
+      res.status(200).json(createSuccessResponse(response));
     } catch (error) {
       console.error('Error in team comprehensive batch API:', error);
-      res.status(500).json({ error: 'Failed to fetch team batch data' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamBatchData', 'Failed to fetch team batch data'));
     }
   });
   
@@ -301,7 +301,7 @@ export function registerStandardizedRoutes(app: Express) {
       const clubTeamIds = clubTeamsResult.map(team => team.id);
       
       if (clubTeamIds.length === 0) {
-        return res.json({ games: [], stats: {}, scores: {}, rosters: {} });
+        return res.status(200).json(createSuccessResponse({ games: [], stats: {}, scores: {}, rosters: {} }));
       }
       
       // Build base query conditions for club games
@@ -337,7 +337,7 @@ export function registerStandardizedRoutes(app: Express) {
         .orderBy(desc(games.date), desc(games.id));
       
       if (basicGames.length === 0) {
-        return res.json({ games: [], stats: {}, scores: {}, rosters: {} });
+        return res.status(200).json(createSuccessResponse({ games: [], stats: {}, scores: {}, rosters: {} }));
       }
       
       let filteredGames = basicGames;
@@ -477,10 +477,10 @@ export function registerStandardizedRoutes(app: Express) {
       // Wait for all data to be fetched
       await Promise.all(promises);
       
-      res.json(response);
+      res.status(200).json(createSuccessResponse(response));
     } catch (error) {
       console.error('Error in club comprehensive batch API:', error);
-      res.status(500).json({ error: 'Failed to fetch club batch data' });
+      res.status(500).json(createErrorResponse('failedToFetchClubBatchData', 'Failed to fetch club batch data'));
     }
   });
 
@@ -498,7 +498,7 @@ export function registerStandardizedRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       
       if (isNaN(teamId) || isNaN(gameId)) {
-        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+        return res.status(400).json(createErrorResponse('invalidTeamIdOrGameId', 'Invalid team ID or game ID'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: Team ${teamId} rosters for game ${gameId}`);
@@ -523,10 +523,10 @@ export function registerStandardizedRoutes(app: Express) {
       ))
       .orderBy(rosters.quarter, rosters.position);
       
-      res.json(transformToApiFormat(result));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(result)));
     } catch (error) {
       console.error('Error in team game rosters endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team game rosters' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamGameRosters', 'Failed to fetch team game rosters'));
     }
   });
 
@@ -539,7 +539,7 @@ export function registerStandardizedRoutes(app: Express) {
       const gameId = parseInt(req.params.gameId);
       
       if (isNaN(gameId)) {
-        return res.status(400).json({ error: 'Invalid game ID' });
+        return res.status(400).json(createErrorResponse('invalidGameId', 'Invalid game ID'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: All rosters for game ${gameId}`);
@@ -561,10 +561,10 @@ export function registerStandardizedRoutes(app: Express) {
       .where(eq(rosters.game_id, gameId))
       .orderBy(teamPlayers.team_id, rosters.quarter, rosters.position);
       
-      res.json(transformToApiFormat(result));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(result)));
     } catch (error) {
       console.error('Error in neutral game rosters endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch game rosters' });
+      res.status(500).json(createErrorResponse('failedToFetchGameRosters', 'Failed to fetch game rosters'));
     }
   });
 
@@ -581,7 +581,7 @@ export function registerStandardizedRoutes(app: Express) {
       const teamId = parseInt(req.params.teamId);
       
       if (isNaN(teamId)) {
-        return res.status(400).json({ error: 'Invalid team ID' });
+        return res.status(400).json(createErrorResponse('invalidTeamId', 'Invalid team ID'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: Team ${teamId} details`);
@@ -611,13 +611,13 @@ export function registerStandardizedRoutes(app: Express) {
       .limit(1);
       
       if (result.length === 0) {
-        return res.status(404).json({ error: 'Team not found' });
+        return res.status(404).json(createErrorResponse('teamNotFound', 'Team not found'));
       }
       
-      res.json(transformToApiFormat(result[0]));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(result[0])));
     } catch (error) {
       console.error('Error in team details endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team details' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamDetails', 'Failed to fetch team details'));
     }
   });
 
@@ -630,7 +630,7 @@ export function registerStandardizedRoutes(app: Express) {
       const teamId = parseInt(req.params.teamId);
       
       if (isNaN(teamId)) {
-        return res.status(400).json({ error: 'Invalid team ID' });
+        return res.status(400).json(createErrorResponse('invalidTeamId', 'Invalid team ID'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: Team ${teamId} players`);
@@ -672,10 +672,10 @@ export function registerStandardizedRoutes(app: Express) {
       console.log(`Team players API found ${result.length} players for team ${teamId}:`, 
         result.map(p => p.displayName || p.playerDisplayName));
       
-      res.json(transformToApiFormat(result));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(result)));
     } catch (error) {
       console.error('Error in team players endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team players' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamPlayers', 'Failed to fetch team players'));
     }
   });
 
@@ -688,7 +688,7 @@ export function registerStandardizedRoutes(app: Express) {
       const clubId = parseInt(req.params.clubId);
       
       if (isNaN(clubId)) {
-        return res.status(400).json({ error: 'Invalid club ID' });
+        return res.status(400).json(createErrorResponse('invalidClubId', 'Invalid club ID'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: Club ${clubId} teams`);
@@ -715,10 +715,10 @@ export function registerStandardizedRoutes(app: Express) {
       .where(eq(teams.club_id, clubId))
       .orderBy(teams.name);
       
-      res.json(transformToApiFormat(result));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(result)));
     } catch (error) {
       console.error('Error in club teams endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch club teams' });
+      res.status(500).json(createErrorResponse('failedToFetchClubTeams', 'Failed to fetch club teams'));
     }
   });
 
@@ -736,7 +736,7 @@ export function registerStandardizedRoutes(app: Express) {
       const { gameIds } = req.body;
       
       if (!Array.isArray(gameIds) || gameIds.length === 0) {
-        return res.status(400).json({ error: 'gameIds array is required' });
+        return res.status(400).json(createErrorResponse('gameIdsArrayRequired', 'gameIds array is required'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: Team ${teamId} batch stats for ${gameIds.length} games`);
@@ -747,7 +747,7 @@ export function registerStandardizedRoutes(app: Express) {
         .filter(id => !isNaN(id) && id > 0);
       
       if (validGameIds.length === 0) {
-        return res.status(400).json({ error: 'No valid gameIds provided' });
+        return res.status(400).json(createErrorResponse('noValidGameIdsProvided', 'No valid gameIds provided'));
       }
       
       // Fetch stats for the team across multiple games
@@ -775,10 +775,10 @@ export function registerStandardizedRoutes(app: Express) {
         }
       });
       
-      res.json(transformToApiFormat(statsMap));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(statsMap)));
     } catch (error) {
       console.error('Error in team batch stats endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team batch stats' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamBatchStats', 'Failed to fetch team batch stats'));
     }
   });
   
@@ -792,7 +792,7 @@ export function registerStandardizedRoutes(app: Express) {
       const { gameIds } = req.body;
       
       if (!Array.isArray(gameIds) || gameIds.length === 0) {
-        return res.status(400).json({ error: 'gameIds array is required' });
+        return res.status(400).json(createErrorResponse('gameIdsArrayRequired', 'gameIds array is required'));
       }
       
       console.log(`🆕 NEW STANDARDIZED: Team ${teamId} batch scores for ${gameIds.length} games`);
@@ -806,7 +806,7 @@ export function registerStandardizedRoutes(app: Express) {
         .filter(id => !isNaN(id) && id > 0);
       
       if (validGameIds.length === 0) {
-        return res.status(400).json({ error: 'No valid gameIds provided' });
+        return res.status(400).json(createErrorResponse('noValidGameIdsProvided', 'No valid gameIds provided'));
       }
       
       // Verify team participated in these games
@@ -845,10 +845,10 @@ export function registerStandardizedRoutes(app: Express) {
         }
       });
       
-      res.json(transformToApiFormat(scoresMap));
+      res.status(200).json(createSuccessResponse(transformToApiFormat(scoresMap)));
     } catch (error) {
       console.error('Error in team batch scores endpoint:', error);
-      res.status(500).json({ error: 'Failed to fetch team batch scores' });
+      res.status(500).json(createErrorResponse('failedToFetchTeamBatchScores', 'Failed to fetch team batch scores'));
     }
   });
 
@@ -860,7 +860,7 @@ export function registerStandardizedRoutes(app: Express) {
    * Health check for standardized routes
    */
   app.get('/api/standardized/health', (req, res) => {
-    res.json({
+    res.status(200).json(createSuccessResponse({
       status: 'ok',
       message: 'Standardized routes are active',
       timestamp: new Date().toISOString(),
@@ -884,6 +884,6 @@ export function registerStandardizedRoutes(app: Express) {
         'POST /api/teams/:teamId/games/stats/batch',
         'POST /api/teams/:teamId/games/scores/batch'
       ]
-    });
+    }));
   });
 }

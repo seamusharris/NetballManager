@@ -2714,7 +2714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all clubs with statistics
-  app.get('/api/clubs', async (req: any, res) => {
+  app.get('/api/clubs', async (req, res) => {
     try {
       const result = await db.execute(sql`
         SELECT 
@@ -2727,7 +2727,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         GROUP BY c.id, c.name, c.code, c.address, c.contact_email, c.contact_phone, c.primary_color, c.secondary_color, c.is_active, c.created_at, c.updated_at
         ORDER BY c.name
       `);
-
       const clubs = result.rows.map(row => ({
         id: row.id,
         name: row.name,
@@ -2735,6 +2734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         address: row.address,
         contactEmail: row.contact_email,
         contactPhone: row.contact_phone,
+        logoUrl: row.logo_url,
         primaryColor: row.primary_color,
         secondaryColor: row.secondary_color,
         isActive: row.is_active,
@@ -2743,41 +2743,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         playersCount: parseInt(row.players_count) || 0,
         teamsCount: parseInt(row.teams_count) || 0
       }));
-
-      res.json(clubs);
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(clubs, { count: clubs.length }));
     } catch (error) {
       console.error('Error fetching clubs:', error);
-      res.status(500).json({ error: 'Failed to fetch clubs' });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, 'Failed to fetch clubs'));
     }
   });
 
   // Club details endpoint (STANDARDIZED)
-  app.get('/api/clubs/:clubId', async (req: any, res) => {
+  app.get('/api/clubs/:clubId', async (req, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       if (isNaN(clubId)) {
         const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
-        return res.status(400).json(createErrorResponse(
-          ErrorCodes.INVALID_PARAMETER,
-          'Invalid club ID format'
-        ));
+        return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'Invalid club ID format'));
       }
-      
-      // Fetch club from database
-      const result = await db.execute(sql`
-        SELECT * FROM clubs WHERE id = ${clubId}
-      `);
-      
+      const result = await db.execute(sql`SELECT * FROM clubs WHERE id = ${clubId}`);
       if (result.rows.length === 0) {
         const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
-        return res.status(404).json(createErrorResponse(
-          ErrorCodes.RESOURCE_NOT_FOUND,
-          'Club not found'
-        ));
+        return res.status(404).json(createErrorResponse(ErrorCodes.RESOURCE_NOT_FOUND, 'Club not found'));
       }
-      
       const club = result.rows[0];
-      const clubData = transformToApiFormat({
+      const clubData = {
         id: club.id,
         name: club.name,
         code: club.code,
@@ -2790,17 +2779,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: club.is_active,
         createdAt: club.created_at,
         updatedAt: club.updated_at
-      });
-      
+      };
       const { createSuccessResponse } = await import('./api-response-standards');
       res.json(createSuccessResponse(clubData));
     } catch (error) {
       console.error('Error fetching club details:', error);
       const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
-      res.status(500).json(createErrorResponse(
-        ErrorCodes.INTERNAL_ERROR,
-        'Failed to fetch club details'
-      ));
+      res.status(500).json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, 'Failed to fetch club details'));
     }
   });
 

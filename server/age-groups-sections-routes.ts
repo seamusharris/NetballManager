@@ -10,6 +10,7 @@ import {
 } from "@shared/schema";
 import { AuthenticatedRequest, standardAuth } from "./auth-middleware";
 import express from "express";
+import { createSuccessResponse, createErrorResponse } from "./api-utils";
 
 export function registerAgeGroupsSectionsRoutes(app: Express) {
   console.log("🔧 Registering age groups sections routes...");
@@ -46,10 +47,10 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         divisionCount: parseInt(row.division_count as string) || 0
       }));
 
-      res.json(ageGroupsWithCounts);
+      res.status(200).json(createSuccessResponse(ageGroupsWithCounts, { count: ageGroupsWithCounts.length }));
     } catch (error) {
       console.error("Error fetching age groups:", error);
-      res.status(500).json({ error: "Failed to fetch age groups" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to fetch age groups"));
     }
   });
 
@@ -58,20 +59,17 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
     try {
       const parsedData = insertAgeGroupSchema.safeParse(req.body);
       if (!parsedData.success) {
-        return res.status(400).json({ 
-          error: "Invalid age group data", 
-          details: parsedData.error.errors 
-        });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid age group data", parsedData.error.errors));
       }
 
       const result = await db.insert(ageGroups).values(parsedData.data as any).returning();
-      res.status(201).json(result[0]);
+      res.status(201).json(createSuccessResponse(result[0], { count: 1 }));
     } catch (error) {
       console.error("Error creating age group:", error);
       if (error.message?.includes("duplicate key")) {
-        res.status(400).json({ error: "An age group with this name already exists" });
+        res.status(400).json(createErrorResponse("duplicate_entry", "An age group with this name already exists"));
       } else {
-        res.status(500).json({ error: "Failed to create age group" });
+        res.status(500).json(createErrorResponse("internal_server_error", "Failed to create age group"));
       }
     }
   });
@@ -82,7 +80,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const id = parseInt(req.params.id);
 
       if (isNaN(id)) {
-        return res.status(400).json({ error: "Invalid age group ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid age group ID"));
       }
 
       const result = await db
@@ -92,13 +90,13 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         .returning();
 
       if (result.length === 0) {
-        return res.status(404).json({ error: "Age group not found" });
+        return res.status(404).json(createErrorResponse("not_found", "Age group not found"));
       }
 
-      res.json(result[0]);
+      res.status(200).json(createSuccessResponse(result[0], { count: 1 }));
     } catch (error) {
       console.error("Error updating age group:", error);
-      res.status(500).json({ error: "Failed to update age group" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to update age group"));
     }
   });
 
@@ -108,7 +106,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const id = parseInt(req.params.id);
 
       if (isNaN(id)) {
-        return res.status(400).json({ error: "Invalid age group ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid age group ID"));
       }
 
       // Check if any divisions use this age group
@@ -117,21 +115,19 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       `);
 
       if (parseInt(divisionsCount.rows[0].count as string) > 0) {
-        return res.status(400).json({ 
-          error: "Cannot delete age group with active divisions. Please delete divisions first." 
-        });
+        return res.status(409).json(createErrorResponse("conflict", "Cannot delete age group with active divisions. Please delete divisions first."));
       }
 
       const result = await db.delete(ageGroups).where(eq(ageGroups.id, id)).returning();
 
       if (result.length === 0) {
-        return res.status(404).json({ error: "Age group not found" });
+        return res.status(404).json(createErrorResponse("not_found", "Age group not found"));
       }
 
-      res.json({ success: true, message: "Age group deleted successfully" });
+      res.status(200).json(createSuccessResponse({ success: true, message: "Age group deleted successfully" }, { count: 1 }));
     } catch (error) {
       console.error("Error deleting age group:", error);
-      res.status(500).json({ error: "Failed to delete age group" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to delete age group"));
     }
   });
 
@@ -143,7 +139,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const seasonId = parseInt(req.params.seasonId);
 
       if (isNaN(seasonId)) {
-        return res.status(400).json({ error: "Invalid season ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid season ID"));
       }
 
       const result = await db.execute(sql`
@@ -174,10 +170,10 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         teamCount: parseInt(row.team_count as string) || 0
       }));
 
-      res.json(divisionsWithDetails);
+      res.status(200).json(createSuccessResponse(divisionsWithDetails, { count: divisionsWithDetails.length }));
     } catch (error) {
       console.error("Error fetching divisions:", error);
-      res.status(500).json({ error: "Failed to fetch divisions" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to fetch divisions"));
     }
   });
 
@@ -188,7 +184,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const seasonId = parseInt(req.params.seasonId);
 
       if (isNaN(seasonId)) {
-        return res.status(400).json({ error: "Invalid season ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid season ID"));
       }
 
       // If no display name provided, generate one from age group and section names
@@ -199,7 +195,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         if (ageGroup.length > 0) {
           displayName = ageGroup[0].name;
         } else {
-          return res.status(400).json({ error: "Invalid age group ID" });
+          return res.status(400).json(createErrorResponse("invalid_input", "Invalid age group ID"));
         }
       }
 
@@ -214,16 +210,13 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const parsedData = insertDivisionSchema.safeParse(divisionData);
       if (!parsedData.success) {
         console.log("Schema validation failed:", parsedData.error.errors);
-        return res.status(400).json({ 
-          error: "Invalid division data", 
-          details: parsedData.error.errors 
-        });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid division data", parsedData.error.errors));
       }
 
       console.log("Schema validation passed, inserting data:", parsedData.data);
 
       const result = await db.insert(divisions).values(parsedData.data as any).returning();
-      res.status(201).json(result[0]);
+      res.status(201).json(createSuccessResponse(result[0], { count: 1 }));
     } catch (error) {
       console.error("Error creating division:", error);
       console.error("Error details:", {
@@ -233,9 +226,9 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         hint: error.hint
       });
       if (error.message?.includes("duplicate key")) {
-        res.status(400).json({ error: "A division with this age group already exists for this season" });
+        res.status(400).json(createErrorResponse("duplicate_entry", "A division with this age group already exists for this season"));
       } else {
-        res.status(500).json({ error: "Failed to create division" });
+        res.status(500).json(createErrorResponse("internal_server_error", "Failed to create division"));
       }
     }
   });
@@ -246,7 +239,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const id = parseInt(req.params.id);
 
       if (isNaN(id)) {
-        return res.status(400).json({ error: "Invalid division ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid division ID"));
       }
 
       // Update display name if age group changed
@@ -270,13 +263,13 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         .returning();
 
       if (result.length === 0) {
-        return res.status(404).json({ error: "Division not found" });
+        return res.status(404).json(createErrorResponse("not_found", "Division not found"));
       }
 
-      res.json(result[0]);
+      res.status(200).json(createSuccessResponse(result[0], { count: 1 }));
     } catch (error) {
       console.error("Error updating division:", error);
-      res.status(500).json({ error: "Failed to update division" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to update division"));
     }
   });
 
@@ -286,7 +279,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const id = parseInt(req.params.id);
 
       if (isNaN(id)) {
-        return res.status(400).json({ error: "Invalid division ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid division ID"));
       }
 
       // Check if any teams are assigned to this division
@@ -295,21 +288,19 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       `);
 
       if (parseInt(teamsCount.rows[0].count as string) > 0) {
-        return res.status(400).json({ 
-          error: "Cannot delete division with assigned teams. Please reassign teams first." 
-        });
+        return res.status(409).json(createErrorResponse("conflict", "Cannot delete division with assigned teams. Please reassign teams first."));
       }
 
       const result = await db.delete(divisions).where(eq(divisions.id, id)).returning();
 
       if (result.length === 0) {
-        return res.status(404).json({ error: "Division not found" });
+        return res.status(404).json(createErrorResponse("not_found", "Division not found"));
       }
 
-      res.json({ success: true, message: "Division deleted successfully" });
+      res.status(200).json(createSuccessResponse({ success: true, message: "Division deleted successfully" }, { count: 1 }));
     } catch (error) {
       console.error("Error deleting division:", error);
-      res.status(500).json({ error: "Failed to delete division" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to delete division"));
     }
   });
 
@@ -319,7 +310,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const divisionId = parseInt(req.params.id);
 
       if (isNaN(divisionId)) {
-        return res.status(400).json({ error: "Invalid division ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid division ID"));
       }
 
       const result = await db.execute(sql`
@@ -349,10 +340,10 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         updatedAt: row.updated_at
       }));
 
-      res.json(teamsWithDetails);
+      res.status(200).json(createSuccessResponse(teamsWithDetails, { count: teamsWithDetails.length }));
     } catch (error) {
       console.error("Error fetching teams for division:", error);
-      res.status(500).json({ error: "Failed to fetch teams" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to fetch teams"));
     }
   });
 
@@ -364,7 +355,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
       const seasonId = parseInt(req.params.seasonId);
 
       if (isNaN(seasonId)) {
-        return res.status(400).json({ error: "Invalid season ID" });
+        return res.status(400).json(createErrorResponse("invalid_input", "Invalid season ID"));
       }
 
       // Get all active age groups
@@ -382,13 +373,13 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         ageGroupId: row.age_group_id
       }));
 
-      res.json({
+      res.status(200).json(createSuccessResponse({
         ageGroups: ageGroupsResult.rows,
         usedCombinations
-      });
+      }, { count: ageGroupsResult.rows.length }));
     } catch (error) {
       console.error("Error fetching division options:", error);
-      res.status(500).json({ error: "Failed to fetch division options" });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to fetch division options"));
     }
   });
 
@@ -407,7 +398,7 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         ORDER BY s.id ASC
       `;
       const { rows } = await pool.query(query);
-      res.json(rows.map(row => ({
+      res.status(200).json(createSuccessResponse(rows.map(row => ({
         id: row.id,
         displayName: row.display_name,
         isActive: row.is_active,
@@ -415,10 +406,10 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         updatedAt: row.updated_at,
         name: row.name,
         divisionCount: parseInt(row.division_count, 10) || 0
-      })));
+      })), { count: rows.length }));
     } catch (err) {
       console.error('Error fetching sections:', err);
-      res.status(500).json({ error: 'Failed to fetch sections' });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to fetch sections"));
     }
   });
 
@@ -430,19 +421,19 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         'SELECT id, display_name, is_active, created_at, updated_at, name FROM sections WHERE id = $1',
         [id]
       );
-      if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
+      if (rows.length === 0) return res.status(404).json(createErrorResponse("not_found", "Section not found"));
       const row = rows[0];
-      res.json({
+      res.status(200).json(createSuccessResponse({
         id: row.id,
         displayName: row.display_name,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         name: row.name
-      });
+      }, { count: 1 }));
     } catch (err) {
       console.error('Error fetching section:', err);
-      res.status(500).json({ error: 'Failed to fetch section' });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to fetch section"));
     }
   });
 
@@ -450,23 +441,23 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
   router.post('/sections', async (req, res) => {
     try {
       const { display_name, is_active = true, name } = req.body;
-      if (!display_name) return res.status(400).json({ error: 'display_name is required' });
+      if (!display_name) return res.status(400).json(createErrorResponse("invalid_input", "display_name is required"));
       const { rows } = await pool.query(
         'INSERT INTO sections (display_name, is_active, name) VALUES ($1, $2, $3) RETURNING id, display_name, is_active, created_at, updated_at, name',
         [display_name, is_active, name || null]
       );
       const row = rows[0];
-      res.status(201).json({
+      res.status(201).json(createSuccessResponse({
         id: row.id,
         displayName: row.display_name,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         name: row.name
-      });
+      }, { count: 1 }));
     } catch (err) {
       console.error('Error creating section:', err);
-      res.status(500).json({ error: 'Failed to create section' });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to create section"));
     }
   });
 
@@ -479,19 +470,19 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         'UPDATE sections SET display_name = COALESCE($1, display_name), is_active = COALESCE($2, is_active), name = COALESCE($3, name), updated_at = now() WHERE id = $4 RETURNING id, display_name, is_active, created_at, updated_at, name',
         [display_name, is_active, name, id]
       );
-      if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
+      if (rows.length === 0) return res.status(404).json(createErrorResponse("not_found", "Section not found"));
       const row = rows[0];
-      res.json({
+      res.status(200).json(createSuccessResponse({
         id: row.id,
         displayName: row.display_name,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         name: row.name
-      });
+      }, { count: 1 }));
     } catch (err) {
       console.error('Error updating section:', err);
-      res.status(500).json({ error: 'Failed to update section' });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to update section"));
     }
   });
 
@@ -504,19 +495,19 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
         'UPDATE sections SET display_name = COALESCE($1, display_name), is_active = COALESCE($2, is_active), name = COALESCE($3, name), updated_at = now() WHERE id = $4 RETURNING id, display_name, is_active, created_at, updated_at, name',
         [display_name, is_active, name, id]
       );
-      if (rows.length === 0) return res.status(404).json({ error: 'Section not found' });
+      if (rows.length === 0) return res.status(404).json(createErrorResponse("not_found", "Section not found"));
       const row = rows[0];
-      res.json({
+      res.status(200).json(createSuccessResponse({
         id: row.id,
         displayName: row.display_name,
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         name: row.name
-      });
+      }, { count: 1 }));
     } catch (err) {
       console.error('Error patching section:', err);
-      res.status(500).json({ error: 'Failed to update section' });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to update section"));
     }
   });
 
@@ -525,11 +516,11 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
     try {
       const { id } = req.params;
       const { rowCount } = await pool.query('DELETE FROM sections WHERE id = $1', [id]);
-      if (rowCount === 0) return res.status(404).json({ error: 'Section not found' });
+      if (rowCount === 0) return res.status(404).json(createErrorResponse("not_found", "Section not found"));
       res.status(204).send();
     } catch (err) {
       console.error('Error deleting section:', err);
-      res.status(500).json({ error: 'Failed to delete section' });
+      res.status(500).json(createErrorResponse("internal_server_error", "Failed to delete section"));
     }
   });
 
