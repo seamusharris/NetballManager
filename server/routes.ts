@@ -36,6 +36,7 @@ import { transformToApiFormat, createSuccessResponse, createErrorResponse, creat
 import camelcaseKeys from 'camelcase-keys';
 import { getBatchGameScores } from './game-scores-utils';
 import { registerClubRoutes } from './club-routes';
+import { registerPlayerRoutes } from './player-routes';
 
 // Database health check function
 async function checkPoolHealth(): Promise<boolean> {
