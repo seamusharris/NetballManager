@@ -291,8 +291,6 @@ export const teamPlayers = pgTable("team_players", {
   id: serial("id").primaryKey(),
   team_id: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
   player_id: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
-  is_regular: boolean("is_regular").notNull().default(true),
-  position_preferences: json("position_preferences").$type<Position[]>(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 }, (table) => {
   return {
@@ -389,12 +387,7 @@ export const clubPlayers = pgTable("club_players", {
   id: serial("id").primaryKey(),
   club_id: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
   player_id: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
-  joined_date: date("joined_date").defaultNow(),
-  left_date: date("left_date"),
-  is_active: boolean("is_active").notNull().default(true),
-  notes: text("notes"),
   created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => {
   return {
     club_player_unique: unique().on(table.club_id, table.player_id)

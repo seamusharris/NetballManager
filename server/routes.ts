@@ -39,6 +39,7 @@ import { registerClubRoutes } from './club-routes';
 import { registerPlayerRoutes } from './player-routes';
 import { registerGameRoutes } from './game-routes';
 import { registerSeasonRoutes } from './season-routes';
+import { registerPlayerSeasonRoutes } from './player-season-routes';
 
 // Database health check function
 async function checkPoolHealth(): Promise<boolean> {
@@ -720,50 +721,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(player);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch player" });
-    }
-  });
-
-  // Get seasons for a specific player
-  app.get("/api/players/:id/seasons", async (req, res) => {
-    try {
-      // Import the player-season route handler function
-      const { getPlayerSeasons } = await import('./player-season-routes');
-
-            // Use our function to get player seasons
-      getPlayerSeasons(req, res);
-    } catch (error) {
-      console.error(`Error fetching seasons for player ${req.params.id}:`, error);
-      res.status(500).json({ 
-        message: "Failed to fetch player seasons",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // DEPRECATED - Test endpoint for direct SQL player seasons
-  app.get("/api/players/:id/seasons/debug", async (req, res) => {
-    try {
-      const playerId = Number(req.params.id);
-
-      // Fetch the player's seasons from the junction table
-      const result = await db.execute(sql`
-        SELECT s.* FROM seasons s
-        JOIN player_seasons ps ON ps.season_id = s.id
-        WHERE ps.player_id = ${playerId}
-        ORDER BY s.name
-      `);
-
-      console.log(`Found ${result.rows.length} seasons for player ${playerId}`);
-
-      // Debugging output
-      if (result.rows.length > 0) {
-        console.log(`Season IDs for player ${playerId}: ${result.rows.map(s => s.id).join(', ')}`);
-      }
-
-      res.json(result.rows);
-    } catch (error) {
-      console.error(`Error fetching player seasons: ${error}`);
-      res.status(500).json({ message: "Failed to fetch player seasons" });
     }
   });
 
@@ -1566,7 +1523,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
 
-  // Register section routes - REMOVED (section system deprecated)
+  // Register player season management
+  registerPlayerSeasonRoutes(app);
   
   // Register game-centric stats routes
   const { registerGameStatsRoutes } = await import('./game-stats-routes');
