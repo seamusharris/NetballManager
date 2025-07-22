@@ -1485,56 +1485,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Legacy gamestats endpoints removed - use /api/games/:id/stats instead
 
-  // ----- SEASONS API -----
-
-  // Get teams for a specific player
-  app.get("/api/players/:playerId/teams", async (req, res) => {
-    try {
-      const playerId = parseInt(req.params.playerId);
-
-      console.log(`Fetching teams for player ${playerId}`);
-
-      const teams = await db.execute(sql`
-        SELECT 
-          t.id,
-          t.name,
-          t.division_id,
-          t.club_id,
-          t.season_id,
-          c.name as club_name,
-          s.name as season_name,
-          d.display_name as division_name
-        FROM teams t
-        JOIN team_players tp ON t.id = tp.team_id
-        JOIN clubs c ON t.club_id = c.id
-        JOIN seasons s ON t.season_id = s.id
-        LEFT JOIN divisions d ON t.division_id = d.id
-        WHERE tp.player_id = ${playerId} 
-          AND t.is_active = true 
-          AND t.name != 'Bye'
-        ORDER BY s.start_date DESC, t.name
-      `);
-
-      console.log(`Found ${teams.rows.length} teams for player ${playerId}:`, teams.rows.map(r => r.name));
-
-      const mappedTeams = teams.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        divisionId: row.division_id,
-        divisionName: row.division_name,
-        clubId: row.club_id,
-        seasonId: row.season_id,
-        clubName: row.club_name,
-        seasonName: row.season_name
-      }));
-
-      res.json(transformToApiFormat(mappedTeams));
-    } catch (error) {
-      console.error("Error fetching player teams:", error);
-      res.status(500).json({ message: "Failed to fetch player teams" });
-    }
-  });
-
  // [SEASON ENDPOINTS REMOVED] - now in server/season-routes.ts 
 
   // Get games for a specific season
