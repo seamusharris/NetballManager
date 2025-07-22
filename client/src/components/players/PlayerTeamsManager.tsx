@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
+import { fetchApi } from "@/lib/apiResponseHandler";
 
 interface PlayerTeamsManagerProps {
   player: any;
@@ -38,11 +39,7 @@ export default function PlayerTeamsManager({
   const { data: playerTeams = [], isLoading: isTeamsLoading } = useQuery<Team[]>({
     queryKey: ['players', player.id, 'teams'],
     queryFn: async () => {
-      const response = await fetch(`/api/players/${player.id}/teams`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch player teams');
-      }
-      return response.json();
+      return fetchApi<Team[]>(`/api/players/${player.id}/teams`);
     },
     enabled: !!player?.id,
   });
@@ -51,11 +48,7 @@ export default function PlayerTeamsManager({
   const { data: allTeams = [], isLoading: isLoadingAllTeams } = useQuery<Team[]>({
     queryKey: ['teams', 'all'],
     queryFn: async () => {
-      const response = await fetch('/api/teams/all');
-      if (!response.ok) {
-        throw new Error('Failed to fetch teams');
-      }
-      return response.json();
+      return fetchApi<Team[]>('/api/teams/all');
     },
     enabled: !!player?.id,
   });
@@ -97,30 +90,28 @@ export default function PlayerTeamsManager({
       
       // Add player to new teams
       for (const teamId of teamsToAdd) {
-        const response = await fetch(`/api/teams/${teamId}/players`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            playerId: player.id,
-            isRegular: true 
-          })
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to add player to team ${teamId}: ${errorText}`);
+        try {
+          await fetchApi(`/api/teams/${teamId}/players`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              playerId: player.id,
+              isRegular: true 
+            })
+          });
+        } catch (error: any) {
+          throw new Error(`Failed to add player to team ${teamId}: ${error.message}`);
         }
       }
       
       // Remove player from teams
       for (const teamId of teamsToRemove) {
-        const response = await fetch(`/api/teams/${teamId}/players/${player.id}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to remove player from team ${teamId}: ${errorText}`);
+        try {
+          await fetchApi(`/api/teams/${teamId}/players/${player.id}`, {
+            method: 'DELETE',
+          });
+        } catch (error: any) {
+          throw new Error(`Failed to remove player from team ${teamId}: ${error.message}`);
         }
       }
       

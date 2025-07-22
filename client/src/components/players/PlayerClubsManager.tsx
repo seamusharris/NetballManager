@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
+import { fetchApi } from "@/lib/apiResponseHandler";
 
 
 interface Club {
@@ -35,11 +36,7 @@ export default function PlayerClubsManager({
   const { data: allClubs = [], isLoading: isClubsLoading } = useQuery<Club[]>({
     queryKey: ['clubs', 'all'],
     queryFn: async () => {
-      const response = await fetch('/api/clubs');
-      if (!response.ok) {
-        throw new Error('Failed to fetch clubs');
-      }
-      const clubs = await response.json();
+      const clubs = await fetchApi<any[]>('/api/clubs');
       return clubs.map((club: any) => ({
         id: club.id,
         name: club.name,
@@ -55,14 +52,15 @@ export default function PlayerClubsManager({
     queryKey: [`/api/players/${player?.id}/clubs`],
     queryFn: async () => {
       if (!player?.id) return [];
-      const response = await fetch(`/api/players/${player.id}/clubs`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          return []; // Player has no club associations
+      try {
+        return await fetchApi<Club[]>(`/api/players/${player.id}/clubs`);
+      } catch (error) {
+        // If 404, return empty array (player has no club associations)
+        if (error instanceof Error && error.message.includes('404')) {
+          return [];
         }
-        throw new Error('Failed to fetch player clubs');
+        throw error;
       }
-      return response.json();
     },
     enabled: !!player?.id,
   });
@@ -113,18 +111,11 @@ export default function PlayerClubsManager({
       console.log(`Updating clubs for player ${player.id}:`, selectedClubs);
       console.log('Current selected clubs state:', selectedClubs);
 
-      const response = await fetch(`/api/players/${player.id}/clubs`, {
+      const result = await fetchApi(`/api/players/${player.id}/clubs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clubIds: selectedClubs })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`Failed to update clubs: ${errorData.message || response.statusText}`);
-      }
-
-      const result = await response.json();
       console.log('Save response:', result);
 
       // Success! Show a toast and refresh the data

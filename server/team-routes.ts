@@ -515,13 +515,17 @@ export function registerTeamRoutes(app: Express) {
       `);
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ message: "Player not found on this team" });
+        const { createErrorResponse } = await import('./api-response-standards');
+        return res.status(404).json(createErrorResponse('NOT_FOUND', "Player not found on this team"));
       }
 
-      res.status(204).end();
+      // Return a success response instead of 204 No Content
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: "Player removed from team successfully" }));
     } catch (error) {
       console.error("Error removing player from team:", error);
-      res.status(500).json({ message: "Failed to remove player from team" });
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to remove player from team"));
     }
   });
 
