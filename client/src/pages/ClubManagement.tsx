@@ -38,6 +38,12 @@ interface ClubWithStats extends Club {
   teamsCount: number;
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
+}
+
 async function fetchApi(url: string) {
   const response = await fetch(url);
   if (!response.ok) {
@@ -56,7 +62,7 @@ export default function ClubManagement() {
   const [, navigate] = useLocation();
 
   // Fetch all clubs (admin only)
-  const { data: clubs, isLoading } = useQuery({
+  const { data: clubs, isLoading, error } = useQuery({
     queryKey: ['clubs'],
     queryFn: async () => {
       const response = await fetch('/api/clubs', {
@@ -67,7 +73,17 @@ export default function ClubManagement() {
       if (!response.ok) {
         throw new Error(`Failed to fetch clubs: ${response.status}`);
       }
-      return response.json() as ClubWithStats[];
+      const result = await response.json();
+      
+      // Handle standardized API response format
+      if (result.data && Array.isArray(result.data)) {
+        return result.data;
+      } else if (result.success && result.data && Array.isArray(result.data)) {
+        // Fallback for success-wrapped responses
+        return result.data;
+      } else {
+        throw new Error(result.error || 'Invalid response format');
+      }
     }
   });
 
@@ -223,6 +239,16 @@ export default function ClubManagement() {
       </div>
 
       <div className="grid gap-6">
+        {error && (
+          <div className="text-red-500 p-4 border border-red-200 rounded">
+            Error loading clubs: {error.message}
+          </div>
+        )}
+        {clubs && clubs.length === 0 && (
+          <div className="text-gray-500 p-4 border border-gray-200 rounded">
+            No clubs found.
+          </div>
+        )}
         {clubs?.map((club) => (
           <Card key={club.id} className={`${currentClub?.id === club.id ? 'ring-2 ring-primary' : ''}`}>
             <CardHeader>

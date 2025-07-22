@@ -387,19 +387,7 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get clubs
-  app.get("/api/clubs", async (req, res) => {
-    try {
-      const clubs = await db.execute(sql`
-        SELECT * FROM clubs WHERE is_active = true ORDER BY name
-      `);
-
-      res.json(transformToApiFormat(clubs.rows));
-    } catch (error) {
-      console.error("Error fetching clubs:", error);
-      res.status(500).json({ message: "Failed to fetch clubs" });
-    }
-  });
+  // Note: /api/clubs endpoint moved to club-routes.ts to avoid conflicts
 
   // Get team by ID
   app.get('/api/teams/:id', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
