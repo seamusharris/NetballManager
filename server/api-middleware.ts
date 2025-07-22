@@ -4,14 +4,6 @@ import { smartCaseConversion } from './smart-case-conversion';
 // Legacy URL patterns that need to be redirected
 const URL_REDIRECTS = [
   {
-    pattern: /^\/api\/game\/(\d+)\/team\/(\d+)\/stats$/,
-    redirect: (match: RegExpMatchArray) => `/api/teams/${match[2]}/games/${match[1]}/stats`
-  },
-  {
-    pattern: /^\/api\/game\/(\d+)\/team\/(\d+)\/rosters$/,
-    redirect: (match: RegExpMatchArray) => `/api/teams/${match[2]}/games/${match[1]}/rosters`
-  },
-  {
     pattern: /^\/api\/game-stats\/(\d+)$/,
     redirect: (match: RegExpMatchArray) => `/api/games/stats/${match[1]}`
   }
