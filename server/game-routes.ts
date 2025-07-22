@@ -83,7 +83,8 @@ export function registerGameRoutes(app: Express) {
         ORDER BY g.date DESC, g.time DESC
       `);
       const transformedGames = result.rows.map(transformGameRow);
-      res.json(transformToApiFormat(transformedGames));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(transformedGames)));
     } catch (error) {
       console.error('Error fetching club games via REST:', error);
       res.status(500).json({ error: 'Failed to fetch club games' });
@@ -122,7 +123,8 @@ export function registerGameRoutes(app: Express) {
         quarter_scores: scoresMap[Number(game.id)]?.quarterScores || []
       }));
       console.log(`Simplified endpoint found ${transformedResults.length} games for club ${clubId}`);
-      res.json(transformToApiFormat(transformedResults));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(transformedResults)));
     } catch (error) {
       console.error('Error fetching simplified club games:', error);
       res.status(500).json({ error: 'Failed to fetch simplified club games' });
@@ -168,7 +170,8 @@ export function registerGameRoutes(app: Express) {
         ...game,
         quarter_scores: Array.isArray(game.quarter_scores) ? game.quarter_scores : []
       }));
-      res.json(transformToApiFormat(transformedResults));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(transformedResults)));
     } catch (error) {
       console.error('=== ERROR IN TEAM SIMPLIFIED ENDPOINT ===');
       console.error('Error details:', error);
@@ -269,7 +272,8 @@ export function registerGameRoutes(app: Express) {
         `);
       }
       const games = result.rows.map(transformGameRow);
-      res.json(transformToApiFormat(games));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(games)));
     } catch (error) {
       console.error('Error fetching games:', error);
       res.status(500).json({ message: "Failed to fetch games" });
@@ -406,7 +410,8 @@ export function registerGameRoutes(app: Express) {
         home_team_name: row.home_team_name,
         away_team_name: row.away_team_name
       };
-      res.json(transformToApiFormat(game));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(game)));
     } catch (error) {
       console.error('Error fetching game:', error);
       res.status(500).json({ message: "Failed to fetch game" });
@@ -508,7 +513,8 @@ export function registerGameRoutes(app: Express) {
       if (!updatedGame) {
         return res.status(404).json({ message: "Game not found" });
       }
-      res.json(transformToApiFormat(updatedGame));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(updatedGame)));
     } catch (error) {
       console.error("Game update error:", error);
       res.status(500).json({ message: "Failed to update game" });

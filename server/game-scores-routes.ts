@@ -37,7 +37,8 @@ export function registerGameScoresRoutes(app: Express) {
           scoresMap[gameId] = [score];
         }
       });
-      res.json(transformToApiFormat(scoresMap));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(scoresMap)));
     } catch (error) {
       console.error('Batch scores fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch batch scores' });
@@ -95,7 +96,8 @@ export function registerGameScoresRoutes(app: Express) {
         console.log(`Batch scores response: NO scores found for ${gamesWithoutScores.length} games: [${gamesWithoutScores.join(', ')}]`);
       }
       
-      res.json(transformToApiFormat(scoresMap));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(scoresMap)));
     } catch (error) {
       console.error('Error fetching batch game scores:', error);
       res.status(500).json({ error: 'Failed to fetch batch game scores' });

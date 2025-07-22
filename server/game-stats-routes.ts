@@ -55,7 +55,8 @@ export function registerGameStatsRoutes(app: Express) {
         return res.status(404).json({ error: 'Stat not found' });
       }
 
-      res.json(transformToApiFormat(updated));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(updated)));
     } catch (error) {
       console.error('Error updating game stat:', error);
       res.status(500).json({ error: 'Failed to update game stat' });
@@ -118,7 +119,8 @@ export function registerGameStatsRoutes(app: Express) {
         }
       }
 
-      res.json(transformToApiFormat(results));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(results)));
     } catch (error) {
       console.error('Error saving game stats:', error);
       res.status(500).json({ error: 'Failed to save game stats' });
@@ -177,7 +179,8 @@ export function registerGameStatsRoutes(app: Express) {
         console.log(`Team-based stats API: No stats found for team ${teamId}. Available teams in this game:`, availableTeams);
       }
       
-      res.json(transformToApiFormat(stats));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(stats)));
     } catch (error) {
       console.error('Error fetching team-based game stats:', error);
       res.status(500).json({ error: 'Failed to fetch team-based game stats' });
@@ -215,7 +218,8 @@ export function registerGameStatsRoutes(app: Express) {
           statsMap[gameId] = [stat];
         }
       });
-      res.json(transformToApiFormat(statsMap));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(statsMap)));
     } catch (error) {
       console.error('Batch stats fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch batch stats' });

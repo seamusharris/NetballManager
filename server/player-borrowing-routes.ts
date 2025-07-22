@@ -60,7 +60,8 @@ async function getPlayerBorrowingHandler(req: AuthenticatedRequest, res: Respons
       createdAt: row.created_at
     }));
 
-    res.json(transformToApiFormat(borrowingRequests));
+    const { createSuccessResponse } = await import('./api-response-standards');
+    res.json(createSuccessResponse(transformToApiFormat(borrowingRequests)));
   } catch (error) {
     console.error('Error fetching borrowing requests:', error);
     res.status(500).json({ error: 'Failed to fetch borrowing requests' });
@@ -133,7 +134,8 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         )
       `);
 
-      res.json({ message: 'Player borrowing request created and approved successfully' });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: 'Player borrowing request created and approved successfully' }));
     } catch (error) {
       console.error('Error creating borrowing request:', error);
       res.status(500).json({ error: 'Failed to create borrowing request' });
@@ -173,7 +175,8 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         WHERE id = ${borrowingId}
       `);
 
-      res.json({ message: 'Borrowing request updated successfully' });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: 'Borrowing request updated successfully' }));
     } catch (error) {
       console.error('Error updating borrowing request:', error);
       res.status(500).json({ error: 'Failed to update borrowing request' });
@@ -209,7 +212,8 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         DELETE FROM player_borrowing WHERE id = ${borrowingId}
       `);
 
-      res.json({ message: 'Borrowing request removed successfully' });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: 'Borrowing request removed successfully' }));
     } catch (error) {
       console.error('Error removing borrowing request:', error);
       res.status(500).json({ error: 'Failed to remove borrowing request' });
@@ -263,7 +267,8 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         seasonName: row.season_name
       }));
 
-      res.json(transformToApiFormat(availablePlayers));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(availablePlayers)));
     } catch (error) {
       console.error('Error fetching available players for borrowing:', error);
       res.status(500).json({ error: 'Failed to fetch available players' });
@@ -309,7 +314,8 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         notes: row.notes
       }));
 
-      res.json(transformToApiFormat(borrowedPlayers));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(borrowedPlayers)));
     } catch (error) {
       console.error('Error fetching borrowed players for game:', error);
       res.status(500).json({ error: 'Failed to fetch borrowed players' });

@@ -27,7 +27,8 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY t.name
       `);
 
-      res.json(transformToApiFormat(teams.rows));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(teams.rows)));
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
@@ -55,7 +56,8 @@ export function registerTeamRoutes(app: Express) {
         playerName: row.display_name
       }));
 
-      res.json(transformToApiFormat(mappedAssignments));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(mappedAssignments)));
     } catch (error) {
       console.error("Error fetching team assignments:", error);
       res.status(500).json({ message: "Failed to fetch team assignments" });
@@ -104,7 +106,8 @@ export function registerTeamRoutes(app: Express) {
         `);
       }
 
-      res.json(transformToApiFormat(team.rows[0]));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(team.rows[0])));
     } catch (error) {
       console.error("Error getting/creating default team:", error);
       res.status(500).json({ message: "Failed to get default team" });
@@ -157,7 +160,8 @@ export function registerTeamRoutes(app: Express) {
         seasonEndDate: row.season_end_date,
       }));
 
-      res.json(transformToApiFormat(teams));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(teams)));
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
@@ -240,7 +244,8 @@ export function registerTeamRoutes(app: Express) {
         RETURNING *
       `);
 
-      res.status(201).json(transformToApiFormat(result.rows[0], '/api/teams'));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.status(201).json(createSuccessResponse(transformToApiFormat(result.rows[0], '/api/teams')));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Team with this name already exists for this club and season" });
@@ -269,7 +274,8 @@ export function registerTeamRoutes(app: Express) {
       }
 
       // Convert DB result to camelCase for frontend
-      res.json(camelcaseKeys(result[0]));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(camelcaseKeys(result[0])));
     } catch (error) {
       console.error("Error updating team:", error);
       res.status(500).json({ message: "Failed to update team" });
@@ -315,13 +321,13 @@ export function registerTeamRoutes(app: Express) {
       }
 
       // Return success with information about games that were updated
-      res.json({ 
-        success: true, 
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ 
         message: gameCount > 0 
           ? `Team deleted successfully. ${gameCount} games updated to remove team references.`
           : "Team deleted successfully.",
         gamesUpdated: gameCount
-      });
+      }));
     } catch (error) {
       console.error("Error deleting team:", error);
       res.status(500).json({ message: "Failed to delete team" });
@@ -484,7 +490,8 @@ export function registerTeamRoutes(app: Express) {
         })
         .returning();
 
-      res.status(201).json(transformToApiFormat(result[0], '/api/teams'));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.status(201).json(createSuccessResponse(transformToApiFormat(result[0], '/api/teams')));
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Player is already on this team" });
@@ -551,7 +558,8 @@ export function registerTeamRoutes(app: Express) {
         return res.status(404).json({ message: "Team player not found" });
       }
 
-      res.json(transformToApiFormat(result[0]));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(result[0])));
     } catch (error) {
       console.error("Error updating team player:", error);
       res.status(500).json({ message: "Failed to update team player" });
@@ -670,7 +678,8 @@ export function registerTeamRoutes(app: Express) {
         WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
       `);
 
-      res.json(transformToApiFormat(stats.rows[0] || {}));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(stats.rows[0] || {})));
     } catch (error) {
       console.error('Error fetching team stats:', error);
       res.status(500).json({ error: 'Failed to fetch team stats' });
@@ -742,7 +751,8 @@ export function registerTeamRoutes(app: Express) {
         avatarColor: row.avatar_color
       }));
 
-      res.json(transformToApiFormat(mappedRoster));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(mappedRoster)));
     } catch (error) {
       console.error('Error fetching team roster:', error);
       res.status(500).json({ error: 'Failed to fetch team roster' });
@@ -869,7 +879,8 @@ export function registerTeamRoutes(app: Express) {
         isBye: row.away_team_name === 'Bye'
       };
 
-      res.json(transformToApiFormat(game));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(game)));
     } catch (error) {
       console.error('Error fetching team-perspective game:', error);
       res.status(500).json({ error: 'Failed to fetch game' });
@@ -920,7 +931,8 @@ export function registerTeamRoutes(app: Express) {
         isAvailable: row.is_available
       }));
 
-      res.json(transformToApiFormat(mappedAvailability));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(mappedAvailability)));
     } catch (error) {
       console.error('Error fetching team availability:', error);
       res.status(500).json({ error: 'Failed to fetch team availability' });
@@ -1016,7 +1028,8 @@ export function registerTeamRoutes(app: Express) {
         avatarColor: row.avatar_color
       }));
 
-      res.json(transformToApiFormat(mappedAvailablePlayers));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(mappedAvailablePlayers)));
     } catch (error) {
       console.error("Error fetching available players:", error);
       res.status(500).json({ message: "Failed to fetch available players" });
@@ -1068,7 +1081,8 @@ export function registerTeamRoutes(app: Express) {
         quarter_scores: Array.isArray(game.quarter_scores) ? game.quarter_scores : []
       }));
 
-      res.json(transformToApiFormat(transformedResults));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(transformedResults)));
     } catch (error) {
       console.error('Error fetching simplified team games:', error);
       res.status(500).json({ error: 'Failed to fetch simplified team games' });
@@ -1257,7 +1271,8 @@ export function registerTeamRoutes(app: Express) {
         avatarColor: row.avatar_color
       }));
 
-      res.json(transformToApiFormat(mappedRoster));
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(mappedRoster)));
     } catch (error) {
       console.error('Error fetching team roster entries:', error);
       res.status(500).json({ error: 'Failed to fetch roster entries' });
@@ -1269,7 +1284,8 @@ export function registerTeamRoutes(app: Express) {
     try {
       const { gameId } = req.params;
       await storage.deleteRostersByGame(parseInt(gameId));
-      res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: `All roster entries for game ${gameId} deleted` }));
     } catch (error) {
       console.error('Error deleting team roster entries:', error);
       res.status(500).json({ error: 'Failed to delete roster entries' });
@@ -1323,10 +1339,10 @@ export function registerTeamRoutes(app: Express) {
         }
 
         await client.query('COMMIT');
-        res.json({ 
-          success: true, 
+        const { createSuccessResponse } = await import('./api-response-standards');
+        res.json(createSuccessResponse({ 
           message: `Successfully saved ${rosterData.length} roster entries for game ${gameIdNum}` 
-        });
+        }));
 
       } catch (error) {
         await client.query('ROLLBACK');

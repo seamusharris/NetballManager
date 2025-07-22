@@ -45,7 +45,8 @@ export function registerGamePermissionsRoutes(app: Express) {
         canViewDetailedStats: row.can_view_detailed_stats
       }));
 
-      res.json(permissions);
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(permissions));
     } catch (error) {
       console.error('Error fetching game permissions:', error);
       res.status(500).json({ error: 'Failed to fetch game permissions' });
@@ -80,7 +81,8 @@ export function registerGamePermissionsRoutes(app: Express) {
         `);
       }
 
-      res.json({ message: 'Game permission granted successfully' });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: 'Game permission granted successfully' }));
     } catch (error) {
       console.error('Error granting game permission:', error);
       res.status(500).json({ error: 'Failed to grant game permission' });
@@ -129,7 +131,8 @@ export function registerGamePermissionsRoutes(app: Express) {
         `);
       }
 
-      res.json({ message: 'Bulk game permissions granted successfully' });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: 'Bulk game permissions granted successfully' }));
     } catch (error) {
       console.error('Error granting bulk game permissions:', error);
       res.status(500).json({ error: 'Failed to grant bulk game permissions' });
@@ -147,7 +150,8 @@ export function registerGamePermissionsRoutes(app: Express) {
         WHERE game_id = ${gameId} AND club_id = ${clubId}
       `);
 
-      res.json({ message: 'Game permission removed successfully' });
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ message: 'Game permission removed successfully' }));
     } catch (error) {
       console.error('Error removing game permission:', error);
       res.status(500).json({ error: 'Failed to remove game permission' });
@@ -166,7 +170,8 @@ export function registerGamePermissionsRoutes(app: Express) {
         ORDER BY name
       `);
 
-      res.json(result.rows);
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(result.rows));
     } catch (error) {
       console.error('Error fetching available clubs:', error);
       res.status(500).json({ error: 'Failed to fetch available clubs' });
