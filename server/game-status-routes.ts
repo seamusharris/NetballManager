@@ -4,6 +4,7 @@ import { db } from "./db";
 import { gameStatuses, games } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { log } from "./vite";
+import { createSuccessResponse, createErrorResponse } from "./api-utils";
 
 const router = Router();
 
@@ -16,10 +17,10 @@ router.get("/", async (req, res) => {
       .where(eq(gameStatuses.is_active, true))
       .orderBy(gameStatuses.sort_order);
     
-    res.json(statuses);
+    res.json(createSuccessResponse(statuses));
   } catch (error) {
     log(`Error fetching game statuses: ${error}`, "error");
-    res.status(500).json({ error: "Failed to fetch game statuses" });
+    res.status(500).json(createErrorResponse('SERVER_ERROR', "Failed to fetch game statuses"));
   }
 });
 
@@ -34,13 +35,13 @@ router.get("/:id", async (req, res) => {
       .limit(1);
     
     if (status.length === 0) {
-      return res.status(404).json({ error: "Game status not found" });
+      return res.status(404).json(createErrorResponse('NOT_FOUND', "Game status not found"));
     }
     
-    res.json(status[0]);
+    res.json(createSuccessResponse(status[0]));
   } catch (error) {
     log(`Error fetching game status: ${error}`, "error");
-    res.status(500).json({ error: "Failed to fetch game status" });
+    res.status(500).json(createErrorResponse('SERVER_ERROR', "Failed to fetch game status"));
   }
 });
 
@@ -53,10 +54,10 @@ router.post("/", async (req, res) => {
       .values(body)
       .returning();
     
-    res.status(201).json(newStatus[0]);
+    res.status(201).json(createSuccessResponse(newStatus[0]));
   } catch (error) {
     log(`Error creating game status: ${error}`, "error");
-    res.status(500).json({ error: "Failed to create game status" });
+    res.status(500).json(createErrorResponse('SERVER_ERROR', "Failed to create game status"));
   }
 });
 
@@ -73,13 +74,13 @@ router.put("/:id", async (req, res) => {
       .returning();
     
     if (updatedStatus.length === 0) {
-      return res.status(404).json({ error: "Game status not found" });
+      return res.status(404).json(createErrorResponse('NOT_FOUND', "Game status not found"));
     }
     
-    res.json(updatedStatus[0]);
+    res.json(createSuccessResponse(updatedStatus[0]));
   } catch (error) {
     log(`Error updating game status: ${error}`, "error");
-    res.status(500).json({ error: "Failed to update game status" });
+    res.status(500).json(createErrorResponse('SERVER_ERROR', "Failed to update game status"));
   }
 });
 
@@ -95,9 +96,10 @@ router.delete("/:id", async (req, res) => {
       .where(eq(games.status_id, id));
     
     if (gamesUsingStatus[0].count > 0) {
-      return res.status(400).json({ 
-        error: "Cannot delete game status that is in use by games" 
-      });
+      return res.status(400).json(createErrorResponse(
+        'INVALID_OPERATION',
+        "Cannot delete game status that is in use by games"
+      ));
     }
     
     const deletedStatus = await db
@@ -107,13 +109,13 @@ router.delete("/:id", async (req, res) => {
       .returning();
     
     if (deletedStatus.length === 0) {
-      return res.status(404).json({ error: "Game status not found" });
+      return res.status(404).json(createErrorResponse('NOT_FOUND', "Game status not found"));
     }
     
-    res.json({ message: "Game status deleted successfully" });
+    res.json(createSuccessResponse({ message: "Game status deleted successfully" }));
   } catch (error) {
     log(`Error deleting game status: ${error}`, "error");
-    res.status(500).json({ error: "Failed to delete game status" });
+    res.status(500).json(createErrorResponse('SERVER_ERROR', "Failed to delete game status"));
   }
 });
 

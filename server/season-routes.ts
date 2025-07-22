@@ -50,10 +50,10 @@ export function registerSeasonRoutes(app: Express) {
     try {
       const seasonData = insertSeasonSchema.parse(req.body);
       const season = await storage.createSeason(seasonData);
-      res.status(201).json(transformToApiFormat(season));
+      res.status(201).json(createSuccessResponse(transformToApiFormat(season)));
     } catch (error) {
       console.error('Error creating season:', error);
-      res.status(400).json({ message: 'Invalid season data' });
+      res.status(400).json(createErrorResponse('INVALID_DATA', 'Invalid season data'));
     }
   });
 
@@ -65,12 +65,12 @@ export function registerSeasonRoutes(app: Express) {
       const seasonData = req.body;
       const updatedSeason = await storage.updateSeason(id, seasonData);
       if (!updatedSeason) {
-        return res.status(404).json({ message: 'Season not found' });
+        return res.status(404).json(createErrorResponse('NOT_FOUND', 'Season not found'));
       }
-      res.json(transformToApiFormat(updatedSeason));
+      res.json(createSuccessResponse(transformToApiFormat(updatedSeason)));
     } catch (error) {
       console.error(`Error updating season ${req.params.id}:`, error);
-      res.status(400).json({ message: 'Invalid season data' });
+      res.status(400).json(createErrorResponse('INVALID_DATA', 'Invalid season data'));
     }
   });
 
@@ -80,12 +80,12 @@ export function registerSeasonRoutes(app: Express) {
       const id = parseInt(req.params.id);
       const season = await storage.setActiveSeason(id);
       if (!season) {
-        return res.status(404).json({ message: 'Season not found' });
+        return res.status(404).json(createErrorResponse('NOT_FOUND', 'Season not found'));
       }
-      res.json(season);
+      res.json(createSuccessResponse(season));
     } catch (error) {
       console.error(`Error activating season ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to activate season' });
+      res.status(500).json(createErrorResponse('SERVER_ERROR', 'Failed to activate season'));
     }
   });
 
@@ -96,18 +96,19 @@ export function registerSeasonRoutes(app: Express) {
       const activeSeason = await storage.getActiveSeason();
       // Prevent deleting the active season
       if (activeSeason && activeSeason.id === id) {
-        return res.status(400).json({ 
-          message: 'Cannot delete the active season. Activate another season first.' 
-        });
+        return res.status(400).json(createErrorResponse(
+          'INVALID_OPERATION', 
+          'Cannot delete the active season. Activate another season first.'
+        ));
       }
       const deleted = await storage.deleteSeason(id);
       if (!deleted) {
-        return res.status(404).json({ message: 'Season not found' });
+        return res.status(404).json(createErrorResponse('NOT_FOUND', 'Season not found'));
       }
-      res.json({ success: true, message: "Season deleted successfully" });
+      res.json(createSuccessResponse({ message: "Season deleted successfully" }));
     } catch (error) {
       console.error(`Error deleting season ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to delete season' });
+      res.status(500).json(createErrorResponse('SERVER_ERROR', 'Failed to delete season'));
     }
   });
 } 

@@ -6,6 +6,7 @@ import { players, playerSeasons } from '@shared/schema';
 import { db } from './db';
 import { eq } from 'drizzle-orm';
 import { Pool } from 'pg';
+import { createSuccessResponse, createErrorResponse } from './api-utils';
 
 /**
  * Dedicated route handler for managing player-season relationships
@@ -49,21 +50,22 @@ export async function updatePlayerSeasonRelationships(req: Request, res: Respons
     const success = await updatePlayerSeasons(playerId, processedSeasonIds);
 
     if (success) {
-      return res.json({ 
-        success: true, 
+      return res.json(createSuccessResponse({ 
         message: `Updated player ${playerId} seasons to ${processedSeasonIds.join(', ')}` 
-      });
+      }));
     } else {
-      return res.status(500).json({ 
-        message: "Failed to update player-season relationships" 
-      });
+      return res.status(500).json(createErrorResponse(
+        'SERVER_ERROR',
+        "Failed to update player-season relationships"
+      ));
     }
   } catch (error) {
     console.error(`Error updating player-season relationships for player ${playerId}:`, error);
-    return res.status(500).json({ 
-      message: "Failed to update player-season relationships",
-      error: error instanceof Error ? error.message : "Unknown error"
-    });
+    return res.status(500).json(createErrorResponse(
+      'SERVER_ERROR',
+      "Failed to update player-season relationships",
+      { error: error instanceof Error ? error.message : "Unknown error" }
+    ));
   }
 }
 
@@ -118,13 +120,14 @@ export async function getPlayerSeasons(req: Request, res: Response) {
       displayOrder: row.display_order
     }));
 
-    return res.json(formattedSeasons);
+    return res.json(createSuccessResponse(formattedSeasons));
   } catch (error) {
     console.error(`Error getting seasons for player ${playerId}:`, error);
-    return res.status(500).json({ 
-      message: "Failed to get player seasons",
-      error: error instanceof Error ? error.message : "Unknown error"
-    });
+    return res.status(500).json(createErrorResponse(
+      'SERVER_ERROR',
+      "Failed to get player seasons",
+      { error: error instanceof Error ? error.message : "Unknown error" }
+    ));
   }
 }
 
