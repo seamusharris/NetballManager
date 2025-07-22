@@ -165,6 +165,133 @@ export function registerClubRoutes(app: Express) {
     }
   });
 
+  // GET /api/clubs/:clubId/players - Get players in a club
+  app.get('/api/clubs/:clubId/players', async (req, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      
+      if (isNaN(clubId)) {
+        return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'Invalid club ID'));
+      }
+      
+      // Verify club exists
+      const clubCheck = await pool.query('SELECT id FROM clubs WHERE id = $1', [clubId]);
+      if (clubCheck.rowCount === 0) {
+        return res.status(404).json(createErrorResponse(ErrorCodes.RESOURCE_NOT_FOUND, 'Club not found'));
+      }
+      
+      // Get club players
+      const result = await pool.query(`
+        SELECT p.*, cp.joined_date, cp.notes
+        FROM club_players cp
+        JOIN players p ON cp.player_id = p.id
+        WHERE cp.club_id = $1
+        ORDER BY p.first_name, p.last_name
+      `, [clubId]);
+      
+      const players = result.rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth,
+        positionPreferences: row.position_preferences,
+        active: row.active,
+        avatarColor: row.avatar_color,
+        joinedDate: row.joined_date,
+        notes: row.notes
+      }));
+      
+      return res.json(createSuccessResponse(players));
+    } catch (error) {
+      console.error('Error fetching club players:', error);
+      return res.status(500).json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, 'Failed to fetch club players'));
+    }
+  });
+
+  // POST /api/clubs/:clubId/players - Add players to a club
+  app.post('/api/clubs/:clubId/players', async (req, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const { player_ids } = req.body; // Expect snake_case after middleware conversion
+      
+      if (isNaN(clubId)) {
+        return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'Invalid club ID'));
+      }
+      
+      if (!Array.isArray(player_ids)) {
+        return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'playerIds must be an array'));
+      }
+      
+      // Verify club exists
+      const clubCheck = await pool.query('SELECT id FROM clubs WHERE id = $1', [clubId]);
+      if (clubCheck.rowCount === 0) {
+        return res.status(404).json(createErrorResponse(ErrorCodes.RESOURCE_NOT_FOUND, 'Club not found'));
+      }
+      
+      // Get current player associations for this club
+      const currentPlayersResult = await pool.query(`
+        SELECT player_id FROM club_players 
+        WHERE club_id = $1
+      `, [clubId]);
+      const currentPlayerIds = currentPlayersResult.rows.map(row => row.player_id);
+
+      // Find players to add and remove
+      const playersToAdd = player_ids.filter(playerId => !currentPlayerIds.includes(playerId));
+      const playersToRemove = currentPlayerIds.filter(playerId => !player_ids.includes(playerId));
+
+      let playersAdded = 0;
+      let playersRemoved = 0;
+
+      // Add new players to club
+      for (const playerId of playersToAdd) {
+        try {
+          await pool.query(`
+            INSERT INTO club_players (club_id, player_id)
+            VALUES ($1, $2)
+            ON CONFLICT (club_id, player_id) DO NOTHING
+          `, [clubId, playerId]);
+          playersAdded++;
+        } catch (error) {
+          console.error(`Error adding player ${playerId} to club ${clubId}:`, error);
+        }
+      }
+
+      // Remove players from club
+      for (const playerId of playersToRemove) {
+        try {
+          await pool.query(`
+            DELETE FROM club_players 
+            WHERE club_id = $1 AND player_id = $2
+          `, [clubId, playerId]);
+          playersRemoved++;
+        } catch (error) {
+          console.error(`Error removing player ${playerId} from club ${clubId}:`, error);
+        }
+      }
+      
+            // Build a natural message
+      let message = `Club ${clubId} successfully updated.`;
+      if (playersAdded > 0 && playersRemoved > 0) {
+        message += ` ${playersAdded} ${playersAdded === 1 ? 'player' : 'players'} added, ${playersRemoved} ${playersRemoved === 1 ? 'player' : 'players'} removed.`;
+      } else if (playersAdded > 0) {
+        message += ` ${playersAdded} ${playersAdded === 1 ? 'player' : 'players'} added.`;
+      } else if (playersRemoved > 0) {
+        message += ` ${playersRemoved} ${playersRemoved === 1 ? 'player' : 'players'} removed.`;
+      }
+
+      return res.json(createSuccessResponse({
+        message,
+        playersAdded,
+        playersRemoved,
+        totalPlayers: player_ids.length
+      }));
+    } catch (error) {
+      console.error('Error updating club players:', error);
+      return res.status(500).json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, 'Failed to update club players'));
+    }
+  });
+
   // Delete club
   app.delete('/api/clubs/:id', async (req, res) => {
     try {

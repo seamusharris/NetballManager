@@ -23,17 +23,9 @@ export function smartCaseConversion() {
       // Handle request body conversion with error handling
       if (convertRequest && req.body && typeof req.body === 'object') {
         try {
-
-          
-          if (config?.fieldMappings) {
-            // Use specific field mappings for precise control
-            req.body = applyFieldMappings(req.body, config.fieldMappings);
-
-          } else {
-            // Use general snake_case conversion
-            req.body = snakecaseKeys(req.body, { deep: true });
-
-          }
+          // Always use automatic snake_case conversion for requests
+          // This converts camelCase from client to snake_case for server/database
+          req.body = snakecaseKeys(req.body, { deep: true });
         } catch (conversionError) {
           console.error('Request case conversion error:', conversionError);
           // Continue without conversion rather than crash

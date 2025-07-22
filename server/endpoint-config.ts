@@ -169,6 +169,12 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     description: 'Club CRUD operations'
   },
 
+  '/api/clubs/*/players': {
+    convertRequest: true,
+    convertResponse: true,
+    description: 'Club players management'
+  },
+
   // ==========================================================================
   // AVAILABILITY ENDPOINTS
   // ==========================================================================
@@ -327,11 +333,13 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
   '/api/players/*/clubs': {
     convertRequest: true,
     convertResponse: true,
-    fieldMappings: {
-      'clubIds': 'club_ids',
-      'playerId': 'player_id'
-    },
     description: 'Player club assignments'
+  },
+
+  '/api/players/*/teams': {
+    convertRequest: true,
+    convertResponse: true,
+    description: 'Player team assignments'
   },
 
   // ==========================================================================
@@ -483,7 +491,7 @@ export function getEndpointConfig(path: string): EndpointConfig | null {
 }
 
 /**
- * Apply field mappings to request body
+ * Apply field mappings to request body (converts camelCase to snake_case)
  */
 export function applyFieldMappings(body: any, mappings: Record<string, string>): any {
   if (!body || typeof body !== 'object') {
@@ -492,7 +500,7 @@ export function applyFieldMappings(body: any, mappings: Record<string, string>):
 
   const result = { ...body };
 
-  // Apply mappings
+  // Apply mappings - convert camelCase to snake_case for requests
   for (const [camelCase, snake_case] of Object.entries(mappings)) {
     if (result[camelCase] !== undefined) {
       result[snake_case] = result[camelCase];

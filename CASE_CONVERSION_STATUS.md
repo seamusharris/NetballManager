@@ -14,23 +14,24 @@
 ```
 Frontend (camelCase) 
     ↓ 
-Smart Middleware → Endpoint Config → Field Mappings → snake_case
+Smart Middleware → Endpoint Config → Automatic snake_case Conversion
     ↓
 Database (snake_case)
     ↓
-Response Middleware → camelCase
+Response Middleware → Automatic camelCase Conversion
     ↓
 Frontend (camelCase)
 ```
 
 ### 📋 Configured Endpoints:
 
-#### Critical Endpoints (With Field Mappings):
-- `/api/teams/*/players` - Player assignment (playerId → player_id, isRegular → is_regular)
-- `/api/teams/*/games/*/availability` - Availability (availablePlayerIds → available_player_ids)
-- `/api/games` - Game CRUD (homeTeamId → home_team_id, awayTeamId → away_team_id, etc.)
-- `/api/players` - Player CRUD (firstName → first_name, displayName → display_name, etc.)
-- `/api/teams` - Team CRUD (clubId → club_id, seasonId → season_id, etc.)
+#### Critical Endpoints (With Automatic Conversion):
+- `/api/teams/*/players` - Player assignment (automatic camelCase → snake_case)
+- `/api/teams/*/games/*/availability` - Availability (automatic camelCase → snake_case)
+- `/api/games` - Game CRUD (automatic camelCase → snake_case)
+- `/api/players` - Player CRUD (automatic camelCase → snake_case)
+- `/api/players/*/clubs` - Player club assignments (automatic camelCase → snake_case)
+- `/api/teams` - Team CRUD (automatic camelCase → snake_case)
 
 #### Batch Endpoints (No Request Conversion):
 - `/api/games/stats/batch` - Expects camelCase gameIds array
@@ -99,12 +100,8 @@ curl http://localhost:3000/api/debug/case-conversion
 ```typescript
 // In server/endpoint-config.ts
 '/api/new-endpoint': {
-  convertRequest: true,
-  convertResponse: true,
-  fieldMappings: {
-    'camelCaseField': 'snake_case_field',
-    'anotherId': 'another_id'
-  },
+  convertRequest: true,  // Automatic camelCase → snake_case
+  convertResponse: true, // Automatic snake_case → camelCase
   description: 'Description of the endpoint'
 }
 ```
@@ -121,7 +118,7 @@ curl http://localhost:3000/api/debug/case-conversion
 ### 📊 Current Configuration Coverage:
 
 - **Configured Endpoints**: 15+
-- **Field Mappings**: 25+ specific mappings
+- **Automatic Conversion**: All configured endpoints use automatic case conversion
 - **Batch Endpoints**: 4 (protected from conversion)
 - **Legacy Endpoints**: 2 (maintained as-is)
 
@@ -129,9 +126,10 @@ curl http://localhost:3000/api/debug/case-conversion
 
 1. **Consistency** - Frontend always works with camelCase
 2. **Database Compatibility** - Backend always uses snake_case
-3. **Flexibility** - Endpoint-specific configuration
-4. **Safety** - Gradual rollout with precise control
-5. **Performance** - Only converts when needed
+3. **Automatic Conversion** - No manual field mappings required
+4. **Maintainable** - Single conversion logic for all fields
+5. **Future-proof** - New fields automatically converted
+6. **Performance** - Only converts when needed
 
 ---
 *Status Updated: 2025-07-19*

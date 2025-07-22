@@ -121,7 +121,7 @@ export default function PlayerClubsManager({
       // Success! Show a toast and refresh the data
       toast({
         title: "Success",
-        description: `Player clubs updated successfully. ${result.clubsAdded || 0} clubs added.`
+        description: result.message || "Player clubs updated successfully."
       });
 
       // Refresh player clubs data

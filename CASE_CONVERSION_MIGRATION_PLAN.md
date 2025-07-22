@@ -82,10 +82,7 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
   '/api/teams/*/players': {
     convertRequest: true,
     convertResponse: true,
-    fieldMappings: {
-      'playerId': 'player_id',
-      'isRegular': 'is_regular'
-    }
+    description: 'Automatic camelCase → snake_case conversion'
   },
   
   // Legacy endpoints - maintain current behavior
@@ -103,13 +100,9 @@ export function smartCaseConversion() {
     const config = getEndpointConfig(req.path);
     
     if (config?.convertRequest && req.body && typeof req.body === 'object') {
-      if (config.fieldMappings) {
-        // Use specific field mappings
-        req.body = applyFieldMappings(req.body, config.fieldMappings);
-      } else {
-        // Use general snake_case conversion
-        req.body = snakecaseKeys(req.body, { deep: true });
-      }
+      // Always use automatic snake_case conversion for requests
+      // This converts camelCase from client to snake_case for server/database
+      req.body = snakecaseKeys(req.body, { deep: true });
     }
 
     // Response conversion (keep existing logic)

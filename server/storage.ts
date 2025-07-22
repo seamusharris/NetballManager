@@ -740,27 +740,25 @@ export class DatabaseStorage implements IStorage {
           c.*,
           cp.joined_date,
           cp.left_date,
-          cp.is_active,
           cp.notes
         FROM clubs c
         JOIN club_players cp ON c.id = cp.club_id
         WHERE cp.player_id = ${playerId}
-        ORDER BY cp.is_active DESC, cp.joined_date DESC
+        ORDER BY cp.joined_date DESC
       `);
 
-      return result.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        code: row.code,
-        address: row.address,
-        contactInfo: row.contact_info,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        joinedDate: row.joined_date,
-        leftDate: row.left_date,
-        isActive: row.is_active,
-        notes: row.notes
-      }));
+              return result.rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          code: row.code,
+          address: row.address,
+          contactInfo: row.contact_info,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          joinedDate: row.joined_date,
+          leftDate: row.left_date,
+          notes: row.notes
+        }));
     } catch (error) {
       console.log('club_players table not available, returning empty array');
       return [];
@@ -773,7 +771,6 @@ export class DatabaseStorage implements IStorage {
         INSERT INTO club_players (player_id, club_id, notes)
         VALUES (${playerId}, ${clubId}, ${notes || null})
         ON CONFLICT (club_id, player_id) DO UPDATE SET
-          is_active = true,
           left_date = null,
           notes = EXCLUDED.notes,
           updated_at = NOW()
@@ -813,11 +810,10 @@ export class DatabaseStorage implements IStorage {
           p.active,
           p.avatar_color,
           cp.joined_date,
-          cp.notes as club_notes,
-          cp.is_active as is_active_in_club
+          cp.notes as club_notes
         FROM players p
         JOIN club_players cp ON p.id = cp.player_id  
-        WHERE cp.club_id = ${clubId} AND cp.is_active = true
+        WHERE cp.club_id = ${clubId}
         ORDER BY p.display_name, p.first_name, p.last_name
       `);
 

@@ -81,44 +81,18 @@ export default function PlayerTeamsManager({
     try {
       console.log(`Updating teams for player ${player.id}:`, selectedTeams);
       
-      // Get current team IDs
-      const currentTeamIds = playerTeams.map(team => team.id);
+      const result = await fetchApi(`/api/players/${player.id}/teams`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamIds: selectedTeams })
+      });
       
-      // Find teams to add and remove
-      const teamsToAdd = selectedTeams.filter(teamId => !currentTeamIds.includes(teamId));
-      const teamsToRemove = currentTeamIds.filter(teamId => !selectedTeams.includes(teamId));
-      
-      // Add player to new teams
-      for (const teamId of teamsToAdd) {
-        try {
-          await fetchApi(`/api/teams/${teamId}/players`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              playerId: player.id,
-              isRegular: true 
-            })
-          });
-        } catch (error: any) {
-          throw new Error(`Failed to add player to team ${teamId}: ${error.message}`);
-        }
-      }
-      
-      // Remove player from teams
-      for (const teamId of teamsToRemove) {
-        try {
-          await fetchApi(`/api/teams/${teamId}/players/${player.id}`, {
-            method: 'DELETE',
-          });
-        } catch (error: any) {
-          throw new Error(`Failed to remove player from team ${teamId}: ${error.message}`);
-        }
-      }
+      console.log('Save response:', result);
       
       // Success! Show a toast and refresh the data
       toast({
         title: "Success",
-        description: "Player teams updated successfully"
+        description: result.message || "Player teams updated successfully."
       });
       
       // Invalidate relevant queries

@@ -1111,16 +1111,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/games/:gameId/availability", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
-      const { availablePlayerIds, explicitlyEmpty } = req.body;
+      const { available_player_ids, explicitly_empty } = req.body; // Expect snake_case after middleware conversion
 
-      if (!Array.isArray(availablePlayerIds)) {
+      if (!Array.isArray(available_player_ids)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
       }
 
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
       
       // Handle explicitly empty case (Select None button)
-      if (explicitlyEmpty === true && availablePlayerIds.length === 0) {
+      if (explicitly_empty === true && available_player_ids.length === 0) {
         console.log(`API: Handling explicitly empty availability for game ${gameId}`);
         const success = await playerAvailabilityStorage.setExplicitlyEmptyAvailability(gameId);
         if (success) {
@@ -1129,8 +1129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.status(500).json({ message: "Failed to clear player availability" });
         }
       } else {
-        console.log(`API: Setting normal availability for game ${gameId}: ${availablePlayerIds.length} players`);
-        const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
+        console.log(`API: Setting normal availability for game ${gameId}: ${available_player_ids.length} players`);
+        const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, available_player_ids);
         if (success) {
           res.json({ message: "Player availability updated successfully" });
         } else {
@@ -1941,17 +1941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- CLUB-PLAYER RELATIONSHIPS API -----
-
-  // Get all clubs for a specific player
-  app.get("/api/players/:playerId/clubs", async (req, res) => {
-    try {
-      const playerId = parseInt(req.params.playerId);
-      const clubs = await storage.getPlayerClubs(playerId);
-      res.json(clubs);
-    } catch (error) {
-      console.error('Error fetching player clubs:', error);
-      res.status(500).json({ error: 'Failed to fetch player clubs' });
-    }  });
+  // [MOVED TO player-routes.ts] - GET/POST /api/players/:playerId/clubs
 
 
 
