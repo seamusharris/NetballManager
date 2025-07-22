@@ -35,6 +35,7 @@ import {
 import { transformToApiFormat, createSuccessResponse, createErrorResponse, createArrayResponse } from './api-utils';
 import camelcaseKeys from 'camelcase-keys';
 import { getBatchGameScores } from './game-scores-utils';
+import { registerClubRoutes } from './club-routes';
 
 // Database health check function
 async function checkPoolHealth(): Promise<boolean> {
@@ -3976,6 +3977,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to save roster entries' });
     }
   });
+
+  registerClubRoutes(app);
 
   // Create HTTP server
   const httpServer = createServer(app);
