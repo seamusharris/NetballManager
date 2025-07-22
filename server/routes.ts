@@ -1600,27 +1600,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ----- ROSTERS API -----
-  app.get("/api/games/:gameId/rosters", async (req, res) => {
-    try {
-      const gameId = Number(req.params.gameId);
-      const rosters = await storage.getRostersByGame(gameId);
-      res.json(transformToApiFormat(rosters));
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch rosters" });
-    }
-  });
+  // [LEGACY ROSTER ENDPOINT REMOVED] - GET /api/games/:gameId/rosters
 
-  // API endpoint to delete all roster entries for a game
-  app.delete("/api/games/:gameId/rosters", async (req, res) => {
-    try {
-      const gameId = Number(req.params.gameId);
-      await storage.deleteRostersByGame(gameId);
-      res.json({ success: true, message: "All roster entries deleted for game" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete roster entries" });
-    }
-  });
+  // [LEGACY ROSTER ENDPOINT REMOVED] - DELETE /api/games/:gameId/rosters
 
   // Create fallback roster for a game
   app.post("/api/games/:gameId/create-fallback-roster", async (req, res) => {
@@ -1640,88 +1622,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/rosters", async (req, res) => {
-    try {
-      const parsedData = insertRosterSchema.safeParse(req.body);
-      if (!parsedData.success) {
-        return res.status(400).json({ message: "Invalid roster data", errors: parsedData.error.errors });
-      }
+  // [LEGACY ROSTER ENDPOINT REMOVED] - POST /api/rosters
 
-      // Validate position
-      if (!POSITIONS.includes(parsedData.data.position as any)) {
-        return res.status(400).json({ message: "Invalid position" });
-      }
+  // [LEGACY ROSTER ENDPOINTS REMOVED] - PATCH /api/rosters/:id, DELETE /api/rosters/:id
 
-      // Validate quarter (1-4)
-      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
-        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
-      }
-
-      const roster = await storage.createRoster(parsedData.data);
-      res.status(201).json(transformToApiFormat(roster));
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create roster position" });
-    }
-  });
-
-  app.patch("/api/rosters/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const updatedRoster = await storage.updateRoster(id, req.body);
-      if (!updatedRoster) {
-        return res.status(404).json({ message: "Roster position not found" });
-      }
-      res.json(transformToApiFormat(updatedRoster));
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update roster position" });
-    }
-  });
-
-  app.delete("/api/rosters/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const success = await storage.deleteRoster(id);
-      if (!success) {
-        return res.status(404).json({ message: "Roster position not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete roster position" });
-    }
-  });
-
-  // Create roster entry for a specific game (standardized endpoint)
-  app.post("/api/games/:gameId/rosters", standardAuth({ requireGameAccess: true }), async (req, res) => {
-    try {
-      const gameId = Number(req.params.gameId);
-
-      // Ensure gameId matches the URL parameter
-      const rosterData = { ...req.body, game_id: gameId };
-
-      // Validate the data using the schema
-      const parsedData = insertRosterSchema.safeParse(rosterData);
-      if (!parsedData.success) {
-        console.error("Roster validation error:", parsedData.error.errors);
-        return res.status(400).json({ message: "Invalid roster data", errors: parsedData.error.errors });
-      }
-
-      // Validate position
-      if (!POSITIONS.includes(parsedData.data.position as any)) {
-        return res.status(400).json({ message: "Invalid position" });
-      }
-
-      // Validate quarter (1-4)
-      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
-        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
-      }
-
-      const roster = await storage.createRoster(parsedData.data);
-      res.status(201).json(transformToApiFormat(roster, '/api/games/*/rosters'));
-    } catch (error) {
-      console.error("Failed to create roster entry:", error);
-      res.status(500).json({ message: "Failed to create roster entry" });
-    }
-  });
+  // [LEGACY ROSTER ENDPOINT REMOVED] - POST /api/games/:gameId/rosters
 
   // ----- PLAYER AVAILABILITY API -----
 
@@ -1943,62 +1848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Legacy batch rosters endpoint for backward compatibility
-  app.post("/api/games/rosters/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
-    console.log('ENTER legacy batch rosters endpoint');
-    try {
-      console.log("POST Batch rosters endpoint received body:", req.body);
-      const { gameIds } = req.body;
-      console.log("Extracted gameIds from POST body:", gameIds);
-
-      // More robust parameter validation - return empty object instead of error for empty requests
-      if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
-        console.log("POST Batch rosters endpoint: No game IDs provided, returning empty object");
-        return res.json({});
-      }
-
-      // Parse and validate game IDs
-      const validGameIds = gameIds
-        .map(id => {
-          const parsed = typeof id === 'number' ? id : parseInt(id, 10);
-          return isNaN(parsed) ? null : parsed;
-        })
-        .filter((id): id is number => id !== null && id > 0);
-
-      if (!validGameIds.length) {
-        return res.status(400).json({ error: "No valid game IDs provided" });
-      }
-
-      console.log(`POST Batch fetching rosters for ${validGameIds.length} games: ${validGameIds.join(',')}`);
-
-      // Process each game ID in parallel with error handling
-      const rosterPromises = validGameIds.map(async (gameId) => {
-        try {
-          const rosters = await storage.getRostersByGame(gameId);
-          console.log(`Batch rosters: Game ${gameId} has ${rosters.length} roster entries`);
-          return { gameId, rosters, success: true };
-        } catch (error) {
-          console.error(`Error fetching rosters for game ${gameId}:`, error);
-          return { gameId, rosters: [], success: false };
-        }
-      });
-
-      const results = await Promise.all(rosterPromises);
-
-      // Create a map of gameId -> rosters[]
-      const rostersMap = results.reduce((acc, result) => {
-        acc[result.gameId] = result.rosters;
-        return acc;
-      }, {} as Record<number, any[]>);
-
-      const rostersCount = Object.entries(rostersMap).map(([gameId, rosters]) => `${gameId}:${rosters.length}`).join(', ');
-      console.log(`POST Batch rosters endpoint successfully returned rosters for ${validGameIds.length} games. Counts: ${rostersCount}`);
-      res.json(transformToApiFormat(rostersMap));
-    } catch (error) {
-      console.error(`Error in POST batch game rosters endpoint:`, error);
-      res.status(500).json({ error: "Failed to get batch game rosters" });
-    }
-  });
+  // [LEGACY BATCH ROSTERS ENDPOINT REMOVED] - POST /api/games/rosters/batch
 
   // Batch endpoint to get stats for multiple games at once
   // Club-scoped batch stats endpoint
@@ -2438,6 +2288,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game status routes
   app.use("/api/game-statuses", gameStatusRoutes);
 
+  // Register club routes
+  registerClubRoutes(app);
+
+  // Register player routes
+  registerPlayerRoutes(app);
+
   // Register team routes
   registerTeamRoutes(app);
 
@@ -2456,28 +2312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerGameStatsRoutes } = await import('./game-stats-routes');
   registerGameStatsRoutes(app);
 
-  // Game-centric roster endpoint
-  app.get('/api/game/:gameId/team/:teamId/rosters', async (req, res) => {
-    try {
-      const gameId = parseInt(req.params.gameId);
-      const teamId = parseInt(req.params.teamId);
-
-      if (isNaN(gameId) || isNaN(teamId)) {
-        return res.status(400).json({ error: 'Invalid game ID or team ID' });
-      }
-
-      console.log(`Game-centric rosters endpoint: fetching rosters for game ${gameId}, team ${teamId}`);
-
-      // Get rosters for this game
-      const rosters = await storage.getRostersByGame(gameId);
-      
-      console.log(`Found ${rosters.length} roster entries for game ${gameId}`);
-      res.json(transformToApiFormat(rosters));
-    } catch (error) {
-      console.error('Error fetching game-centric rosters:', error);
-      res.status(500).json({ error: 'Failed to fetch rosters' });
-    }
-  });
+  // [LEGACY GAME-CENTRIC ROSTER ENDPOINT REMOVED] - now handled in server/team-routes.ts
   // Team Game Awards endpoints
   app.get('/api/games/:gameId/team-awards', async (req, res) => {
     try {
@@ -3306,236 +3141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Team-based get roster entries (NEW - Stage 5) - MOVED TO TOP
-  app.get('/api/teams/:teamId/games/:gameId/rosters', async (req: AuthenticatedRequest, res) => {
-    try {
-      const teamId = parseInt(req.params.teamId);
-      const gameId = parseInt(req.params.gameId);
-      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
-
-      console.log(`Team-based roster fetch: teamId=${teamId}, gameId=${gameId}`);
-
-      if (isNaN(teamId) || isNaN(gameId)) {
-        return res.status(400).json({ error: 'Invalid team ID or game ID' });
-      }
-
-      // Get team details to check club access
-      const team = await db.execute(sql`
-        SELECT club_id FROM teams WHERE id = ${teamId}
-      `);
-
-      if (team.rows.length === 0) {
-        return res.status(404).json({ error: 'Team not found' });
-      }
-
-      const teamClubId = team.rows[0].club_id;
-      if (!userClubs.includes(teamClubId)) {
-        return res.status(403).json({ error: 'Access denied to this team' });
-      }
-
-      // Verify the team is actually playing in this game
-      const gameCheck = await db.execute(sql`
-        SELECT id FROM games 
-        WHERE id = ${gameId} AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
-      `);
-
-      if (gameCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Team is not playing in this game' });
-      }
-
-      // Get roster entries for this team's game
-      const roster = await db.execute(sql`
-        SELECT 
-          r.id,
-          r.game_id,
-          r.quarter,
-          r.position,
-          r.player_id,
-          p.display_name,
-          p.first_name,
-          p.last_name,
-          p.avatar_color
-        FROM rosters r
-        JOIN players p ON r.player_id = p.id
-        WHERE r.game_id = ${gameId}
-        ORDER BY r.quarter, r.position
-      `);
-
-      console.log(`Team-based roster fetch: Found ${roster.rows.length} roster entries for game ${gameId}`);
-
-      const mappedRoster = roster.rows.map(row => ({
-        id: row.id,
-        gameId: row.game_id,
-        quarter: row.quarter,
-        position: row.position,
-        playerId: row.player_id,
-        playerName: row.display_name,
-        firstName: row.first_name,
-        lastName: row.last_name,
-        avatarColor: row.avatar_color
-      }));
-
-      res.json(transformToApiFormat(mappedRoster));
-    } catch (error) {
-      console.error('Error fetching team roster entries:', error);
-      res.status(500).json({ error: 'Failed to fetch roster entries' });
-    }
-  });
-
-  // Team-based delete roster entries (NEW - Stage 5)
-  app.delete('/api/teams/:teamId/games/:gameId/rosters', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
-    try {
-      const { gameId } = req.params;
-      await storage.deleteRostersByGame(parseInt(gameId));
-      res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
-    } catch (error) {
-      console.error('Error deleting team roster entries:', error);
-      res.status(500).json({ error: 'Failed to delete roster entries' });
-    }
-  });
-
-  // Delete all roster entries for a game (LEGACY - will be deprecated)
-  app.delete('/api/games/:gameId/rosters', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
-    try {
-      const { gameId } = req.params;
-      await storage.deleteRostersByGame(parseInt(gameId));
-      res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
-    } catch (error) {
-      console.error('Error deleting roster entries:', error);
-      res.status(500).json({ error: 'Failed to delete roster entries' });
-    }
-  });
-
-  // Team-based batch save roster entries (NEW - Stage 5)
-  app.post('/api/teams/:teamId/games/:gameId/rosters/batch', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
-    try {
-      const { gameId } = req.params;
-      const { rosters: rosterData } = req.body;
-
-      if (!Array.isArray(rosterData)) {
-        return res.status(400).json({ error: 'Rosters data must be an array' });
-      }
-
-      const gameIdNum = parseInt(gameId);
-      console.log(`Team-based batch saving ${rosterData.length} roster entries for game ${gameIdNum}`);
-
-      // Use a single transaction for the entire operation
-      const client = await pool.connect();
-      
-      try {
-        await client.query('BEGIN');
-
-        // Delete all existing roster entries for this game in one operation
-        const deleteResult = await client.query(
-          'DELETE FROM rosters WHERE game_id = $1',
-          [gameIdNum]
-        );
-        console.log(`Deleted ${deleteResult.rowCount} existing roster entries`);
-
-        // Insert new roster entries
-        if (rosterData.length > 0) {
-          const insertQuery = `
-            INSERT INTO rosters (game_id, player_id, position, quarter)
-            VALUES ${rosterData.map((_, index) => 
-              `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${index * 4 + 4})`
-            ).join(', ')};
-          `;
-
-          const insertValues = rosterData.flatMap(roster => [
-            gameIdNum,
-            roster.playerId,
-            roster.position,
-            roster.quarter
-          ]);
-
-          const insertResult = await client.query(insertQuery, insertValues);
-          console.log(`Inserted ${insertResult.rowCount} new roster entries`);
-        }
-
-        await client.query('COMMIT');
-        res.json({ 
-          success: true, 
-          message: `Successfully saved ${rosterData.length} roster entries for game ${gameIdNum}` 
-        });
-
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      console.error('Error in team-based batch roster save:', error);
-      res.status(500).json({ error: 'Failed to save roster entries' });
-    }
-  });
-
-  // Batch save roster entries for a game (LEGACY - will be deprecated)
-  app.post('/api/games/:gameId/rosters/batch', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
-    try {
-      const { gameId } = req.params;
-      const { rosters: rosterData } = req.body;
-
-      if (!Array.isArray(rosterData)) {
-        return res.status(400).json({ error: 'Rosters data must be an array' });
-      }
-
-      const gameIdNum = parseInt(gameId);
-      console.log(`Batch saving ${rosterData.length} roster entries for game ${gameIdNum}`);
-
-      // Use a single transaction for the entire operation
-      const client = await pool.connect();
-      
-      try {
-        await client.query('BEGIN');
-
-        // Delete all existing roster entries for this game in one operation
-        const deleteResult = await client.query(
-          'DELETE FROM rosters WHERE game_id = $1',
-          [gameIdNum]
-        );
-        console.log(`Deleted ${deleteResult.rowCount} existing roster entries`);
-
-        // Bulk insert all new entries if we have any
-        if (rosterData.length > 0) {
-          // Create the VALUES part of the query
-          const values = [];
-          const params = [];
-          let paramIndex = 1;
-
-          for (const roster of rosterData) {
-            values.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`);
-            params.push(roster.gameId, roster.quarter, roster.position, roster.playerId);
-            paramIndex += 4;
-          }
-
-          const insertQuery = `
-            INSERT INTO rosters (game_id, quarter, position, player_id)
-            VALUES ${values.join(', ')}
-          `;
-
-          const insertResult = await client.query(insertQuery, params);
-          console.log(`Bulk inserted ${insertResult.rowCount} roster entries`);
-        }
-
-        await client.query('COMMIT');
-
-        res.status(201).json({ 
-          success: true, 
-          message: `Batch saved ${rosterData.length} roster entries for game ${gameId}`,
-          count: rosterData.length
-        });
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      console.error('Error batch saving roster entries:', error);
-      res.status(500).json({ error: 'Failed to batch save roster entries' });
-    }
-  });
+  // [LEGACY BATCH ROSTER ENDPOINT REMOVED] - POST /api/games/:gameId/rosters/batch
 
   // Canonical club-scoped batch roster save endpoint
   app.post('/api/clubs/:clubId/teams/:teamId/games/:gameId/rosters/batch', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
@@ -3609,8 +3215,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to save roster entries' });
     }
   });
-
-  registerClubRoutes(app);
 
   // Create HTTP server
   const httpServer = createServer(app);

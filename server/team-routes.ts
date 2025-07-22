@@ -1,14 +1,17 @@
 import type { Express, Response } from "express";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { sql, eq, and } from "drizzle-orm";
-import { teams, teamPlayers } from "@shared/schema";
+import { teams, teamPlayers, rosters } from "@shared/schema";
 import { 
   AuthenticatedRequest, 
-  requireClubAccess 
+  requireClubAccess,
+  requireTeamGameAccess,
+  standardAuth
 } from "./auth-middleware";
 import { transformToApiFormat } from './api-utils';
 import snakecaseKeys from 'snakecase-keys';
 import camelcaseKeys from 'camelcase-keys';
+import { storage } from './storage';
 
 export function registerTeamRoutes(app: Express) {
   // Get all teams for a season
@@ -1029,6 +1032,323 @@ export function registerTeamRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching available players:", error);
       res.status(500).json({ message: "Failed to fetch available players" });
+    }
+  });
+
+  // Team-specific simplified games endpoint
+  app.get("/api/teams/:teamId/games/simplified", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+      
+      // Single optimized query for team-specific games with scores included
+      const result = await db.execute(sql`
+        SELECT 
+          g.id,
+          g.date,
+          g.round,
+          g.home_team_id,
+          g.away_team_id,
+          gs.name as status_name,
+          gs.is_completed as status_is_completed,
+          ht.name as home_team_name,
+          at.name as away_team_name,
+          (SELECT COUNT(*) FROM game_stats WHERE game_id = g.id) as stats_count,
+          COALESCE(
+            (SELECT JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'homeScore', COALESCE((SELECT score FROM game_scores WHERE game_id = g.id AND team_id = g.home_team_id AND quarter = q.quarter), 0),
+                'awayScore', COALESCE((SELECT score FROM game_scores WHERE game_id = g.id AND team_id = g.away_team_id AND quarter = q.quarter), 0)
+              ) ORDER BY q.quarter
+            ) FROM (SELECT 1 as quarter UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) q),
+            '[]'::json
+          ) as quarter_scores
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE g.home_team_id = ${teamId} OR g.away_team_id = ${teamId}
+        ORDER BY g.date DESC, g.time DESC
+      `);
+
+      // Transform results and return
+      const transformedResults = result.rows.map(game => ({
+        ...game,
+        quarter_scores: Array.isArray(game.quarter_scores) ? game.quarter_scores : []
+      }));
+
+      res.json(transformToApiFormat(transformedResults));
+    } catch (error) {
+      console.error('Error fetching simplified team games:', error);
+      res.status(500).json({ error: 'Failed to fetch simplified team games' });
+    }
+  });
+
+  // Team-specific games endpoint (STANDARDIZED)
+  app.get("/api/teams/:teamId/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId, 10);
+      const clubId = req.user?.currentClubId;
+
+      if (isNaN(teamId)) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
+      }
+
+      if (!clubId) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.UNAUTHORIZED,
+          'Club context required'
+        ));
+      }
+
+      // Set cache headers for team-specific data
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+      res.set('ETag', `team-${teamId}-games-${Date.now()}`);
+      res.set('Vary', 'x-current-club-id, x-current-team-id');
+
+      // Query for team-specific games only
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.name as status, 
+          gs.display_name as status_display_name, 
+          gs.is_completed, 
+          gs.allows_statistics, 
+          gs.home_team_goals, 
+          gs.away_team_goals,
+          s.name as season_name, 
+          s.start_date as season_start, 
+          s.end_date as season_end, 
+          s.is_active as season_active,
+          ht.name as home_team_name, 
+          ht.division_id as home_team_division, 
+          ht.club_id as home_club_id,
+          at.name as away_team_name, 
+          at.division_id as away_team_division, 
+          at.club_id as away_club_id,
+          hc.name as home_club_name, 
+          hc.code as home_club_code,
+          ac.name as away_club_name, 
+          ac.code as away_club_code
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
+        LEFT JOIN clubs ac ON at.club_id = ac.id
+        WHERE (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+        ORDER BY g.date DESC, g.time DESC
+      `);
+
+      // Use same transformation as main games endpoint
+      const transformGameRow = (row: any) => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+        statusName: row.status,
+        statusDisplayName: row.status_display_name,
+        statusIsCompleted: row.is_completed,
+        statusAllowsStatistics: row.allows_statistics,
+        statusTeamGoals: row.home_team_goals,
+        statusOpponentGoals: row.away_team_goals,
+        seasonName: row.season_name,
+        seasonStartDate: row.season_start,
+        seasonEndDate: row.season_end,
+        seasonIsActive: row.season_active,
+        homeTeamName: row.home_team_name,
+        homeTeamDivision: row.home_team_division,
+        homeClubId: row.home_club_id,
+        homeClubName: row.home_club_name,
+        homeClubCode: row.home_club_code,
+        awayTeamName: row.away_team_name,
+        awayTeamDivision: row.away_team_division,
+        awayClubId: row.away_club_id,
+        awayClubName: row.away_club_name,
+        awayClubCode: row.away_club_code,
+        isBye: row.away_team_name === 'Bye'
+      });
+
+      const games = result.rows.map(transformGameRow);
+
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(transformToApiFormat(games)));
+    } catch (error) {
+      console.error('Error fetching team games:', error);
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch team games'
+      ));
+    }
+  });
+
+  // Team-based get roster entries
+  app.get('/api/teams/:teamId/games/:gameId/rosters', async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      console.log(`Team-based roster fetch: teamId=${teamId}, gameId=${gameId}`);
+
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Verify the team is actually playing in this game
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ${gameId} AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Team is not playing in this game' });
+      }
+
+      // Get roster entries for this team's game
+      const roster = await db.execute(sql`
+        SELECT 
+          r.id,
+          r.game_id,
+          r.quarter,
+          r.position,
+          r.player_id,
+          p.display_name,
+          p.first_name,
+          p.last_name,
+          p.avatar_color
+        FROM rosters r
+        JOIN players p ON r.player_id = p.id
+        WHERE r.game_id = ${gameId}
+        ORDER BY r.quarter, r.position
+      `);
+
+      console.log(`Team-based roster fetch: Found ${roster.rows.length} roster entries for game ${gameId}`);
+
+      const mappedRoster = roster.rows.map(row => ({
+        id: row.id,
+        gameId: row.game_id,
+        quarter: row.quarter,
+        position: row.position,
+        playerId: row.player_id,
+        playerName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        avatarColor: row.avatar_color
+      }));
+
+      res.json(transformToApiFormat(mappedRoster));
+    } catch (error) {
+      console.error('Error fetching team roster entries:', error);
+      res.status(500).json({ error: 'Failed to fetch roster entries' });
+    }
+  });
+
+  // Team-based delete roster entries
+  app.delete('/api/teams/:teamId/games/:gameId/rosters', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      await storage.deleteRostersByGame(parseInt(gameId));
+      res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
+    } catch (error) {
+      console.error('Error deleting team roster entries:', error);
+      res.status(500).json({ error: 'Failed to delete roster entries' });
+    }
+  });
+
+  // Team-based batch save roster entries
+  app.post('/api/teams/:teamId/games/:gameId/rosters/batch', requireTeamGameAccess(true), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const { rosters: rosterData } = req.body;
+
+      if (!Array.isArray(rosterData)) {
+        return res.status(400).json({ error: 'Rosters data must be an array' });
+      }
+
+      const gameIdNum = parseInt(gameId);
+      console.log(`Team-based batch saving ${rosterData.length} roster entries for game ${gameIdNum}`);
+
+      // Use a single transaction for the entire operation
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+
+        // Delete all existing roster entries for this game in one operation
+        const deleteResult = await client.query(
+          'DELETE FROM rosters WHERE game_id = $1',
+          [gameIdNum]
+        );
+        console.log(`Deleted ${deleteResult.rowCount} existing roster entries`);
+
+        // Insert new roster entries
+        if (rosterData.length > 0) {
+          const insertQuery = `
+            INSERT INTO rosters (game_id, player_id, position, quarter)
+            VALUES ${rosterData.map((_, index) => 
+              `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${index * 4 + 4})`
+            ).join(', ')};
+          `;
+
+          const insertValues = rosterData.flatMap(roster => [
+            gameIdNum,
+            roster.playerId,
+            roster.position,
+            roster.quarter
+          ]);
+
+          const insertResult = await client.query(insertQuery, insertValues);
+          console.log(`Inserted ${insertResult.rowCount} new roster entries`);
+        }
+
+        await client.query('COMMIT');
+        res.json({ 
+          success: true, 
+          message: `Successfully saved ${rosterData.length} roster entries for game ${gameIdNum}` 
+        });
+
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error in team-based batch roster save:', error);
+      res.status(500).json({ error: 'Failed to save roster entries' });
     }
   });
 }
