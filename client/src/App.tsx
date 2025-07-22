@@ -95,6 +95,9 @@ import DragDropExamples from '@/pages/DragDropExamples';
 import LiveScoreTrackingExamples from './pages/LiveScoreTrackingExamples';
 import ApiStandardizationTest from '@/pages/ApiStandardizationTest';
 import GameListTestPage from '@/pages/GameListTestPage';
+import AdminClubs from '@/pages/AdminClubs';
+import AdminPlayers from '@/pages/AdminPlayers';
+import AdminTeams from '@/pages/AdminTeams';
 
 
 /**
@@ -183,6 +186,9 @@ function Router() {
 
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
+        <Route path="/admin/clubs" component={withErrorBoundary(AdminClubs, 'AdminClubs')} />
+        <Route path="/admin/players" component={withErrorBoundary(AdminPlayers, 'AdminPlayers')} />
+        <Route path="/admin/teams" component={withErrorBoundary(AdminTeams, 'AdminTeams')} />
         <Route path="/settings" component={Settings} />
         <Route path="/performance-dashboard" component={withErrorBoundary(PerformanceDashboard, 'PerformanceDashboard')} />
         <Route path="/component-examples" component={ComponentExamples} />
