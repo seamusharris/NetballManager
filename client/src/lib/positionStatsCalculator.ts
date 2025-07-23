@@ -82,10 +82,10 @@ export function calculatePositionAverages(
     }
   });
 
-  const gsAvgGoalsFor = gamesWithPositionStats > 0 ? gsGoalsFor / gamesWithPositionStats : 0;
-  const gaAvgGoalsFor = gamesWithPositionStats > 0 ? gaGoalsFor / gamesWithPositionStats : 0;
-  const gdAvgGoalsAgainst = gamesWithPositionStats > 0 ? gdGoalsAgainst / gamesWithPositionStats : 0;
-  const gkAvgGoalsAgainst = gamesWithPositionStats > 0 ? gkGoalsAgainst / gamesWithPositionStats : 0;
+  const gsAvgGoalsFor = gamesWithPositionStats > 0 ? Math.round((gsGoalsFor / gamesWithPositionStats) * 10) / 10 : 0;
+  const gaAvgGoalsFor = gamesWithPositionStats > 0 ? Math.round((gaGoalsFor / gamesWithPositionStats) * 10) / 10 : 0;
+  const gdAvgGoalsAgainst = gamesWithPositionStats > 0 ? Math.round((gdGoalsAgainst / gamesWithPositionStats) * 10) / 10 : 0;
+  const gkAvgGoalsAgainst = gamesWithPositionStats > 0 ? Math.round((gkGoalsAgainst / gamesWithPositionStats) * 10) / 10 : 0;
 
   const attackingPositionsTotal = gsAvgGoalsFor + gaAvgGoalsFor;
   const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
@@ -180,10 +180,10 @@ export function calculateQuarterByQuarterStats(
     });
 
     // Calculate averages per quarter
-    const avgGsGoalsFor = gamesWithQuarterData > 0 ? gsGoalsFor / gamesWithQuarterData : 0;
-    const avgGaGoalsFor = gamesWithQuarterData > 0 ? gaGoalsFor / gamesWithQuarterData : 0;
-    const avgGdGoalsAgainst = gamesWithQuarterData > 0 ? gdGoalsAgainst / gamesWithQuarterData : 0;
-    const avgGkGoalsAgainst = gamesWithQuarterData > 0 ? gkGoalsAgainst / gamesWithQuarterData : 0;
+    const avgGsGoalsFor = gamesWithQuarterData > 0 ? Math.round((gsGoalsFor / gamesWithQuarterData) * 10) / 10 : 0;
+    const avgGaGoalsFor = gamesWithQuarterData > 0 ? Math.round((gaGoalsFor / gamesWithQuarterData) * 10) / 10 : 0;
+    const avgGdGoalsAgainst = gamesWithQuarterData > 0 ? Math.round((gdGoalsAgainst / gamesWithQuarterData) * 10) / 10 : 0;
+    const avgGkGoalsAgainst = gamesWithQuarterData > 0 ? Math.round((gkGoalsAgainst / gamesWithQuarterData) * 10) / 10 : 0;
 
     return {
       quarter,

@@ -30,7 +30,7 @@ const CompactAttackDefenseWidget: React.FC<CompactAttackDefenseWidgetProps> = ({
     gamesWithPositionStats
   } = averages;
 
-  // Calculate totals by summing quarter-by-quarter averages
+  // Calculate totals from quarter-by-quarter data to ensure consistency
   const totalAttackFromQuarters = quarterData.reduce((sum, quarter) => 
     sum + quarter.gsGoalsFor + quarter.gaGoalsFor, 0
   );
@@ -38,6 +38,19 @@ const CompactAttackDefenseWidget: React.FC<CompactAttackDefenseWidgetProps> = ({
   const totalDefenseFromQuarters = quarterData.reduce((sum, quarter) => 
     sum + quarter.gdGoalsAgainst + quarter.gkGoalsAgainst, 0
   );
+
+  // Calculate totals by rounding individual position values first, then adding
+  const roundedGsAvg = Math.round(gsAvgGoalsFor * 10) / 10;
+  const roundedGaAvg = Math.round(gaAvgGoalsFor * 10) / 10;
+  const roundedGkAvg = Math.round(gkAvgGoalsAgainst * 10) / 10;
+  const roundedGdAvg = Math.round(gdAvgGoalsAgainst * 10) / 10;
+  
+  const totalAttackFromPositions = roundedGsAvg + roundedGaAvg;
+  const totalDefenseFromPositions = roundedGkAvg + roundedGdAvg;
+
+  // Use quarter-based totals for consistency
+  const displayAttackTotal = totalAttackFromQuarters;
+  const displayDefenseTotal = totalDefenseFromQuarters;
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -49,21 +62,21 @@ const CompactAttackDefenseWidget: React.FC<CompactAttackDefenseWidgetProps> = ({
           <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-800">Attack</span>
-              <span className="text-2xl font-bold text-green-600">{totalAttackFromQuarters.toFixed(1)}</span>
+              <span className="text-2xl font-bold text-green-600">{displayAttackTotal.toFixed(1)}</span>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-semibold">
-                <span>GS: {gsAvgGoalsFor.toFixed(1)}</span>
-                <span>GA: {gaAvgGoalsFor.toFixed(1)}</span>
+                <span>GS: {roundedGsAvg.toFixed(1)}</span>
+                <span>GA: {roundedGaAvg.toFixed(1)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 flex">
                 <div
                   className="bg-green-600 h-3 rounded-l-full"
-                  style={{ width: totalAttackFromQuarters > 0 ? `${(gsAvgGoalsFor / totalAttackFromQuarters) * 100}%` : '50%' }}
+                  style={{ width: totalAttackFromPositions > 0 ? `${(gsAvgGoalsFor / totalAttackFromPositions) * 100}%` : '50%' }}
                 ></div>
                 <div
                   className="bg-green-400 h-3 rounded-r-full"
-                  style={{ width: totalAttackFromQuarters > 0 ? `${(gaAvgGoalsFor / totalAttackFromQuarters) * 100}%` : '50%' }}
+                  style={{ width: totalAttackFromPositions > 0 ? `${(gaAvgGoalsFor / totalAttackFromPositions) * 100}%` : '50%' }}
                 ></div>
               </div>
             </div>
@@ -124,21 +137,21 @@ const CompactAttackDefenseWidget: React.FC<CompactAttackDefenseWidgetProps> = ({
           <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-800">Defense</span>
-              <span className="text-2xl font-bold text-red-600">{totalDefenseFromQuarters.toFixed(1)}</span>
+              <span className="text-2xl font-bold text-red-600">{displayDefenseTotal.toFixed(1)}</span>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-semibold">
-                <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
-                <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
+                <span>GK: {roundedGkAvg.toFixed(1)}</span>
+                <span>GD: {roundedGdAvg.toFixed(1)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 flex">
                 <div
                   className="bg-red-600 h-3 rounded-l-full"
-                  style={{ width: totalDefenseFromQuarters > 0 ? `${(gkAvgGoalsAgainst / totalDefenseFromQuarters) * 100}%` : '50%' }}
+                  style={{ width: totalDefenseFromPositions > 0 ? `${(gkAvgGoalsAgainst / totalDefenseFromPositions) * 100}%` : '50%' }}
                 ></div>
                 <div
                   className="bg-red-400 h-3 rounded-r-full"
-                  style={{ width: totalDefenseFromQuarters > 0 ? `${(gdAvgGoalsAgainst / totalDefenseFromQuarters) * 100}%` : '50%' }}
+                  style={{ width: totalDefenseFromPositions > 0 ? `${(gdAvgGoalsAgainst / totalDefenseFromPositions) * 100}%` : '50%' }}
                 ></div>
               </div>
             </div>
