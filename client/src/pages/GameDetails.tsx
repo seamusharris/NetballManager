@@ -1642,7 +1642,7 @@ export default function GameDetails() {
             )}
 
             {/* Record Stats Button */}
-            {!game.isBye && !game.completed && effectiveTeam && effectiveClub && (
+            {!game.isBye && effectiveTeam && effectiveClub && (
               <RecordStatsButton 
                 game={game} 
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900"

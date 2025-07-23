@@ -9,6 +9,7 @@ export interface SimpleGame {
   awayTeam?: { id: number; name: string }; // Optional for BYE games
   quarterScores?: Array<{ homeScore: number; awayScore: number }>;
   hasStats: boolean;
+  statusAllowsStatistics?: boolean;
 }
 
 export interface SimplifiedGamesData {
@@ -63,7 +64,8 @@ export class SimplifiedGamesFetcher {
           name: game.away_team_name || game.awayTeamName
         } : undefined,
         quarterScores: Array.isArray(game.quarter_scores || game.quarterScores) ? (game.quarter_scores || game.quarterScores) : [],
-        hasStats: (game.stats_count || game.statsCount || 0) > 0
+        hasStats: (game.stats_count || game.statsCount || 0) > 0,
+        statusAllowsStatistics: game.status_allows_statistics || game.statusAllowsStatistics || true
       }));
       
     } catch (error) {

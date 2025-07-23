@@ -15,32 +15,44 @@ export default function RecordStatsButton({ game, className = "" }: RecordStatsB
   const [, navigate] = useLocation();
   const { currentTeam, currentClub } = useClub();
 
-  // If game.status_id does not allow stats, return null (replace 3 with correct status if needed)
-  if (game.status_id !== 3) {
-    return null;
-  }
-
   // Use team from club context - determine which team the user represents
   const handleRecordStats = () => {
+    // Debug the available data
+    console.log('🔍 RecordStatsButton Debug:');
+    console.log('🔍 game:', game);
+    console.log('🔍 currentTeam:', currentTeam);
+    console.log('🔍 currentClub:', currentClub);
+    console.log('🔍 game.home_team_id:', game.home_team_id);
+    console.log('🔍 game.away_team_id:', game.away_team_id);
+
     // Prefer current team context if available and matches one of the game teams
     const userTeamId = currentTeam?.id;
-    const clubId = currentClub?.id;
     let targetTeamId;
 
     if (userTeamId && (userTeamId === game.home_team_id || userTeamId === game.away_team_id)) {
       targetTeamId = userTeamId;
+      console.log('🔍 Using current team ID:', targetTeamId);
     } else {
       // Fallback: use home_team_id
       targetTeamId = game.home_team_id;
+      console.log('🔍 Using home team ID as fallback:', targetTeamId);
     }
 
-    // Use simplified URL pattern - no need for club/team context in URL
-    navigate(`/game/${game.id}/stats/record`);
+    console.log('🔍 Final targetTeamId:', targetTeamId);
+
+    // Use RESTful team-centric URL pattern
+    navigate(`/team/${targetTeamId}/game/${game.id}/stats/record`);
   };
 
   return (
-    <button className={`btn btn-primary ${className}`} onClick={handleRecordStats}>
+    <Button 
+      variant="outline" 
+      size="sm"
+      className={`border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900 ${className}`}
+      onClick={handleRecordStats}
+    >
+      <ActivitySquare className="mr-2 h-4 w-4" />
       Record Stats
-    </button>
+    </Button>
   );
 }

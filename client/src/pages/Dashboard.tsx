@@ -6,7 +6,7 @@ import { TEAM_NAME } from "@/lib/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import SimplifiedGamesList from "@/components/ui/simplified-games-list";
 import { useSimplifiedGames } from "@/hooks/use-simplified-games";
 import { DynamicBreadcrumbs } from "@/components/layout/DynamicBreadcrumbs";
@@ -19,56 +19,244 @@ import { formatShortDate } from "@/lib/utils";
 import { apiClient } from '@/lib/apiClient';
 
 export default function Dashboard() {
-  const params = useParams();
+  const params = useParams<{ teamId?: string }>();
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   
   // Simple: get teamId directly from URL like GamePreparation page
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : undefined;
 
-  // Simple data fetching like GamePreparation page
+  // Get all games for the current team
   const { data: games = [], isLoading: isLoadingGames } = useSimplifiedGames(
-    currentClubId!,
+    currentClub?.id ?? 0,
     teamIdFromUrl
   );
 
-  // Get recent 5 completed games for attack/defense analysis
-  const recentCompletedGames = games.filter(game => game.status === 'completed').slice(0, 5);
-  const recentGameIds = recentCompletedGames.map(game => game.id);
-  
-  // Fetch batch statistics for the recent games
+  // Debug the raw games data
+  console.log('🔍 Raw games data debug:');
+  console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
+  console.log('🔍 currentClub?.id:', currentClub?.id);
+  console.log('🔍 isLoadingGames:', isLoadingGames);
+  console.log('🔍 Total games fetched:', games.length);
+  console.log('🔍 Sample game:', games[0]);
+  console.log('🔍 All games:', games.map(g => ({ id: g.id, status: g.status, hasStats: g.hasStats, statusAllowsStatistics: g.statusAllowsStatistics })));
+
+  // Filter to completed games that allow statistics (for quarter performance analysis)
+  const completedGamesWithStatisticsEnabled = useMemo(() => {
+    const filtered = games.filter(game => 
+      game.status === 'completed' && 
+      game.statusAllowsStatistics === true
+    );
+    console.log('🔍 Games filtering debug:');
+    console.log('🔍 Total games:', games.length);
+    console.log('🔍 Completed games:', games.filter(g => g.status === 'completed').length);
+    console.log('🔍 Games with statistics enabled:', games.filter(g => g.statusAllowsStatistics === true).length);
+    console.log('🔍 Completed games with statistics enabled:', filtered.length);
+    console.log('🔍 Sample game:', games[0]);
+    return filtered;
+  }, [games]);
+
+  // Filter to completed games with position statistics (for attack/defense analysis)
+  const completedGamesWithPositionStats = useMemo(() => {
+    const filtered = games.filter(game => 
+      game.status === 'completed' && 
+      game.statusAllowsStatistics === true &&
+      game.hasStats === true
+    );
+    console.log('🔍 Games with position stats:', filtered.length);
+    return filtered;
+  }, [games]);
+
+  // Get the 5 most recent completed games for the games list display
+  const recentCompletedGames = useMemo(() => {
+    return completedGamesWithStatisticsEnabled
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [completedGamesWithStatisticsEnabled]);
+
+  // Get all completed games with statistics enabled for quarter performance widget
+  const allSeasonGamesWithStatistics = useMemo(() => {
+    return completedGamesWithStatisticsEnabled
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [completedGamesWithStatisticsEnabled]);
+
+  // Get all completed games with position stats for attack/defense widget
+  const allSeasonGamesWithPositionStats = useMemo(() => {
+    return completedGamesWithPositionStats
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [completedGamesWithPositionStats]);
+
+  // Fetch batch statistics for all season games with position stats
   const { statsMap: batchStats, isLoading: isLoadingStats } = useBatchGameStatistics(
-    recentCompletedGames.map(game => game.id),
+    allSeasonGamesWithPositionStats.map(game => game.id),
     false
   );
 
-  // Fetch batch scores for the recent games using club-scoped endpoint
+  // Fetch batch scores for all season games with statistics enabled
   const { data: batchScores = {}, isLoading: isLoadingScores } = useQuery<Record<number, any[]>>({
-    queryKey: ['batch-scores', recentCompletedGames.map(game => game.id).join(',')],
+    queryKey: ['batch-scores', allSeasonGamesWithStatistics.map(game => game.id).join(',')],
     queryFn: async () => {
-      if (recentCompletedGames.length === 0) return {};
+      if (allSeasonGamesWithStatistics.length === 0) return {};
       
-      const gameIds = recentCompletedGames.map(game => game.id);
+      const gameIds = allSeasonGamesWithStatistics.map(game => game.id);
       return apiClient.post(`/api/clubs/${currentClub?.id}/games/scores/batch`, {
         gameIds: gameIds
       });
     },
-    enabled: recentCompletedGames.length > 0 && !!currentClub?.id,
+    enabled: allSeasonGamesWithStatistics.length > 0 && !!currentClub?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Calculate position averages for attack/defense widget
-  const positionAverages = recentCompletedGames.length > 0 && batchStats && Object.keys(batchStats).length > 0
-    ? calculatePositionAverages(recentCompletedGames, batchStats, teamIdFromUrl ?? 0)
-    : null;
+  // Quick debug of data sources
+  console.log('🔍 QUICK DEBUG - Data Sources:');
+  console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
+  console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
+  console.log('🔍 Sample batchScores data:', batchScores && Object.keys(batchScores).length > 0 ? batchScores[Object.keys(batchScores)[0]] : 'No data');
+  console.log('🔍 Sample batchStats data:', batchStats && Object.keys(batchStats).length > 0 ? batchStats[Object.keys(batchStats)[0]] : 'No data');
 
-  // Calculate quarter-by-quarter breakdown for the widget
-  const quarterData = React.useMemo(() => {
-    if (!recentCompletedGames.length || !batchStats || Object.keys(batchStats).length === 0) {
-      return [];
+  // Calculate position averages for attack/defense widget using position stats data
+  const positionAverages = useMemo(() => {
+    if (!batchStats || Object.keys(batchStats).length === 0) return null;
+    
+    const result = calculatePositionAverages(allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl ?? 0);
+    
+    // Debug the main summary calculation
+    console.log('🔍 Main Summary Calculation Debug:');
+    console.log('🔍 Games with position stats:', result.gamesWithPositionStats);
+    console.log('🔍 GS Avg Goals For:', result.gsAvgGoalsFor);
+    console.log('🔍 GA Avg Goals For:', result.gaAvgGoalsFor);
+    console.log('🔍 GD Avg Goals Against:', result.gdAvgGoalsAgainst);
+    console.log('🔍 GK Avg Goals Against:', result.gkAvgGoalsAgainst);
+    console.log('🔍 Attack Total (GS + GA):', result.attackingPositionsTotal);
+    console.log('🔍 Defense Total (GD + GK):', result.defendingPositionsTotal);
+    
+    return result;
+  }, [allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl]);
+
+  // Calculate quarter-by-quarter stats using position stats data
+  const quarterData = useMemo(() => {
+    if (!batchStats || Object.keys(batchStats).length === 0) return [];
+    
+    const result = calculateQuarterByQuarterStats(allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl ?? 0);
+    
+    // Debug the quarter breakdown calculation
+    console.log('🔍 Quarter Breakdown Calculation Debug:');
+    result.forEach((quarter, index) => {
+      console.log(`🔍 Q${quarter.quarter}:`);
+      console.log(`  - Games with data: ${quarter.gamesWithQuarterData}`);
+      console.log(`  - GS Goals: ${quarter.gsGoalsFor}`);
+      console.log(`  - GA Goals: ${quarter.gaGoalsFor}`);
+      console.log(`  - GD Goals Against: ${quarter.gdGoalsAgainst}`);
+      console.log(`  - GK Goals Against: ${quarter.gkGoalsAgainst}`);
+      console.log(`  - Attack Total: ${quarter.gsGoalsFor + quarter.gaGoalsFor}`);
+      console.log(`  - Defense Total: ${quarter.gdGoalsAgainst + quarter.gkGoalsAgainst}`);
+    });
+    
+    // Calculate sum of quarter totals
+    const quarterAttackSum = result.reduce((sum, q) => sum + q.gsGoalsFor + q.gaGoalsFor, 0);
+    const quarterDefenseSum = result.reduce((sum, q) => sum + q.gdGoalsAgainst + q.gkGoalsAgainst, 0);
+    console.log('🔍 Quarter Attack Sum (Q1+Q2+Q3+Q4):', quarterAttackSum);
+    console.log('🔍 Quarter Defense Sum (Q1+Q2+Q3+Q4):', quarterDefenseSum);
+    
+    return result;
+  }, [allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl]);
+
+  // Debug comparison between Quarter Performance and Attack/Defense data sources
+  const debugDataComparison = useMemo(() => {
+    if (!allSeasonGamesWithStatistics.length || !allSeasonGamesWithPositionStats.length) return;
+
+    console.log('🔍 DATA SOURCE COMPARISON DEBUG:');
+    console.log('🔍 Games for Quarter Performance:', allSeasonGamesWithStatistics.length);
+    console.log('🔍 Games for Attack/Defense:', allSeasonGamesWithPositionStats.length);
+
+    // Compare game IDs
+    const quarterGameIds = allSeasonGamesWithStatistics.map(g => g.id).sort();
+    const attackDefenseGameIds = allSeasonGamesWithPositionStats.map(g => g.id).sort();
+    console.log('🔍 Quarter Performance Game IDs:', quarterGameIds);
+    console.log('🔍 Attack/Defense Game IDs:', attackDefenseGameIds);
+
+    // Check for overlapping games
+    const overlappingGames = quarterGameIds.filter(id => attackDefenseGameIds.includes(id));
+    console.log('🔍 Overlapping Games:', overlappingGames.length);
+
+    // Sample a few games to compare data
+    const sampleGameId = overlappingGames[0];
+    if (sampleGameId) {
+      console.log('🔍 Sample Game Data Comparison:');
+      console.log('🔍 Game ID:', sampleGameId);
+
+      // Quarter Performance data (from batchScores)
+      const quarterScores = batchScores?.[sampleGameId] || [];
+      console.log('🔍 Quarter Performance Scores:', quarterScores);
+
+      // Attack/Defense data (from batchStats)
+      const attackDefenseStats = batchStats?.[sampleGameId] || [];
+      console.log('🔍 Attack/Defense Stats:', attackDefenseStats);
+
+      // Calculate totals for this game
+      const quarterTotal = quarterScores.reduce((sum, score) => {
+        if (score.teamId === teamIdFromUrl) {
+          return sum + (score.score || 0);
+        }
+        return sum;
+      }, 0);
+
+      const attackDefenseTotal = attackDefenseStats.reduce((sum, stat) => {
+        if (stat.team_id === teamIdFromUrl) { // Corrected property name
+          return sum + (stat.goals_for || 0); // Corrected property name
+        }
+        return sum;
+      }, 0);
+
+      console.log('🔍 Quarter Performance Total for Game:', quarterTotal);
+      console.log('🔍 Attack/Defense Total for Game:', attackDefenseTotal);
     }
 
-    return calculateQuarterByQuarterStats(recentCompletedGames, batchStats, teamIdFromUrl ?? 0);
-  }, [recentCompletedGames, batchStats, teamIdFromUrl]);
+    // Calculate Quarter Performance totals (like the component does)
+    let totalQuarterGoalsFor = 0;
+    let totalQuarterGoalsAgainst = 0;
+    let gamesWithQuarterScores = 0;
+
+    allSeasonGamesWithStatistics.forEach(game => {
+      const gameScores = batchScores?.[game.id] || [];
+      if (gameScores.length > 0) {
+        gamesWithQuarterScores++;
+
+        let gameGoalsFor = 0;
+        let gameGoalsAgainst = 0;
+
+        gameScores.forEach(score => {
+          if (score.teamId === teamIdFromUrl) {
+            gameGoalsFor += score.score || 0;
+          } else {
+            gameGoalsAgainst += score.score || 0;
+          }
+        });
+
+        totalQuarterGoalsFor += gameGoalsFor;
+        totalQuarterGoalsAgainst += gameGoalsAgainst;
+      }
+    });
+
+    const avgQuarterGoalsFor = gamesWithQuarterScores > 0 ? totalQuarterGoalsFor / gamesWithQuarterScores : 0;
+    const avgQuarterGoalsAgainst = gamesWithQuarterScores > 0 ? totalQuarterGoalsAgainst / gamesWithQuarterScores : 0;
+
+    console.log('🔍 QUARTER PERFORMANCE TOTALS:');
+    console.log('🔍 Games with quarter scores:', gamesWithQuarterScores);
+    console.log('🔍 Average Goals For:', avgQuarterGoalsFor.toFixed(1));
+    console.log('🔍 Average Goals Against:', avgQuarterGoalsAgainst.toFixed(1));
+    console.log('🔍 Total Goals For (sum of all games):', totalQuarterGoalsFor);
+    console.log('🔍 Total Goals Against (sum of all games):', totalQuarterGoalsAgainst);
+
+    // Compare with Attack/Defense totals
+    console.log('🔍 COMPARISON:');
+    console.log('🔍 Quarter Performance Attack Total:', avgQuarterGoalsFor.toFixed(1));
+    console.log('🔍 Attack/Defense Attack Total:', (quarterData.reduce((sum, q) => sum + q.gsGoalsFor + q.gaGoalsFor, 0)).toFixed(1));
+    console.log('🔍 Quarter Performance Defense Total:', avgQuarterGoalsAgainst.toFixed(1));
+    console.log('🔍 Attack/Defense Defense Total:', (quarterData.reduce((sum, q) => sum + q.gdGoalsAgainst + q.gkGoalsAgainst, 0)).toFixed(1));
+  }, [allSeasonGamesWithStatistics, allSeasonGamesWithPositionStats, batchScores, batchStats, teamIdFromUrl, quarterData]);
+
+  // Call the debug function
+  debugDataComparison;
 
   // Simple loading state like GamePreparation page
   if (clubLoading || !currentClub) {
@@ -156,7 +344,7 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <SimplifiedGamesList
-                      games={games.filter(game => game.status === 'completed').slice(0, 5)}
+                      games={recentCompletedGames}
                       currentTeamId={teamIdFromUrl ?? 0}
                       variant="recent"
                       maxGames={5}
@@ -171,17 +359,29 @@ export default function Dashboard() {
               </div>
 
               {/* Quarter Performance Analysis Widget */}
-              {recentCompletedGames.length > 0 && (
+              {(() => {
+                console.log('🔍 Widget Debug:');
+                console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
+                console.log('🔍 allSeasonGamesWithPositionStats length:', allSeasonGamesWithPositionStats.length);
+                console.log('🔍 positionAverages:', positionAverages);
+                console.log('🔍 quarterData length:', quarterData.length);
+                console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
+                console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
+                
+                return null;
+              })()}
+              
+              {allSeasonGamesWithStatistics.length > 0 && (
                 <>
                   {/* Debug quarter scores */}
                   {(() => {
                     console.log('🔍 Quarter Performance Debug:');
-                    console.log('🔍 Recent games:', recentCompletedGames.map(g => ({ id: g.id, status: g.status })));
+                    console.log('🔍 All season games with statistics enabled:', allSeasonGamesWithStatistics.map(g => ({ id: g.id, status: g.status, statusAllowsStatistics: g.statusAllowsStatistics })));
                     console.log('🔍 Batch scores keys:', Object.keys(batchScores || {}));
                     console.log('🔍 Team ID:', teamIdFromUrl);
                     
                     // Debug sample game scores
-                    const firstGameId = recentCompletedGames[0]?.id;
+                    const firstGameId = allSeasonGamesWithStatistics[0]?.id;
                     if (firstGameId && batchScores?.[firstGameId]) {
                       console.log('🔍 Sample game scores:', batchScores[firstGameId].slice(0, 3));
                     }
@@ -189,7 +389,7 @@ export default function Dashboard() {
                   })()}
                   
                   <QuarterPerformanceAnalysisWidget
-                    games={recentCompletedGames}
+                    games={allSeasonGamesWithStatistics}
                     currentTeamId={teamIdFromUrl ?? 0}
                     batchScores={batchScores}
                     excludeSpecialGames={true}
@@ -199,13 +399,40 @@ export default function Dashboard() {
               )}
 
               {/* Compact Attack Defense Widget */}
-              {recentCompletedGames.length > 0 && positionAverages && quarterData.length > 0 && (
+              {allSeasonGamesWithPositionStats.length > 0 && positionAverages && quarterData.length > 0 && (
                 <CompactAttackDefenseWidget
                   averages={positionAverages}
                   quarterData={quarterData}
                   showQuarterBreakdown={true}
                   className="w-full"
                 />
+              )}
+
+              {/* Fallback: Show widgets even if no season data */}
+              {allSeasonGamesWithStatistics.length === 0 && allSeasonGamesWithPositionStats.length === 0 && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Quarter Performance Analysis</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-500 text-center py-8">
+                        No completed games with statistics available for analysis.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Attack vs Defense Breakdown</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-500 text-center py-8">
+                        No completed games with position statistics available for analysis.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
 
               {/* Team Performance Metrics - Simplified for now */}
@@ -227,7 +454,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <SimplifiedGamesList
-                    games={games.filter(game => game.status === 'completed').slice(0, 10)}
+                    games={recentCompletedGames}
                     currentTeamId={teamIdFromUrl ?? 0}
                     variant="recent"
                     maxGames={10}
@@ -259,7 +486,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <SimplifiedGamesList
-                    games={games}
+                    games={allSeasonGamesWithPositionStats}
                     currentTeamId={teamIdFromUrl ?? 0}
                     variant="season"
                     compact={false}
