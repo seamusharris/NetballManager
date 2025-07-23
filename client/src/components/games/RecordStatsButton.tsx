@@ -9,9 +9,10 @@ import { startTransition } from 'react';
 export interface RecordStatsButtonProps {
   game: any; // Use 'any' for now to avoid type errors, ideally import the correct type
   className?: string;
+  teamId?: number; // Add teamId prop
 }
 
-export default function RecordStatsButton({ game, className = "" }: RecordStatsButtonProps) {
+export default function RecordStatsButton({ game, className = "", teamId }: RecordStatsButtonProps) {
   const [, navigate] = useLocation();
   const { currentTeam, currentClub } = useClub();
 
@@ -20,22 +21,29 @@ export default function RecordStatsButton({ game, className = "" }: RecordStatsB
     // Debug the available data
     console.log('🔍 RecordStatsButton Debug:');
     console.log('🔍 game:', game);
+    console.log('🔍 teamId prop:', teamId);
     console.log('🔍 currentTeam:', currentTeam);
     console.log('🔍 currentClub:', currentClub);
     console.log('🔍 game.home_team_id:', game.home_team_id);
     console.log('🔍 game.away_team_id:', game.away_team_id);
 
-    // Prefer current team context if available and matches one of the game teams
-    const userTeamId = currentTeam?.id;
-    let targetTeamId;
+    // Use the teamId prop if provided, otherwise fall back to current team logic
+    let targetTeamId = teamId;
 
-    if (userTeamId && (userTeamId === game.home_team_id || userTeamId === game.away_team_id)) {
-      targetTeamId = userTeamId;
-      console.log('🔍 Using current team ID:', targetTeamId);
+    if (!targetTeamId) {
+      // Prefer current team context if available and matches one of the game teams
+      const userTeamId = currentTeam?.id;
+
+      if (userTeamId && (userTeamId === game.home_team_id || userTeamId === game.away_team_id)) {
+        targetTeamId = userTeamId;
+        console.log('🔍 Using current team ID:', targetTeamId);
+      } else {
+        // Fallback: use home_team_id
+        targetTeamId = game.home_team_id;
+        console.log('🔍 Using home team ID as fallback:', targetTeamId);
+      }
     } else {
-      // Fallback: use home_team_id
-      targetTeamId = game.home_team_id;
-      console.log('🔍 Using home team ID as fallback:', targetTeamId);
+      console.log('🔍 Using teamId prop:', targetTeamId);
     }
 
     console.log('🔍 Final targetTeamId:', targetTeamId);

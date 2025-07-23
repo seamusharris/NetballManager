@@ -1645,6 +1645,7 @@ export default function GameDetails() {
             {!game.isBye && effectiveTeam && effectiveClub && (
               <RecordStatsButton 
                 game={game} 
+                teamId={teamIdFromUrl || effectiveTeam.id}
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900"
                 currentTeamId={effectiveTeam.id}
                 currentClubId={effectiveClub.id}

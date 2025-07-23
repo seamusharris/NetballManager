@@ -225,4 +225,138 @@ export function registerGameStatsRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to fetch batch stats' });
     }
   });
+
+  // Team-centric batch save stats endpoint
+  app.post('/api/teams/:teamId/games/:gameId/stats/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const gameId = parseInt(req.params.gameId);
+      const { stats } = req.body;
+
+      console.log(`Team ${teamId} batch saving stats for game ${gameId}`);
+
+      if (isNaN(teamId) || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid team ID or game ID' });
+      }
+
+      if (!Array.isArray(stats)) {
+        return res.status(400).json({ error: 'stats array is required' });
+      }
+
+      // Verify team participates in game
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ${gameId} 
+        AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found or team not participating' });
+      }
+
+      const results = [];
+      const errors = [];
+
+      // Process each stat in the batch
+      for (const statData of stats) {
+        try {
+          // Ensure gameId and teamId match the URL parameters
+          const validatedStatData = { 
+            ...statData, 
+            game_id: gameId,
+            team_id: teamId 
+          };
+
+          // Validate that required fields are provided
+          if (!validatedStatData.position || !validatedStatData.quarter) {
+            errors.push({ stat: statData, error: 'position and quarter are required' });
+            continue;
+          }
+
+          // Validate quarter (1-4)
+          if (validatedStatData.quarter < 1 || validatedStatData.quarter > 4) {
+            errors.push({ stat: statData, error: 'quarter must be between 1 and 4' });
+            continue;
+          }
+
+          // Check for existing stat with team context
+          const existingStat = await db.select()
+            .from(gameStats)
+            .where(and(
+              eq(gameStats.game_id, gameId),
+              eq(gameStats.team_id, teamId),
+              eq(gameStats.position, validatedStatData.position),
+              eq(gameStats.quarter, validatedStatData.quarter)
+            ))
+            .limit(1);
+
+          let stat;
+          if (existingStat.length > 0) {
+            // Update existing stat
+            console.log(`Updating existing stat ID ${existingStat[0].id} for position ${validatedStatData.position} quarter ${validatedStatData.quarter}`);
+            const [updated] = await db.update(gameStats)
+              .set({
+                goals_for: validatedStatData.goals_for || 0,
+                goals_against: validatedStatData.goals_against || 0,
+                missed_goals: validatedStatData.missed_goals || 0,
+                rebounds: validatedStatData.rebounds || 0,
+                intercepts: validatedStatData.intercepts || 0,
+                deflections: validatedStatData.deflections || 0,
+                turnovers: validatedStatData.turnovers || 0,
+                gains: validatedStatData.gains || 0,
+                receives: validatedStatData.receives || 0,
+                penalties: validatedStatData.penalties || 0,
+                rating: validatedStatData.rating || null
+              })
+              .where(eq(gameStats.id, existingStat[0].id))
+              .returning();
+            stat = updated;
+          } else {
+            // Create new stat
+            console.log(`Creating new stat for position ${validatedStatData.position} quarter ${validatedStatData.quarter}`);
+            const [created] = await db.insert(gameStats)
+              .values({
+                game_id: gameId,
+                team_id: teamId,
+                position: validatedStatData.position,
+                quarter: validatedStatData.quarter,
+                goals_for: validatedStatData.goals_for || 0,
+                goals_against: validatedStatData.goals_against || 0,
+                missed_goals: validatedStatData.missed_goals || 0,
+                rebounds: validatedStatData.rebounds || 0,
+                intercepts: validatedStatData.intercepts || 0,
+                deflections: validatedStatData.deflections || 0,
+                turnovers: validatedStatData.turnovers || 0,
+                gains: validatedStatData.gains || 0,
+                receives: validatedStatData.receives || 0,
+                penalties: validatedStatData.penalties || 0,
+                rating: validatedStatData.rating || null
+              })
+              .returning();
+            stat = created;
+          }
+
+          results.push(stat);
+        } catch (error) {
+          console.error('Error processing stat in batch:', error);
+          errors.push({ stat: statData, error: 'failed to process stat' });
+        }
+      }
+
+      // Return results with any errors
+      const response = {
+        success: errors.length === 0,
+        saved: results.length,
+        errors: errors.length > 0 ? errors : undefined
+      };
+
+      console.log(`Team ${teamId} batch save completed: ${results.length} saved, ${errors.length} errors`);
+
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.status(errors.length === 0 ? 201 : 207).json(createSuccessResponse(response));
+    } catch (error) {
+      console.error('Failed to batch save team stats:', error);
+      res.status(500).json({ error: 'Failed to batch save team stats' });
+    }
+  });
 }

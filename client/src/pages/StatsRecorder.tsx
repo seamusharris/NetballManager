@@ -452,7 +452,8 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
         throw new Error("Cannot determine team context for saving stats");
       }
 
-      const updates = [];
+      // Convert positionStats to array format for batch endpoint
+      const statsArray = [];
 
       Object.entries(positionStats).forEach(([key, stats]) => {
         const [position, quarterStr] = key.split("-");
@@ -463,51 +464,36 @@ export default function StatsRecorder({ gameId: propGameId, teamId: propTeamId }
           return;
         }
 
-        const existingStat = existingStats && Array.isArray(existingStats) ? existingStats.find((s: any) => s.position === position && s.quarter === quarter && s.teamId === currentTeamId) : undefined;
-
-        if (existingStat) {
-          // Use standardized endpoint for updates
-          const updatePromise = apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, {
-            goalsFor: stats.goalsFor || 0,
-            goalsAgainst: stats.goalsAgainst || 0,
-            missedGoals: stats.missedGoals || 0,
-            rebounds: stats.rebounds || 0,
-            intercepts: stats.intercepts || 0,
-            deflections: stats.deflections || 0,
-            turnovers: stats.turnovers || 0,
-            gains: stats.gains || 0,
-            receives: stats.receives || 0,
-            penalties: stats.penalties || 0,
-            rating: stats.rating,
-          });
-          updates.push(updatePromise);
-        } else {
-          const createPromise = apiClient.post(`/api/games/${gameId}/stats`, {
-            gameId: gameId,
-            teamId: currentTeamId,
-            position: position,
-            quarter: quarter,
-            goalsFor: stats.goalsFor || 0,
-            goalsAgainst: stats.goalsAgainst || 0,
-            missedGoals: stats.missedGoals || 0,
-            rebounds: stats.rebounds || 0,
-            intercepts: stats.intercepts || 0,
-            deflections: stats.deflections || 0,
-            turnovers: stats.turnovers || 0,
-            gains: stats.gains || 0,
-            receives: stats.receives || 0,
-            penalties: stats.penalties || 0,
-            rating: stats.rating,
-          });
-          updates.push(createPromise);
-        }
+        statsArray.push({
+          position: position,
+          quarter: quarter,
+          goals_for: stats.goalsFor || 0,
+          goals_against: stats.goalsAgainst || 0,
+          missed_goals: stats.missedGoals || 0,
+          rebounds: stats.rebounds || 0,
+          intercepts: stats.intercepts || 0,
+          deflections: stats.deflections || 0,
+          turnovers: stats.turnovers || 0,
+          gains: stats.gains || 0,
+          receives: stats.receives || 0,
+          penalties: stats.penalties || 0,
+          rating: stats.rating,
+        });
       });
 
-      if (updates.length === 0) {
+      if (statsArray.length === 0) {
         throw new Error("No statistics found to save");
       }
 
-      await Promise.all(updates);
+      console.log(`Saving ${statsArray.length} stats for team ${currentTeamId}, game ${gameId}`);
+
+      // Use team-centric batch endpoint
+      const response = await apiClient.post(`/api/teams/${currentTeamId}/games/${gameId}/stats/batch`, {
+        stats: statsArray
+      });
+
+      console.log('Batch save response:', response);
+      return response;
     },
     onSuccess: () => {
       clearGameCache(gameId);
