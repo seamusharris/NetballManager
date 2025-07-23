@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { calculateQuarterAverages } from '@/lib/positionStatsCalculator';
 
 interface QuarterPerformanceAnalysisProps {
   games: any[];
@@ -17,48 +18,12 @@ export default function QuarterPerformanceAnalysis({
   className = "",
   excludeSpecialGames = true
 }: QuarterPerformanceAnalysisProps) {
+  // Use shared utility for quarter calculations
+  const quarterAverages = calculateQuarterAverages(games, batchScores, currentTeamId, excludeSpecialGames);
+
   return (
     <div className={`grid grid-cols-2 md:grid-cols-5 gap-4 ${className}`}>
-      {[1, 2, 3, 4].map(quarter => {
-        // Calculate average scores for this quarter across all games
-        let totalTeamScore = 0;
-        let totalOpponentScore = 0;
-        let gamesWithData = 0;
-
-        games.forEach(game => {
-          // Skip special status games if requested
-          if (excludeSpecialGames && (
-            game.statusName === 'bye' || 
-            game.statusName === 'forfeit-win' || 
-            game.statusName === 'forfeit-loss'
-          )) return;
-
-          const gameScores = batchScores?.[game.id] || [];
-          const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-            id: score.id,
-            gameId: score.gameId,
-            teamId: score.teamId,
-            quarter: score.quarter,
-            score: score.score,
-            enteredBy: score.enteredBy,
-            enteredAt: score.enteredAt,
-            updatedAt: score.updatedAt,
-            notes: score.notes
-          })) : [];
-
-          const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
-          const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
-
-          totalTeamScore += quarterTeamScore;
-          totalOpponentScore += quarterOpponentScore;
-
-          if(quarterTeamScore > 0 || quarterOpponentScore > 0){
-            gamesWithData++;
-          }
-        });
-
-        const avgTeamScore = gamesWithData > 0 ? totalTeamScore / gamesWithData : 0;
-        const avgOpponentScore = gamesWithData > 0 ? totalOpponentScore / gamesWithData : 0;
+      {quarterAverages.map(({ quarter, avgTeamScore, avgOpponentScore, gamesWithData }) => {
 
         const isWinning = avgTeamScore > avgOpponentScore;
         const isLosing = avgTeamScore < avgOpponentScore;

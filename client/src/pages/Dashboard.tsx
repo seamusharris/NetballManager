@@ -10,10 +10,11 @@ import React, { useMemo } from "react";
 import SimplifiedGamesList from "@/components/ui/simplified-games-list";
 import { useSimplifiedGames } from "@/hooks/use-simplified-games";
 import { DynamicBreadcrumbs } from "@/components/layout/DynamicBreadcrumbs";
-import CompactAttackDefenseWidget from "@/components/ui/compact-attack-defense-widget";
+import { CompactAttackDefenseWidget } from "@/components/ui/compact-attack-defense-widget";
 import QuarterPerformanceAnalysisWidget from "@/components/ui/quarter-performance-analysis-widget";
+import { SeasonStatsWidget } from "@/components/ui/season-stats-widget";
 import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
-import { calculatePositionAverages, calculateQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
+import { processUnifiedGameData, calculateUnifiedQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
 import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
 import { apiClient } from '@/lib/apiClient';
@@ -95,12 +96,28 @@ export default function Dashboard() {
   const { data: batchScores = {}, isLoading: isLoadingScores } = useQuery<Record<number, any[]>>({
     queryKey: ['batch-scores', allSeasonGamesWithStatistics.map(game => game.id).join(',')],
     queryFn: async () => {
-      if (allSeasonGamesWithStatistics.length === 0) return {};
+      console.log('🔍 BATCH SCORES QUERY RUNNING:');
+      console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
+      console.log('🔍 currentClub?.id:', currentClub?.id);
+      
+      if (allSeasonGamesWithStatistics.length === 0) {
+        console.log('🔍 No games with statistics, returning empty object');
+        return {} as Record<number, any[]>;
+      }
       
       const gameIds = allSeasonGamesWithStatistics.map(game => game.id);
-      return apiClient.post(`/api/clubs/${currentClub?.id}/games/scores/batch`, {
-        gameIds: gameIds
-      });
+      console.log('🔍 Game IDs for batch scores:', gameIds);
+      
+      try {
+        const result = await apiClient.post(`/api/clubs/${currentClub?.id}/games/scores/batch`, {
+          gameIds: gameIds
+        });
+        console.log('🔍 Batch scores API result:', result);
+        return result as Record<number, any[]>;
+      } catch (error) {
+        console.error('🔍 Error fetching batch scores:', error);
+        return {} as Record<number, any[]>;
+      }
     },
     enabled: allSeasonGamesWithStatistics.length > 0 && !!currentClub?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -113,52 +130,63 @@ export default function Dashboard() {
   console.log('🔍 Sample batchScores data:', batchScores && Object.keys(batchScores).length > 0 ? batchScores[Object.keys(batchScores)[0]] : 'No data');
   console.log('🔍 Sample batchStats data:', batchStats && Object.keys(batchStats).length > 0 ? batchStats[Object.keys(batchStats)[0]] : 'No data');
 
-  // Calculate position averages for attack/defense widget using position stats data
-  const positionAverages = useMemo(() => {
-    if (!batchStats || Object.keys(batchStats).length === 0) return null;
+  // Process unified game data for attack/defense widget
+  const { unifiedData, averages } = useMemo(() => {
+    console.log('🔍 UNIFIED DATA PROCESSING DEBUG:');
+    console.log('�� allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
+    console.log('🔍 allSeasonGamesWithPositionStats length:', allSeasonGamesWithPositionStats.length);
+    console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
+    console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
+    console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
     
-    const result = calculatePositionAverages(allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl ?? 0);
+    if (!batchScores || Object.keys(batchScores).length === 0) {
+      console.log('🔍 Early return - missing batchScores data');
+      return { unifiedData: [], averages: null };
+    }
+    
+    // Use allSeasonGamesWithStatistics instead of allSeasonGamesWithPositionStats
+    // The unified approach can handle games without position stats
+    const result = processUnifiedGameData(allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl ?? 0);
     
     // Debug the main summary calculation
     console.log('🔍 Main Summary Calculation Debug:');
-    console.log('🔍 Games with position stats:', result.gamesWithPositionStats);
-    console.log('🔍 GS Avg Goals For:', result.gsAvgGoalsFor);
-    console.log('🔍 GA Avg Goals For:', result.gaAvgGoalsFor);
-    console.log('🔍 GD Avg Goals Against:', result.gdAvgGoalsAgainst);
-    console.log('🔍 GK Avg Goals Against:', result.gkAvgGoalsAgainst);
-    console.log('🔍 Attack Total (GS + GA):', result.attackingPositionsTotal);
-    console.log('🔍 Defense Total (GD + GK):', result.defendingPositionsTotal);
+    console.log('🔍 Unified data length:', result.unifiedData.length);
+    console.log('🔍 Games with official scores:', result.averages.gamesWithOfficialScores);
+    console.log('🔍 Games with position stats:', result.averages.gamesWithPositionStats);
+    console.log('🔍 GS Avg Goals For:', result.averages.gsAvgGoalsFor);
+    console.log('🔍 GA Avg Goals For:', result.averages.gaAvgGoalsFor);
+    console.log('🔍 GD Avg Goals Against:', result.averages.gdAvgGoalsAgainst);
+    console.log('🔍 GK Avg Goals Against:', result.averages.gkAvgGoalsAgainst);
+    console.log('🔍 Attack Total (GS + GA):', result.averages.attackingPositionsTotal);
+    console.log('🔍 Defense Total (GD + GK):', result.averages.defendingPositionsTotal);
     
     return result;
-  }, [allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl]);
+  }, [allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl]);
 
-  // Calculate quarter-by-quarter stats using position stats data
+  // Calculate quarter data from unified data
   const quarterData = useMemo(() => {
-    if (!batchStats || Object.keys(batchStats).length === 0) return [];
+    console.log('🔍 Quarter data calculation debug:');
+    console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics?.length);
+    console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
+    console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
+    console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
     
-    const result = calculateQuarterByQuarterStats(allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl ?? 0);
+    if (!allSeasonGamesWithStatistics || allSeasonGamesWithStatistics.length === 0) {
+      console.log('🔍 No games with statistics available');
+      return [];
+    }
     
-    // Debug the quarter breakdown calculation
-    console.log('🔍 Quarter Breakdown Calculation Debug:');
-    result.forEach((quarter, index) => {
-      console.log(`🔍 Q${quarter.quarter}:`);
-      console.log(`  - Games with data: ${quarter.gamesWithQuarterData}`);
-      console.log(`  - GS Goals: ${quarter.gsGoalsFor}`);
-      console.log(`  - GA Goals: ${quarter.gaGoalsFor}`);
-      console.log(`  - GD Goals Against: ${quarter.gdGoalsAgainst}`);
-      console.log(`  - GK Goals Against: ${quarter.gkGoalsAgainst}`);
-      console.log(`  - Attack Total: ${quarter.gsGoalsFor + quarter.gaGoalsFor}`);
-      console.log(`  - Defense Total: ${quarter.gdGoalsAgainst + quarter.gkGoalsAgainst}`);
-    });
+    if (!batchScores || Object.keys(batchScores).length === 0) {
+      console.log('🔍 No batchScores available');
+      return [];
+    }
     
-    // Calculate sum of quarter totals
-    const quarterAttackSum = result.reduce((sum, q) => sum + q.gsGoalsFor + q.gaGoalsFor, 0);
-    const quarterDefenseSum = result.reduce((sum, q) => sum + q.gdGoalsAgainst + q.gkGoalsAgainst, 0);
-    console.log('🔍 Quarter Attack Sum (Q1+Q2+Q3+Q4):', quarterAttackSum);
-    console.log('🔍 Quarter Defense Sum (Q1+Q2+Q3+Q4):', quarterDefenseSum);
-    
+    const result = calculateUnifiedQuarterByQuarterStats(allSeasonGamesWithStatistics, batchScores, teamIdFromUrl ?? 0, batchStats);
+    console.log('🔍 Quarter calculation result:', result);
+    console.log('🔍 allSeasonGamesWithStatistics sample:', allSeasonGamesWithStatistics[0]);
+    console.log('🔍 allSeasonGamesWithStatistics keys:', allSeasonGamesWithStatistics[0] ? Object.keys(allSeasonGamesWithStatistics[0]) : 'No games');
     return result;
-  }, [allSeasonGamesWithPositionStats, batchStats, teamIdFromUrl]);
+  }, [allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl]);
 
   // Debug comparison between Quarter Performance and Attack/Defense data sources
   const debugDataComparison = useMemo(() => {
@@ -363,7 +391,7 @@ export default function Dashboard() {
                 console.log('🔍 Widget Debug:');
                 console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
                 console.log('🔍 allSeasonGamesWithPositionStats length:', allSeasonGamesWithPositionStats.length);
-                console.log('🔍 positionAverages:', positionAverages);
+                console.log('🔍 positionAverages:', averages);
                 console.log('🔍 quarterData length:', quarterData.length);
                 console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
                 console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
@@ -371,6 +399,16 @@ export default function Dashboard() {
                 return null;
               })()}
               
+              {allSeasonGamesWithStatistics.length > 0 && (
+                <SeasonStatsWidget
+                  games={allSeasonGamesWithStatistics}
+                  batchScores={batchScores}
+                  batchStats={batchStats}
+                  teamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
               {allSeasonGamesWithStatistics.length > 0 && (
                 <>
                   {/* Debug quarter scores */}
@@ -399,11 +437,12 @@ export default function Dashboard() {
               )}
 
               {/* Compact Attack Defense Widget */}
-              {allSeasonGamesWithPositionStats.length > 0 && positionAverages && quarterData.length > 0 && (
+              {allSeasonGamesWithStatistics.length > 0 && averages && (
                 <CompactAttackDefenseWidget
-                  averages={positionAverages}
-                  quarterData={quarterData}
-                  showQuarterBreakdown={true}
+                  games={allSeasonGamesWithStatistics}
+                  batchScores={batchScores}
+                  batchStats={batchStats}
+                  teamId={teamIdFromUrl ?? 0}
                   className="w-full"
                 />
               )}

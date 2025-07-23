@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SimpleGameResultCard from '@/components/ui/simple-game-result-card';
 import QuarterPerformanceAnalysisWidget from '@/components/ui/quarter-performance-analysis-widget';
 import AttackDefenseDisplay from '@/components/ui/attack-defense-display';
-import CompactAttackDefenseWidget from '@/components/ui/compact-attack-defense-widget';
+import { CompactAttackDefenseWidget } from '@/components/ui/compact-attack-defense-widget';
 
 // Example widget components demonstrating different approaches
 
@@ -426,48 +426,39 @@ function ExampleAttackDefenseWidget({ className }: { className?: string }) {
 
 // CompactAttackDefenseWidget example
 function ExampleCompactAttackDefenseWidget({ className }: { className?: string }) {
-  // Sample position averages data
-  const samplePositionAverages = {
-    gsAvgGoalsFor: 8.5,
-    gaAvgGoalsFor: 6.2,
-    gdAvgGoalsAgainst: 4.8,
-    gkAvgGoalsAgainst: 3.1,
-    attackingPositionsTotal: 14.7, // GS + GA
-    defendingPositionsTotal: 7.9,  // GD + GK
-    gamesWithPositionStats: 12
+  // Mock data for the new unified approach
+  const mockGames = [
+    { id: 1, home_team_id: 123, away_team_id: 456, status: 'completed' },
+    { id: 2, home_team_id: 123, away_team_id: 789, status: 'completed' },
+    { id: 3, home_team_id: 456, away_team_id: 123, status: 'completed' }
+  ];
+
+  const mockBatchScores = {
+    '1': { q1_home_score: 15, q2_home_score: 18, q3_home_score: 20, q4_home_score: 22 },
+    '2': { q1_home_score: 12, q2_home_score: 15, q3_home_score: 18, q4_home_score: 20 },
+    '3': { q1_away_score: 14, q2_away_score: 16, q3_away_score: 19, q4_away_score: 21 }
   };
 
-  // Sample quarter breakdown data
-  const sampleQuarterData = [
-    {
-      quarter: 1,
-      gsGoalsFor: 2.1,
-      gaGoalsFor: 1.8,
-      gdGoalsAgainst: 1.2,
-      gkGoalsAgainst: 0.9
-    },
-    {
-      quarter: 2,
-      gsGoalsFor: 2.3,
-      gaGoalsFor: 1.5,
-      gdGoalsAgainst: 1.4,
-      gkGoalsAgainst: 0.8
-    },
-    {
-      quarter: 3,
-      gsGoalsFor: 2.0,
-      gaGoalsFor: 1.6,
-      gdGoalsAgainst: 1.1,
-      gkGoalsAgainst: 0.7
-    },
-    {
-      quarter: 4,
-      gsGoalsFor: 2.1,
-      gaGoalsFor: 1.3,
-      gdGoalsAgainst: 1.1,
-      gkGoalsAgainst: 0.7
-    }
-  ];
+  const mockBatchStats = {
+    '1': [
+      { teamId: 123, position: 'GS', goalsFor: 8, goalsAgainst: 0 },
+      { teamId: 123, position: 'GA', goalsFor: 7, goalsAgainst: 0 },
+      { teamId: 123, position: 'GK', goalsFor: 0, goalsAgainst: 6 },
+      { teamId: 123, position: 'GD', goalsFor: 0, goalsAgainst: 9 }
+    ],
+    '2': [
+      { teamId: 123, position: 'GS', goalsFor: 6, goalsAgainst: 0 },
+      { teamId: 123, position: 'GA', goalsFor: 9, goalsAgainst: 0 },
+      { teamId: 123, position: 'GK', goalsFor: 0, goalsAgainst: 8 },
+      { teamId: 123, position: 'GD', goalsFor: 0, goalsAgainst: 7 }
+    ],
+    '3': [
+      { teamId: 123, position: 'GS', goalsFor: 7, goalsAgainst: 0 },
+      { teamId: 123, position: 'GA', goalsFor: 8, goalsAgainst: 0 },
+      { teamId: 123, position: 'GK', goalsFor: 0, goalsAgainst: 9 },
+      { teamId: 123, position: 'GD', goalsFor: 0, goalsAgainst: 6 }
+    ]
+  };
 
   return (
     <StandardWidget 
@@ -476,8 +467,10 @@ function ExampleCompactAttackDefenseWidget({ className }: { className?: string }
       className={className}
     >
       <CompactAttackDefenseWidget
-        averages={samplePositionAverages}
-        quarterData={sampleQuarterData}
+        games={mockGames}
+        batchScores={mockBatchScores}
+        batchStats={mockBatchStats}
+        teamId={123}
       />
     </StandardWidget>
   );
