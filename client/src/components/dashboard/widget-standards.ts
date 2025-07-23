@@ -3,9 +3,14 @@
  * 
  * All dashboard widgets should follow this structure for consistency:
  * 
- * 1. Use BaseWidget or CustomHeaderWidget as the container
+ * 1. Use StandardWidget, MinimalWidget, or ContentWidget as containers
  * 2. Standard naming convention for props
  * 3. Consistent spacing and typography
+ * 
+ * Widget Types:
+ * - StandardWidget: For widgets with titles/descriptions (most common)
+ * - MinimalWidget: For widgets that need card styling but no header
+ * - ContentWidget: For widgets that are just content areas (no card wrapper)
  */
 
 export interface StandardWidgetProps {
@@ -65,6 +70,31 @@ export const WIDGET_COMPONENTS = {
   gameWidget: 'unified-game-widget',
 } as const;
 
+// Widget Type Guidelines
+export const WIDGET_GUIDELINES = {
+  // Use StandardWidget when:
+  standardWidget: [
+    'Widget has a clear title/description',
+    'Widget is a standalone component',
+    'Widget needs consistent card styling',
+    'Widget will be placed in grid layouts'
+  ],
+  
+  // Use MinimalWidget when:
+  minimalWidget: [
+    'Widget needs card styling but no header',
+    'Widget content is self-explanatory',
+    'Widget is part of a larger component'
+  ],
+  
+  // Use ContentWidget when:
+  contentWidget: [
+    'Widget is just content without card styling',
+    'Widget is embedded in another component',
+    'Widget needs custom styling'
+  ]
+} as const;
+
 // Unified Game Widget Standard Configurations
 export const GAME_WIDGET_CONFIGS = {
   dashboard: {
@@ -120,29 +150,6 @@ export const SPACING_STANDARDS = {
   tightGridGap: 'gap-2',   // Very compact layouts
 } as const;
 
-// Helper function to get action button class
-export function getActionButtonClass(action: keyof typeof ACTION_STYLES): string {
-  return ACTION_STYLES[action];
-}
-
-// Page template helper functions
-export const PAGE_HELPERS = {
-  // Create breadcrumb items for common navigation patterns
-  createBreadcrumbs: (items: Array<{label: string, href?: string, onClick?: () => void}>) => items,
-
-  // Generate page title with club/team context
-  createPageTitle: (baseName: string, teamName?: string, clubName?: string) => {
-    if (teamName) return `${baseName} - ${teamName}`;
-    if (clubName) return `${baseName} - ${clubName}`;
-    return baseName;
-  },
-
-  // Generate page subtitle with context
-  createPageSubtitle: (description: string, context?: string) => {
-    return context ? `${description} • ${context}` : description;
-  }
-} as const;
-
 // Content section helper functions
 export const CONTENT_HELPERS = {
   // Standard section configurations
@@ -154,4 +161,19 @@ export const CONTENT_HELPERS = {
     };
     return configs[type];
   }
+} as const;
+
+// Migration guide for existing widgets
+export const MIGRATION_GUIDE = {
+  // Replace BaseWidget with StandardWidget
+  baseWidget: 'StandardWidget',
+  
+  // Replace CustomHeaderWidget with StandardWidget + headerContent
+  customHeaderWidget: 'StandardWidget with headerContent prop',
+  
+  // Replace direct Card usage with StandardWidget
+  directCard: 'StandardWidget',
+  
+  // Replace custom div containers with ContentWidget
+  customDiv: 'ContentWidget'
 } as const;

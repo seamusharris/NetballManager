@@ -10,6 +10,13 @@ import React from "react";
 import SimplifiedGamesList from "@/components/ui/simplified-games-list";
 import { useSimplifiedGames } from "@/hooks/use-simplified-games";
 import { DynamicBreadcrumbs } from "@/components/layout/DynamicBreadcrumbs";
+import CompactAttackDefenseWidget from "@/components/ui/compact-attack-defense-widget";
+import QuarterPerformanceAnalysisWidget from "@/components/ui/quarter-performance-analysis-widget";
+import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
+import { calculatePositionAverages, calculateQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
+import { Badge } from "@/components/ui/badge";
+import { formatShortDate } from "@/lib/utils";
+import { apiClient } from '@/lib/apiClient';
 
 export default function Dashboard() {
   const params = useParams();
@@ -24,7 +31,44 @@ export default function Dashboard() {
     teamIdFromUrl
   );
 
-  // Simple data fetching - no complex batch operations for now
+  // Get recent 5 completed games for attack/defense analysis
+  const recentCompletedGames = games.filter(game => game.status === 'completed').slice(0, 5);
+  const recentGameIds = recentCompletedGames.map(game => game.id);
+  
+  // Fetch batch statistics for the recent games
+  const { statsMap: batchStats, isLoading: isLoadingStats } = useBatchGameStatistics(
+    recentCompletedGames.map(game => game.id),
+    false
+  );
+
+  // Fetch batch scores for the recent games using club-scoped endpoint
+  const { data: batchScores = {}, isLoading: isLoadingScores } = useQuery<Record<number, any[]>>({
+    queryKey: ['batch-scores', recentCompletedGames.map(game => game.id).join(',')],
+    queryFn: async () => {
+      if (recentCompletedGames.length === 0) return {};
+      
+      const gameIds = recentCompletedGames.map(game => game.id);
+      return apiClient.post(`/api/clubs/${currentClub?.id}/games/scores/batch`, {
+        gameIds: gameIds
+      });
+    },
+    enabled: recentCompletedGames.length > 0 && !!currentClub?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Calculate position averages for attack/defense widget
+  const positionAverages = recentCompletedGames.length > 0 && batchStats && Object.keys(batchStats).length > 0
+    ? calculatePositionAverages(recentCompletedGames, batchStats, teamIdFromUrl ?? 0)
+    : null;
+
+  // Calculate quarter-by-quarter breakdown for the widget
+  const quarterData = React.useMemo(() => {
+    if (!recentCompletedGames.length || !batchStats || Object.keys(batchStats).length === 0) {
+      return [];
+    }
+
+    return calculateQuarterByQuarterStats(recentCompletedGames, batchStats, teamIdFromUrl ?? 0);
+  }, [recentCompletedGames, batchStats, teamIdFromUrl]);
 
   // Simple loading state like GamePreparation page
   if (clubLoading || !currentClub) {
@@ -83,59 +127,96 @@ export default function Dashboard() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-8">
-              <div className="grid gap-8 lg:gap-10">
-                {/* Two-column layout for Upcoming and Recent Games */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Upcoming Games - Left Column */}
-                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle>Upcoming Games</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <SimplifiedGamesList
-                        games={games.filter(game => game.status !== 'completed').slice(0, 5)}
-                        currentTeamId={teamIdFromUrl ?? 0}
-                        variant="upcoming"
-                        maxGames={5}
-                        compact={true}
-                        showQuarterScores={false}
-                        layout="medium"
-                      />
-                    </CardContent>
-                  </Card>
-
-                  {/* Recent Games - Right Column */}
-                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle>Recent Games</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <SimplifiedGamesList
-                        games={games.filter(game => game.status === 'completed').slice(0, 5)}
-                        currentTeamId={teamIdFromUrl ?? 0}
-                        variant="recent"
-                        maxGames={5}
-                        compact={true}
-                        showQuarterScores={false}
-                        layout="medium"
-                        showViewMore={true}
-                        viewMoreHref={`/team/${teamIdFromUrl}/games?status=completed`}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Team Performance Metrics - Simplified for now */}
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Two-column layout for Upcoming and Recent Games */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Upcoming Games */}
                 <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Team Performance Summary</CardTitle>
+                    <CardTitle>Upcoming Games</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">Performance metrics will be added here later.</p>
+                    <SimplifiedGamesList
+                      games={games.filter(game => game.status !== 'completed').slice(0, 5)}
+                      currentTeamId={teamIdFromUrl ?? 0}
+                      variant="upcoming"
+                      maxGames={5}
+                      compact={true}
+                      showQuarterScores={false}
+                      layout="medium"
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Recent Games */}
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle>Recent Games</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SimplifiedGamesList
+                      games={games.filter(game => game.status === 'completed').slice(0, 5)}
+                      currentTeamId={teamIdFromUrl ?? 0}
+                      variant="recent"
+                      maxGames={5}
+                      compact={true}
+                      showQuarterScores={false}
+                      layout="medium"
+                      showViewMore={true}
+                      viewMoreHref={`/team/${teamIdFromUrl}/games?status=completed`}
+                    />
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Quarter Performance Analysis Widget */}
+              {recentCompletedGames.length > 0 && (
+                <>
+                  {/* Debug quarter scores */}
+                  {(() => {
+                    console.log('🔍 Quarter Performance Debug:');
+                    console.log('🔍 Recent games:', recentCompletedGames.map(g => ({ id: g.id, status: g.status })));
+                    console.log('🔍 Batch scores keys:', Object.keys(batchScores || {}));
+                    console.log('🔍 Team ID:', teamIdFromUrl);
+                    
+                    // Debug sample game scores
+                    const firstGameId = recentCompletedGames[0]?.id;
+                    if (firstGameId && batchScores?.[firstGameId]) {
+                      console.log('🔍 Sample game scores:', batchScores[firstGameId].slice(0, 3));
+                    }
+                    return null;
+                  })()}
+                  
+                  <QuarterPerformanceAnalysisWidget
+                    games={recentCompletedGames}
+                    currentTeamId={teamIdFromUrl ?? 0}
+                    batchScores={batchScores}
+                    excludeSpecialGames={true}
+                    className="w-full"
+                  />
+                </>
+              )}
+
+              {/* Compact Attack Defense Widget */}
+              {recentCompletedGames.length > 0 && positionAverages && quarterData.length > 0 && (
+                <CompactAttackDefenseWidget
+                  averages={positionAverages}
+                  quarterData={quarterData}
+                  showQuarterBreakdown={true}
+                  className="w-full"
+                />
+              )}
+
+              {/* Team Performance Metrics - Simplified for now */}
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle>Team Performance Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Performance metrics will be added here later.</p>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="recent" className="space-y-8">

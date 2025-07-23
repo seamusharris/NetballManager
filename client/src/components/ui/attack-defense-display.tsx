@@ -2,6 +2,7 @@
 import React from 'react';
 import { PositionAverages } from '@/lib/positionStatsCalculator';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export interface AttackDefenseDisplayProps {
   averages: PositionAverages;
@@ -65,7 +66,7 @@ const AttackDefenseDisplay: React.FC<AttackDefenseDisplayProps> = ({
                 </div>
               </div>
               <div className="text-xs text-gray-500">
-                Based on {gamesWithPositionStats} games with position statistics recorded.
+                Goals scored based on {gamesWithPositionStats} games with position statistics recorded.
               </div>
             </>
           ) : (
@@ -85,22 +86,22 @@ const AttackDefenseDisplay: React.FC<AttackDefenseDisplayProps> = ({
             <>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm font-semibold">
-                  <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
                   <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
+                  <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3 flex">
                   <div
                     className="bg-red-600 h-3 rounded-l-full"
-                    style={{ width: defendingPositionsTotal > 0 ? `${(gdAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
+                    style={{ width: defendingPositionsTotal > 0 ? `${(gkAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
                   ></div>
                   <div
                     className="bg-red-400 h-3 rounded-r-full"
-                    style={{ width: defendingPositionsTotal > 0 ? `${(gkAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
+                    style={{ width: defendingPositionsTotal > 0 ? `${(gdAvgGoalsAgainst / defendingPositionsTotal) * 100}%` : '50%' }}
                   ></div>
                 </div>
               </div>
               <div className="text-xs text-gray-500">
-                Goals conceded across {gamesWithPositionStats} games.
+                Goals conceded based on {gamesWithPositionStats} games with position statistics recorded.
               </div>
             </>
           ) : (
@@ -111,40 +112,118 @@ const AttackDefenseDisplay: React.FC<AttackDefenseDisplayProps> = ({
         </div>
       </div>
 
-      {/* Quarter-by-Quarter Breakdown */}
+      {/* Quarter-by-Quarter Breakdown - Separate Attack and Defense Rows */}
       {showQuarterBreakdown && quarterData.length > 0 && (
         <div className="mt-6">
-          <h5 className="font-medium mb-3 text-gray-700">Quarter-by-Quarter Breakdown</h5>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {quarterData.map((quarter) => (
-              <div key={quarter.quarter} className="border rounded-lg p-3 bg-white">
-                <h6 className="font-medium text-center mb-2">Q{quarter.quarter}</h6>
+          
+          {/* Attack Row */}
+          <div className="mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {quarterData.map((quarter) => {
+                const attackTotal = quarter.gsGoalsFor + quarter.gaGoalsFor;
                 
-                {/* Attack Section */}
-                <div className="mb-2">
-                  <div className="text-xs text-green-700 font-medium mb-1">Attack</div>
-                  <div className="flex justify-between text-xs">
-                    <span>GS: {quarter.gsGoalsFor}</span>
-                    <span>GA: {quarter.gaGoalsFor}</span>
-                  </div>
-                  <div className="text-xs text-green-600 font-semibold">
-                    Total: {quarter.gsGoalsFor + quarter.gaGoalsFor}
-                  </div>
-                </div>
+                return (
+                  <div key={`attack-${quarter.quarter}`} className="text-center p-3 rounded-lg border-2 bg-green-100 border-green-300 transition-colors relative">
+                    {/* Quarter badge in top-left corner */}
+                    <div className="absolute -top-2 -left-2">
+                      <Badge className="text-xs font-bold px-2 py-1 rounded-full shadow-sm border bg-green-500 text-white border-green-600">
+                        Q{quarter.quarter}
+                      </Badge>
+                    </div>
 
-                {/* Defense Section */}
-                <div>
-                  <div className="text-xs text-red-700 font-medium mb-1">Defense</div>
-                  <div className="flex justify-between text-xs">
-                    <span>GD: {quarter.gdGoalsAgainst}</span>
-                    <span>GK: {quarter.gkGoalsAgainst}</span>
+                    <div className="space-y-2 mt-1">
+                      {/* Attack Total */}
+                      <div className="text-lg font-bold text-green-600">
+                        {attackTotal.toFixed(1)}
+                      </div>
+                      <div className="text-xs text-green-700 font-medium">Total Goals</div>
+
+                      {/* Attack Breakdown */}
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>GS: {quarter.gsGoalsFor.toFixed(1)}</span>
+                          <span>GA: {quarter.gaGoalsFor.toFixed(1)}</span>
+                        </div>
+                      </div>
+
+                      {/* Performance Bar - GS vs GA proportion */}
+                      <div 
+                        className="w-full bg-gray-200 rounded-full h-2 mt-3 flex" 
+                        title="GS vs GA proportion"
+                      >
+                        <div 
+                          className="h-2 rounded-l-full bg-green-600"
+                          style={{ 
+                            width: attackTotal > 0 ? `${(quarter.gsGoalsFor / attackTotal) * 100}%` : '50%'
+                          }}
+                        ></div>
+                        <div 
+                          className="h-2 rounded-r-full bg-green-400"
+                          style={{ 
+                            width: attackTotal > 0 ? `${(quarter.gaGoalsFor / attackTotal) * 100}%` : '50%'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-red-600 font-semibold">
-                    Total: {quarter.gdGoalsAgainst + quarter.gkGoalsAgainst}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Defense Row */}
+          <div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {quarterData.map((quarter) => {
+                const defenseTotal = quarter.gdGoalsAgainst + quarter.gkGoalsAgainst;
+                
+                return (
+                  <div key={`defense-${quarter.quarter}`} className="text-center p-3 rounded-lg border-2 bg-red-100 border-red-300 transition-colors relative">
+                    {/* Quarter badge in top-left corner */}
+                    <div className="absolute -top-2 -left-2">
+                      <Badge className="text-xs font-bold px-2 py-1 rounded-full shadow-sm border bg-red-500 text-white border-red-600">
+                        Q{quarter.quarter}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2 mt-1">
+                      {/* Defense Total */}
+                      <div className="text-lg font-bold text-red-600">
+                        {defenseTotal.toFixed(1)}
+                      </div>
+                      <div className="text-xs text-red-700 font-medium">Goals Conceded</div>
+
+                      {/* Defense Breakdown */}
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>GK: {quarter.gkGoalsAgainst.toFixed(1)}</span>
+                          <span>GD: {quarter.gdGoalsAgainst.toFixed(1)}</span>
+                        </div>
+                      </div>
+
+                      {/* Performance Bar - GD vs GK proportion */}
+                      <div 
+                        className="w-full bg-gray-200 rounded-full h-2 mt-3 flex" 
+                        title="GD vs GK proportion"
+                      >
+                        <div 
+                          className="h-2 rounded-l-full bg-red-600"
+                          style={{ 
+                            width: defenseTotal > 0 ? `${(quarter.gkGoalsAgainst / defenseTotal) * 100}%` : '50%'
+                          }}
+                        ></div>
+                        <div 
+                          className="h-2 rounded-r-full bg-red-400"
+                          style={{ 
+                            width: defenseTotal > 0 ? `${(quarter.gdGoalsAgainst / defenseTotal) * 100}%` : '50%'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

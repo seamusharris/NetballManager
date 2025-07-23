@@ -33,7 +33,7 @@ interface ExampleSection {
   description: string;
   path: string;
   icon: React.ReactNode;
-  category: 'Components' | 'Patterns' | 'Layouts';
+  category: 'Components' | 'Patterns' | 'Layouts' | 'Sport-Specific' | 'Interactive' | 'Navigation' | 'Data Display' | 'States' | 'Advanced Layouts';
   status: 'Complete' | 'In Progress' | 'Planned';
 }
 
@@ -126,6 +126,14 @@ const examples: ExampleSection[] = [
     path: '/team-performance-examples',
     icon: <BarChart3 className="h-5 w-5" />,
     category: 'Sport-Specific',
+    status: 'Complete'
+  },
+  {
+    title: 'Widget Standardization',
+    description: 'Standardized widget patterns for consistent UI components across the application with different layout examples.',
+    path: '/widget-examples',
+    icon: <Box className="h-5 w-5" />,
+    category: 'Patterns',
     status: 'Complete'
   },
   {
@@ -442,7 +450,6 @@ export default function ComponentExamples() {
   return (
     <PageTemplate 
       title="Component Examples" 
-      breadcrumbs={[{ label: "Component Examples" }]}
     >
       <div className="space-y-8">
         <div className="prose max-w-none">

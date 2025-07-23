@@ -6,6 +6,7 @@ import { storage } from './storage';
 import { createSuccessResponse, createErrorResponse, ErrorCodes } from './api-response-standards';
 import { insertPlayerSchema, importPlayerSchema } from '@shared/schema';
 import { transformToApiFormat } from './api-utils';
+import { calculatePlayerStats } from './utils/playerStatsService';
 
 export function registerPlayerRoutes(app: Express) {
   console.log('🚀 Registering player routes...');
@@ -113,6 +114,21 @@ export function registerPlayerRoutes(app: Express) {
         ErrorCodes.INTERNAL_ERROR,
         'Failed to fetch player'
       ));
+    }
+  });
+
+  // GET /api/players/:id/stats - Aggregated player stats with breakdowns
+  app.get('/api/players/:id/stats', async (req, res) => {
+    const playerId = parseInt(req.params.id, 10);
+    const allowedGroups = ['season', 'team', 'club'] as const;
+    let groupBy = req.query.groupBy ? String(req.query.groupBy).split(',') : [];
+    groupBy = groupBy.filter(g => allowedGroups.includes(g as any));
+    try {
+      const stats = await calculatePlayerStats(playerId, { groupBy: groupBy as ('season' | 'team' | 'club')[] });
+      res.json(stats);
+    } catch (error) {
+      console.error('Error calculating player stats:', error);
+      res.status(500).json({ message: 'Failed to calculate player stats' });
     }
   });
 

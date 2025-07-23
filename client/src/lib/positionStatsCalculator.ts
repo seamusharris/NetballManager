@@ -111,3 +111,87 @@ export interface PositionPerformanceDisplayProps {
   label?: string;
   className?: string;
 }
+
+/**
+ * Calculate quarter-by-quarter attack/defense statistics from position-based game stats
+ * @param games - Array of games to analyze
+ * @param batchStats - Stats data keyed by game ID
+ * @param currentTeamId - ID of the team to calculate stats for
+ * @returns Array of quarter data with position-specific goals
+ */
+export function calculateQuarterByQuarterStats(
+  games: any[],
+  batchStats: Record<string, any[]>,
+  currentTeamId: number
+): Array<{
+  quarter: number;
+  gsGoalsFor: number;
+  gaGoalsFor: number;
+  gdGoalsAgainst: number;
+  gkGoalsAgainst: number;
+  gamesWithQuarterData: number;
+}> {
+  const quarters = [1, 2, 3, 4];
+  
+  return quarters.map(quarter => {
+    let gsGoalsFor = 0;
+    let gaGoalsFor = 0;
+    let gdGoalsAgainst = 0;
+    let gkGoalsAgainst = 0;
+    let gamesWithQuarterData = 0;
+
+    games.forEach(game => {
+      const gameStats = batchStats[game.id.toString()] || batchStats[game.id];
+      
+      if (!gameStats || gameStats.length === 0) {
+        return;
+      }
+
+      // Filter to current team and specific quarter
+      const teamStats = gameStats.filter(stat => 
+        Number(stat.teamId) === Number(currentTeamId) && 
+        stat.quarter === quarter
+      );
+
+      let hasQuarterData = false;
+      
+      teamStats.forEach(stat => {
+        if (stat.position === 'GS' && typeof stat.goalsFor === 'number') {
+          gsGoalsFor += stat.goalsFor;
+          hasQuarterData = true;
+        }
+        if (stat.position === 'GA' && typeof stat.goalsFor === 'number') {
+          gaGoalsFor += stat.goalsFor;
+          hasQuarterData = true;
+        }
+        if (stat.position === 'GD' && typeof stat.goalsAgainst === 'number') {
+          gdGoalsAgainst += stat.goalsAgainst;
+          hasQuarterData = true;
+        }
+        if (stat.position === 'GK' && typeof stat.goalsAgainst === 'number') {
+          gkGoalsAgainst += stat.goalsAgainst;
+          hasQuarterData = true;
+        }
+      });
+
+      if (hasQuarterData) {
+        gamesWithQuarterData++;
+      }
+    });
+
+    // Calculate averages per quarter
+    const avgGsGoalsFor = gamesWithQuarterData > 0 ? gsGoalsFor / gamesWithQuarterData : 0;
+    const avgGaGoalsFor = gamesWithQuarterData > 0 ? gaGoalsFor / gamesWithQuarterData : 0;
+    const avgGdGoalsAgainst = gamesWithQuarterData > 0 ? gdGoalsAgainst / gamesWithQuarterData : 0;
+    const avgGkGoalsAgainst = gamesWithQuarterData > 0 ? gkGoalsAgainst / gamesWithQuarterData : 0;
+
+    return {
+      quarter,
+      gsGoalsFor: avgGsGoalsFor,
+      gaGoalsFor: avgGaGoalsFor,
+      gdGoalsAgainst: avgGdGoalsAgainst,
+      gkGoalsAgainst: avgGkGoalsAgainst,
+      gamesWithQuarterData
+    };
+  });
+}

@@ -1,12 +1,11 @@
-import { BaseWidget } from '@/components/ui/base-widget';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Link } from 'wouter';
 import { Game, Opponent } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { GameBadge } from '@/components/ui/game-badge';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { StandardWidget } from '@/components/ui/standard-widget';
 import { useClub } from '@/contexts/ClubContext';
 
 interface UpcomingGamesProps {
@@ -22,52 +21,10 @@ interface UpcomingGamesProps {
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
   const { currentTeam } = useClub();
 
-  console.log('UpcomingGames render:', {
-    totalGames: games?.length || 0,
-    currentTeamId: currentTeam?.id,
-    gamesArray: games?.slice(0, 3).map(g => ({
-      id: g.id,
-      date: g.date,
-      homeTeam: g.homeTeamName,
-      awayTeam: g.awayTeamName,
-      statusIsCompleted: g.statusIsCompleted,
-      homeTeamId: g.homeTeamId,
-      awayTeamId: g.awayTeamId
-    }))
-  });
-
-  // Filter for upcoming games using the new status system - include BYE games
+  // Filter for upcoming games
   const upcomingGames = games
     .filter(game => {
-      // Debug specific game
-      const isTargetGame = game.id === 108;
-      if (isTargetGame) {
-        console.log('Processing Game 108:', {
-          id: game.id,
-          date: game.date,
-          homeTeamId: game.homeTeamId,
-          awayTeamId: game.awayTeamId,
-          homeTeamName: game.homeTeamName,
-          awayTeamName: game.awayTeamName,
-          statusIsCompleted: game.statusIsCompleted,
-          isBye: game.isBye,
-          statusName: game.statusName,
-          currentTeamId: currentTeam?.id
-        });
-      }
-
-      // First check if this game involves the current team
-      const currentTeamId = currentTeam?.id;
-      if (currentTeamId) {
-        const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
-        if (!isTeamGame) {
-          if (isTargetGame) console.log('Game 108 filtered out: not team game');
-          return false;
-        }
-        if (isTargetGame) console.log('Game 108 passed: is team game');
-      }
-
-      // Only filter by completion status - include both regular games and BYEs that aren't completed
+      // Check if game is completed
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
@@ -111,58 +68,57 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
   };
 
   return (
-    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl border-0 shadow-lg ${className}`}>
-      <div className="px-6 py-6">
-        <h3 className="text-xl font-semibold mb-4">Upcoming Games</h3>
-
-        {upcomingGames.length > 0 ? (
-          <div className="space-y-6">
-            {upcomingGames.map((game, index) => (
-              <Link key={game.id} href={currentTeam?.id ? `/team/${currentTeam.id}/games/${game.id}` : `/game/${game.id}`}>
-                <div className={`flex justify-between items-center p-4 mb-6 mt-2 border-l-4 border-t border-r border-b rounded cursor-pointer hover:bg-blue-100 transition-colors ${
-                    index === 0 ? 'border-blue-500 bg-blue-50 border-t-blue-500 border-r-blue-500 border-b-blue-500' : 'border-blue-400 bg-blue-50 border-t-blue-400 border-r-blue-400 border-b-blue-400'
-                  }`}
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800">{getOpponentName(game)}</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-700">{formatShortDate(game.date)} • {game.time}</p>
-                      {game.round && (
-                        <GameBadge variant="round">
-                          Round {game.round}
-                        </GameBadge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {game.statusIsCompleted ? (
-                      <GameScoreDisplay gameId={game.id} compact={true} fallback="—" />
-                    ) : (
-                      <span className="text-sm text-gray-500">—</span>
+    <StandardWidget 
+      title="Upcoming Games"
+      className={className}
+    >
+      {upcomingGames.length > 0 ? (
+        <div className="space-y-4">
+          {upcomingGames.map((game, index) => (
+            <Link key={game.id} href={currentTeam?.id ? `/team/${currentTeam.id}/games/${game.id}` : `/game/${game.id}`}>
+              <div className={`flex justify-between items-center p-4 border-l-4 border-t border-r border-b rounded cursor-pointer hover:bg-blue-100 transition-colors ${
+                  index === 0 ? 'border-blue-500 bg-blue-50 border-t-blue-500 border-r-blue-500 border-b-blue-500' : 'border-blue-400 bg-blue-50 border-t-blue-400 border-r-blue-400 border-b-blue-400'
+                }`}
+              >
+                <div>
+                  <p className="font-semibold text-gray-800">{getOpponentName(game)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-700">{formatShortDate(game.date)} • {game.time}</p>
+                    {game.round && (
+                      <GameBadge variant="round">
+                        Round {game.round}
+                      </GameBadge>
                     )}
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6">
-            <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
-            <Link href={currentTeam ? `/team/${currentTeam.id}/games` : "/games"} className="text-accent hover:underline">
-              Go to Games List
+                <div className="text-right">
+                  {game.statusIsCompleted ? (
+                    <GameScoreDisplay gameId={game.id} compact={true} fallback="—" />
+                  ) : (
+                    <span className="text-sm text-gray-500">—</span>
+                  )}
+                </div>
+              </div>
             </Link>
-          </div>
-        )}
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6">
+          <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
+          <Link href={currentTeam ? `/team/${currentTeam.id}/games` : "/games"} className="text-accent hover:underline">
+            Go to Games List
+          </Link>
+        </div>
+      )}
 
-        {upcomingGames.length > 5 ? (
-          <ViewMoreButton href={currentTeam?.id ? `/team/${currentTeam.id}/games?status=upcoming` : "/games?status=upcoming"}>
-            View more →
-          </ViewMoreButton>
-        ) : (
-          <div className="mb-4" />
-        )}
-      </div>
-    </div>
+      {upcomingGames.length > 5 ? (
+        <ViewMoreButton href={currentTeam?.id ? `/team/${currentTeam.id}/games?status=upcoming` : "/games?status=upcoming"}>
+          View more →
+        </ViewMoreButton>
+      ) : (
+        <div className="mb-4" />
+      )}
+    </StandardWidget>
   );
 }
 
