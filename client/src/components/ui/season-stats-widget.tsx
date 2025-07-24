@@ -66,7 +66,7 @@ export function SeasonStatsWidget({
   console.log(`📊 Total goals: ${totalGoalsFor} for, ${totalGoalsAgainst} against (${goalDifference > 0 ? '+' : ''}${goalDifference})`);
 
   return (
-    <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-gray-50", className)}>
+    <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-white", className)}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">

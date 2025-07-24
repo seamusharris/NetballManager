@@ -475,15 +475,7 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Team Performance Metrics - Simplified for now */}
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle>Team Performance Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Performance metrics will be added here later.</p>
-                </CardContent>
-              </Card>
+
             </TabsContent>
 
             <TabsContent value="recent" className="space-y-8">

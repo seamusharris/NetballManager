@@ -107,7 +107,7 @@ export function CompactAttackDefenseWidget({
   console.log(`  Defense: GK=${(positionTotals.gkAvgGoalsAgainst / positionTotals.defendingPositionsTotal * 100).toFixed(1)}% GD=${(positionTotals.gdAvgGoalsAgainst / positionTotals.defendingPositionsTotal * 100).toFixed(1)}%`);
 
   return (
-    <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-gray-50", className)}>
+    <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-white", className)}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Attack Column */}
         <div className="space-y-4">

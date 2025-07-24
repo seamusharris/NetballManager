@@ -44,7 +44,7 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
   });
 
   return (
-    <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-gray-50", className)}>
+    <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-white", className)}>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {quarterPerformanceData.map(({ quarter, avgTeamScore, avgOpponentScore, gamesWithData }) => {
           const isWinning = avgTeamScore > avgOpponentScore;
