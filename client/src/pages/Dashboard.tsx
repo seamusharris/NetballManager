@@ -676,6 +676,7 @@ export default function Dashboard() {
                 <QuarterPerformanceAnalysisWidget
                   games={recentGamesWithStatistics}
                   batchScores={batchScores}
+                  batchStats={recentBatchStats}
                   currentTeamId={teamIdFromUrl ?? 0}
                   className="w-full"
                 />
@@ -760,6 +761,7 @@ export default function Dashboard() {
                 <QuarterPerformanceAnalysisWidget
                   games={opponentGamesWithStatistics}
                   batchScores={batchScores}
+                  batchStats={opponentBatchStats}
                   currentTeamId={teamIdFromUrl ?? 0}
                   className="w-full"
                 />
