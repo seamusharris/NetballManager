@@ -124,6 +124,8 @@ export default function Dashboard() {
     false
   );
 
+
+
   // Fetch batch scores for all season games with statistics enabled
   const { data: batchScores = {}, isLoading: isLoadingScores } = useQuery<Record<number, any[]>>({
     queryKey: ['batch-scores', allSeasonGamesWithStatistics.map(game => game.id).join(',')],
@@ -194,6 +196,36 @@ export default function Dashboard() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
   }, [gamesWithQuarterScores]);
+
+  // Get recent games with statistics for widgets (last 5 games with stats)
+  const recentGamesWithStatistics = useMemo(() => {
+    return gamesWithQuarterScores
+      .filter(game => game.status === 'completed' && game.statusAllowsStatistics)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5)
+      .map(game => ({
+        ...game,
+        status: 'completed' // Add the status field that the calculators expect
+      }));
+  }, [gamesWithQuarterScores]);
+
+  // Get recent games with position stats for attack/defense widget
+  const recentGamesWithPositionStats = useMemo(() => {
+    return gamesWithQuarterScores
+      .filter(game => game.status === 'completed' && game.statusAllowsStatistics)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5)
+      .map(game => ({
+        ...game,
+        status: 'completed' // Add the status field that the calculators expect
+      }));
+  }, [gamesWithQuarterScores]);
+
+  // Fetch batch statistics for recent games with position stats
+  const { statsMap: recentBatchStats, isLoading: isLoadingRecentStats } = useBatchGameStatistics(
+    recentGamesWithPositionStats.map(game => game.id),
+    false
+  );
 
   // Quick debug of data sources
   console.log('🔍 QUICK DEBUG - Data Sources:');
@@ -568,6 +600,43 @@ export default function Dashboard() {
                   />
                 </CardContent>
               </Card>
+
+              {/* Recent Quarter Performance Analysis Widget */}
+              {recentGamesWithStatistics.length > 0 && (
+                <QuarterPerformanceAnalysisWidget
+                  games={recentGamesWithStatistics}
+                  batchScores={batchScores}
+                  currentTeamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
+              {/* Recent Compact Attack Defense Widget */}
+              {recentGamesWithPositionStats.length > 0 && (
+                <CompactAttackDefenseWidget
+                  games={recentGamesWithPositionStats}
+                  batchScores={batchScores}
+                  batchStats={recentBatchStats}
+                  teamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
+              {/* Fallback: Show message if no recent games with stats */}
+              {recentGamesWithStatistics.length === 0 && recentGamesWithPositionStats.length === 0 && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Recent Performance Analysis</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-500 text-center py-8">
+                        No recent completed games with statistics available for analysis.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="opponent" className="space-y-8">
