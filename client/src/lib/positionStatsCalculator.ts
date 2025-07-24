@@ -946,34 +946,30 @@ export function calculateQuarterAverages(
     let gamesWithData = 0;
 
     games.forEach(game => {
-      // Skip special status games if requested
-      if (excludeSpecialGames && (
-        game.statusName === 'bye' || 
-        game.statusName === 'forfeit-win' || 
-        game.statusName === 'forfeit-loss'
-      )) return;
+      // Use the same filtering logic as season statistics method
+      if (game.status === 'completed' && game.statusAllowsStatistics === true) {
+        const gameScores = batchScores?.[game.id] || [];
+        const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+          id: score.id,
+          gameId: score.gameId,
+          teamId: score.teamId,
+          quarter: score.quarter,
+          score: score.score,
+          enteredBy: score.enteredBy,
+          enteredAt: score.enteredAt,
+          updatedAt: score.updatedAt,
+          notes: score.notes
+        })) : [];
 
-      const gameScores = batchScores?.[game.id] || [];
-      const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-        id: score.id,
-        gameId: score.gameId,
-        teamId: score.teamId,
-        quarter: score.quarter,
-        score: score.score,
-        enteredBy: score.enteredBy,
-        enteredAt: score.enteredAt,
-        updatedAt: score.updatedAt,
-        notes: score.notes
-      })) : [];
+        const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+        const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
-      const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
-      const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+        totalTeamScore += quarterTeamScore;
+        totalOpponentScore += quarterOpponentScore;
 
-      totalTeamScore += quarterTeamScore;
-      totalOpponentScore += quarterOpponentScore;
-
-      if(quarterTeamScore > 0 || quarterOpponentScore > 0){
-        gamesWithData++;
+        if(quarterTeamScore > 0 || quarterOpponentScore > 0){
+          gamesWithData++;
+        }
       }
     });
 
@@ -1126,7 +1122,7 @@ export function calculateUnifiedQuarterByQuarterStats(
     console.warn('⚠️ - This may indicate missing batchStats data or no recorded position statistics');
   } else if (positionStatsAnalysis.forCurrentTeam === 0) {
     console.warn(`⚠️ WARNING: No position statistics found for team ${currentTeamId}, will use 50/50 fallback distribution`);
-    console.warn('⚠️ - Available team IDs in stats:', [...new Set(allPositionStats.map(s => s.teamId))]);
+    console.warn('⚠️ - Available team IDs in stats:', Array.from(new Set(allPositionStats.map(s => s.teamId))));
   }
   
   try {
@@ -1280,4 +1276,221 @@ export function calculateUnifiedQuarterByQuarterStats(
     console.error('❌ ERROR: Exception in calculateUnifiedQuarterByQuarterStats:', error);
     return createEmptyQuarterStats();
   }
+}
+
+/**
+ * Calculate season averages from all games using consistent filtering
+ */
+export function calculateSeasonAverages(
+  games: any[],
+  batchScores: Record<number, any[]>,
+  teamId: number
+): { avgGoalsFor: number; avgGoalsAgainst: number; gamesWithStats: number } {
+  let totalGoalsFor = 0;
+  let totalGoalsAgainst = 0;
+  let gamesWithStats = 0;
+
+  games.forEach(game => {
+    // Use consistent filtering across all widgets
+    if (game.status === 'completed' && game.statusAllowsStatistics === true) {
+      const gameScores = batchScores?.[game.id] || [];
+      
+      if (gameScores.length > 0) {
+        gamesWithStats++;
+        
+        // Calculate total goals for this game
+        let gameGoalsFor = 0;
+        let gameGoalsAgainst = 0;
+        
+        gameScores.forEach(score => {
+          if (score.teamId === teamId) {
+            gameGoalsFor += score.score;
+          } else {
+            gameGoalsAgainst += score.score;
+          }
+        });
+        
+        totalGoalsFor += gameGoalsFor;
+        totalGoalsAgainst += gameGoalsAgainst;
+      }
+    }
+  });
+
+  const avgGoalsFor = gamesWithStats > 0 ? totalGoalsFor / gamesWithStats : 0;
+  const avgGoalsAgainst = gamesWithStats > 0 ? totalGoalsAgainst / gamesWithStats : 0;
+
+  return { avgGoalsFor, avgGoalsAgainst, gamesWithStats };
+}
+
+/**
+ * Calculate quarter proportions from quarter averages
+ */
+export function calculateQuarterProportions(
+  quarterAverages: { quarter: number; avgTeamScore: number; avgOpponentScore: number; gamesWithData: number }[]
+): { quarterProportions: Record<number, { attack: number; defense: number }>; totalQuarterScores: number; totalQuarterDefense: number } {
+  const totalQuarterScores = quarterAverages.reduce((sum, q) => sum + q.avgTeamScore, 0);
+  const totalQuarterDefense = quarterAverages.reduce((sum, q) => sum + q.avgOpponentScore, 0);
+
+  const quarterProportions: Record<number, { attack: number; defense: number }> = {};
+
+  quarterAverages.forEach(({ quarter, avgTeamScore, avgOpponentScore }) => {
+    const attackProportion = totalQuarterScores > 0 ? avgTeamScore / totalQuarterScores : 0.25;
+    const defenseProportion = totalQuarterDefense > 0 ? avgOpponentScore / totalQuarterDefense : 0.25;
+    
+    quarterProportions[quarter] = { attack: attackProportion, defense: defenseProportion };
+  });
+
+  return { quarterProportions, totalQuarterScores, totalQuarterDefense };
+}
+
+/**
+ * Distribute season averages proportionally across quarters
+ */
+export function distributeSeasonAveragesToQuarters(
+  seasonAverages: { avgGoalsFor: number; avgGoalsAgainst: number },
+  quarterAverages: { quarter: number; avgTeamScore: number; avgOpponentScore: number; gamesWithData: number }[],
+  batchStats: Record<number, any[]> | undefined,
+  games: any[],
+  teamId: number
+): {
+  quarterData: Array<{
+    quarter: number;
+    gsGoalsFor: number;
+    gaGoalsFor: number;
+    gkGoalsAgainst: number;
+    gdGoalsAgainst: number;
+    gamesWithQuarterData: number;
+  }>;
+  positionTotals: {
+    gsAvgGoalsFor: number;
+    gaAvgGoalsFor: number;
+    gkAvgGoalsAgainst: number;
+    gdAvgGoalsAgainst: number;
+    attackingPositionsTotal: number;
+    defendingPositionsTotal: number;
+  };
+} {
+  const { quarterProportions, totalQuarterScores, totalQuarterDefense } = calculateQuarterProportions(quarterAverages);
+
+  const quarterData = quarterAverages.map(({ quarter, avgTeamScore, avgOpponentScore, gamesWithData }) => {
+    // Calculate quarter-specific position percentages from game stats
+    let qGsGoals = 0, qGaGoals = 0, qGkGoals = 0, qGdGoals = 0;
+
+    if (batchStats) {
+      games.forEach(game => {
+        if (game.status === 'completed' && game.statusAllowsStatistics === true) {
+          const gameStats = batchStats[game.id] || [];
+          const quarterTeamStats = gameStats.filter(stat => 
+            stat.teamId === teamId && stat.quarter === quarter
+          );
+          
+          quarterTeamStats.forEach(stat => {
+            if (stat.position === 'GS') qGsGoals += stat.goalsFor || 0;
+            if (stat.position === 'GA') qGaGoals += stat.goalsFor || 0;
+            if (stat.position === 'GK') qGkGoals += stat.goalsAgainst || 0;
+            if (stat.position === 'GD') qGdGoals += stat.goalsAgainst || 0;
+          });
+        }
+      });
+    }
+
+    // Calculate quarter-specific percentages (default to 50/50 if no data)
+    const qAttackTotal = qGsGoals + qGaGoals;
+    const qDefenseTotal = qGkGoals + qGdGoals;
+    
+    const qGsPercentage = qAttackTotal > 0 ? qGsGoals / qAttackTotal : 0.5;
+    const qGaPercentage = qAttackTotal > 0 ? qGaGoals / qAttackTotal : 0.5;
+    const qGkPercentage = qDefenseTotal > 0 ? qGkGoals / qDefenseTotal : 0.5;
+    const qGdPercentage = qDefenseTotal > 0 ? qGdGoals / qDefenseTotal : 0.5;
+
+    // Calculate proportional quarter averages from season averages
+    const quarterAttackProportion = quarterProportions[quarter].attack;
+    const quarterDefenseProportion = quarterProportions[quarter].defense;
+    
+    const proportionalAttackAverage = seasonAverages.avgGoalsFor * quarterAttackProportion;
+    const proportionalDefenseAverage = seasonAverages.avgGoalsAgainst * quarterDefenseProportion;
+
+    // Apply position percentages to proportional quarter averages
+    const gsGoalsFor = proportionalAttackAverage * qGsPercentage;
+    const gaGoalsFor = proportionalAttackAverage * qGaPercentage;
+    const gkGoalsAgainst = proportionalDefenseAverage * qGkPercentage;
+    const gdGoalsAgainst = proportionalDefenseAverage * qGdPercentage;
+
+    return {
+      quarter,
+      gsGoalsFor: Math.round(gsGoalsFor * 10) / 10,
+      gaGoalsFor: Math.round(gaGoalsFor * 10) / 10,
+      gkGoalsAgainst: Math.round(gkGoalsAgainst * 10) / 10,
+      gdGoalsAgainst: Math.round(gdGoalsAgainst * 10) / 10,
+      gamesWithQuarterData: gamesWithData
+    };
+  });
+
+  // Calculate position totals
+  const totalGsFromQuarters = quarterData.reduce((sum, q) => sum + q.gsGoalsFor, 0);
+  const totalGaFromQuarters = quarterData.reduce((sum, q) => sum + q.gaGoalsFor, 0);
+  const totalGkFromQuarters = quarterData.reduce((sum, q) => sum + q.gkGoalsAgainst, 0);
+  const totalGdFromQuarters = quarterData.reduce((sum, q) => sum + q.gdGoalsAgainst, 0);
+
+  const positionTotals = {
+    gsAvgGoalsFor: totalGsFromQuarters,
+    gaAvgGoalsFor: totalGaFromQuarters,
+    gkAvgGoalsAgainst: totalGkFromQuarters,
+    gdAvgGoalsAgainst: totalGdFromQuarters,
+    attackingPositionsTotal: totalGsFromQuarters + totalGaFromQuarters,
+    defendingPositionsTotal: totalGkFromQuarters + totalGdFromQuarters
+  };
+
+  return { quarterData, positionTotals };
+}
+
+/**
+ * Calculate consistent quarter performance data for all widgets
+ */
+export function calculateConsistentQuarterPerformance(
+  games: any[],
+  batchScores: Record<number, any[]>,
+  batchStats: Record<number, any[]> | undefined,
+  teamId: number
+): {
+  seasonAverages: { avgGoalsFor: number; avgGoalsAgainst: number; gamesWithStats: number };
+  quarterAverages: { quarter: number; avgTeamScore: number; avgOpponentScore: number; gamesWithData: number }[];
+  quarterData: Array<{
+    quarter: number;
+    gsGoalsFor: number;
+    gaGoalsFor: number;
+    gkGoalsAgainst: number;
+    gdGoalsAgainst: number;
+    gamesWithQuarterData: number;
+  }>;
+  positionTotals: {
+    gsAvgGoalsFor: number;
+    gaAvgGoalsFor: number;
+    gkAvgGoalsAgainst: number;
+    gdAvgGoalsAgainst: number;
+    attackingPositionsTotal: number;
+    defendingPositionsTotal: number;
+  };
+} {
+  // Calculate season averages using consistent filtering
+  const seasonAverages = calculateSeasonAverages(games, batchScores, teamId);
+  
+  // Calculate quarter averages using consistent filtering
+  const quarterAverages = calculateQuarterAverages(games, batchScores, teamId, true);
+  
+  // Distribute season averages to quarters
+  const { quarterData, positionTotals } = distributeSeasonAveragesToQuarters(
+    seasonAverages,
+    quarterAverages,
+    batchStats,
+    games,
+    teamId
+  );
+
+  return {
+    seasonAverages,
+    quarterAverages,
+    quarterData,
+    positionTotals
+  };
 }

@@ -7,6 +7,7 @@ import { apiRequest, apiClient } from '@/lib/apiClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { getCompletedGamesForStats } from '@/lib/gameFilters';
 import { useClub } from '@/contexts/ClubContext';
+import { calculateConsistentQuarterPerformance } from '../../lib/positionStatsCalculator';
 
 interface QuarterPerformanceWidgetProps {
   games: Game[];
@@ -14,6 +15,8 @@ interface QuarterPerformanceWidgetProps {
   activeSeason?: any;
   selectedSeason?: any;
   currentTeamId?: number;
+  batchScores?: Record<number, any[]>;
+  batchStats?: Record<number, any[]>;
 }
 
 export default function QuarterPerformanceWidget({ 
@@ -21,7 +24,9 @@ export default function QuarterPerformanceWidget({
   className, 
   activeSeason, 
   selectedSeason,
-  currentTeamId 
+  currentTeamId,
+  batchScores = {},
+  batchStats
 }: QuarterPerformanceWidgetProps) {
   const { currentClubId } = useClub();
   const [quarterPerformance, setQuarterPerformance] = useState<{
@@ -32,154 +37,29 @@ export default function QuarterPerformanceWidget({
     avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 }
   });
 
-  // Get games valid for statistics - memoize to prevent infinite re-renders
-  const validGameIds = useMemo(() => {
-    // Filter for completed games that allow statistics
-    const validGames = getCompletedGamesForStats(games);
+  // Use utility function for consistent calculations with actual data
+  const { seasonAverages, quarterAverages } = calculateConsistentQuarterPerformance(
+    games,
+    batchScores, // Use actual batchScores
+    batchStats, // Use actual batchStats
+    currentTeamId
+  );
 
-    console.log('QuarterPerformanceWidget valid games:', validGames.length, 'out of', games.length);
-    return validGames.map(game => game.id);
-  }, [games]);
+  // Convert quarter averages to the format expected by the widget
+  const avgTeamScoreByQuarter: Record<number, number> = {};
+  const avgOpponentScoreByQuarter: Record<number, number> = {};
 
-  const enableQuery = validGameIds.length > 0;
-
-  const seasonId = selectedSeason?.id || 'current';
-  const gameIdsKey = validGameIds.join(',');
-
-  // Fetch scores for all valid games (we need scores, not stats, for quarter performance)
-  const { data: gameScoresMap, isLoading } = useQuery({
-    queryKey: ['quarterPerformanceScores', gameIdsKey, seasonId],
-    queryFn: async () => {
-      if (validGameIds.length === 0) {
-        return {};
-      }
-
-      try {
-        // Use the club-scoped batch scores endpoint
-        console.log(`QuarterPerformanceWidget: Fetching batch scores for game IDs:`, validGameIds);
-
-        const batchScores = await apiClient.post(`/api/clubs/${currentClubId}/games/scores/batch`, {
-          gameIds: validGameIds
-        });
-
-        console.log('QuarterPerformanceWidget: Received batch scores:', batchScores);
-
-        // Check if we got valid data
-        if (batchScores && typeof batchScores === 'object') {
-          console.log(`QuarterPerformanceWidget: Successfully received batch scores:`, Object.keys(batchScores));
-          return batchScores;
-        }
-
-        console.warn('QuarterPerformanceWidget: Batch scores endpoint returned invalid data');
-        return {};
-      } catch (error) {
-        console.warn("QuarterPerformanceWidget: Batch scores endpoint failed:", error);
-        return {};
-      }
-    },
-    enabled: enableQuery && !!currentClubId,
-    staleTime: 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000
+  quarterAverages.forEach(({ quarter, avgTeamScore, avgOpponentScore }) => {
+    avgTeamScoreByQuarter[quarter] = avgTeamScore;
+    avgOpponentScoreByQuarter[quarter] = avgOpponentScore;
   });
 
-  // Calculate quarter performance metrics
   useEffect(() => {
-    if (!gameScoresMap || isLoading || validGameIds.length === 0) return;
-
-    console.log('QuarterPerformanceWidget: Processing scores map:', {
-      totalGames: validGameIds.length,
-      scoresMapKeys: Object.keys(gameScoresMap),
-      sampleData: Object.keys(gameScoresMap).slice(0, 2).map(key => ({
-        gameId: key,
-        scoresCount: gameScoresMap[key]?.length || 0,
-        firstScore: gameScoresMap[key]?.[0]
-      }))
-    });
-
-    const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
-      1: { team: 0, opponent: 0, count: 0 },
-      2: { team: 0, opponent: 0, count: 0 },
-      3: { team: 0, opponent: 0, count: 0 },
-      4: { team: 0, opponent: 0, count: 0 }
-    };
-
-    validGameIds.forEach(gameId => {
-      const gameScores = gameScoresMap[gameId];
-      console.log(`QuarterPerformanceWidget processing game ${gameId}:`, gameScores ? `${gameScores.length} scores` : 'no scores');
-
-      // Skip if no data available
-      if (!gameScores || gameScores.length === 0) return;
-
-      // Find the current team ID from the games array
-      const game = games.find(g => g.id === gameId);
-      if (!game) return;
-
-      // Determine which team is "our" team based on the current team context
-      let ourTeamId;
-      let opponentTeamId;
-
-      if (currentTeamId) {
-        // Use the provided current team ID to determine our team vs opponent
-        ourTeamId = currentTeamId;
-        opponentTeamId = game.home_team_id === currentTeamId ? game.away_team_id : game.home_team_id;
-      } else {
-        // Fallback: try to determine from game structure
-        console.warn('QuarterPerformanceWidget: No currentTeamId provided, using fallback logic');
-        ourTeamId = game.home_team_id;
-        opponentTeamId = game.away_team_id;
-      }
-
-      // Group scores by quarter for this game
-      const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
-        1: { team: 0, opponent: 0 },
-        2: { team: 0, opponent: 0 },
-        3: { team: 0, opponent: 0 },
-        4: { team: 0, opponent: 0 }
-      };
-
-      // Process each score entry
-      gameScores.forEach(scoreEntry => {
-        if (scoreEntry.quarter < 1 || scoreEntry.quarter > 4) return;
-        const quarter = scoreEntry.quarter;
-
-        if (scoreEntry.teamId === ourTeamId) {
-          gameQuarterScores[quarter].team += scoreEntry.score || 0;
-        } else if (scoreEntry.teamId === opponentTeamId) {
-          gameQuarterScores[quarter].opponent += scoreEntry.score || 0;
-        }
-      });
-
-      // Add to overall totals
-      Object.keys(gameQuarterScores).forEach(quarterStr => {
-        const quarter = parseInt(quarterStr);
-        const quarterScore = gameQuarterScores[quarter];
-        quarterScores[quarter].team += quarterScore.team;
-        quarterScores[quarter].opponent += quarterScore.opponent;
-        quarterScores[quarter].count += 1;
-      });
-    });
-
-    const avgTeamScoreByQuarter: Record<number, number> = {};
-    const avgOpponentScoreByQuarter: Record<number, number> = {};
-
-    Object.keys(quarterScores).forEach(quarterStr => {
-      const quarter = parseInt(quarterStr);
-      const count = quarterScores[quarter].count || 1;
-      avgTeamScoreByQuarter[quarter] = Math.round((quarterScores[quarter].team / count) * 10) / 10;
-      avgOpponentScoreByQuarter[quarter] = Math.round((quarterScores[quarter].opponent / count) * 10) / 10;
-    });
-
-    console.log('QuarterPerformanceWidget: Calculated averages:', {
-      avgTeamScoreByQuarter,
-      avgOpponentScoreByQuarter,
-      totalGamesProcessed: quarterScores[1].count
-    });
-
     setQuarterPerformance({
       avgTeamScoreByQuarter,
       avgOpponentScoreByQuarter
     });
-  }, [gameScoresMap, isLoading, validGameIds, games]);
+  }, [quarterAverages]);
 
   // Calculate which quarter is strongest/weakest
   const quarterDiffs = Object.keys(quarterPerformance.avgTeamScoreByQuarter).map(quarter => {

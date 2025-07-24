@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { calculateQuarterAverages } from '@/lib/positionStatsCalculator';
+import { calculateConsistentQuarterPerformance } from '@/lib/positionStatsCalculator';
 
 interface QuarterPerformanceAnalysisProps {
   games: any[];
   currentTeamId: number;
   batchScores?: Record<number, any[]>;
+  batchStats?: Record<number, any[]>;
   className?: string;
   excludeSpecialGames?: boolean; // Skip BYE and forfeit games
 }
@@ -15,15 +16,57 @@ export default function QuarterPerformanceAnalysis({
   games,
   currentTeamId,
   batchScores,
+  batchStats,
   className = "",
   excludeSpecialGames = true
 }: QuarterPerformanceAnalysisProps) {
-  // Use shared utility for quarter calculations
-  const quarterAverages = calculateQuarterAverages(games, batchScores, currentTeamId, excludeSpecialGames);
+  // Debug input data
+  console.log('🔍 QuarterPerformanceAnalysis INPUT DATA:');
+  console.log('🔍 games length:', games?.length);
+  console.log('🔍 currentTeamId:', currentTeamId);
+  console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
+  console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
+  console.log('🔍 Sample game:', games?.[0]);
+  console.log('🔍 Sample batchScores:', batchScores && Object.keys(batchScores).length > 0 ? batchScores[Object.keys(batchScores)[0]] : 'No data');
+
+  // Use consistent calculation method across all widgets
+  const { seasonAverages, quarterAverages, quarterData, positionTotals } = calculateConsistentQuarterPerformance(
+    games,
+    batchScores || {},
+    batchStats, // Now passing actual batchStats instead of undefined
+    currentTeamId
+  );
+
+  // Use quarterData instead of quarterAverages to match CompactAttackDefenseWidget
+  const quarterPerformanceData = quarterData.map(({ quarter, gsGoalsFor, gaGoalsFor, gkGoalsAgainst, gdGoalsAgainst }) => ({
+    quarter,
+    avgTeamScore: gsGoalsFor + gaGoalsFor, // Total goals scored (attack)
+    avgOpponentScore: gkGoalsAgainst + gdGoalsAgainst, // Total goals conceded (defense)
+    gamesWithData: 0 // Not used for display
+  }));
+
+  // Debug: Compare raw quarter averages vs distributed season averages
+  console.log('🔍 QUARTER CALCULATION COMPARISON:');
+  console.log('🔍 Season averages:', seasonAverages);
+  console.log('🔍 Using quarterData (should match CompactAttackDefenseWidget):');
+  quarterPerformanceData.forEach(({ quarter, avgTeamScore, avgOpponentScore }) => {
+    console.log(`🔍 Q${quarter}: ${avgTeamScore.toFixed(1)}-${avgOpponentScore.toFixed(1)}`);
+  });
+
+  // Debug: Show what the CompactAttackDefenseWidget would calculate
+  console.log('🔍 COMPACT WIDGET COMPARISON:');
+  console.log('🔍 This widget should show the SAME quarter values as CompactAttackDefenseWidget');
+
+  // Debug logging to verify calculations
+  console.log('🔍 QuarterPerformanceAnalysis - UPDATED CALCULATIONS:');
+  quarterPerformanceData.forEach(({ quarter, avgTeamScore, avgOpponentScore }) => {
+    const diff = avgTeamScore - avgOpponentScore;
+    console.log(`🔍 Q${quarter}: ${avgTeamScore.toFixed(1)}-${avgOpponentScore.toFixed(1)} = ${diff > 0 ? '+' : ''}${diff.toFixed(1)}`);
+  });
 
   return (
     <div className={`grid grid-cols-2 md:grid-cols-5 gap-4 ${className}`}>
-      {quarterAverages.map(({ quarter, avgTeamScore, avgOpponentScore, gamesWithData }) => {
+      {quarterPerformanceData.map(({ quarter, avgTeamScore, avgOpponentScore, gamesWithData }) => {
 
         const isWinning = avgTeamScore > avgOpponentScore;
         const isLosing = avgTeamScore < avgOpponentScore;
@@ -60,7 +103,10 @@ export default function QuarterPerformanceAnalysis({
                 {avgTeamScore.toFixed(1)}–{avgOpponentScore.toFixed(1)}
               </div>
               <div className={`text-base ${getDiffTextColorClass()}`}>
-                {avgTeamScore - avgOpponentScore > 0 ? `+${(avgTeamScore - avgOpponentScore).toFixed(1)}` : (avgTeamScore - avgOpponentScore).toFixed(1)}
+                {(() => {
+                  const diff = avgTeamScore - avgOpponentScore;
+                  return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+                })()}
               </div>
 
               <div 
@@ -84,41 +130,16 @@ export default function QuarterPerformanceAnalysis({
 
       {/* Goal Difference Box - styled like quarter boxes */}
       {(() => {
-        // Calculate overall goal difference for styling
-        let totalGoalsFor = 0;
-        let totalGoalsAgainst = 0;
-        let gamesWithScores = 0;
+        // Calculate overall goal difference using consistent method
+        const { seasonAverages } = calculateConsistentQuarterPerformance(
+          games,
+          batchScores || {},
+          batchStats, // Now passing actual batchStats instead of undefined
+          currentTeamId
+        );
 
-        games.forEach(game => {
-          // Skip special status games if requested
-          if (excludeSpecialGames && (
-            game.statusName === 'bye' || 
-            game.statusName === 'forfeit-win' || 
-            game.statusName === 'forfeit-loss'
-          )) return;
-
-          const gameScores = batchScores?.[game.id] || [];
-          if (gameScores.length > 0) {
-            gamesWithScores++;
-
-            let gameGoalsFor = 0;
-            let gameGoalsAgainst = 0;
-
-            gameScores.forEach(score => {
-              if (score.teamId === currentTeamId) {
-                gameGoalsFor += score.score;
-              } else {
-                gameGoalsAgainst += score.score;
-              }
-            });
-
-            totalGoalsFor += gameGoalsFor;
-            totalGoalsAgainst += gameGoalsAgainst;
-          }
-        });
-
-        const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
-        const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
+        const avgGoalsFor = seasonAverages.avgGoalsFor;
+        const avgGoalsAgainst = seasonAverages.avgGoalsAgainst;
         const goalDifference = avgGoalsFor - avgGoalsAgainst;
 
         const isWinning = goalDifference > 0;
@@ -156,7 +177,10 @@ export default function QuarterPerformanceAnalysis({
                 {avgGoalsFor.toFixed(1)}–{avgGoalsAgainst.toFixed(1)}
               </div>
               <div className={`text-base ${getDiffTextColorClass()}`}>
-                {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                {(() => {
+                  const diff = avgGoalsFor - avgGoalsAgainst;
+                  return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+                })()}
               </div>
 
               <div 

@@ -402,9 +402,9 @@ export default function Dashboard() {
               {allSeasonGamesWithStatistics.length > 0 && (
                 <SeasonStatsWidget
                   games={allSeasonGamesWithStatistics}
+                  currentTeamId={teamIdFromUrl ?? 0}
                   batchScores={batchScores}
                   batchStats={batchStats}
-                  teamId={teamIdFromUrl ?? 0}
                   className="w-full"
                 />
               )}
@@ -430,6 +430,7 @@ export default function Dashboard() {
                     games={allSeasonGamesWithStatistics}
                     currentTeamId={teamIdFromUrl ?? 0}
                     batchScores={batchScores}
+                    batchStats={batchStats}
                     excludeSpecialGames={true}
                     className="w-full"
                   />
