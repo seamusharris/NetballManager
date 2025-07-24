@@ -1,6 +1,7 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Response, NextFunction } from "express";
 import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
+import type { AuthenticatedRequest } from './unified-auth';
 import { standardAuth, requireTeamGameAccess, AuthenticatedRequest } from "./auth-middleware";
 import { transformToApiFormat } from "./api-utils";
 import { storage } from "./storage";

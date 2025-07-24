@@ -1,8 +1,9 @@
 
-import { Express, Request, Response } from 'express';
+import { Express, Response, NextFunction } from 'express';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
-import { AuthenticatedRequest, requireClubAccess } from './auth-middleware';
+import type { AuthenticatedRequest } from './unified-auth';
+import { requireClubAccess } from './auth-middleware';
 import { z } from 'zod';
 
 const inviteUserSchema = z.object({

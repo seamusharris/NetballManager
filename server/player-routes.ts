@@ -1,6 +1,7 @@
 // server/player-routes.ts
 // New home for all /api/players endpoints (CRUD)
-import { Express } from 'express';
+import { Express, Response, NextFunction } from 'express';
+import type { AuthenticatedRequest } from './unified-auth';
 import { pool } from './db';
 import { storage } from './storage';
 import { createSuccessResponse, createErrorResponse, ErrorCodes } from './api-response-standards';
@@ -12,7 +13,7 @@ export function registerPlayerRoutes(app: Express) {
   console.log('🚀 Registering player routes...');
   
   // GET /api/clubs/:clubId/players
-  app.get('/api/clubs/:clubId/players', async (req, res) => {
+  app.get('/api/clubs/:clubId/players', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
       const clubId = parseInt(req.params.clubId);
       if (!clubId || isNaN(clubId)) {
@@ -32,7 +33,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // GET /api/players (legacy, club context from user)
-  app.get('/api/players', async (req: any, res) => {
+  app.get('/api/players', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
       const clubId = req.user?.currentClubId;
       if (!clubId) {
@@ -52,7 +53,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // POST /api/players
-  app.post('/api/players', async (req, res) => {
+  app.post('/api/players', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
       if (!clubId) {
@@ -99,7 +100,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // GET /api/players/:id
-  app.get('/api/players/:id', async (req, res) => {
+  app.get('/api/players/:id', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
       const player = await storage.getPlayer(Number(req.params.id));
       if (!player) {
@@ -118,7 +119,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // GET /api/players/:id/stats - Aggregated player stats with breakdowns
-  app.get('/api/players/:id/stats', async (req, res) => {
+  app.get('/api/players/:id/stats', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const playerId = parseInt(req.params.id, 10);
     const allowedGroups = ['season', 'team', 'club'] as const;
     let groupBy = req.query.groupBy ? String(req.query.groupBy).split(',') : [];
@@ -133,7 +134,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // PATCH /api/players/:id
-  app.patch('/api/players/:id', async (req, res) => {
+  app.patch('/api/players/:id', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
       const id = Number(req.params.id);
       const updateData = { ...req.body };
@@ -165,7 +166,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // DELETE /api/players/:id
-  app.delete('/api/players/:id', async (req, res) => {
+  app.delete('/api/players/:id', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deletePlayer(id);
@@ -185,7 +186,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // GET /api/players/:playerId/clubs - Get clubs for a player
-  app.get('/api/players/:playerId/clubs', async (req, res) => {
+  app.get('/api/players/:playerId/clubs', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     console.log('🔍 GET /api/players/:playerId/clubs endpoint hit!', {
       playerId: req.params.playerId,
       url: req.url,
@@ -216,7 +217,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // GET /api/players/:playerId/teams - Get teams for a player
-  app.get('/api/players/:playerId/teams', async (req, res) => {
+  app.get('/api/players/:playerId/teams', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     console.log('🔍 GET /api/players/:playerId/teams endpoint hit!', {
       playerId: req.params.playerId,
       url: req.url,
@@ -266,7 +267,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // POST /api/players/:playerId/teams - Update teams for a player
-  app.post('/api/players/:playerId/teams', async (req, res) => {
+  app.post('/api/players/:playerId/teams', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     console.log('🔥 POST /api/players/:playerId/teams endpoint hit!', {
       playerId: req.params.playerId,
       body: req.body,
@@ -365,7 +366,7 @@ export function registerPlayerRoutes(app: Express) {
   });
 
   // POST /api/players/:playerId/clubs - Update clubs for a player
-  app.post('/api/players/:playerId/clubs', async (req, res) => {
+  app.post('/api/players/:playerId/clubs', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     console.log('🔥 POST /api/players/:playerId/clubs endpoint hit!', {
       playerId: req.params.playerId,
       body: req.body,

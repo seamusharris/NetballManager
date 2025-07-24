@@ -1,4 +1,4 @@
-import type { Express, Response } from "express";
+import type { Express, Response, NextFunction } from "express";
 import { db, pool } from "./db";
 import { sql, eq, and } from "drizzle-orm";
 import { teams, teamPlayers, rosters } from "@shared/schema";
@@ -12,6 +12,7 @@ import { transformToApiFormat } from './api-utils';
 import snakecaseKeys from 'snakecase-keys';
 import camelcaseKeys from 'camelcase-keys';
 import { storage } from './storage';
+import type { AuthenticatedRequest } from './unified-auth';
 
 export function registerTeamRoutes(app: Express) {
   // Get all teams for a season

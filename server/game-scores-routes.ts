@@ -2,7 +2,8 @@ import { Express } from 'express';
 import { db, pool } from './db';
 import { gameScores, games } from '@shared/schema';
 import { eq, and, or, inArray, sql } from 'drizzle-orm';
-import { standardAuth, AuthenticatedRequest } from './auth-middleware';
+import type { AuthenticatedRequest } from './unified-auth';
+import { standardAuth } from './auth-middleware';
 import { transformToApiFormat } from './api-utils';
 import camelcaseKeys from 'camelcase-keys';
 
