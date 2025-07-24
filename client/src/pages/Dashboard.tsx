@@ -13,6 +13,7 @@ import { DynamicBreadcrumbs } from "@/components/layout/DynamicBreadcrumbs";
 import { CompactAttackDefenseWidget } from "@/components/ui/compact-attack-defense-widget";
 import QuarterPerformanceAnalysisWidget from "@/components/ui/quarter-performance-analysis-widget";
 import { SeasonStatsWidget } from "@/components/ui/season-stats-widget";
+import { StatsDebugTable } from "@/components/ui/stats-debug-table";
 import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
 import { useNextGame } from '@/hooks/use-next-game';
 import { processUnifiedGameData, calculateUnifiedQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
@@ -591,6 +592,17 @@ export default function Dashboard() {
               {/* Compact Attack Defense Widget */}
               {allSeasonGamesWithStatistics.length > 0 && averages && (
                 <CompactAttackDefenseWidget
+                  games={allSeasonGamesWithStatistics}
+                  batchScores={batchScores}
+                  batchStats={batchStats}
+                  teamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
+              {/* Stats Debug Table */}
+              {allSeasonGamesWithStatistics.length > 0 && (
+                <StatsDebugTable
                   games={allSeasonGamesWithStatistics}
                   batchScores={batchScores}
                   batchStats={batchStats}

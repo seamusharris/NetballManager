@@ -29,19 +29,21 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
   );
 
   // Use quarterData instead of quarterAverages to match CompactAttackDefenseWidget
-  const quarterPerformanceData = quarterData.map(({ quarter, gsGoalsFor, gaGoalsFor, gkGoalsAgainst, gdGoalsAgainst }) => ({
-    quarter,
-    avgTeamScore: Math.round((gsGoalsFor + gaGoalsFor) * 10) / 10, // Total goals scored (attack)
-    avgOpponentScore: Math.round((gkGoalsAgainst + gdGoalsAgainst) * 10) / 10, // Total goals conceded (defense)
-    gamesWithData: 0 // Not used for display
-  }));
+  const quarterPerformanceData = quarterData.map(({ quarter, gsGoalsFor, gaGoalsFor, gkGoalsAgainst, gdGoalsAgainst }) => {
+    const attackTotal = gsGoalsFor + gaGoalsFor;
+    const defenseTotal = gkGoalsAgainst + gdGoalsAgainst;
+    
 
-  // Debug logging to verify calculations
-  console.log('🔍 QuarterPerformanceAnalysisWidget - UPDATED CALCULATIONS:');
-  quarterPerformanceData.forEach(({ quarter, avgTeamScore, avgOpponentScore }) => {
-    const diff = avgTeamScore - avgOpponentScore;
-    console.log(`🔍 Q${quarter}: ${avgTeamScore.toFixed(1)}-${avgOpponentScore.toFixed(1)} = ${diff > 0 ? '+' : ''}${diff.toFixed(1)}`);
+    
+    return {
+      quarter,
+      avgTeamScore: Math.round(attackTotal * 10) / 10, // Total goals scored (attack)
+      avgOpponentScore: Math.round(defenseTotal * 10) / 10, // Total goals conceded (defense)
+      gamesWithData: 0 // Not used for display
+    };
   });
+
+
 
   return (
     <div className={cn("px-4 py-6 border-2 border-gray-200 rounded-lg bg-white", className)}>

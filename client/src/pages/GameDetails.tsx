@@ -1599,8 +1599,7 @@ export default function GameDetails() {
         </Breadcrumb>
       </div>
 
-        {/* Team Context Switcher */}
-        <TeamSwitcher />
+        
 
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
