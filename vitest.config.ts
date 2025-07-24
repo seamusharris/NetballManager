@@ -4,9 +4,13 @@ import { resolve } from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
-    include: ['tests/**/*.test.ts'],
+    include: [
+      'tests/**/*.test.ts',
+      'client/src/**/*.test.ts',
+      'client/src/**/*.test.tsx'
+    ],
     exclude: ['node_modules/**', 'dist/**'],
     coverage: {
       provider: 'v8',

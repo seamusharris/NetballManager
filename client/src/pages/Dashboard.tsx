@@ -778,6 +778,17 @@ export default function Dashboard() {
                 />
               )}
 
+              {/* Opponent Stats Debug Table */}
+              {opponentGamesWithStatistics.length > 0 && (
+                <StatsDebugTable
+                  games={opponentGamesWithStatistics}
+                  batchScores={batchScores}
+                  batchStats={opponentBatchStats}
+                  teamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
               {/* Fallback: Show message if no opponent games with stats */}
               {(!upcomingOpponent || (opponentGamesWithStatistics.length === 0 && opponentGamesWithPositionStats.length === 0)) && (
                 <div className="space-y-6">
