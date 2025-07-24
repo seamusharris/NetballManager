@@ -47,6 +47,7 @@ export default function RecentGamesWidget({
 
       return isCompleted;
     })
+    // Standardize: always reverse chronological for recent games
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, limit);
 

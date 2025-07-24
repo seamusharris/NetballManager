@@ -355,7 +355,14 @@ export function GamesList({
         comparison = roundA - roundB;
         break;
       case 'date':
-        comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
+        // Standardize: completed/recent games reverse chronological, upcoming games chronological
+        if (statusFilter === 'completed' || statusFilter === 'recent' || statusFilter === 'all' || statusFilter === 'season') {
+          comparison = new Date(b.date).getTime() - new Date(a.date).getTime(); // reverse chronological
+        } else if (statusFilter === 'upcoming') {
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime(); // chronological
+        } else {
+          comparison = new Date(b.date).getTime() - new Date(a.date).getTime(); // default to reverse chronological
+        }
         break;
       case 'opponent':
         const opponentA = opponents.find(opp => opp.id === a.opponentId)?.teamName || '';
@@ -368,7 +375,7 @@ export function GamesList({
         comparison = statusA.localeCompare(statusB);
         break;
       default:
-        comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
+        comparison = new Date(b.date).getTime() - new Date(a.date).getTime(); // default to reverse chronological
     }
 
     return sortDirection === 'asc' ? comparison : -comparison;

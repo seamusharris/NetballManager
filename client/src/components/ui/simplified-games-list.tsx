@@ -81,18 +81,19 @@ export default function SimplifiedGamesList({
     // Apply variant-specific filtering
     switch (variant) {
       case 'upcoming':
-        filteredGames = filteredGames.filter(game => game.status === 'scheduled' || game.status === 'upcoming');
+        filteredGames = filteredGames.filter(game => game.status === 'scheduled' || game.status === 'upcoming')
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // chronological
         break;
       case 'recent':
         filteredGames = filteredGames.filter(game => game.status === 'completed')
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // reverse chronological
         break;
       case 'season':
-        // Already filtered by caller, just sort by date
-        filteredGames = filteredGames.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        filteredGames = filteredGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // reverse chronological
         break;
       default:
-        // 'all', 'dashboard' - use games as provided
+        // 'all', 'dashboard' - use reverse chronological by default
+        filteredGames = filteredGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         break;
     }
     

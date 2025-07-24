@@ -100,12 +100,14 @@ export default function Dashboard() {
 
   // Get all completed games with statistics enabled for quarter performance widget
   const allSeasonGamesWithStatistics = useMemo(() => {
+    // Standardize: reverse chronological for completed games
     return completedGamesWithStatisticsEnabled
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [completedGamesWithStatisticsEnabled]);
 
   // Get all completed games with position stats for attack/defense widget
   const allSeasonGamesWithPositionStats = useMemo(() => {
+    // Standardize: reverse chronological for completed games
     return completedGamesWithPositionStats
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [completedGamesWithPositionStats]);
@@ -167,6 +169,7 @@ export default function Dashboard() {
 
   // Get the 5 most recent completed games for the games list display (ALL completed games, including forfeits)
   const recentCompletedGames = useMemo(() => {
+    // Standardize: reverse chronological for recent games
     return gamesWithQuarterScores
       .filter(game => game.status === 'completed')
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -175,6 +178,7 @@ export default function Dashboard() {
 
   // Get recent games with statistics for widgets (last 5 games with stats)
   const recentGamesWithStatistics = useMemo(() => {
+    // Standardize: reverse chronological for recent games
     return gamesWithQuarterScores
       .filter(game => game.status === 'completed' && game.statusAllowsStatistics)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -187,6 +191,7 @@ export default function Dashboard() {
 
   // Get recent games with position stats for attack/defense widget
   const recentGamesWithPositionStats = useMemo(() => {
+    // Standardize: reverse chronological for recent games
     return gamesWithQuarterScores
       .filter(game => game.status === 'completed' && game.statusAllowsStatistics)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -200,6 +205,7 @@ export default function Dashboard() {
   // Get games against upcoming opponent
   const gamesAgainstOpponent = useMemo(() => {
     if (!upcomingOpponent) return [];
+    // Standardize: reverse chronological for completed games
     return gamesWithQuarterScores
       .filter(game => {
         const isHomeTeam = teamIdFromUrl === game.homeTeam.id;

@@ -28,21 +28,10 @@ function UpcomingGames({ games, centralizedScoresMap, opponents, className, seas
       const isCompleted = game.statusIsCompleted === true || 
                          game.gameStatus?.isCompleted === true || 
                          game.completed === true;
-
-      if (game.id === 108) {
-        console.log('Game 108 final check:', {
-          date: game.date,
-          isCompleted,
-          statusIsCompleted: game.statusIsCompleted,
-          statusName: game.statusName,
-          isBye: game.isBye,
-          willShow: !isCompleted
-        });
-      }
-
       // Show all non-completed games (including BYEs)
       return !isCompleted;
     })
+    // Standardize: always chronological for upcoming games
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games
 

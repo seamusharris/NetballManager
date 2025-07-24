@@ -581,13 +581,6 @@ function calculateQuarterScoredAverages(
   batchScores: Record<number, any[]>,
   currentTeamId: number
 ): { quarter: number; average: number; gamesWithData: number }[] {
-
-    gamesLength: games?.length,
-    currentTeamId,
-    batchScoresAvailable: Object.keys(batchScores || {}).length,
-    sampleGameIds: games?.slice(0, 3).map(g => g.id || g.gameId)
-  });
-
   // Validation: Check inputs
   if (!games || !Array.isArray(games)) {
     console.error('❌ ERROR: Invalid games parameter in calculateQuarterScoredAverages:', games);
