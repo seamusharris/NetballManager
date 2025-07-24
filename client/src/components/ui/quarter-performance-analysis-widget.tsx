@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { calculateQuarterPositionBreakdowns, GameWithPositionStats, OfficialQuarterScore as BaseOfficialQuarterScore } from '@/lib/quarterBreakdownUtils';
+import { calculateQuarterPositionBreakdowns, GameWithPositionStats, OfficialQuarterScore as BaseOfficialQuarterScore, getConsistentStatsBreakdown } from '@/lib/quarterBreakdownUtils';
 
 export interface QuarterPerformanceAnalysisWidgetProps {
   games: any[];
@@ -77,46 +77,14 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
     return { quarter: `Q${qNum}`, for: forSum, against: againstSum, gamesWithData };
   });
 
+  // Use centralized, sum-matched breakdowns for all displayed values
+  const breakdown = getConsistentStatsBreakdown(gamesWithPositionStats, officialQuarterScores);
+
   // Debug logging for mapped data
-  console.log('[QuarterPerformanceAnalysisWidget] gamesWithPositionStats:', gamesWithPositionStats);
-  console.log('[QuarterPerformanceAnalysisWidget] officialQuarterScores:', officialQuarterScores);
+  console.log('[QuarterPerformanceAnalysisWidget] breakdown:', breakdown);
 
-  // Calculate per-quarter averages, always including every game (treat missing as zero)
-  const quarterAverages = [1,2,3,4].map(qNum => {
-    let sumFor = 0, sumAgainst = 0;
-    gamesWithPositionStats.forEach(g => {
-      const qStats = g.quarterStats[`Q${qNum}`] || { GS: 0, GA: 0, GK: 0, GD: 0 };
-      sumFor += (qStats.GS || 0) + (qStats.GA || 0);
-      sumAgainst += (qStats.GK || 0) + (qStats.GD || 0);
-    });
-    return {
-      quarter: `Q${qNum}`,
-      avgFor: sumFor / numGames,
-      avgAgainst: sumAgainst / numGames
-    };
-  });
-
-  // Calculate AVG card values (sum of quarter averages)
-  const avgCard = quarterAverages.reduce(
-    (acc, q) => {
-      acc.avgFor += q.avgFor;
-      acc.avgAgainst += q.avgAgainst;
-      return acc;
-    },
-    { avgFor: 0, avgAgainst: 0 }
-  );
-
-  // Strip gamesWithData before passing to the utility
-  const officialQuarterScoresForUtility = officialQuarterScores.map(q => ({ quarter: q.quarter, for: q.for, against: q.against }));
-
-  const { breakdowns, dataQuality } = calculateQuarterPositionBreakdowns(
-    gamesWithPositionStats,
-    officialQuarterScoresForUtility
-  );
-
-  // Debug logging for utility output
-  console.log('[QuarterPerformanceAnalysisWidget] breakdowns:', breakdowns);
-  console.log('[QuarterPerformanceAnalysisWidget] dataQuality:', dataQuality);
+  // Data quality indicator
+  const dataQuality = { gamesWithStats: games.length };
 
   return (
     <div className={cn('px-4 py-6 border-2 border-gray-200 rounded-lg bg-white', className)}>
@@ -125,10 +93,11 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Quarter cards */}
-        {quarterAverages.map(({ quarter, avgFor, avgAgainst }, idx) => {
-          const isWinning = avgFor > avgAgainst;
-          const isLosing = avgFor < avgAgainst;
-          const isDraw = Math.abs(avgFor - avgAgainst) < 0.1;
+        {breakdown.quarterFor.map((forVal, idx) => {
+          const againstVal = breakdown.quarterAgainst[idx];
+          const isWinning = forVal > againstVal;
+          const isLosing = forVal < againstVal;
+          const isDraw = Math.abs(forVal - againstVal) < 0.1;
           const getBackgroundClass = () => {
             if (isDraw) return 'bg-amber-100 border-amber-300';
             if (isWinning) return 'bg-green-100 border-green-300';
@@ -139,7 +108,7 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
             return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
           };
           return (
-            <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+            <div key={`Q${idx+1}`} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
               {/* Quarter badge in top-left corner */}
               <div className="absolute -top-2 -left-2">
                 <Badge 
@@ -149,16 +118,16 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
                     'bg-red-500 text-white border-red-600'
                   }`}
                 >
-                  {quarter}
+                  Q{idx+1}
                 </Badge>
               </div>
               <div className="space-y-1 mt-1">
                 <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
-                  {avgFor.toFixed(1)}–{avgAgainst.toFixed(1)}
+                  {forVal.toFixed(1)}–{againstVal.toFixed(1)}
                 </div>
                 <div className={`text-base ${getDiffTextColorClass()}`}>
                   {(() => {
-                    const diff = avgFor - avgAgainst;
+                    const diff = forVal - againstVal;
                     return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
                   })()}
                 </div>
@@ -172,7 +141,7 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
                       isLosing ? 'bg-red-500' : 'bg-amber-500'
                     }`}
                     style={{ 
-                      width: `${Math.min(100, Math.max(0, (avgFor / (avgFor + avgAgainst)) * 100))}%`
+                      width: `${Math.min(100, Math.max(0, (forVal / (forVal + againstVal)) * 100))}%`
                     }}
                   />
                 </div>
@@ -188,16 +157,16 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
           </div>
           <div className="space-y-1 mt-1">
             <div className="text-lg font-bold text-green-700">
-              {avgCard.avgFor.toFixed(1)}–{avgCard.avgAgainst.toFixed(1)}
+              {breakdown.totalFor.toFixed(1)}–{breakdown.totalAgainst.toFixed(1)}
             </div>
             <div className="text-base text-green-700 font-bold">
               {(() => {
-                const diff = avgCard.avgFor - avgCard.avgAgainst;
+                const diff = breakdown.totalFor - breakdown.totalAgainst;
                 return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
               })()}
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Sum of quarter averages">
-              <div className="h-2 rounded-full bg-green-500" style={{ width: `${Math.min(100, Math.max(0, (avgCard.avgFor / (avgCard.avgFor + avgCard.avgAgainst)) * 100))}%` }} />
+              <div className="h-2 rounded-full bg-green-500" style={{ width: `${Math.min(100, Math.max(0, (breakdown.totalFor / (breakdown.totalFor + breakdown.totalAgainst)) * 100))}%` }} />
             </div>
           </div>
         </div>

@@ -1,8 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { calculateQuarterPositionBreakdowns, GameWithPositionStats, OfficialQuarterScore as BaseOfficialQuarterScore } from '@/lib/quarterBreakdownUtils';
-import { adjustValuesToTotal } from '@/lib/roundingUtils';
+import { calculateQuarterPositionBreakdowns, GameWithPositionStats, OfficialQuarterScore as BaseOfficialQuarterScore, getConsistentStatsBreakdown } from '@/lib/quarterBreakdownUtils';
 
 interface CompactAttackDefenseWidgetProps {
   games: any[];
@@ -66,61 +65,14 @@ export function CompactAttackDefenseWidget({
     return { quarter: `Q${qNum}`, for: forSum, against: againstSum };
   });
 
+  // Use centralized, sum-matched breakdowns for all displayed values
+  const breakdown = getConsistentStatsBreakdown(gamesWithPositionStats, officialQuarterScores);
+
   // Debug logging for mapped data
-  console.log('[CompactAttackDefenseWidget] gamesWithPositionStats:', gamesWithPositionStats);
-  console.log('[CompactAttackDefenseWidget] officialQuarterScores:', officialQuarterScores);
-
-  // Calculate per-quarter and per-position averages (full precision)
-  let totalGS = 0, totalGA = 0, totalGK = 0, totalGD = 0;
-  let rawQuarterAverages: { quarter: string; GS: number; GA: number; GK: number; GD: number; attackTotal: number; defenseTotal: number }[] = [];
-  [1,2,3,4].forEach(qNum => {
-    let sumGS = 0, sumGA = 0, sumGK = 0, sumGD = 0;
-    gamesWithPositionStats.forEach(g => {
-      const qStats = g.quarterStats[`Q${qNum}`] || { GS: 0, GA: 0, GK: 0, GD: 0 };
-      sumGS += qStats.GS;
-      sumGA += qStats.GA;
-      sumGK += qStats.GK;
-      sumGD += qStats.GD;
-    });
-    totalGS += sumGS;
-    totalGA += sumGA;
-    totalGK += sumGK;
-    totalGD += sumGD;
-    rawQuarterAverages.push({
-      quarter: `Q${qNum}`,
-      GS: sumGS / numGames,
-      GA: sumGA / numGames,
-      GK: sumGK / numGames,
-      GD: sumGD / numGames,
-      attackTotal: (sumGS + sumGA) / numGames,
-      defenseTotal: (sumGK + sumGD) / numGames
-    });
-  });
-
-  // Calculate attack/defense averages per game (full precision)
-  const avgAttack = (totalGS + totalGA) / numGames;
-  const avgDefense = (totalGK + totalGD) / numGames;
-
-  // Use shared adjustValuesToTotal for all breakdowns
-  const attackQuarters = adjustValuesToTotal(rawQuarterAverages.map(q => q.attackTotal), Math.round(avgAttack * 10) / 10);
-  const defenseQuarters = adjustValuesToTotal(rawQuarterAverages.map(q => q.defenseTotal), Math.round(avgDefense * 10) / 10);
-  const gsQuarters = adjustValuesToTotal(rawQuarterAverages.map(q => q.GS), Math.round((totalGS / numGames) * 10) / 10);
-  const gaQuarters = adjustValuesToTotal(rawQuarterAverages.map(q => q.GA), Math.round((totalGA / numGames) * 10) / 10);
-  const gkQuarters = adjustValuesToTotal(rawQuarterAverages.map(q => q.GK), Math.round((totalGK / numGames) * 10) / 10);
-  const gdQuarters = adjustValuesToTotal(rawQuarterAverages.map(q => q.GD), Math.round((totalGD / numGames) * 10) / 10);
-
-  // Adjust GS+GA and GK+GD in summary cards to match the displayed total
-  const [displayGS, displayGA] = adjustValuesToTotal([
-    totalGS / numGames,
-    totalGA / numGames
-  ], Math.round(avgAttack * 10) / 10);
-  const [displayGK, displayGD] = adjustValuesToTotal([
-    totalGK / numGames,
-    totalGD / numGames
-  ], Math.round(avgDefense * 10) / 10);
+  console.log('[CompactAttackDefenseWidget] breakdown:', breakdown);
 
   // Data quality indicator
-  const dataQuality = { gamesWithStats: numGames };
+  const dataQuality = { gamesWithStats: games.length };
 
   return (
     <div className={cn('px-4 py-6 border-2 border-gray-200 rounded-lg bg-white', className)}>
@@ -134,21 +86,21 @@ export function CompactAttackDefenseWidget({
           <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-800">Attack</span>
-              <span className="text-2xl font-bold text-green-600">{(Math.round(avgAttack * 10) / 10).toFixed(1)}</span>
+              <span className="text-2xl font-bold text-green-600">{breakdown.totalFor.toFixed(1)}</span>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-semibold">
-                <span>GS: {displayGS.toFixed(1)}</span>
-                <span>GA: {displayGA.toFixed(1)}</span>
+                <span>GS: {breakdown.GS.toFixed(1)}</span>
+                <span>GA: {breakdown.GA.toFixed(1)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 flex">
                 <div
                   className="bg-green-600 h-3 rounded-l-full"
-                  style={{ width: avgAttack > 0 ? `${displayGS / avgAttack * 100}%` : '50%' }}
+                  style={{ width: breakdown.totalFor > 0 ? `${breakdown.GS / breakdown.totalFor * 100}%` : '50%' }}
                 ></div>
                 <div
                   className="bg-green-400 h-3 rounded-r-full"
-                  style={{ width: avgAttack > 0 ? `${displayGA / avgAttack * 100}%` : '50%' }}
+                  style={{ width: breakdown.totalFor > 0 ? `${breakdown.GA / breakdown.totalFor * 100}%` : '50%' }}
                 ></div>
               </div>
             </div>
@@ -158,41 +110,39 @@ export function CompactAttackDefenseWidget({
           </div>
 
           {/* Attack Quarters */}
-          {rawQuarterAverages.length > 0 && (
+          {breakdown.perQuarter.length > 0 && (
             <div className="grid grid-cols-4 gap-2">
-              {rawQuarterAverages.map((q, i) => {
-                return (
-                  <div key={`attack-${q.quarter}`} className="text-center p-2 rounded-lg border-2 bg-green-100 border-green-300 relative">
-                    <div className="absolute -top-1 -left-1">
-                      <div className="text-xs font-bold px-1 py-0.5 rounded-full bg-green-500 text-white text-[10px]">
-                        {q.quarter}
-                      </div>
-                    </div>
-                    <div className="space-y-1 mt-1">
-                      <div className="text-base font-bold text-green-600">
-                        {attackQuarters[i].toFixed(1)}
-                      </div>
-                      <div className="text-xs text-green-700">Scored</div>
-                      <div className="text-[10px] space-y-0.5">
-                        <div className="flex justify-between">
-                          <span>GS: {gsQuarters[i].toFixed(1)}</span>
-                          <span>GA: {gaQuarters[i].toFixed(1)}</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1 flex">
-                        <div 
-                          className="h-1.5 rounded-l-full bg-green-600"
-                          style={{ width: attackQuarters[i] > 0 ? `${(gsQuarters[i] / attackQuarters[i]) * 100}%` : '50%' }}
-                        ></div>
-                        <div 
-                          className="h-1.5 rounded-r-full bg-green-400"
-                          style={{ width: attackQuarters[i] > 0 ? `${(gaQuarters[i] / attackQuarters[i]) * 100}%` : '50%' }}
-                        ></div>
-                      </div>
+              {breakdown.perQuarter.map((q, i) => (
+                <div key={`attack-Q${i+1}`} className="text-center p-2 rounded-lg border-2 bg-green-100 border-green-300 relative">
+                  <div className="absolute -top-1 -left-1">
+                    <div className="text-xs font-bold px-1 py-0.5 rounded-full bg-green-500 text-white text-[10px]">
+                      Q{i+1}
                     </div>
                   </div>
-                );
-              })}
+                  <div className="space-y-1 mt-1">
+                    <div className="text-base font-bold text-green-600">
+                      {(breakdown.quarterFor[i] || 0).toFixed(1)}
+                    </div>
+                    <div className="text-xs text-green-700">Scored</div>
+                    <div className="text-[10px] space-y-0.5">
+                      <div className="flex justify-between">
+                        <span>GS: {q.GS.toFixed(1)}</span>
+                        <span>GA: {q.GA.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1 flex">
+                      <div 
+                        className="h-1.5 rounded-l-full bg-green-600"
+                        style={{ width: (breakdown.quarterFor[i] || 0) > 0 ? `${q.GS / breakdown.quarterFor[i] * 100}%` : '50%' }}
+                      ></div>
+                      <div 
+                        className="h-1.5 rounded-r-full bg-green-400"
+                        style={{ width: (breakdown.quarterFor[i] || 0) > 0 ? `${q.GA / breakdown.quarterFor[i] * 100}%` : '50%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -203,21 +153,21 @@ export function CompactAttackDefenseWidget({
           <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-800">Defense</span>
-              <span className="text-2xl font-bold text-red-600">{(Math.round(avgDefense * 10) / 10).toFixed(1)}</span>
+              <span className="text-2xl font-bold text-red-600">{breakdown.totalAgainst.toFixed(1)}</span>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-semibold">
-                <span>GK: {displayGK.toFixed(1)}</span>
-                <span>GD: {displayGD.toFixed(1)}</span>
+                <span>GK: {breakdown.GK.toFixed(1)}</span>
+                <span>GD: {breakdown.GD.toFixed(1)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 flex">
                 <div
                   className="bg-red-600 h-3 rounded-l-full"
-                  style={{ width: avgDefense > 0 ? `${displayGK / avgDefense * 100}%` : '50%' }}
+                  style={{ width: breakdown.totalAgainst > 0 ? `${breakdown.GK / breakdown.totalAgainst * 100}%` : '50%' }}
                 ></div>
                 <div
                   className="bg-red-400 h-3 rounded-r-full"
-                  style={{ width: avgDefense > 0 ? `${displayGD / avgDefense * 100}%` : '50%' }}
+                  style={{ width: breakdown.totalAgainst > 0 ? `${breakdown.GD / breakdown.totalAgainst * 100}%` : '50%' }}
                 ></div>
               </div>
             </div>
@@ -227,41 +177,39 @@ export function CompactAttackDefenseWidget({
           </div>
 
           {/* Defense Quarters */}
-          {rawQuarterAverages.length > 0 && (
+          {breakdown.perQuarter.length > 0 && (
             <div className="grid grid-cols-4 gap-2">
-              {rawQuarterAverages.map((q, i) => {
-                return (
-                  <div key={`defense-${q.quarter}`} className="text-center p-2 rounded-lg border-2 bg-red-100 border-red-300 relative">
-                    <div className="absolute -top-1 -left-1">
-                      <div className="text-xs font-bold px-1 py-0.5 rounded-full bg-red-500 text-white text-[10px]">
-                        {q.quarter}
-                      </div>
-                    </div>
-                    <div className="space-y-1 mt-1">
-                      <div className="text-base font-bold text-red-600">
-                        {defenseQuarters[i].toFixed(1)}
-                      </div>
-                      <div className="text-xs text-red-700">Conceded</div>
-                      <div className="text-[10px] space-y-0.5">
-                        <div className="flex justify-between">
-                          <span>GK: {gkQuarters[i].toFixed(1)}</span>
-                          <span>GD: {gdQuarters[i].toFixed(1)}</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1 flex">
-                        <div 
-                          className="h-1.5 rounded-l-full bg-red-600"
-                          style={{ width: defenseQuarters[i] > 0 ? `${(gkQuarters[i] / defenseQuarters[i]) * 100}%` : '50%' }}
-                        ></div>
-                        <div 
-                          className="h-1.5 rounded-r-full bg-red-400"
-                          style={{ width: defenseQuarters[i] > 0 ? `${(gdQuarters[i] / defenseQuarters[i]) * 100}%` : '50%' }}
-                        ></div>
-                      </div>
+              {breakdown.perQuarter.map((q, i) => (
+                <div key={`defense-Q${i+1}`} className="text-center p-2 rounded-lg border-2 bg-red-100 border-red-300 relative">
+                  <div className="absolute -top-1 -left-1">
+                    <div className="text-xs font-bold px-1 py-0.5 rounded-full bg-red-500 text-white text-[10px]">
+                      Q{i+1}
                     </div>
                   </div>
-                );
-              })}
+                  <div className="space-y-1 mt-1">
+                    <div className="text-base font-bold text-red-600">
+                      {(breakdown.quarterAgainst[i] || 0).toFixed(1)}
+                    </div>
+                    <div className="text-xs text-red-700">Conceded</div>
+                    <div className="text-[10px] space-y-0.5">
+                      <div className="flex justify-between">
+                        <span>GK: {q.GK.toFixed(1)}</span>
+                        <span>GD: {q.GD.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1 flex">
+                      <div 
+                        className="h-1.5 rounded-l-full bg-red-600"
+                        style={{ width: (breakdown.quarterAgainst[i] || 0) > 0 ? `${q.GK / breakdown.quarterAgainst[i] * 100}%` : '50%' }}
+                      ></div>
+                      <div 
+                        className="h-1.5 rounded-r-full bg-red-400"
+                        style={{ width: (breakdown.quarterAgainst[i] || 0) > 0 ? `${q.GD / breakdown.quarterAgainst[i] * 100}%` : '50%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
