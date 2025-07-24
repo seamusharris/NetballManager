@@ -30,7 +30,7 @@ class ApiClient {
 
   setClubContext(context: ClubContext) {
     this.clubContext = context;
-    console.log('API Client: Club context set to:', context.currentClubId, 'Team:', context.currentTeamId);
+
   }
 
   /**
@@ -38,12 +38,7 @@ class ApiClient {
    * Converts { data: [...], meta: {...} } back to [...]
    */
   private unwrapStandardizedResponse<T>(response: any): T {
-    console.log('API Client: Checking response for unwrapping:', {
-      hasData: response?.data !== undefined,
-      hasMeta: response?.meta !== undefined,
-      isObject: response && typeof response === 'object',
-      keys: response && typeof response === 'object' ? Object.keys(response) : []
-    });
+
     
     // Check if this is a standardized success response
     // Must be an object with both 'data' and 'meta' properties
@@ -51,7 +46,7 @@ class ApiClient {
         typeof response === 'object' && 
         response.hasOwnProperty('data') && 
         response.hasOwnProperty('meta')) {
-      console.log('API Client: Detected standardized response, unwrapping data');
+
       return response.data;
     }
     
@@ -60,13 +55,13 @@ class ApiClient {
         typeof response === 'object' && 
         response.hasOwnProperty('error') && 
         typeof response.error === 'object') {
-      console.log('API Client: Detected standardized error response');
+
       // For errors, we might want to throw or handle differently
       // For now, return as-is to maintain error handling
       return response;
     }
     
-    console.log('API Client: No unwrapping needed, returning response as-is');
+
     // Return as-is for legacy responses
     return response;
   }

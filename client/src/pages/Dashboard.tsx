@@ -47,20 +47,7 @@ export default function Dashboard() {
     };
   }, [nextGame, teamIdFromUrl]);
 
-  // Debug the raw games data
-  console.log('🔍 Raw games data debug:');
-  console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
-  console.log('🔍 currentClub?.id:', currentClub?.id);
-  console.log('🔍 isLoadingGames:', isLoadingGames);
-  console.log('🔍 Total games fetched:', games.length);
-  console.log('🔍 Sample game:', games[0]);
-  console.log('🔍 All games:', games.map(g => ({ id: g.id, statusIsCompleted: g.statusIsCompleted, hasStats: g.hasStats, statusAllowsStatistics: g.statusAllowsStatistics })));
   
-  // Debug the filtering
-  console.log('🔍 Filtering debug:');
-  console.log('🔍 Games with statusIsCompleted=true:', games.filter(g => g.statusIsCompleted === true).length);
-  console.log('🔍 Games with statusAllowsStatistics=true:', games.filter(g => g.statusAllowsStatistics === true).length);
-  console.log('🔍 Games with both conditions:', games.filter(g => g.statusIsCompleted === true && g.statusAllowsStatistics === true).length);
 
   // Filter to completed games that allow statistics (for quarter performance analysis)
   const completedGamesWithStatisticsEnabled = useMemo(() => {
@@ -71,12 +58,7 @@ export default function Dashboard() {
       ...game,
       status: 'completed' // Add the status field that the calculators expect
     }));
-    console.log('🔍 Games filtering debug:');
-    console.log('🔍 Total games:', games.length);
-    console.log('🔍 Completed games:', games.filter(g => g.statusIsCompleted === true).length);
-    console.log('🔍 Games with statistics enabled:', games.filter(g => g.statusAllowsStatistics === true).length);
-    console.log('🔍 Completed games with statistics enabled:', filtered.length);
-    console.log('🔍 Sample game:', games[0]);
+    
     return filtered;
   }, [games]);
 
@@ -89,7 +71,7 @@ export default function Dashboard() {
       ...game,
       status: 'completed' // Add the status field that the calculators expect
     }));
-    console.log('🔍 Games with position stats:', filtered.length);
+  
     return filtered;
   }, [games]);
 
@@ -140,23 +122,16 @@ export default function Dashboard() {
   const { data: batchScores = {}, isLoading: isLoadingScores } = useQuery<Record<number, any[]>>({
     queryKey: ['batch-scores', allSeasonGamesWithStatistics.map(game => game.id).join(',')],
     queryFn: async () => {
-      console.log('🔍 BATCH SCORES QUERY RUNNING:');
-      console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
-      console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
-      
       if (allSeasonGamesWithStatistics.length === 0) {
-        console.log('🔍 No games with statistics, returning empty object');
         return {} as Record<number, any[]>;
       }
       
       const gameIds = allSeasonGamesWithStatistics.map(game => game.id);
-      console.log('🔍 Game IDs for batch scores:', gameIds);
       
       try {
         const result = await apiClient.post(`/api/clubs/${currentClub?.id}/games/scores/batch`, {
           gameIds: gameIds
         });
-        console.log('🔍 Batch scores API result:', result);
         return result as Record<number, any[]>;
       } catch (error) {
         console.error('🔍 Error fetching batch scores:', error);
@@ -188,16 +163,7 @@ export default function Dashboard() {
     });
   }, [transformedGamesForDisplay, batchScores]);
 
-  // Debug upcoming games
-  console.log('🔍 Upcoming Games Debug:');
-  console.log('🔍 Total games:', games.length);
-  console.log('🔍 Games with statusName:', games.filter(g => g.statusName).map(g => ({ id: g.id, statusName: g.statusName, date: g.date })));
-  console.log('🔍 Scheduled games:', gamesWithQuarterScores.filter(g => g.status === 'scheduled'));
-  console.log('🔍 All game statuses:', gamesWithQuarterScores.map(g => ({ id: g.id, status: g.status, date: g.date })));
-  console.log('🔍 Next game from useNextGame:', nextGame);
-  console.log('🔍 Games that are not completed:', games.filter(g => !g.statusIsCompleted).map(g => ({ id: g.id, statusIsCompleted: g.statusIsCompleted, date: g.date, isBye: g.isBye })));
-  console.log('🔍 Current date:', new Date().toISOString());
-  console.log('🔍 Games with future dates:', games.filter(g => new Date(g.date) > new Date()).map(g => ({ id: g.id, date: g.date, statusIsCompleted: g.statusIsCompleted, statusName: g.statusName })));
+
 
   // Get the 5 most recent completed games for the games list display (ALL completed games, including forfeits)
   const recentCompletedGames = useMemo(() => {
@@ -301,142 +267,28 @@ export default function Dashboard() {
     const result = processUnifiedGameData(allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl ?? 0);
     
     // Debug the main summary calculation
-    console.log('🔍 Main Summary Calculation Debug:');
-    console.log('🔍 Unified data length:', result.unifiedData.length);
-    console.log('🔍 Games with official scores:', result.averages.gamesWithOfficialScores);
-    console.log('🔍 Games with position stats:', result.averages.gamesWithPositionStats);
-    console.log('🔍 GS Avg Goals For:', result.averages.gsAvgGoalsFor);
-    console.log('🔍 GA Avg Goals For:', result.averages.gaAvgGoalsFor);
-    console.log('🔍 GD Avg Goals Against:', result.averages.gdAvgGoalsAgainst);
-    console.log('🔍 GK Avg Goals Against:', result.averages.gkAvgGoalsAgainst);
-    console.log('🔍 Attack Total (GS + GA):', result.averages.attackingPositionsTotal);
-    console.log('🔍 Defense Total (GD + GK):', result.averages.defendingPositionsTotal);
+
     
     return result;
   }, [allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl]);
 
   // Calculate quarter data from unified data
   const quarterData = useMemo(() => {
-    console.log('🔍 Quarter data calculation debug:');
-    console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics?.length);
-    console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
-    console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
-    console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
-    
     if (!allSeasonGamesWithStatistics || allSeasonGamesWithStatistics.length === 0) {
-      console.log('🔍 No games with statistics available');
       return [];
     }
     
     if (!batchScores || Object.keys(batchScores).length === 0) {
-      console.log('🔍 No batchScores available');
       return [];
     }
     
     const result = calculateUnifiedQuarterByQuarterStats(allSeasonGamesWithStatistics, batchScores, teamIdFromUrl ?? 0, batchStats);
-    console.log('🔍 Quarter calculation result:', result);
-    console.log('🔍 allSeasonGamesWithStatistics sample:', allSeasonGamesWithStatistics[0]);
-    console.log('🔍 allSeasonGamesWithStatistics keys:', allSeasonGamesWithStatistics[0] ? Object.keys(allSeasonGamesWithStatistics[0]) : 'No games');
     return result;
   }, [allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl]);
 
-  // Debug comparison between Quarter Performance and Attack/Defense data sources
-  const debugDataComparison = useMemo(() => {
-    if (!allSeasonGamesWithStatistics.length || !allSeasonGamesWithPositionStats.length) return;
 
-    console.log('🔍 DATA SOURCE COMPARISON DEBUG:');
-    console.log('🔍 Games for Quarter Performance:', allSeasonGamesWithStatistics.length);
-    console.log('🔍 Games for Attack/Defense:', allSeasonGamesWithPositionStats.length);
 
-    // Compare game IDs
-    const quarterGameIds = allSeasonGamesWithStatistics.map(g => g.id).sort();
-    const attackDefenseGameIds = allSeasonGamesWithPositionStats.map(g => g.id).sort();
-    console.log('🔍 Quarter Performance Game IDs:', quarterGameIds);
-    console.log('🔍 Attack/Defense Game IDs:', attackDefenseGameIds);
 
-    // Check for overlapping games
-    const overlappingGames = quarterGameIds.filter(id => attackDefenseGameIds.includes(id));
-    console.log('🔍 Overlapping Games:', overlappingGames.length);
-
-    // Sample a few games to compare data
-    const sampleGameId = overlappingGames[0];
-    if (sampleGameId) {
-      console.log('🔍 Sample Game Data Comparison:');
-      console.log('🔍 Game ID:', sampleGameId);
-
-      // Quarter Performance data (from batchScores)
-      const quarterScores = batchScores?.[sampleGameId] || [];
-      console.log('🔍 Quarter Performance Scores:', quarterScores);
-
-      // Attack/Defense data (from batchStats)
-      const attackDefenseStats = batchStats?.[sampleGameId] || [];
-      console.log('🔍 Attack/Defense Stats:', attackDefenseStats);
-
-      // Calculate totals for this game
-      const quarterTotal = quarterScores.reduce((sum, score) => {
-        if (score.teamId === teamIdFromUrl) {
-          return sum + (score.score || 0);
-        }
-        return sum;
-      }, 0);
-
-      const attackDefenseTotal = attackDefenseStats.reduce((sum, stat) => {
-        if (stat.team_id === teamIdFromUrl) { // Corrected property name
-          return sum + (stat.goals_for || 0); // Corrected property name
-        }
-        return sum;
-      }, 0);
-
-      console.log('🔍 Quarter Performance Total for Game:', quarterTotal);
-      console.log('🔍 Attack/Defense Total for Game:', attackDefenseTotal);
-    }
-
-    // Calculate Quarter Performance totals (like the component does)
-    let totalQuarterGoalsFor = 0;
-    let totalQuarterGoalsAgainst = 0;
-    let gamesWithQuarterScores = 0;
-
-    allSeasonGamesWithStatistics.forEach(game => {
-      const gameScores = batchScores?.[game.id] || [];
-      if (gameScores.length > 0) {
-        gamesWithQuarterScores++;
-
-        let gameGoalsFor = 0;
-        let gameGoalsAgainst = 0;
-
-        gameScores.forEach(score => {
-          if (score.teamId === teamIdFromUrl) {
-            gameGoalsFor += score.score || 0;
-          } else {
-            gameGoalsAgainst += score.score || 0;
-          }
-        });
-
-        totalQuarterGoalsFor += gameGoalsFor;
-        totalQuarterGoalsAgainst += gameGoalsAgainst;
-      }
-    });
-
-    const avgQuarterGoalsFor = gamesWithQuarterScores > 0 ? totalQuarterGoalsFor / gamesWithQuarterScores : 0;
-    const avgQuarterGoalsAgainst = gamesWithQuarterScores > 0 ? totalQuarterGoalsAgainst / gamesWithQuarterScores : 0;
-
-    console.log('🔍 QUARTER PERFORMANCE TOTALS:');
-    console.log('🔍 Games with quarter scores:', gamesWithQuarterScores);
-    console.log('🔍 Average Goals For:', avgQuarterGoalsFor.toFixed(1));
-    console.log('🔍 Average Goals Against:', avgQuarterGoalsAgainst.toFixed(1));
-    console.log('🔍 Total Goals For (sum of all games):', totalQuarterGoalsFor);
-    console.log('🔍 Total Goals Against (sum of all games):', totalQuarterGoalsAgainst);
-
-    // Compare with Attack/Defense totals
-    console.log('🔍 COMPARISON:');
-    console.log('🔍 Quarter Performance Attack Total:', avgQuarterGoalsFor.toFixed(1));
-    console.log('🔍 Attack/Defense Attack Total:', (quarterData.reduce((sum, q) => sum + q.gsGoalsFor + q.gaGoalsFor, 0)).toFixed(1));
-    console.log('🔍 Quarter Performance Defense Total:', avgQuarterGoalsAgainst.toFixed(1));
-    console.log('🔍 Attack/Defense Defense Total:', (quarterData.reduce((sum, q) => sum + q.gdGoalsAgainst + q.gkGoalsAgainst, 0)).toFixed(1));
-  }, [allSeasonGamesWithStatistics, allSeasonGamesWithPositionStats, batchScores, batchStats, teamIdFromUrl, quarterData]);
-
-  // Call the debug function
-  debugDataComparison;
 
   // Simple loading state like GamePreparation page
   if (clubLoading || !currentClub) {

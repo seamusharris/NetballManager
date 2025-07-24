@@ -79,7 +79,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only run if we have user clubs, haven't initialized yet, and aren't currently loading
     if (Array.isArray(userClubs) && userClubs.length > 0 && !isInitialized && !isLoadingClubs) {
-      console.log('ClubContext: Starting initialization...');
+  
 
       let targetClubId: number;
 
@@ -107,7 +107,7 @@ function ClubProvider({ children }: { children: React.ReactNode }) {
       setCurrentClubId(targetClubId);
       setIsInitialized(true);
 
-      console.log('ClubContext: Initialization completed with club:', targetClubId);
+      
     }
   }, [userClubs, isLoadingClubs, isInitialized]);
 

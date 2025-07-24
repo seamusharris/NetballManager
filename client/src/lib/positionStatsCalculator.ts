@@ -121,11 +121,7 @@ export function processUnifiedGameData(
   unifiedData: UnifiedGameData[];
   averages: UnifiedPositionAverages;
 } {
-  console.log('🔍 processUnifiedGameData Debug:');
-  console.log('🔍 games length:', games.length);
-  console.log('🔍 batchScores keys:', Object.keys(batchScores));
-  console.log('🔍 batchStats keys:', Object.keys(batchStats));
-  console.log('🔍 currentTeamId:', currentTeamId);
+
 
   const unifiedData: UnifiedGameData[] = [];
   let totalGoalsFor = 0;
@@ -136,18 +132,13 @@ export function processUnifiedGameData(
   // Calculate overall position percentages from all available position stats
   const allPositionStats = Object.values(batchStats).flat();
   const overallPercentages = calculatePositionPercentages(allPositionStats, currentTeamId);
-  console.log('🔍 Overall percentages:', overallPercentages);
+
 
   games.forEach(game => {
-    console.log('🔍 Processing game:', game.id);
     const gameScores = batchScores[game.id.toString()] || batchScores[game.id] || [];
     const gameStats = batchStats[game.id.toString()] || batchStats[game.id];
     
-    console.log('🔍 Game scores:', gameScores);
-    console.log('🔍 Game stats:', gameStats);
-    
     if (!gameScores || gameScores.length === 0) {
-      console.log('🔍 Skipping game - no scores');
       return; // Skip games without official scores
     }
 
@@ -171,7 +162,7 @@ export function processUnifiedGameData(
     const q4 = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === 4)?.score || 0;
     
     const gameGoalsFor = q1 + q2 + q3 + q4;
-    console.log('🔍 Team goals for (ATTACK):', gameGoalsFor, 'q1:', q1, 'q2:', q2, 'q3:', q3, 'q4:', q4);
+
     
     // Calculate quarter scores for opponent (DEFENSE - what we conceded)
     const opponentQ1 = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === 1)?.score || 0;
@@ -179,14 +170,14 @@ export function processUnifiedGameData(
     const opponentQ3 = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === 3)?.score || 0;
     const opponentQ4 = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === 4)?.score || 0;
     const gameGoalsAgainst = opponentQ1 + opponentQ2 + opponentQ3 + opponentQ4;
-    console.log('🔍 Opponent goals (DEFENSE):', gameGoalsAgainst, 'oppQ1:', opponentQ1, 'oppQ2:', opponentQ2, 'oppQ3:', opponentQ3, 'oppQ4:', opponentQ4);
+
     
     if (gameGoalsFor > 0 || gameGoalsAgainst > 0) {
       gamesWithOfficialScores++;
       totalGoalsFor += gameGoalsFor;
       totalGoalsAgainst += gameGoalsAgainst;
       
-      console.log('🔍 Goals for (Attack):', gameGoalsFor, 'Goals against (Defense):', gameGoalsAgainst);
+
     }
 
     // Calculate position breakdown for this specific game
@@ -212,8 +203,7 @@ export function processUnifiedGameData(
     });
   });
 
-  console.log('🔍 Final totals - Goals for:', totalGoalsFor, 'Goals against:', totalGoalsAgainst);
-  console.log('🔍 Games with official scores:', gamesWithOfficialScores);
+
 
   // Calculate overall position percentages from all games
   let totalGsGoals = 0;
@@ -450,11 +440,7 @@ function calculateAttackPositionPercentages(
   teamId: number,
   quarter?: number
 ): { gsPercentage: number; gaPercentage: number } {
-  console.log('🔍 calculateAttackPositionPercentages called with:', {
-    statsLength: positionStats?.length,
-    teamId,
-    quarter: quarter || 'all quarters'
-  });
+
 
   // Enhanced logging for input validation
   if (!positionStats || !Array.isArray(positionStats)) {
@@ -473,12 +459,7 @@ function calculateAttackPositionPercentages(
     (quarter === undefined || stat.quarter === quarter)
   );
 
-  console.log('🔍 Detailed attack stats filtering:', {
-    totalStats: positionStats.length,
-    afterTeamFilter: positionStats.filter(stat => Number(stat.teamId) === Number(teamId)).length,
-    afterQuarterFilter: relevantStats.length,
-    quarterFilter: quarter ? `Q${quarter}` : 'all quarters'
-  });
+
 
   if (relevantStats.length === 0) {
     console.warn(`⚠️ WARNING: No relevant attack stats found for team ${teamId}${quarter ? ` in Q${quarter}` : ''}, falling back to 50/50 distribution`);
@@ -491,12 +472,7 @@ function calculateAttackPositionPercentages(
   let gaStatCount = 0;
 
   relevantStats.forEach(stat => {
-    console.log(`🔍 Processing attack stat:`, {
-      position: stat.position,
-      goalsFor: stat.goalsFor,
-      quarter: stat.quarter,
-      teamId: stat.teamId
-    });
+
 
     if (stat.position === 'GS' && typeof stat.goalsFor === 'number') {
       totalGsGoals += stat.goalsFor;
@@ -511,14 +487,7 @@ function calculateAttackPositionPercentages(
   const totalAttackGoals = totalGsGoals + totalGaGoals;
   
   // Enhanced logging for calculation details
-  console.log('🔍 Detailed attack percentage calculation:', {
-    gsStats: gsStatCount,
-    gaStats: gaStatCount,
-    totalGsGoals,
-    totalGaGoals,
-    totalAttackGoals,
-    hasValidData: totalAttackGoals > 0
-  });
+
 
   // Calculate percentages, default to 50/50 if no data
   const gsPercentage = totalAttackGoals > 0 ? totalGsGoals / totalAttackGoals : 0.5;
@@ -528,11 +497,7 @@ function calculateAttackPositionPercentages(
   if (totalAttackGoals === 0) {
     console.warn(`⚠️ WARNING: No attack goals found for team ${teamId}${quarter ? ` in Q${quarter}` : ''}, falling back to 50/50 distribution (GS: 50%, GA: 50%)`);
   } else {
-    console.log('✅ Attack percentages calculated from actual data:', {
-      gsPercentage: `${(gsPercentage * 100).toFixed(1)}%`,
-      gaPercentage: `${(gaPercentage * 100).toFixed(1)}%`,
-      dataSource: quarter ? `Q${quarter} specific` : 'all quarters'
-    });
+
   }
 
   return { gsPercentage, gaPercentage };
@@ -546,11 +511,6 @@ function calculateDefensePositionPercentages(
   teamId: number,
   quarter?: number
 ): { gkPercentage: number; gdPercentage: number } {
-  console.log('🔍 calculateDefensePositionPercentages called with:', {
-    statsLength: positionStats?.length,
-    teamId,
-    quarter: quarter || 'all quarters'
-  });
 
   // Enhanced logging for input validation
   if (!positionStats || !Array.isArray(positionStats)) {
@@ -569,12 +529,7 @@ function calculateDefensePositionPercentages(
     (quarter === undefined || stat.quarter === quarter)
   );
 
-  console.log('🔍 Detailed defense stats filtering:', {
-    totalStats: positionStats.length,
-    afterTeamFilter: positionStats.filter(stat => Number(stat.teamId) === Number(teamId)).length,
-    afterQuarterFilter: relevantStats.length,
-    quarterFilter: quarter ? `Q${quarter}` : 'all quarters'
-  });
+
 
   if (relevantStats.length === 0) {
     console.warn(`⚠️ WARNING: No relevant defense stats found for team ${teamId}${quarter ? ` in Q${quarter}` : ''}, falling back to 50/50 distribution`);
@@ -587,12 +542,7 @@ function calculateDefensePositionPercentages(
   let gdStatCount = 0;
 
   relevantStats.forEach(stat => {
-    console.log(`🔍 Processing defense stat:`, {
-      position: stat.position,
-      goalsAgainst: stat.goalsAgainst,
-      quarter: stat.quarter,
-      teamId: stat.teamId
-    });
+
 
     if (stat.position === 'GK' && typeof stat.goalsAgainst === 'number') {
       totalGkGoals += stat.goalsAgainst;
@@ -607,14 +557,7 @@ function calculateDefensePositionPercentages(
   const totalDefenseGoals = totalGkGoals + totalGdGoals;
   
   // Enhanced logging for calculation details
-  console.log('🔍 Detailed defense percentage calculation:', {
-    gkStats: gkStatCount,
-    gdStats: gdStatCount,
-    totalGkGoals,
-    totalGdGoals,
-    totalDefenseGoals,
-    hasValidData: totalDefenseGoals > 0
-  });
+
 
   // Calculate percentages, default to 50/50 if no data
   const gkPercentage = totalDefenseGoals > 0 ? totalGkGoals / totalDefenseGoals : 0.5;
@@ -624,11 +567,7 @@ function calculateDefensePositionPercentages(
   if (totalDefenseGoals === 0) {
     console.warn(`⚠️ WARNING: No defense goals found for team ${teamId}${quarter ? ` in Q${quarter}` : ''}, falling back to 50/50 distribution (GK: 50%, GD: 50%)`);
   } else {
-    console.log('✅ Defense percentages calculated from actual data:', {
-      gkPercentage: `${(gkPercentage * 100).toFixed(1)}%`,
-      gdPercentage: `${(gdPercentage * 100).toFixed(1)}%`,
-      dataSource: quarter ? `Q${quarter} specific` : 'all quarters'
-    });
+
   }
 
   return { gkPercentage, gdPercentage };
@@ -642,7 +581,7 @@ function calculateQuarterScoredAverages(
   batchScores: Record<number, any[]>,
   currentTeamId: number
 ): { quarter: number; average: number; gamesWithData: number }[] {
-  console.log('🔍 calculateQuarterScoredAverages called with:', {
+
     gamesLength: games?.length,
     currentTeamId,
     batchScoresAvailable: Object.keys(batchScores || {}).length,
