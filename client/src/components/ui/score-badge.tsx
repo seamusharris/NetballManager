@@ -47,7 +47,7 @@ export function ScoreBadge({ teamScore, opponentScore, className, size = 'defaul
         className
       )}
     >
-      {teamScore}—{opponentScore}
+      {teamScore}:{opponentScore}
     </div>
   );
 }

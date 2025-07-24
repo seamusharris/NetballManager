@@ -14,6 +14,7 @@ import { CompactAttackDefenseWidget } from "@/components/ui/compact-attack-defen
 import QuarterPerformanceAnalysisWidget from "@/components/ui/quarter-performance-analysis-widget";
 import { SeasonStatsWidget } from "@/components/ui/season-stats-widget";
 import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
+import { useNextGame } from '@/hooks/use-next-game';
 import { processUnifiedGameData, calculateUnifiedQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
 import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
@@ -26,11 +27,15 @@ export default function Dashboard() {
   // Simple: get teamId directly from URL like GamePreparation page
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : undefined;
 
-  // Get all games for the current team
-  const { data: games = [], isLoading: isLoadingGames } = useSimplifiedGames(
-    currentClub?.id ?? 0,
-    teamIdFromUrl
-  );
+  // Get all games for the current team using team API
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+    queryKey: ['teams', teamIdFromUrl, 'games'],
+    queryFn: () => apiClient.get(`/api/teams/${teamIdFromUrl}/games`),
+    enabled: !!teamIdFromUrl,
+  });
+
+  // Get next upcoming game
+  const { data: nextGame } = useNextGame();
 
   // Debug the raw games data
   console.log('🔍 Raw games data debug:');
@@ -39,17 +44,26 @@ export default function Dashboard() {
   console.log('🔍 isLoadingGames:', isLoadingGames);
   console.log('🔍 Total games fetched:', games.length);
   console.log('🔍 Sample game:', games[0]);
-  console.log('🔍 All games:', games.map(g => ({ id: g.id, status: g.status, hasStats: g.hasStats, statusAllowsStatistics: g.statusAllowsStatistics })));
+  console.log('🔍 All games:', games.map(g => ({ id: g.id, statusIsCompleted: g.statusIsCompleted, hasStats: g.hasStats, statusAllowsStatistics: g.statusAllowsStatistics })));
+  
+  // Debug the filtering
+  console.log('🔍 Filtering debug:');
+  console.log('🔍 Games with statusIsCompleted=true:', games.filter(g => g.statusIsCompleted === true).length);
+  console.log('🔍 Games with statusAllowsStatistics=true:', games.filter(g => g.statusAllowsStatistics === true).length);
+  console.log('🔍 Games with both conditions:', games.filter(g => g.statusIsCompleted === true && g.statusAllowsStatistics === true).length);
 
   // Filter to completed games that allow statistics (for quarter performance analysis)
   const completedGamesWithStatisticsEnabled = useMemo(() => {
     const filtered = games.filter(game => 
-      game.status === 'completed' && 
+      game.statusIsCompleted === true && 
       game.statusAllowsStatistics === true
-    );
+    ).map(game => ({
+      ...game,
+      status: 'completed' // Add the status field that the calculators expect
+    }));
     console.log('🔍 Games filtering debug:');
     console.log('🔍 Total games:', games.length);
-    console.log('🔍 Completed games:', games.filter(g => g.status === 'completed').length);
+    console.log('🔍 Completed games:', games.filter(g => g.statusIsCompleted === true).length);
     console.log('🔍 Games with statistics enabled:', games.filter(g => g.statusAllowsStatistics === true).length);
     console.log('🔍 Completed games with statistics enabled:', filtered.length);
     console.log('🔍 Sample game:', games[0]);
@@ -59,20 +73,38 @@ export default function Dashboard() {
   // Filter to completed games with position statistics (for attack/defense analysis)
   const completedGamesWithPositionStats = useMemo(() => {
     const filtered = games.filter(game => 
-      game.status === 'completed' && 
-      game.statusAllowsStatistics === true &&
-      game.hasStats === true
-    );
+      game.statusIsCompleted === true && 
+      game.statusAllowsStatistics === true
+    ).map(game => ({
+      ...game,
+      status: 'completed' // Add the status field that the calculators expect
+    }));
     console.log('🔍 Games with position stats:', filtered.length);
     return filtered;
   }, [games]);
 
-  // Get the 5 most recent completed games for the games list display
-  const recentCompletedGames = useMemo(() => {
-    return completedGamesWithStatisticsEnabled
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 5);
-  }, [completedGamesWithStatisticsEnabled]);
+  // Transform team API games to SimpleGame format for SimplifiedGamesList
+  const transformedGamesForDisplay = useMemo(() => {
+    return games.map(game => ({
+      id: game.id,
+      date: game.date,
+      round: game.round ? parseInt(game.round) : undefined,
+      status: game.statusName || (game.statusIsCompleted ? 'completed' : 'scheduled') as 'completed' | 'scheduled' | 'upcoming' | 'forfeit-win' | 'forfeit-loss' | 'bye',
+      homeTeam: { 
+        id: game.homeTeamId, 
+        name: game.homeTeamName 
+      },
+      awayTeam: game.awayTeamId ? { 
+        id: game.awayTeamId, 
+        name: game.awayTeamName 
+      } : undefined,
+      quarterScores: [], // Will be populated after batchScores is available
+      hasStats: game.statusAllowsStatistics || false,
+      statusAllowsStatistics: game.statusAllowsStatistics || false
+    }));
+  }, [games]);
+
+
 
   // Get all completed games with statistics enabled for quarter performance widget
   const allSeasonGamesWithStatistics = useMemo(() => {
@@ -98,7 +130,7 @@ export default function Dashboard() {
     queryFn: async () => {
       console.log('🔍 BATCH SCORES QUERY RUNNING:');
       console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
-      console.log('🔍 currentClub?.id:', currentClub?.id);
+      console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
       
       if (allSeasonGamesWithStatistics.length === 0) {
         console.log('🔍 No games with statistics, returning empty object');
@@ -119,9 +151,49 @@ export default function Dashboard() {
         return {} as Record<number, any[]>;
       }
     },
-    enabled: allSeasonGamesWithStatistics.length > 0 && !!currentClub?.id,
+    enabled: allSeasonGamesWithStatistics.length > 0 && !!teamIdFromUrl,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Add quarter scores to transformed games after batchScores is available
+  const gamesWithQuarterScores = useMemo(() => {
+    return transformedGamesForDisplay.map(game => {
+      // Get quarter scores for this game from batchScores
+      const gameScores = batchScores?.[game.id] || [];
+      const quarterScores = [];
+      
+      // Group scores by quarter
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const homeScore = gameScores.find(s => s.quarter === quarter && s.teamId === game.homeTeam.id)?.score || 0;
+        const awayScore = gameScores.find(s => s.quarter === quarter && s.teamId === game.awayTeam?.id)?.score || 0;
+        quarterScores.push({ homeScore, awayScore });
+      }
+      
+      return {
+        ...game,
+        quarterScores: quarterScores
+      };
+    });
+  }, [transformedGamesForDisplay, batchScores]);
+
+  // Debug upcoming games
+  console.log('🔍 Upcoming Games Debug:');
+  console.log('🔍 Total games:', games.length);
+  console.log('🔍 Games with statusName:', games.filter(g => g.statusName).map(g => ({ id: g.id, statusName: g.statusName, date: g.date })));
+  console.log('🔍 Scheduled games:', gamesWithQuarterScores.filter(g => g.status === 'scheduled'));
+  console.log('🔍 All game statuses:', gamesWithQuarterScores.map(g => ({ id: g.id, status: g.status, date: g.date })));
+  console.log('🔍 Next game from useNextGame:', nextGame);
+  console.log('🔍 Games that are not completed:', games.filter(g => !g.statusIsCompleted).map(g => ({ id: g.id, statusIsCompleted: g.statusIsCompleted, date: g.date, isBye: g.isBye })));
+  console.log('🔍 Current date:', new Date().toISOString());
+  console.log('🔍 Games with future dates:', games.filter(g => new Date(g.date) > new Date()).map(g => ({ id: g.id, date: g.date, statusIsCompleted: g.statusIsCompleted, statusName: g.statusName })));
+
+  // Get the 5 most recent completed games for the games list display (ALL completed games, including forfeits)
+  const recentCompletedGames = useMemo(() => {
+    return gamesWithQuarterScores
+      .filter(game => game.status === 'completed')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [gamesWithQuarterScores]);
 
   // Quick debug of data sources
   console.log('🔍 QUICK DEBUG - Data Sources:');
@@ -354,7 +426,7 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <SimplifiedGamesList
-                      games={games.filter(game => game.status !== 'completed').slice(0, 5)}
+                      games={gamesWithQuarterScores.filter(game => game.status === 'scheduled' || game.status === 'upcoming')}
                       currentTeamId={teamIdFromUrl ?? 0}
                       variant="upcoming"
                       maxGames={5}
@@ -518,7 +590,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <SimplifiedGamesList
-                    games={allSeasonGamesWithPositionStats}
+                    games={gamesWithQuarterScores}
                     currentTeamId={teamIdFromUrl ?? 0}
                     variant="season"
                     compact={false}

@@ -82,6 +82,8 @@ import PlayerBorrowing from '@/pages/PlayerBorrowing';
 import TeamAnalysis from './pages/TeamAnalysis';
 import Preparation from '@/pages/Preparation';
 import GamePreparation from '@/pages/GamePreparation';
+import GamePreparationDashboard from '@/pages/GamePreparationDashboard';
+import GamePreparationAnalysis from '@/pages/GamePreparationAnalysis';
 import TeamPreparation from './pages/TeamPreparation';
 import Preparation2 from './pages/Preparation2';
 import TeamLadder from './pages/TeamLadder';
@@ -191,6 +193,8 @@ function Router() {
           )}
         </Route>
         <Route path="/team/:teamId/preparation/:gameId" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
+        <Route path="/team/:teamId/preparation/:gameId/dashboard" component={withErrorBoundary(GamePreparationDashboard, 'GamePreparationDashboard')} />
+        <Route path="/team/:teamId/preparation/:gameId/analysis" component={withErrorBoundary(GamePreparationAnalysis, 'GamePreparationAnalysis')} />
         <Route path="/team/:teamId/preparation" component={withErrorBoundary(GamePreparation, 'GamePreparation')} />
         <Route path="/team/:teamId/analysis" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />
         <Route path="/team/:teamId/analysis/:opponentId" component={withErrorBoundary(TeamPreparation, 'TeamPreparation')} />

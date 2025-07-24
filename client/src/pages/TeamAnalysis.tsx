@@ -14,7 +14,6 @@ import { getWinLoseLabel } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
 import TeamPositionAnalysis from '@/components/dashboard/TeamPositionAnalysis';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { calculateClubWinRate } from '@/lib/winRateCalculator';
 

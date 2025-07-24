@@ -36,7 +36,6 @@ import {
 import BackButton from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from '@/lib/utils';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
 import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
 import RecordStatsButton from '@/components/games/RecordStatsButton';

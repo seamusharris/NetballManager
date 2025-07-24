@@ -18,7 +18,7 @@ interface GameInfo {
   id: number;
   date: string;
   round?: number;
-  status: 'completed' | 'scheduled' | 'forfeit-win' | 'forfeit-loss' | 'bye';
+  status: 'completed' | 'scheduled' | 'upcoming' | 'forfeit-win' | 'forfeit-loss' | 'bye';
   venue?: string;
 }
 

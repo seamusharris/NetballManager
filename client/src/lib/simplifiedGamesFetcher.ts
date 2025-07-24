@@ -4,7 +4,7 @@ export interface SimpleGame {
   id: number;
   date: string;
   round?: number;
-  status: 'completed' | 'scheduled' | 'forfeit-win' | 'forfeit-loss' | 'bye';
+  status: 'completed' | 'scheduled' | 'upcoming' | 'forfeit-win' | 'forfeit-loss' | 'bye';
   homeTeam: { id: number; name: string };
   awayTeam?: { id: number; name: string }; // Optional for BYE games
   quarterScores?: Array<{ homeScore: number; awayScore: number }>;
@@ -78,6 +78,7 @@ export class SimplifiedGamesFetcher {
     if (statusName === 'bye') return 'bye';
     if (statusName === 'forfeit-win') return 'forfeit-win';
     if (statusName === 'forfeit-loss') return 'forfeit-loss';
+    if (statusName === 'upcoming') return 'upcoming';
     if (isCompleted) return 'completed';
     return 'scheduled';
   }

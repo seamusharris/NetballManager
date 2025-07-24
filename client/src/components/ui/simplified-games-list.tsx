@@ -72,7 +72,7 @@ export default function SimplifiedGamesList({
       if (statusFilter === 'completed') {
         filteredGames = filteredGames.filter(game => game.status === 'completed');
       } else if (statusFilter === 'upcoming') {
-        filteredGames = filteredGames.filter(game => game.status === 'scheduled');
+        filteredGames = filteredGames.filter(game => game.status === 'scheduled' || game.status === 'upcoming');
       } else {
         filteredGames = filteredGames.filter(game => game.status === statusFilter);
       }
@@ -81,7 +81,7 @@ export default function SimplifiedGamesList({
     // Apply variant-specific filtering
     switch (variant) {
       case 'upcoming':
-        filteredGames = filteredGames.filter(game => game.status === 'scheduled');
+        filteredGames = filteredGames.filter(game => game.status === 'scheduled' || game.status === 'upcoming');
         break;
       case 'recent':
         filteredGames = filteredGames.filter(game => game.status === 'completed')

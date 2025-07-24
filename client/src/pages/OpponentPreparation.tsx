@@ -13,7 +13,7 @@ import { Loader2, Target, TrendingUp, FileText, Users, Clock, MapPin, Calendar }
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import { getWinLoseLabel } from '@/lib/utils';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+
 import { ResultBadge } from '@/components/ui/result-badge';
 import { formatShortDate } from '@/lib/utils';
 
@@ -297,7 +297,7 @@ export default function OpponentPreparation() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TeamSwitcher mode="optional" />
+            
           </div>
         </div>
 

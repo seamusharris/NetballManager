@@ -1206,6 +1206,79 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
+  // Team-specific batch scores endpoint
+  app.post('/api/teams/:teamId/games/scores/batch', async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId, 10);
+      const { gameIds } = req.body;
+
+      if (isNaN(teamId)) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
+      }
+
+      if (!Array.isArray(gameIds)) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'gameIds must be an array'
+        ));
+      }
+
+      // Verify all games belong to this team
+      const gameCheck = await db.execute(sql`
+        SELECT id FROM games 
+        WHERE id = ANY(${gameIds}) AND (home_team_id = ${teamId} OR away_team_id = ${teamId})
+      `);
+
+      if (gameCheck.rows.length !== gameIds.length) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Some games do not belong to this team'
+        ));
+      }
+
+      // Get scores for all games
+      const scores = await db.execute(sql`
+        SELECT 
+          game_id,
+          team_id,
+          quarter,
+          score
+        FROM game_scores 
+        WHERE game_id = ANY(${gameIds})
+        ORDER BY game_id, team_id, quarter
+      `);
+
+      // Group scores by game ID
+      const scoresByGame: Record<number, any[]> = {};
+      scores.rows.forEach(row => {
+        if (!scoresByGame[row.game_id]) {
+          scoresByGame[row.game_id] = [];
+        }
+        scoresByGame[row.game_id].push({
+          teamId: row.team_id,
+          quarter: row.quarter,
+          score: row.score
+        });
+      });
+
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(scoresByGame));
+    } catch (error) {
+      console.error('Error fetching team batch scores:', error);
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch team batch scores'
+      ));
+    }
+  });
+
   // Team-based get roster entries
   app.get('/api/teams/:teamId/games/:gameId/rosters', async (req: AuthenticatedRequest, res) => {
     try {

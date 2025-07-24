@@ -947,7 +947,8 @@ export function calculateQuarterAverages(
 
     games.forEach(game => {
       // Use the same filtering logic as season statistics method
-      if (game.status === 'completed' && game.statusAllowsStatistics === true) {
+      const isCompleted = game.status === 'completed' || game.statusIsCompleted === true;
+    if (isCompleted && game.statusAllowsStatistics === true) {
         const gameScores = batchScores?.[game.id] || [];
         const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
           id: score.id,
@@ -1291,8 +1292,9 @@ export function calculateSeasonAverages(
   let gamesWithStats = 0;
 
   games.forEach(game => {
-    // Use consistent filtering across all widgets
-    if (game.status === 'completed' && game.statusAllowsStatistics === true) {
+    // Use consistent filtering across all widgets - support both data structures
+    const isCompleted = game.status === 'completed' || game.statusIsCompleted === true;
+    if (isCompleted && game.statusAllowsStatistics === true) {
       const gameScores = batchScores?.[game.id] || [];
       
       if (gameScores.length > 0) {
@@ -1378,7 +1380,8 @@ export function distributeSeasonAveragesToQuarters(
 
     if (batchStats) {
       games.forEach(game => {
-        if (game.status === 'completed' && game.statusAllowsStatistics === true) {
+        const isCompleted = game.status === 'completed' || game.statusIsCompleted === true;
+    if (isCompleted && game.statusAllowsStatistics === true) {
           const gameStats = batchStats[game.id] || [];
           const quarterTeamStats = gameStats.filter(stat => 
             stat.teamId === teamId && stat.quarter === quarter

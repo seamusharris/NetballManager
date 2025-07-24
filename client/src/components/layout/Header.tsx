@@ -3,7 +3,6 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ClubSwitcher } from './ClubSwitcher';
-import { TeamSwitcher } from './TeamSwitcher';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
@@ -43,7 +42,6 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
         <div className="flex items-center space-x-4">
           {/* Club and Team switchers */}
           <ClubSwitcher />
-          <TeamSwitcher />
         </div>
       </div>
     </header>

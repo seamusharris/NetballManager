@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import PageTemplate from '@/components/layout/PageTemplate';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+
 import { useClub } from '@/contexts/ClubContext';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
@@ -168,7 +168,6 @@ const Preparation = () => {
 
   return (
     <PageTemplate title="Game Preparation">
-      <TeamSwitcher />
       
       {renderStepIndicator()}
 
