@@ -37,6 +37,15 @@ export default function Dashboard() {
   // Get next upcoming game
   const { data: nextGame } = useNextGame();
 
+  // Get upcoming opponent from next game
+  const upcomingOpponent = useMemo(() => {
+    if (!nextGame) return null;
+    const isHomeTeam = teamIdFromUrl === nextGame.homeTeamId;
+    return {
+      id: isHomeTeam ? nextGame.awayTeamId : nextGame.homeTeamId
+    };
+  }, [nextGame, teamIdFromUrl]);
+
   // Debug the raw games data
   console.log('🔍 Raw games data debug:');
   console.log('🔍 teamIdFromUrl:', teamIdFromUrl);
@@ -221,9 +230,47 @@ export default function Dashboard() {
       }));
   }, [gamesWithQuarterScores]);
 
+  // Get games against upcoming opponent
+  const gamesAgainstOpponent = useMemo(() => {
+    if (!upcomingOpponent) return [];
+    return gamesWithQuarterScores
+      .filter(game => {
+        const isHomeTeam = teamIdFromUrl === game.homeTeam.id;
+        const opponentId = isHomeTeam ? game.awayTeam?.id : game.homeTeam.id;
+        return opponentId === upcomingOpponent.id && game.status === 'completed';
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [gamesWithQuarterScores, upcomingOpponent, teamIdFromUrl]);
+
+  // Get games against opponent with statistics for widgets
+  const opponentGamesWithStatistics = useMemo(() => {
+    return gamesAgainstOpponent
+      .filter(game => game.statusAllowsStatistics)
+      .map(game => ({
+        ...game,
+        status: 'completed' // Add the status field that the calculators expect
+      }));
+  }, [gamesAgainstOpponent]);
+
+  // Get games against opponent with position stats for attack/defense widget
+  const opponentGamesWithPositionStats = useMemo(() => {
+    return gamesAgainstOpponent
+      .filter(game => game.statusAllowsStatistics)
+      .map(game => ({
+        ...game,
+        status: 'completed' // Add the status field that the calculators expect
+      }));
+  }, [gamesAgainstOpponent]);
+
   // Fetch batch statistics for recent games with position stats
   const { statsMap: recentBatchStats, isLoading: isLoadingRecentStats } = useBatchGameStatistics(
     recentGamesWithPositionStats.map(game => game.id),
+    false
+  );
+
+  // Fetch batch statistics for opponent games with position stats
+  const { statsMap: opponentBatchStats, isLoading: isLoadingOpponentStats } = useBatchGameStatistics(
+    opponentGamesWithPositionStats.map(game => game.id),
     false
   );
 
@@ -601,6 +648,17 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
+              {/* Recent Season Statistics Debug Widget */}
+              {recentGamesWithStatistics.length > 0 && (
+                <SeasonStatsWidget
+                  games={recentGamesWithStatistics}
+                  currentTeamId={teamIdFromUrl ?? 0}
+                  batchScores={batchScores}
+                  batchStats={recentBatchStats}
+                  className="w-full"
+                />
+              )}
+
               {/* Recent Quarter Performance Analysis Widget */}
               {recentGamesWithStatistics.length > 0 && (
                 <QuarterPerformanceAnalysisWidget
@@ -643,12 +701,87 @@ export default function Dashboard() {
               {/* Opponent Form Section - Simplified */}
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Opponent Analysis</CardTitle>
+                  <CardTitle>
+                    {upcomingOpponent && gamesAgainstOpponent.length > 0
+                      ? (() => {
+                          const firstGame = gamesAgainstOpponent[0];
+                          const isHomeTeam = teamIdFromUrl === firstGame.homeTeam.id;
+                          const opponentName = isHomeTeam ? firstGame.awayTeam?.name : firstGame.homeTeam.name;
+                          return `Games vs ${opponentName}`;
+                        })()
+                      : upcomingOpponent 
+                        ? 'Games vs Opponent'
+                        : 'Opponent Analysis'
+                    }
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Opponent analysis will be added here later.</p>
+                  {upcomingOpponent ? (
+                    <SimplifiedGamesList
+                      games={gamesAgainstOpponent}
+                      currentTeamId={teamIdFromUrl ?? 0}
+                      variant="season"
+                      compact={false}
+                      showQuarterScores={true}
+                      layout="wide"
+                      showFilters={false}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground">No upcoming games found.</p>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Opponent Season Statistics Debug Widget */}
+              {opponentGamesWithStatistics.length > 0 && (
+                <SeasonStatsWidget
+                  games={opponentGamesWithStatistics}
+                  currentTeamId={teamIdFromUrl ?? 0}
+                  batchScores={batchScores}
+                  batchStats={opponentBatchStats}
+                  className="w-full"
+                />
+              )}
+
+              {/* Opponent Quarter Performance Analysis Widget */}
+              {opponentGamesWithStatistics.length > 0 && (
+                <QuarterPerformanceAnalysisWidget
+                  games={opponentGamesWithStatistics}
+                  batchScores={batchScores}
+                  currentTeamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
+              {/* Opponent Compact Attack Defense Widget */}
+              {opponentGamesWithPositionStats.length > 0 && (
+                <CompactAttackDefenseWidget
+                  games={opponentGamesWithPositionStats}
+                  batchScores={batchScores}
+                  batchStats={opponentBatchStats}
+                  teamId={teamIdFromUrl ?? 0}
+                  className="w-full"
+                />
+              )}
+
+              {/* Fallback: Show message if no opponent games with stats */}
+              {(!upcomingOpponent || (opponentGamesWithStatistics.length === 0 && opponentGamesWithPositionStats.length === 0)) && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Opponent Performance Analysis</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-500 text-center py-8">
+                        {!upcomingOpponent 
+                          ? 'No upcoming games found to determine opponent.'
+                          : 'No completed games with statistics available against this opponent.'
+                        }
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="season" className="space-y-8">

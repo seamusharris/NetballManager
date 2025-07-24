@@ -31,8 +31,8 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
   // Use quarterData instead of quarterAverages to match CompactAttackDefenseWidget
   const quarterPerformanceData = quarterData.map(({ quarter, gsGoalsFor, gaGoalsFor, gkGoalsAgainst, gdGoalsAgainst }) => ({
     quarter,
-    avgTeamScore: gsGoalsFor + gaGoalsFor, // Total goals scored (attack)
-    avgOpponentScore: gkGoalsAgainst + gdGoalsAgainst, // Total goals conceded (defense)
+    avgTeamScore: Math.round((gsGoalsFor + gaGoalsFor) * 10) / 10, // Total goals scored (attack)
+    avgOpponentScore: Math.round((gkGoalsAgainst + gdGoalsAgainst) * 10) / 10, // Total goals conceded (defense)
     gamesWithData: 0 // Not used for display
   }));
 
@@ -109,8 +109,8 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
 
         {/* AVG Card */}
         {(() => {
-          const avgGoalsFor = seasonAverages.avgGoalsFor;
-          const avgGoalsAgainst = seasonAverages.avgGoalsAgainst;
+          const avgGoalsFor = Math.round(seasonAverages.avgGoalsFor * 10) / 10;
+          const avgGoalsAgainst = Math.round(seasonAverages.avgGoalsAgainst * 10) / 10;
           const isWinning = avgGoalsFor > avgGoalsAgainst;
           const isLosing = avgGoalsFor < avgGoalsAgainst;
           const isDraw = Math.abs(avgGoalsFor - avgGoalsAgainst) < 0.1;
