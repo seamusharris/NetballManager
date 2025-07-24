@@ -20,11 +20,6 @@ export function CompactAttackDefenseWidget({
   teamId, 
   className = "" 
 }: CompactAttackDefenseWidgetProps) {
-  // Debug logging for input props
-  console.log('[CompactAttackDefenseWidget] games:', games);
-  console.log('[CompactAttackDefenseWidget] batchScores:', batchScores);
-  console.log('[CompactAttackDefenseWidget] batchStats:', batchStats);
-
   const numGames = games.length || 1; // Avoid division by zero
 
   // Build gamesWithPositionStats from batchStats
@@ -68,16 +63,13 @@ export function CompactAttackDefenseWidget({
   // Use centralized, sum-matched breakdowns for all displayed values
   const breakdown = getConsistentStatsBreakdown(gamesWithPositionStats, officialQuarterScores);
 
-  // Debug logging for mapped data
-  console.log('[CompactAttackDefenseWidget] breakdown:', breakdown);
-
   // Data quality indicator
   const dataQuality = { gamesWithStats: games.length };
 
   return (
     <div className={cn('px-4 py-6 border-2 border-gray-200 rounded-lg bg-white', className)}>
       <div className="mb-2 text-xs text-gray-500 font-medium">
-        Analysis based on {dataQuality.gamesWithStats} number of games with position breakdowns.
+        Analysis based on {dataQuality.gamesWithStats} games with position breakdowns.
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Attack Column */}
@@ -103,9 +95,6 @@ export function CompactAttackDefenseWidget({
                   style={{ width: breakdown.totalFor > 0 ? `${breakdown.GA / breakdown.totalFor * 100}%` : '50%' }}
                 ></div>
               </div>
-            </div>
-            <div className="text-xs text-gray-500">
-              Goals scored breakdown for all quarters.
             </div>
           </div>
 
@@ -170,9 +159,6 @@ export function CompactAttackDefenseWidget({
                   style={{ width: breakdown.totalAgainst > 0 ? `${breakdown.GD / breakdown.totalAgainst * 100}%` : '50%' }}
                 ></div>
               </div>
-            </div>
-            <div className="text-xs text-gray-500">
-              Goals conceded breakdown for all quarters.
             </div>
           </div>
 

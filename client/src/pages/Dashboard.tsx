@@ -285,7 +285,7 @@ export default function Dashboard() {
   // Process unified game data for attack/defense widget
   const { unifiedData, averages } = useMemo(() => {
     console.log('🔍 UNIFIED DATA PROCESSING DEBUG:');
-    console.log('�� allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
+    console.log('🔍 allSeasonGamesWithStatistics length:', allSeasonGamesWithStatistics.length);
     console.log('🔍 allSeasonGamesWithPositionStats length:', allSeasonGamesWithPositionStats.length);
     console.log('🔍 batchScores keys:', Object.keys(batchScores || {}));
     console.log('🔍 batchStats keys:', Object.keys(batchStats || {}));
@@ -660,17 +660,6 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Recent Season Statistics Debug Widget */}
-              {recentGamesWithStatistics.length > 0 && (
-                <SeasonStatsWidget
-                  games={recentGamesWithStatistics}
-                  currentTeamId={teamIdFromUrl ?? 0}
-                  batchScores={batchScores}
-                  batchStats={recentBatchStats}
-                  className="w-full"
-                />
-              )}
-
               {/* Recent Quarter Performance Analysis Widget */}
               {recentGamesWithStatistics.length > 0 && (
                 <QuarterPerformanceAnalysisWidget
@@ -745,17 +734,6 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Opponent Season Statistics Debug Widget */}
-              {opponentGamesWithStatistics.length > 0 && (
-                <SeasonStatsWidget
-                  games={opponentGamesWithStatistics}
-                  currentTeamId={teamIdFromUrl ?? 0}
-                  batchScores={batchScores}
-                  batchStats={opponentBatchStats}
-                  className="w-full"
-                />
-              )}
-
               {/* Opponent Quarter Performance Analysis Widget */}
               {opponentGamesWithStatistics.length > 0 && (
                 <QuarterPerformanceAnalysisWidget
@@ -771,17 +749,6 @@ export default function Dashboard() {
               {opponentGamesWithPositionStats.length > 0 && (
                 <CompactAttackDefenseWidget
                   games={opponentGamesWithPositionStats}
-                  batchScores={batchScores}
-                  batchStats={opponentBatchStats}
-                  teamId={teamIdFromUrl ?? 0}
-                  className="w-full"
-                />
-              )}
-
-              {/* Opponent Stats Debug Table */}
-              {opponentGamesWithStatistics.length > 0 && (
-                <StatsDebugTable
-                  games={opponentGamesWithStatistics}
                   batchScores={batchScores}
                   batchStats={opponentBatchStats}
                   teamId={teamIdFromUrl ?? 0}

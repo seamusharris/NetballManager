@@ -27,11 +27,6 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
   className,
   excludeSpecialGames = true
 }) => {
-  // Debug logging for input props
-  console.log('[QuarterPerformanceAnalysisWidget] games:', games);
-  console.log('[QuarterPerformanceAnalysisWidget] batchScores:', batchScores);
-  console.log('[QuarterPerformanceAnalysisWidget] batchStats:', batchStats);
-
   const numGames = games.length || 1;
 
   // Build gamesWithPositionStats from batchStats
@@ -80,17 +75,11 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
   // Use centralized, sum-matched breakdowns for all displayed values
   const breakdown = getConsistentStatsBreakdown(gamesWithPositionStats, officialQuarterScores);
 
-  // Debug logging for mapped data
-  console.log('[QuarterPerformanceAnalysisWidget] breakdown:', breakdown);
-
   // Data quality indicator
   const dataQuality = { gamesWithStats: games.length };
 
   return (
     <div className={cn('px-4 py-6 border-2 border-gray-200 rounded-lg bg-white', className)}>
-      <div className="mb-2 text-xs text-gray-500 font-medium">
-        Analysis based on {dataQuality.gamesWithStats} number of games with position breakdowns.
-      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Quarter cards */}
         {breakdown.quarterFor.map((forVal, idx) => {
@@ -132,8 +121,7 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
                   })()}
                 </div>
                 <div 
-                  className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
-                  title="Our share of total quarter scoring"
+                  className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4"
                 >
                   <div 
                     className={`h-2 rounded-full ${
@@ -165,7 +153,7 @@ const QuarterPerformanceAnalysisWidget: React.FC<QuarterPerformanceAnalysisWidge
                 return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
               })()}
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Sum of quarter averages">
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4">
               <div className="h-2 rounded-full bg-green-500" style={{ width: `${Math.min(100, Math.max(0, (breakdown.totalFor / (breakdown.totalFor + breakdown.totalAgainst)) * 100))}%` }} />
             </div>
           </div>
