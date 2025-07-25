@@ -12,14 +12,18 @@ import { useSimplifiedGames } from "@/hooks/use-simplified-games";
 import { DynamicBreadcrumbs } from "@/components/layout/DynamicBreadcrumbs";
 import { CompactAttackDefenseWidget } from "@/components/ui/compact-attack-defense-widget";
 import QuarterPerformanceAnalysisWidget from "@/components/ui/quarter-performance-analysis-widget";
-import { SeasonStatsWidget } from "@/components/ui/season-stats-widget";
-import { StatsDebugTable } from "@/components/ui/stats-debug-table";
+
+import { NextGameDetailsWidget } from "@/components/ui/next-game-details-widget";
 import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
 import { useNextGame } from '@/hooks/use-next-game';
 import { processUnifiedGameData, calculateUnifiedQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
 import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
 import { apiClient } from '@/lib/apiClient';
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, MapPin, Flag, Trophy, Shield } from 'lucide-react';
+import { ResultBadge } from "@/components/ui/result-badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export default function Dashboard() {
   const params = useParams<{ teamId?: string }>();
@@ -292,8 +296,71 @@ export default function Dashboard() {
     return result;
   }, [allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl]);
 
-
-
+  // Calculate season statistics from completed games
+  const seasonStats = useMemo(() => {
+    const completedGames = games.filter(game => game.statusIsCompleted === true);
+    
+    let wins = 0;
+    let losses = 0;
+    let draws = 0;
+    let goalsFor = 0;
+    let goalsAgainst = 0;
+    
+    completedGames.forEach(game => {
+      const gameScores = batchScores?.[game.id] || [];
+      if (gameScores.length === 0) return;
+      
+      const isHomeGame = teamIdFromUrl === game.homeTeamId;
+      let homeScore = 0;
+      let awayScore = 0;
+      
+      // Sum up all quarter scores for each team
+      gameScores.forEach(score => {
+        if (score.teamId === game.homeTeamId) {
+          homeScore += score.score;
+        } else if (score.teamId === game.awayTeamId) {
+          awayScore += score.score;
+        }
+      });
+      
+      // Determine result
+      if (homeScore > awayScore) {
+        wins += isHomeGame ? 1 : 0;
+        losses += isHomeGame ? 0 : 1;
+      } else if (awayScore > homeScore) {
+        wins += isHomeGame ? 0 : 1;
+        losses += isHomeGame ? 1 : 0;
+      } else {
+        draws += 1;
+      }
+      
+      // Add to goals totals
+      if (isHomeGame) {
+        goalsFor += homeScore;
+        goalsAgainst += awayScore;
+      } else {
+        goalsFor += awayScore;
+        goalsAgainst += homeScore;
+      }
+    });
+    
+    const gamesPlayed = wins + losses + draws;
+    const points = (wins * 3) + draws;
+    const goalDifference = goalsFor - goalsAgainst;
+    const percentage = goalsAgainst > 0 ? ((goalsFor / goalsAgainst) * 100) : 0;
+    
+    return {
+      wins,
+      losses,
+      draws,
+      gamesPlayed,
+      goalsFor,
+      goalsAgainst,
+      points,
+      goalDifference,
+      percentage: Math.round(percentage)
+    };
+  }, [games, batchScores, teamIdFromUrl]);
 
 
   // Simple loading state like GamePreparation page
@@ -355,6 +422,425 @@ export default function Dashboard() {
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
+              {/* Top row: 4 plain cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Card 1: Next Game Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base font-semibold">
+                      {nextGame ? (() => {
+                        const fullGame = games.find(g => g.id === nextGame.id);
+                        const home = fullGame?.homeTeamName || 'Home';
+                        const away = fullGame?.awayTeamName || 'Away';
+                        return `${home} vs ${away}`;
+                      })() : ''}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {nextGame ? (
+                      <div className="space-y-2">
+                        {/* No main heading here, title is above */}
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <Calendar className="h-4 w-4" />
+                          <span>{(() => {
+                            const d = new Date(nextGame.date);
+                            return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                          })()}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <Clock className="h-4 w-4" />
+                          <span>{(() => {
+                            // If nextGame.time is present, format as 12:00 PM
+                            if (!nextGame.time) return '';
+                            // Combine date and time for correct formatting
+                            const dt = new Date(`${nextGame.date}T${nextGame.time}`);
+                            return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                          })()}</span>
+                        </div>
+                        {/* Round (moved above address) */}
+                        {(() => {
+                          const fullGame = games.find(g => g.id === nextGame.id);
+                          return fullGame?.round ? (
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <Flag className="h-4 w-4" />
+                              <span>Round {fullGame.round}</span>
+                            </div>
+                          ) : null;
+                        })()}
+                        {/* Address (now below round, and cleaned up) */}
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <MapPin className="h-4 w-4" />
+                          <span>1-9 Anderson St, Templestowe</span>
+                        </div>
+                        {/* Action Buttons Row: Availability & Roster */}
+                        <div className="flex justify-center pt-1">
+                          <div className="flex gap-4">
+                            <Button
+                              onClick={() => nextGame && (window.location.href = `/team/${teamIdFromUrl}/game/${nextGame.id}/availability`)}
+                              variant="outline"
+                              className="bg-gray-50 border-gray-400 text-gray-700 hover:bg-gray-200 hover:text-gray-800 text-sm px-4 py-1"
+                            >
+                              Availability
+                            </Button>
+                            <Button
+                              onClick={() => nextGame && (window.location.href = `/team/${teamIdFromUrl}/game/${nextGame.id}/roster`)}
+                              variant="outline"
+                              className="bg-gray-50 border-gray-400 text-gray-700 hover:bg-gray-200 hover:text-gray-800 text-sm px-4 py-1"
+                            >
+                              Roster
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">No upcoming game</div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Card 2: History vs Next Opponent */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base font-semibold">
+                      {nextGame ? (() => {
+                        const fullGame = games.find(g => g.id === nextGame.id);
+                        const isHome = teamIdFromUrl === nextGame.homeTeamId;
+                        const opponentName = fullGame
+                          ? (isHome ? fullGame.awayTeamName : fullGame.homeTeamName)
+                          : 'Opponent';
+                        return `Form vs ${opponentName}`;
+                      })() : 'Form vs Opponent'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {nextGame ? (() => {
+                      const isHome = teamIdFromUrl === nextGame.homeTeamId;
+                      const nextOpponentId = isHome ? nextGame.awayTeamId : nextGame.homeTeamId;
+                      const gamesVsOpponent = games
+                        .filter(g => {
+                          const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                          const opponentId = isHomeGame ? g.awayTeamId : g.homeTeamId;
+                          return opponentId === nextOpponentId && g.statusIsCompleted;
+                        })
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // chronological order
+                      if (gamesVsOpponent.length === 0) return <div className="text-muted-foreground">No history</div>;
+                      // Helper to get result for each game
+                      const getResult = (g) => {
+                        const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                        
+                        // Get scores from batchScores data
+                        const gameScores = batchScores?.[g.id] || [];
+                        if (gameScores.length === 0) {
+                          console.log('🔍 No batch scores for game:', g.id);
+                          return null;
+                        }
+                        
+                        // Calculate total scores for each team
+                        let homeScore = 0;
+                        let awayScore = 0;
+                        
+                        gameScores.forEach(scoreEntry => {
+                          if (scoreEntry.teamId === g.homeTeamId) {
+                            homeScore += scoreEntry.score || 0;
+                          } else if (scoreEntry.teamId === g.awayTeamId) {
+                            awayScore += scoreEntry.score || 0;
+                          }
+                        });
+                        
+                        console.log('🔍 Calculated scores:', {
+                          gameId: g.id,
+                          isHomeGame,
+                          homeScore,
+                          awayScore,
+                          homeTeamId: g.homeTeamId,
+                          awayTeamId: g.awayTeamId,
+                          gameScoresCount: gameScores.length
+                        });
+                        
+                        // Determine our score vs opponent score
+                        const teamScore = isHomeGame ? homeScore : awayScore;
+                        const oppScore = isHomeGame ? awayScore : homeScore;
+                        
+                        if (typeof teamScore !== 'number' || typeof oppScore !== 'number') return null;
+                        if (teamScore > oppScore) return 'Win';
+                        if (teamScore < oppScore) return 'Loss';
+                        return 'Draw';
+                      };
+                      return (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-1">
+                            {gamesVsOpponent
+                              .map((g, idx) => {
+                                const result = getResult(g);
+                                if (!result) return null;
+                                // Get scores for tooltip
+                                const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                                const gameScores = batchScores?.[g.id] || [];
+                                let homeScore = 0, awayScore = 0;
+                                gameScores.forEach(scoreEntry => {
+                                  if (scoreEntry.teamId === g.homeTeamId) homeScore += scoreEntry.score || 0;
+                                  else if (scoreEntry.teamId === g.awayTeamId) awayScore += scoreEntry.score || 0;
+                                });
+                                const teamScore = isHomeGame ? homeScore : awayScore;
+                                const oppScore = isHomeGame ? awayScore : homeScore;
+                                const scoreString = `${teamScore}–${oppScore}`;
+                                return (
+                                  <Tooltip key={g.id}>
+                                    <TooltipTrigger asChild>
+                                      <span><ResultBadge result={result} size="md" /></span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{scoreString}</TooltipContent>
+                                  </Tooltip>
+                                );
+                              })
+                              .filter(Boolean)}
+                          </div>
+                          {/* Goals for/against row */}
+                          {(() => {
+                            let totalFor = 0, totalAgainst = 0;
+                            gamesVsOpponent.forEach(g => {
+                              const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                              const gameScores = batchScores?.[g.id] || [];
+                              let homeScore = 0, awayScore = 0;
+                              gameScores.forEach(scoreEntry => {
+                                if (scoreEntry.teamId === g.homeTeamId) homeScore += scoreEntry.score || 0;
+                                else if (scoreEntry.teamId === g.awayTeamId) awayScore += scoreEntry.score || 0;
+                              });
+                              if (isHomeGame) {
+                                totalFor += homeScore;
+                                totalAgainst += awayScore;
+                              } else {
+                                totalFor += awayScore;
+                                totalAgainst += homeScore;
+                              }
+                            });
+                            return (
+                              <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
+                                <div className="flex justify-between">
+                                  <span>Goals for:</span>
+                                  <span className="font-bold">{totalFor}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Goals against:</span>
+                                  <span className="font-bold">{totalAgainst}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Goal difference:</span>
+                                  <span className="font-bold">{totalFor - totalAgainst > 0 ? '+' : ''}{totalFor - totalAgainst}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Percentage:</span>
+                                  <span className="font-bold">{totalAgainst > 0 ? Math.round((totalFor / totalAgainst) * 100) : 0}%</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      );
+                    })() : <div className="text-muted-foreground">No upcoming game</div>}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Form Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base font-semibold">Recent Form</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      // Get last 5 completed games for this team with actual scores
+                      const recentGames = games
+                        .filter(g => 
+                          // Team is involved
+                          (g.homeTeamId === teamIdFromUrl || g.awayTeamId === teamIdFromUrl) &&
+                          // Game is completed
+                          g.statusIsCompleted === true &&
+                          // Not a bye game (has opponent)
+                          g.awayTeamId !== null &&
+                          // Has batch scores available
+                          batchScores?.[g.id]?.length > 0
+                        )
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .slice(0, 5);
+
+                      if (recentGames.length === 0) {
+                        return <div className="text-sm text-muted-foreground">No recent games</div>;
+                      }
+
+                      // Helper to get result for each game
+                      const getResult = (g) => {
+                        const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                        
+                        // Get scores from batchScores data
+                        const gameScores = batchScores?.[g.id] || [];
+                        if (gameScores.length === 0) {
+                          return null;
+                        }
+                        
+                        // Calculate total scores for each team
+                        let homeScore = 0;
+                        let awayScore = 0;
+                        
+                        gameScores.forEach(score => {
+                          if (score.teamId === g.homeTeamId) {
+                            homeScore += score.score;
+                          } else if (score.teamId === g.awayTeamId) {
+                            awayScore += score.score;
+                          }
+                        });
+                        
+                        const teamScore = isHomeGame ? homeScore : awayScore;
+                        const oppScore = isHomeGame ? awayScore : homeScore;
+                        
+                        if (teamScore > oppScore) return 'Win';
+                        if (teamScore < oppScore) return 'Loss';
+                        return 'Draw';
+                      };
+
+                      // Calculate totals for recent games
+                      let totalFor = 0;
+                      let totalAgainst = 0;
+                      
+                      recentGames.forEach(g => {
+                        const gameScores = batchScores?.[g.id] || [];
+                        const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                        
+                        let homeScore = 0;
+                        let awayScore = 0;
+                        
+                        gameScores.forEach(score => {
+                          if (score.teamId === g.homeTeamId) {
+                            homeScore += score.score;
+                          } else if (score.teamId === g.awayTeamId) {
+                            awayScore += score.score;
+                          }
+                        });
+                        
+                        if (isHomeGame) {
+                          totalFor += homeScore;
+                          totalAgainst += awayScore;
+                        } else {
+                          totalFor += awayScore;
+                          totalAgainst += homeScore;
+                        }
+                      });
+
+                      return (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-1">
+                            {recentGames
+                              .reverse()
+                              .map((g, idx) => {
+                                const result = getResult(g);
+                                if (!result) return null;
+                                // Get scores for tooltip
+                                const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                                const gameScores = batchScores?.[g.id] || [];
+                                let homeScore = 0;
+                                let awayScore = 0;
+                                gameScores.forEach(score => {
+                                  if (score.teamId === g.homeTeamId) {
+                                    homeScore += score.score;
+                                  } else if (score.teamId === g.awayTeamId) {
+                                    awayScore += score.score;
+                                  }
+                                });
+                                const teamScore = isHomeGame ? homeScore : awayScore;
+                                const oppScore = isHomeGame ? awayScore : homeScore;
+                                
+                                return (
+                                  <Tooltip key={g.id}>
+                                    <TooltipTrigger>
+                                      <ResultBadge result={result} size="md" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{teamScore}–{oppScore}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })
+                              .filter(Boolean)}
+                          </div>
+                          <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
+                            <div className="flex justify-between">
+                              <span>Goals for:</span>
+                              <span className="font-bold">{totalFor}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Goals against:</span>
+                              <span className="font-bold">{totalAgainst}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Goal difference:</span>
+                              <span className="font-bold">{totalFor - totalAgainst > 0 ? '+' : ''}{totalFor - totalAgainst}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Percentage:</span>
+                              <span className="font-bold">{totalAgainst > 0 ? Math.round((totalFor / totalAgainst) * 100) : 0}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+
+                {/* Card 3: Season Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base font-semibold">Season Form</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <div
+                          className="inline-flex items-center justify-center rounded-full font-semibold text-white border border-white h-8 w-12 text-sm bg-green-500"
+                          style={{
+                            boxShadow: '0 0 0 1px #22c55e'
+                          }}
+                        >
+                          {seasonStats?.wins || 0}W
+                        </div>
+                        <div
+                          className="inline-flex items-center justify-center rounded-full font-semibold text-white border border-white h-8 w-12 text-sm bg-red-500"
+                          style={{
+                            boxShadow: '0 0 0 1px #ef4444'
+                          }}
+                        >
+                          {seasonStats?.losses || 0}L
+                        </div>
+                        <div
+                          className="inline-flex items-center justify-center rounded-full font-semibold text-white border border-white h-8 w-12 text-sm bg-yellow-500"
+                          style={{
+                            boxShadow: '0 0 0 1px #eab308'
+                          }}
+                        >
+                          {seasonStats?.draws || 0}D
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
+                        <div className="flex justify-between">
+                          <span>Goals for:</span>
+                          <span className="font-bold">{seasonStats?.goalsFor || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Goals against:</span>
+                          <span className="font-bold">{seasonStats?.goalsAgainst || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Goal difference:</span>
+                          <span className="font-bold">{seasonStats?.goalDifference >= 0 ? '+' : ''}{seasonStats?.goalDifference || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Percentage:</span>
+                          <span className="font-bold">{seasonStats?.percentage || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Two-column layout for Upcoming and Recent Games */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Upcoming Games */}
@@ -409,15 +895,7 @@ export default function Dashboard() {
                 return null;
               })()}
               
-              {allSeasonGamesWithStatistics.length > 0 && (
-                <SeasonStatsWidget
-                  games={allSeasonGamesWithStatistics}
-                  currentTeamId={teamIdFromUrl ?? 0}
-                  batchScores={batchScores}
-                  batchStats={batchStats}
-                  className="w-full"
-                />
-              )}
+
 
               {allSeasonGamesWithStatistics.length > 0 && (
                 <>
@@ -450,17 +928,6 @@ export default function Dashboard() {
               {/* Compact Attack Defense Widget */}
               {allSeasonGamesWithStatistics.length > 0 && averages && (
                 <CompactAttackDefenseWidget
-                  games={allSeasonGamesWithStatistics}
-                  batchScores={batchScores}
-                  batchStats={batchStats}
-                  teamId={teamIdFromUrl ?? 0}
-                  className="w-full"
-                />
-              )}
-
-              {/* Stats Debug Table */}
-              {allSeasonGamesWithStatistics.length > 0 && (
-                <StatsDebugTable
                   games={allSeasonGamesWithStatistics}
                   batchScores={batchScores}
                   batchStats={batchStats}
@@ -654,6 +1121,8 @@ export default function Dashboard() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          
         </div>
       </div>
     </>

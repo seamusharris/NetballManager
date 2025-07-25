@@ -172,6 +172,12 @@ function Router() {
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/club/:clubId/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/team/:teamId/players" component={withErrorBoundary(TeamPlayersManager, 'TeamPlayersManager')} />
+        
+        {/* NEW RESTFUL ROUTES - Recommended pattern */}
+        <Route path="/team/:teamId/game/:gameId/availability" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
+        <Route path="/team/:teamId/game/:gameId/roster" component={withErrorBoundary(RosterGame, 'RosterGame')} />
+        
+        {/* DEPRECATED ROUTES - Legacy patterns (will be removed in future) */}
         <Route path="/team/:teamId/availability" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
         <Route path="/team/:teamId/availability/:gameId" component={withErrorBoundary(PlayerAvailability, 'PlayerAvailability')} />
         <Route path="/team/:teamId/roster/game/:gameId" component={withErrorBoundary(RosterGame, 'RosterGame')} />

@@ -998,7 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- PLAYER AVAILABILITY API -----
 
   // Team-based availability endpoint (NEW - Stage 5)
-  app.get("/api/teams/:teamId/games/:gameId/availability", requireTeamGameAccess(), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/teams/:teamId/game/:gameId/availability", requireTeamGameAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const teamId = Number(req.params.teamId);
