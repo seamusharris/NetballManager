@@ -844,42 +844,28 @@ export default function Dashboard() {
               {/* Two-column layout for Upcoming and Recent Games */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Upcoming Games */}
-                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle>Upcoming Games</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SimplifiedGamesList
-                      games={gamesWithQuarterScores.filter(game => game.status === 'scheduled' || game.status === 'upcoming')}
-                      currentTeamId={teamIdFromUrl ?? 0}
-                      variant="upcoming"
-                      maxGames={5}
-                      compact={true}
-                      showQuarterScores={false}
-                      layout="medium"
-                    />
-                  </CardContent>
-                </Card>
+                <SimplifiedGamesList
+                  games={gamesWithQuarterScores.filter(game => game.status === 'scheduled' || game.status === 'upcoming')}
+                  currentTeamId={teamIdFromUrl ?? 0}
+                  variant="upcoming"
+                  maxGames={5}
+                  compact={true}
+                  showQuarterScores={false}
+                  layout="medium"
+                />
 
                 {/* Recent Games */}
-                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle>Recent Games</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SimplifiedGamesList
-                      games={recentCompletedGames}
-                      currentTeamId={teamIdFromUrl ?? 0}
-                      variant="recent"
-                      maxGames={5}
-                      compact={true}
-                      showQuarterScores={false}
-                      layout="medium"
-                      showViewMore={true}
-                      viewMoreHref={`/team/${teamIdFromUrl}/games?status=completed`}
-                    />
-                  </CardContent>
-                </Card>
+                <SimplifiedGamesList
+                  games={recentCompletedGames}
+                  currentTeamId={teamIdFromUrl ?? 0}
+                  variant="recent"
+                  maxGames={5}
+                  compact={true}
+                  showQuarterScores={false}
+                  layout="medium"
+                  showViewMore={true}
+                  viewMoreHref={`/team/${teamIdFromUrl}/games?status=completed`}
+                />
               </div>
 
               {/* Quarter Performance Analysis Widget */}
