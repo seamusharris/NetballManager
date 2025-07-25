@@ -8,7 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import Dashboard from "@/pages/Dashboard";
+import TeamDashboard from "@/pages/TeamDashboard";
 import Players from "@/pages/Players";
 import Roster from "@/pages/Roster";
 import Games from "@/pages/Games";
@@ -135,7 +135,7 @@ function Router() {
         {/* New club-scoped routes */}
         <Route path="/club/:clubId" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
         <Route path="/club/:clubId/teams" component={withErrorBoundary(Teams, 'Teams')} />
-        <Route path="/club/:clubId/team/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/club/:clubId/team/:teamId" component={withErrorBoundary(TeamDashboard, 'TeamDashboard')} />
         <Route path="/club/:clubId/team/:teamId/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/club/:clubId/team/:teamId/players" component={withErrorBoundary(TeamPlayersManager, 'TeamPlayersManager')} />
         <Route path="/club/:clubId/team/:teamId/roster" component={withErrorBoundary(Roster, 'Roster')} />
@@ -160,8 +160,8 @@ function Router() {
         </Route>
         
         {/* Legacy routes for backward compatibility */}
-        <Route path="/team/:teamId/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
-        <Route path="/team/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/team/:teamId/dashboard" component={withErrorBoundary(TeamDashboard, 'TeamDashboard')} />
+        <Route path="/team/:teamId" component={withErrorBoundary(TeamDashboard, 'TeamDashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/club/:clubId/players" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/players/:clubId" component={withErrorBoundary(Players, 'Players')} />

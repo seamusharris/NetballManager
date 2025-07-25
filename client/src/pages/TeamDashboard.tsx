@@ -1094,33 +1094,15 @@ export default function Dashboard() {
                   <CardTitle>Season Form</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-2xl border border-gray-200 bg-white p-6">
-                    <div className="font-semibold text-lg mb-2">Season Form</div>
-                    <div className="flex gap-2 mb-3">
-                      {games.filter(game => game.statusIsCompleted === true).map(game => {
-                        const gameScores = batchScores?.[game.id] || [];
-                        if (gameScores.length === 0) return null;
-                        let homeScore = 0;
-                        let awayScore = 0;
-                        gameScores.forEach(score => {
-                          if (score.teamId === game.homeTeamId) {
-                            homeScore += score.score;
-                          } else if (score.teamId === game.awayTeamId) {
-                            awayScore += score.score;
-                          }
-                        });
-                        let result: 'Win' | 'Loss' | 'Draw' | 'Bye' = 'Draw';
-                        if (game.isBye) {
-                          result = 'Bye';
-                        } else if ((teamIdFromUrl === game.homeTeamId && homeScore > awayScore) || (teamIdFromUrl === game.awayTeamId && awayScore > homeScore)) {
-                          result = 'Win';
-                        } else if ((teamIdFromUrl === game.homeTeamId && homeScore < awayScore) || (teamIdFromUrl === game.awayTeamId && awayScore < homeScore)) {
-                          result = 'Loss';
-                        }
-                        return <ResultBadge key={game.id} result={result} shape="capsule" size="md" />;
-                      })}
-                    </div>
-                  </div>
+                  <SimplifiedGamesList
+                    games={gamesWithQuarterScores}
+                    currentTeamId={teamIdFromUrl ?? 0}
+                    variant="season"
+                    compact={false}
+                    showQuarterScores={true}
+                    layout="wide"
+                    showFilters={true}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

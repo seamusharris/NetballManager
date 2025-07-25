@@ -61,7 +61,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     // Team-specific links following proposed architecture
     const teamLinks = currentTeamId ? [
       { 
-        path: `/team/${currentTeamId}/dashboard`, 
+        path: `/team/${currentTeamId}`, 
         label: 'Team Dashboard', 
         icon: <Home className="w-5 h-5" />,
         section: 'team'
