@@ -808,16 +808,132 @@ export function calculateGameScores(stats: GameStat[]) {
 
 // Get appropriate color for game status
 export function getGameStatusColor(status: GameStatus): string {
-  const colorMap = {
-    'upcoming': 'blue',
-    'in-progress': 'amber',
-    'completed': 'green',
-    'forfeit-win': 'orange',
-    'forfeit-loss': 'red',
-    'bye': 'purple',
-    'abandoned': 'gray'
-  };
+  switch (status) {
+    case 'scheduled':
+      return 'text-blue-600';
+    case 'in-progress':
+      return 'text-yellow-600';
+    case 'completed':
+      return 'text-green-600';
+    case 'cancelled':
+      return 'text-red-600';
+    case 'postponed':
+      return 'text-orange-600';
+    default:
+      return 'text-gray-600';
+  }
+}
 
-  return colorMap[status] || 'gray';
+/**
+ * Calculate season statistics from games with options for totals vs averages
+ */
+export function calculateSeasonStats(
+  games: any[],
+  batchScores: Record<number, any[]>,
+  teamId: number,
+  options: {
+    includeByes?: boolean;
+    format?: 'totals' | 'averages' | 'both';
+  } = { includeByes: false, format: 'both' }
+): {
+  wins: number;
+  losses: number;
+  draws: number;
+  byes: number;
+  gamesPlayed: number;
+  totalGoalsFor: number;
+  totalGoalsAgainst: number;
+  totalGoalDifference: number;
+  avgGoalsFor: number;
+  avgGoalsAgainst: number;
+  avgGoalDifference: number;
+  points: number;
+  percentage: number;
+} {
+  const completedGames = games.filter(game => game.statusIsCompleted === true);
+  
+  let wins = 0;
+  let losses = 0;
+  let draws = 0;
+  let byes = 0;
+  let totalGoalsFor = 0;
+  let totalGoalsAgainst = 0;
+  let gamesWithScores = 0;
+  
+  completedGames.forEach(game => {
+    const gameScores = batchScores?.[game.id] || [];
+    const isHomeGame = teamId === game.homeTeamId;
+    
+    // Handle bye games
+    if (game.statusName === 'bye' || game.awayTeamId === null) {
+      byes += 1;
+      return;
+    }
+    
+    // Skip games without scores
+    if (gameScores.length === 0) {
+      return;
+    }
+    
+    gamesWithScores++;
+    
+    let homeScore = 0;
+    let awayScore = 0;
+    
+    // Sum up all quarter scores for each team
+    gameScores.forEach(score => {
+      if (score.teamId === game.homeTeamId) {
+        homeScore += score.score;
+      } else if (score.teamId === game.awayTeamId) {
+        awayScore += score.score;
+      }
+    });
+    
+    // Determine result
+    if (homeScore > awayScore) {
+      wins += isHomeGame ? 1 : 0;
+      losses += isHomeGame ? 0 : 1;
+    } else if (awayScore > homeScore) {
+      wins += isHomeGame ? 0 : 1;
+      losses += isHomeGame ? 1 : 0;
+    } else {
+      draws += 1;
+    }
+    
+    // Add to goals totals
+    if (isHomeGame) {
+      totalGoalsFor += homeScore;
+      totalGoalsAgainst += awayScore;
+    } else {
+      totalGoalsFor += awayScore;
+      totalGoalsAgainst += homeScore;
+    }
+  });
+  
+  const gamesPlayed = wins + losses + draws;
+  const totalGoalDifference = totalGoalsFor - totalGoalsAgainst;
+  const points = (wins * 3) + draws;
+  const percentage = totalGoalsAgainst > 0 ? ((totalGoalsFor / totalGoalsAgainst) * 100) : 0;
+  
+  // Calculate averages
+  const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
+  const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
+  const avgGoalDifference = avgGoalsFor - avgGoalsAgainst;
+  
+  return {
+    wins,
+    losses,
+    draws,
+    byes,
+    gamesPlayed,
+    totalGoalsFor,
+    totalGoalsAgainst,
+    totalGoalDifference,
+    avgGoalsFor,
+    avgGoalsAgainst,
+    avgGoalDifference,
+    points,
+    percentage: Math.round(percentage)
+  };
 }
 export { unifiedStatsService as StatisticsService };

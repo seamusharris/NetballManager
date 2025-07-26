@@ -17,6 +17,7 @@ import { NextGameDetailsWidget } from "@/components/ui/next-game-details-widget"
 import { useBatchGameStatistics } from "@/components/statistics/hooks/useBatchGameStatistics";
 import { useNextGame } from '@/hooks/use-next-game';
 import { processUnifiedGameData, calculateUnifiedQuarterByQuarterStats } from '@/lib/positionStatsCalculator';
+import { calculateSeasonStats } from '@/lib/statisticsService';
 import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
 import { apiClient } from '@/lib/apiClient';
@@ -303,83 +304,9 @@ export default function Dashboard() {
     return result;
   }, [allSeasonGamesWithStatistics, batchScores, batchStats, teamIdFromUrl]);
 
-  // Calculate season statistics from completed games
+  // Calculate season statistics using shared function
   const seasonStats = useMemo(() => {
-    const completedGames = games.filter(game => game.statusIsCompleted === true);
-    
-    let wins = 0;
-    let losses = 0;
-    let draws = 0;
-    let byes = 0;
-    let goalsFor = 0;
-    let goalsAgainst = 0;
-    
-    completedGames.forEach(game => {
-      const gameScores = batchScores?.[game.id] || [];
-      const isHomeGame = teamIdFromUrl === game.homeTeamId;
-      
-      // Handle bye games
-      if (game.statusName === 'bye' || game.awayTeamId === null) {
-        byes += 1;
-        return;
-      }
-      
-      // Skip games without scores (shouldn't happen for completed games, but safety check)
-      if (gameScores.length === 0) {
-        console.log(`🔍 Game ${game.id} has no scores but is completed, skipping`);
-        return;
-      }
-      
-      let homeScore = 0;
-      let awayScore = 0;
-      
-      // Sum up all quarter scores for each team
-      gameScores.forEach(score => {
-        if (score.teamId === game.homeTeamId) {
-          homeScore += score.score;
-        } else if (score.teamId === game.awayTeamId) {
-          awayScore += score.score;
-        }
-      });
-      
-      // Determine result
-      if (homeScore > awayScore) {
-        wins += isHomeGame ? 1 : 0;
-        losses += isHomeGame ? 0 : 1;
-      } else if (awayScore > homeScore) {
-        wins += isHomeGame ? 0 : 1;
-        losses += isHomeGame ? 1 : 0;
-      } else {
-        draws += 1;
-      }
-      
-      // Add to goals totals
-      if (isHomeGame) {
-        goalsFor += homeScore;
-        goalsAgainst += awayScore;
-      } else {
-        goalsFor += awayScore;
-        goalsAgainst += homeScore;
-      }
-    });
-    
-    const gamesPlayed = wins + losses + draws;
-    const points = (wins * 3) + draws;
-    const goalDifference = goalsFor - goalsAgainst;
-    const percentage = goalsAgainst > 0 ? ((goalsFor / goalsAgainst) * 100) : 0;
-    
-    return {
-      wins,
-      losses,
-      draws,
-      byes,
-      gamesPlayed,
-      goalsFor,
-      goalsAgainst,
-      points,
-      goalDifference,
-      percentage: Math.round(percentage)
-    };
+    return calculateSeasonStats(games, batchScores, teamIdFromUrl ?? 0);
   }, [games, batchScores, teamIdFromUrl]);
 
 
@@ -618,6 +545,7 @@ export default function Dashboard() {
                           {/* Goals for/against row */}
                           {(() => {
                             let totalFor = 0, totalAgainst = 0;
+                            let gamesWithScores = 0;
                             gamesVsOpponent.forEach(g => {
                               const isHomeGame = teamIdFromUrl === g.homeTeamId;
                               const gameScores = batchScores?.[g.id] || [];
@@ -626,31 +554,39 @@ export default function Dashboard() {
                                 if (scoreEntry.teamId === g.homeTeamId) homeScore += scoreEntry.score || 0;
                                 else if (scoreEntry.teamId === g.awayTeamId) awayScore += scoreEntry.score || 0;
                               });
-                              if (isHomeGame) {
-                                totalFor += homeScore;
-                                totalAgainst += awayScore;
-                              } else {
-                                totalFor += awayScore;
-                                totalAgainst += homeScore;
+                              if (homeScore > 0 || awayScore > 0) {
+                                gamesWithScores++;
+                                if (isHomeGame) {
+                                  totalFor += homeScore;
+                                  totalAgainst += awayScore;
+                                } else {
+                                  totalFor += awayScore;
+                                  totalAgainst += homeScore;
+                                }
                               }
                             });
+                            
+                            const avgFor = gamesWithScores > 0 ? totalFor / gamesWithScores : 0;
+                            const avgAgainst = gamesWithScores > 0 ? totalAgainst / gamesWithScores : 0;
+                            const avgDifference = avgFor - avgAgainst;
+                            
                             return (
                               <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
                                 <div className="flex justify-between">
-                                  <span>Goals for:</span>
-                                  <span className="font-bold">{totalFor}</span>
+                                  <span>Average for:</span>
+                                  <span className="font-bold">{avgFor.toFixed(1)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Goals against:</span>
-                                  <span className="font-bold">{totalAgainst}</span>
+                                  <span>Average against:</span>
+                                  <span className="font-bold">{avgAgainst.toFixed(1)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Goal difference:</span>
-                                  <span className="font-bold">{totalFor - totalAgainst > 0 ? '+' : ''}{totalFor - totalAgainst}</span>
+                                  <span>Average difference:</span>
+                                  <span className="font-bold">{avgDifference >= 0 ? '+' : ''}{avgDifference.toFixed(1)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Percentage:</span>
-                                  <span className="font-bold">{totalAgainst > 0 ? Math.round((totalFor / totalAgainst) * 100) : 0}%</span>
+                                  <span className="font-bold">{avgAgainst > 0 ? Math.round((avgFor / avgAgainst) * 100) : 0}%</span>
                                 </div>
                               </div>
                             );
@@ -718,9 +654,10 @@ export default function Dashboard() {
                         return 'Draw';
                       };
 
-                      // Calculate totals for recent games (excluding byes)
+                      // Calculate averages for recent games (excluding byes)
                       let totalFor = 0;
                       let totalAgainst = 0;
+                      let gamesWithScores = 0;
                       
                       recentGames.forEach(g => {
                         // Skip bye games for goals totals
@@ -742,14 +679,21 @@ export default function Dashboard() {
                           }
                         });
                         
-                        if (isHomeGame) {
-                          totalFor += homeScore;
-                          totalAgainst += awayScore;
-                        } else {
-                          totalFor += awayScore;
-                          totalAgainst += homeScore;
+                        if (homeScore > 0 || awayScore > 0) {
+                          gamesWithScores++;
+                          if (isHomeGame) {
+                            totalFor += homeScore;
+                            totalAgainst += awayScore;
+                          } else {
+                            totalFor += awayScore;
+                            totalAgainst += homeScore;
+                          }
                         }
                       });
+                      
+                      const avgFor = gamesWithScores > 0 ? totalFor / gamesWithScores : 0;
+                      const avgAgainst = gamesWithScores > 0 ? totalAgainst / gamesWithScores : 0;
+                      const avgDifference = avgFor - avgAgainst;
 
                       return (
                         <div className="flex flex-col gap-2">
@@ -804,20 +748,20 @@ export default function Dashboard() {
                           </div>
                           <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
                             <div className="flex justify-between">
-                              <span>Goals for:</span>
-                              <span className="font-bold">{totalFor}</span>
+                              <span>Average for:</span>
+                              <span className="font-bold">{avgFor.toFixed(1)}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Goals against:</span>
-                              <span className="font-bold">{totalAgainst}</span>
+                              <span>Average against:</span>
+                              <span className="font-bold">{avgAgainst.toFixed(1)}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Goal difference:</span>
-                              <span className="font-bold">{totalFor - totalAgainst > 0 ? '+' : ''}{totalFor - totalAgainst}</span>
+                              <span>Average difference:</span>
+                              <span className="font-bold">{avgDifference >= 0 ? '+' : ''}{avgDifference.toFixed(1)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span>Percentage:</span>
-                              <span className="font-bold">{totalAgainst > 0 ? Math.round((totalFor / totalAgainst) * 100) : 0}%</span>
+                              <span className="font-bold">{avgAgainst > 0 ? Math.round((avgFor / avgAgainst) * 100) : 0}%</span>
                             </div>
                           </div>
                         </div>
@@ -873,16 +817,16 @@ export default function Dashboard() {
                       </div>
                       <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
                         <div className="flex justify-between">
-                          <span>Goals for:</span>
-                          <span className="font-bold">{seasonStats?.goalsFor || 0}</span>
+                          <span>Average for:</span>
+                          <span className="font-bold">{seasonStats?.avgGoalsFor?.toFixed(1) || '0.0'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Goals against:</span>
-                          <span className="font-bold">{seasonStats?.goalsAgainst || 0}</span>
+                          <span>Average against:</span>
+                          <span className="font-bold">{seasonStats?.avgGoalsAgainst?.toFixed(1) || '0.0'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Goal difference:</span>
-                          <span className="font-bold">{seasonStats?.goalDifference >= 0 ? '+' : ''}{seasonStats?.goalDifference || 0}</span>
+                          <span>Average difference:</span>
+                          <span className="font-bold">{seasonStats?.avgGoalDifference >= 0 ? '+' : ''}{seasonStats?.avgGoalDifference?.toFixed(1) || '0.0'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Percentage:</span>
