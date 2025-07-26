@@ -32,6 +32,13 @@ export default function Dashboard() {
   // Simple: get teamId directly from URL like GamePreparation page
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : undefined;
 
+  // Get team details
+  const { data: team, isLoading: isLoadingTeam } = useQuery<any>({
+    queryKey: ['team', teamIdFromUrl],
+    queryFn: () => apiClient.get(`/api/teams/${teamIdFromUrl}`),
+    enabled: !!teamIdFromUrl,
+  });
+
   // Get all games for the current team using team API
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['teams', teamIdFromUrl, 'games'],
@@ -303,14 +310,26 @@ export default function Dashboard() {
     let wins = 0;
     let losses = 0;
     let draws = 0;
+    let byes = 0;
     let goalsFor = 0;
     let goalsAgainst = 0;
     
     completedGames.forEach(game => {
       const gameScores = batchScores?.[game.id] || [];
-      if (gameScores.length === 0) return;
-      
       const isHomeGame = teamIdFromUrl === game.homeTeamId;
+      
+      // Handle bye games
+      if (game.statusName === 'bye' || game.awayTeamId === null) {
+        byes += 1;
+        return;
+      }
+      
+      // Skip games without scores (shouldn't happen for completed games, but safety check)
+      if (gameScores.length === 0) {
+        console.log(`🔍 Game ${game.id} has no scores but is completed, skipping`);
+        return;
+      }
+      
       let homeScore = 0;
       let awayScore = 0;
       
@@ -353,6 +372,7 @@ export default function Dashboard() {
       wins,
       losses,
       draws,
+      byes,
       gamesPlayed,
       goalsFor,
       goalsAgainst,
@@ -364,12 +384,12 @@ export default function Dashboard() {
 
 
   // Simple loading state like GamePreparation page
-  if (clubLoading || !currentClub) {
+  if (clubLoading || !currentClub || isLoadingTeam) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+          <p className="mt-2 text-sm text-muted-foreground">Loading team data...</p>
         </div>
       </div>
     );
@@ -378,8 +398,8 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
-        <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
+        <title>{team?.name || 'Team'} Dashboard | {TEAM_NAME} Stats Tracker</title>
+        <meta name="description" content={`View ${team?.name || 'team'}'s performance metrics, upcoming games, and player statistics`} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -391,12 +411,12 @@ export default function Dashboard() {
           <Card className="border-0 shadow-lg text-white" style={{ backgroundColor: "#1e3a8a" }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2 text-white">
-                    {currentClub?.name} Dashboard
-                  </h1>
-                  <p className="text-blue-100">Performance metrics and insights for your team</p>
-                </div>
+                                  <div>
+                    <h1 className="text-3xl font-bold tracking-tight mb-2 text-white">
+                      {team?.name || currentClub?.name} Dashboard
+                    </h1>
+                    <p className="text-blue-100">Performance metrics and insights for your team</p>
+                  </div>
               </div>
             </CardContent>
           </Card>
@@ -648,17 +668,13 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     {(() => {
-                      // Get last 5 completed games for this team with actual scores
+                      // Get last 5 completed games for this team (including byes)
                       const recentGames = games
                         .filter(g => 
                           // Team is involved
                           (g.homeTeamId === teamIdFromUrl || g.awayTeamId === teamIdFromUrl) &&
                           // Game is completed
-                          g.statusIsCompleted === true &&
-                          // Not a bye game (has opponent)
-                          g.awayTeamId !== null &&
-                          // Has batch scores available
-                          batchScores?.[g.id]?.length > 0
+                          g.statusIsCompleted === true
                         )
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                         .slice(0, 5);
@@ -670,6 +686,11 @@ export default function Dashboard() {
                       // Helper to get result for each game
                       const getResult = (g) => {
                         const isHomeGame = teamIdFromUrl === g.homeTeamId;
+                        
+                        // Handle bye games
+                        if (g.statusName === 'bye' || g.awayTeamId === null) {
+                          return 'Bye';
+                        }
                         
                         // Get scores from batchScores data
                         const gameScores = batchScores?.[g.id] || [];
@@ -697,11 +718,16 @@ export default function Dashboard() {
                         return 'Draw';
                       };
 
-                      // Calculate totals for recent games
+                      // Calculate totals for recent games (excluding byes)
                       let totalFor = 0;
                       let totalAgainst = 0;
                       
                       recentGames.forEach(g => {
+                        // Skip bye games for goals totals
+                        if (g.statusName === 'bye' || g.awayTeamId === null) {
+                          return;
+                        }
+                        
                         const gameScores = batchScores?.[g.id] || [];
                         const isHomeGame = teamIdFromUrl === g.homeTeamId;
                         
@@ -733,6 +759,21 @@ export default function Dashboard() {
                               .map((g, idx) => {
                                 const result = getResult(g);
                                 if (!result) return null;
+                                
+                                // Handle bye games
+                                if (result === 'Bye') {
+                                  return (
+                                    <Tooltip key={g.id}>
+                                      <TooltipTrigger>
+                                        <ResultBadge result="Bye" size="md" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Bye</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  );
+                                }
+                                
                                 // Get scores for tooltip
                                 const isHomeGame = teamIdFromUrl === g.homeTeamId;
                                 const gameScores = batchScores?.[g.id] || [];
@@ -809,14 +850,26 @@ export default function Dashboard() {
                         >
                           {seasonStats?.losses || 0}L
                         </div>
-                        <div
-                          className="inline-flex items-center justify-center rounded-full font-semibold text-white border border-white h-8 w-12 text-sm bg-yellow-500"
-                          style={{
-                            boxShadow: '0 0 0 1px #eab308'
-                          }}
-                        >
-                          {seasonStats?.draws || 0}D
-                        </div>
+                        {seasonStats?.draws > 0 && (
+                          <div
+                            className="inline-flex items-center justify-center rounded-full font-semibold text-white border border-white h-8 w-12 text-sm bg-yellow-500"
+                            style={{
+                              boxShadow: '0 0 0 1px #eab308'
+                            }}
+                          >
+                            {seasonStats.draws}D
+                          </div>
+                        )}
+                        {seasonStats?.byes > 0 && (
+                          <div
+                            className="inline-flex items-center justify-center rounded-full font-semibold text-white border border-white h-8 w-12 text-sm bg-gray-500"
+                            style={{
+                              boxShadow: '0 0 0 1px #6b7280'
+                            }}
+                          >
+                            {seasonStats.byes}B
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col gap-1 mt-1 text-sm text-gray-700">
                         <div className="flex justify-between">
