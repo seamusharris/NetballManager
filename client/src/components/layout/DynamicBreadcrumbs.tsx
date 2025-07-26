@@ -276,6 +276,32 @@ export function DynamicBreadcrumbs({ customItems, hideHome = false }: DynamicBre
           { label: 'Availability' }
         ];
       }
+      // Handle /team/:teamId/game/:gameId/availability pattern
+      if (pathSegments[2] === 'game' && pathSegments[3] && !isNaN(Number(pathSegments[3]))) {
+        const gameId = parseInt(pathSegments[3]);
+        const gameLabel = gameDetails 
+          ? `${gameDetails.home_team_name || gameDetails.homeTeamName || 'Home'} vs ${gameDetails.away_team_name || gameDetails.awayTeamName || 'Away'}`
+          : `Game ${gameId}`;
+        
+        // Check if next segment is availability
+        if (pathSegments[4] === 'availability') {
+          return [
+            { label: 'Home', href: '/' },
+            { label: clubName, href: `/club/${effectiveClubId || 54}` },
+            { label: (typeof teamName === 'string' ? teamName : 'Team'), href: `/team/${teamId}` },
+            { label: gameLabel, href: `/team/${teamId}/game/${gameId}` },
+            { label: 'Availability' }
+          ];
+        }
+        
+        // Just game details
+        return [
+          { label: 'Home', href: '/' },
+          { label: clubName, href: `/club/${effectiveClubId || 54}` },
+          { label: (typeof teamName === 'string' ? teamName : 'Team'), href: `/team/${teamId}` },
+          { label: gameLabel }
+        ];
+      }
       // Legacy game routes
       if (pathSegments[2] === 'games' && pathSegments[3] && !isNaN(Number(pathSegments[3]))) {
         const gameId = parseInt(pathSegments[3]);

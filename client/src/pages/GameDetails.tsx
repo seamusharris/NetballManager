@@ -39,6 +39,7 @@ import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
 import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
 import RecordStatsButton from '@/components/games/RecordStatsButton';
+import SimpleGameResultCard from '@/components/ui/simple-game-result-card';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -1809,25 +1810,44 @@ export default function GameDetails() {
             </Dialog>
           </div>
 
-          <div className="text-gray-500">
-            {formatDate(game.date)} {game.time && `at ${game.time}`}
-            {game.location && ` · ${game.location}`}
-            {game.round && ` · Round ${game.round}`}
-          </div>
+
         </div>
 
         {/* View Statistics button removed - stats now available directly on this page */}
       </div>
 
-      {/* Show quarter scores summary */}
-      <QuarterScores 
-        quarterScores={quarterScores} 
-        gameStatus={game?.status} 
-        contextualTeamScore={totalTeamScore}
-        contextualOpponentScore={totalOpponentScore}
-        isByeGame={isByeGame}
-        isUpcomingGame={isUpcomingGame}
-      />
+      {/* Game Result Box */}
+      <div className="mt-6">
+        <Card>
+          <CardContent className="pt-6 pb-6">
+            <SimpleGameResultCard
+              homeTeam={{ id: game.homeTeamId, name: game.homeTeamName }}
+              awayTeam={game.awayTeamId ? { id: game.awayTeamId, name: game.awayTeamName } : undefined}
+              quarterScores={quarterScores?.map(q => ({
+                homeScore: q.teamScore,
+                awayScore: q.opponentScore
+              })) || []}
+              currentTeamId={teamIdFromUrl}
+              gameInfo={{
+                id: game.id,
+                date: game.date,
+                round: game.round,
+                status: game.statusName || (game.statusIsCompleted ? 'completed' : 'scheduled'),
+                statusIsCompleted: game.statusIsCompleted
+              }}
+              layout="wide"
+              showLink={false}
+              showDate={true}
+              showRound={true}
+              showScore={true}
+              showQuarterScores={true}
+              hasStats={gameStats && gameStats.length > 0}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+
 
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
