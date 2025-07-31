@@ -37,8 +37,8 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
     enabled: !propPlayers,
   });
 
-  const roster = propRoster || rosterData || [];
-  const players = propPlayers || playersData || [];
+  const roster = Array.isArray(propRoster) ? propRoster : Array.isArray(rosterData) ? rosterData : [];
+  const players = Array.isArray(propPlayers) ? propPlayers : Array.isArray(playersData) ? playersData : [];
 
   // Group roster by quarter and position
   const rosterByQuarterPosition = roster.reduce((acc, item) => {
