@@ -1135,7 +1135,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'gameIds array is required' });
       }
 
-      console.log(`Club-scoped POST Batch stats endpoint for club ${clubId}, gameIds:`, gameIds);
 
       const gameIdInts = gameIds.map(id => parseInt(id)).filter(id => !isNaN(id));
       if (gameIdInts.length === 0) {
@@ -1173,13 +1172,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Legacy batch stats endpoint for backward compatibility
   app.post("/api/games/stats/batch", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("POST Batch endpoint received body:", req.body);
       const { gameIds } = req.body;
-      console.log("Extracted gameIds from POST body:", gameIds);
 
       // More robust parameter validation - return empty object instead of error for empty requests
       if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
-        console.log("POST Batch stats endpoint: No game IDs provided, returning empty object");
         return res.json({});
       }
 
@@ -1195,7 +1191,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No valid game IDs provided" });
       }
 
-      console.log(`POST Batch fetching stats for ${validGameIds.length} games: ${validGameIds.join(',')}`);
 
       // Process each game ID in parallel with error handling
       const statsPromises = validGameIds.map(async (gameId) => {
@@ -1216,7 +1211,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {} as Record<number, any[]>);
 
-      console.log(`POST Batch endpoint successfully returned stats for ${validGameIds.length} games`);
       res.json(transformToApiFormat(statsMap));
     } catch (error) {
       console.error(`Error in POST batch game stats endpoint:`, error);
