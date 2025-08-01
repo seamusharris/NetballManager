@@ -1,35 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { insertGameSchema } from "@shared/schema";
-import { Button } from '../ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
-import { Input } from '../ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { useToast } from '../../hooks/use-toast';
-import { useClub } from '../../contexts/ClubContext';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../lib/apiClient';
+import { format } from 'date-fns';
+import ClubTeamSelector from './ClubTeamSelector';
 
-const formSchema = insertGameSchema.extend({
-  date: z.string().min(1, "Date is required"),
-  time: z.string().min(1, "Time is required"),
-  round: z.string().optional(),
-  statusId: z.string().min(1, "Game status is required"),
-  seasonId: z.string().min(1, "Season is required"),
-  homeTeamId: z.string().min(1, "Home team is required"),
-  awayTeamId: z.string().optional(), // Make optional to allow BYE games
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-interface GameFormProps {
+interface NewGameFormProps {
   game?: any;
   seasons: any[];
   gameStatuses: any[];
-  teams: any[];
-  allTeams: any[];
   activeSeason: any;
   onSubmit: (data: any) => void;
   onCancel: () => void;
@@ -37,340 +14,315 @@ interface GameFormProps {
   isEditing?: boolean;
 }
 
-export default function GameForm({
+interface GameFormData {
+  date: string;
+  time: string;
+  round?: string;
+  seasonId: string;
+  homeClubId: string;
+  homeTeamId: string;
+  awayClubId?: string;
+  awayTeamId?: string;
+  statusId: string;
+  venue?: string;
+  notes?: string;
+}
+
+export default function NewGameForm({
   game,
   seasons,
   gameStatuses,
-  teams,
-  allTeams = [],
   activeSeason,
   onSubmit,
   onCancel,
   isSubmitting = false,
-  isEditing = false,
-}: GameFormProps) {
-  const { toast } = useToast();
-  const { currentClubId } = useClub();
-
-  // Fetch all teams for inter-club games
-  const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({
-    queryKey: ['teams', 'all'],
-    queryFn: () => apiClient.get('/api/teams/all'),
-    staleTime: 5 * 60 * 1000,
+  isEditing = false
+}: NewGameFormProps) {
+  const [formData, setFormData] = useState<GameFormData>({
+    date: game?.date || format(new Date(), 'yyyy-MM-dd'),
+    time: game?.time || '10:00',
+    round: game?.round || '',
+    seasonId: game?.seasonId?.toString() || activeSeason?.id?.toString() || '',
+    homeClubId: '',
+    homeTeamId: game?.homeTeamId?.toString() || '',
+    awayClubId: '',
+    awayTeamId: game?.awayTeamId?.toString() || '',
+    statusId: game?.statusId?.toString() || '1',
+    venue: game?.venue || '',
+    notes: game?.notes || ''
   });
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      date: "",
-      time: "",
-      round: "",
-      statusId: activeSeason ? "1" : "",
-      seasonId: activeSeason ? activeSeason.id.toString() : "",
-      homeTeamId: "",
-      awayTeamId: "",
-    },
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { watch } = form;
-
-  console.log("GameForm useEffect triggered:", {
-    game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,
-    activeSeason: activeSeason ? { id: activeSeason.id, name: activeSeason.name } : null,
-    gameStatuses: gameStatuses?.length || 0,
-    teams: teams?.length || 0,
-  });
-
-  useEffect(() => {
-    if (game && activeSeason) {
-      console.log("Resetting form with game data:", game);
-      form.reset({
-        date: game.date || "",
-        time: game.time || "",
-        round: game.round || "",
-        statusId: game.statusId?.toString() || "1",
-        seasonId: game.seasonId?.toString() || activeSeason.id.toString(),
-        homeTeamId: game.homeTeamId?.toString() || "",
-        awayTeamId: game.awayTeamId?.toString() || "",
-      });
-    } else if (activeSeason && !game) {
-      // Set defaults for new games
-      form.reset({
-        date: "",
-        time: "",
-        round: "",
-        statusId: "1",
-        seasonId: activeSeason.id.toString(),
-        homeTeamId: "",
-        awayTeamId: "",
-      });
+  // Query to get clubs
+  const { data: clubs, isLoading: clubsLoading } = useQuery({
+    queryKey: ['clubs'],
+    queryFn: async () => {
+      const response = await fetch('/api/clubs');
+      if (!response.ok) throw new Error('Failed to fetch clubs');
+      const data = await response.json();
+      return data.data || [];
     }
-  }, [game, activeSeason, form]);
-
-  // Watch for status changes to clear away team when switching to BYE
-  const watchedStatusId = watch("statusId");
-  useEffect(() => {
-    if (watchedStatusId === "6") { // BYE status
-      form.setValue("awayTeamId", "");
-    }
-  }, [watchedStatusId, form]);
-
-  const formValues = form.watch();
-  console.log("GameForm rendering with data:", {
-    gameStatuses: gameStatuses?.length || 0,
-    teams: teams?.length || 0,
-    seasons: seasons?.length || 0,
-    isEditing,
-    formValues: {
-      date: formValues.date,
-      time: formValues.time,
-      round: formValues.round,
-      statusId: formValues.statusId,
-      seasonId: formValues.seasonId,
-      homeTeamId: formValues.homeTeamId,
-      awayTeamId: formValues.awayTeamId,
-    },
   });
 
-  const handleSubmit = (values: FormValues) => {
-    // Validate required fields
-    if (!values.homeTeamId) {
-      form.setError("homeTeamId", { message: "Please select a home team" });
+  // Set initial club IDs when editing
+  useEffect(() => {
+    if (game && clubs && clubs.length > 0) {
+      // Find home team's club
+      if (game.homeTeamId) {
+        fetch(`/api/teams/${game.homeTeamId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.data?.clubId) {
+              setFormData(prev => ({ ...prev, homeClubId: data.data.clubId.toString() }));
+            }
+          });
+      }
+      
+      // Find away team's club
+      if (game.awayTeamId) {
+        fetch(`/api/teams/${game.awayTeamId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.data?.clubId) {
+              setFormData(prev => ({ ...prev, awayClubId: data.data.clubId.toString() }));
+            }
+          });
+      }
+    }
+  }, [game, clubs]);
+
+  const isBye = formData.statusId === '6';
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.date) newErrors.date = 'Date is required';
+    if (!formData.time) newErrors.time = 'Time is required';
+    if (!formData.seasonId) newErrors.seasonId = 'Season is required';
+    if (!formData.homeClubId) newErrors.homeClub = 'Home club is required';
+    if (!formData.homeTeamId) newErrors.homeTeam = 'Home team is required';
+    if (!formData.statusId) newErrors.status = 'Game status is required';
+    
+    if (!isBye) {
+      if (!formData.awayClubId) newErrors.awayClub = 'Away club is required';
+      if (!formData.awayTeamId) newErrors.awayTeam = 'Away team is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
       return;
     }
 
-    // Check if this is a BYE game (status 6)
-    const isByeGame = parseInt(values.statusId) === 6;
-
-    // Only require away team for non-BYE games
-    if (!isByeGame && !values.awayTeamId) {
-      form.setError("awayTeamId", { message: "Please select an away team for regular games" });
-      return;
-    }
-
-    const gameData = {
-      date: values.date,
-      time: values.time,
-      round: values.round,
-      statusId: parseInt(values.statusId),
-      seasonId: parseInt(values.seasonId),
-      homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: isByeGame ? null : (values.awayTeamId ? parseInt(values.awayTeamId) : null),
-      isBye: isByeGame
+    const submitData = {
+      date: formData.date,
+      time: formData.time,
+      round: formData.round || null,
+      season_id: parseInt(formData.seasonId),
+      home_team_id: parseInt(formData.homeTeamId),
+      away_team_id: isBye ? null : parseInt(formData.awayTeamId),
+      status_id: parseInt(formData.statusId),
+      venue: formData.venue || null,
+      notes: formData.notes || null
     };
 
-    if (isEditing && game) {
-      console.log("Updating game with ID:", game.id, "and data:", gameData);
-    } else {
-      console.log("Creating new game with data:", gameData);
-    }
+    onSubmit(submitData);
+  };
 
-    onSubmit(gameData);
+  const handleFieldChange = (field: keyof GameFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+            Date *
+          </label>
+          <input
+            type="date"
+            id="date"
+            value={formData.date}
+            onChange={(e) => handleFieldChange('date', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.date ? 'border-red-500' : 'border-gray-300'
+            }`}
+            required
           />
+          {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
+        </div>
 
-          <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        <div>
+          <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
+            Time *
+          </label>
+          <input
+            type="time"
+            id="time"
+            value={formData.time}
+            onChange={(e) => handleFieldChange('time', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.time ? 'border-red-500' : 'border-gray-300'
+            }`}
+            required
+          />
+          {errors.time && <p className="mt-1 text-sm text-red-600">{errors.time}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="round" className="block text-sm font-medium text-gray-700 mb-1">
+            Round
+          </label>
+          <input
+            type="text"
+            id="round"
+            value={formData.round}
+            onChange={(e) => handleFieldChange('round', e.target.value)}
+            placeholder="e.g., 1, SF, GF"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-          <FormField
-            control={form.control}
-            name="round"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Round</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    min="1" 
-                    placeholder="Enter round number"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="seasonId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Season</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select season" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {seasons.map(season => (
-                      <SelectItem key={season.id} value={season.id.toString()}>
-                        {season.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Which season this game belongs to
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="homeTeamId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Home Team</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select home team" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {teams && teams.length > 0 ? (
-                      teams.map(team => (
-                        <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="loading" disabled>Loading teams...</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  The home team for this game (your club's team)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Only show away team selector for non-BYE games */}
-          {watch("statusId") !== "6" && (
-            <FormField
-              control={form.control}
-              name="awayTeamId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>Away Team</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select away team" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingAllTeams ? (
-                        <SelectItem value="loading" disabled>Loading teams...</SelectItem>
-                      ) : allClubTeams && allClubTeams.length > 0 ? (
-                        allClubTeams
-                          .filter(team => team.isActive !== false)
-                          .map(team => (
-                            <SelectItem key={team.id} value={team.id.toString()}>
-                              {team.clubName && team.clubName !== 'Warrandyte Netball Club' 
-                                ? `${team.clubName} - ${team.name}` 
-                                : team.name}
-                            </SelectItem>
-                          ))
-                      ) : (
-                        <SelectItem value="loading" disabled>Loading teams...</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The away team for this game (can be from any club)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {/* Show info for BYE games */}
-          {watch("statusId") === "6" && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>BYE Game:</strong> No away team needed. This is a bye round for the selected home team.
-              </p>
-            </div>
-          )}
-
-          <FormField
-            control={form.control}
-            name="statusId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Game Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select game status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {gameStatuses && gameStatuses.length > 0 ? (
-                      gameStatuses.map(status => (
-                        <SelectItem key={status.id} value={status.id.toString()}>
-                          {status.displayName}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="1">Loading statuses...</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Current status of the game
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : isEditing ? "Update Game" : "Create Game"}
-          </Button>
+        <div>
+          <label htmlFor="season" className="block text-sm font-medium text-gray-700 mb-1">
+            Season *
+          </label>
+          <select
+            id="season"
+            value={formData.seasonId}
+            onChange={(e) => handleFieldChange('seasonId', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.seasonId ? 'border-red-500' : 'border-gray-300'
+            }`}
+            required
+          >
+            <option value="">Select a season</option>
+            {seasons.map((season) => (
+              <option key={season.id} value={season.id}>
+                {season.name}
+              </option>
+            ))}
+          </select>
+          {errors.seasonId && <p className="mt-1 text-sm text-red-600">{errors.seasonId}</p>}
         </div>
-      </form>
-    </Form>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-gray-900">Home Team</h3>
+        <ClubTeamSelector
+          clubs={clubs || []}
+          selectedClubId={formData.homeClubId}
+          selectedTeamId={formData.homeTeamId}
+          seasonId={formData.seasonId}
+          onClubChange={(clubId) => {
+            handleFieldChange('homeClubId', clubId);
+            handleFieldChange('homeTeamId', ''); // Reset team when club changes
+          }}
+          onTeamChange={(teamId) => handleFieldChange('homeTeamId', teamId)}
+          clubError={errors.homeClub}
+          teamError={errors.homeTeam}
+          required
+        />
+      </div>
+
+      {!isBye && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-900">Away Team</h3>
+          <ClubTeamSelector
+            clubs={clubs || []}
+            selectedClubId={formData.awayClubId}
+            selectedTeamId={formData.awayTeamId}
+            seasonId={formData.seasonId}
+            onClubChange={(clubId) => {
+              handleFieldChange('awayClubId', clubId);
+              handleFieldChange('awayTeamId', ''); // Reset team when club changes
+            }}
+            onTeamChange={(teamId) => handleFieldChange('awayTeamId', teamId)}
+            clubError={errors.awayClub}
+            teamError={errors.awayTeam}
+            required
+          />
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+          Game Status *
+        </label>
+        <select
+          id="status"
+          value={formData.statusId}
+          onChange={(e) => handleFieldChange('statusId', e.target.value)}
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.status ? 'border-red-500' : 'border-gray-300'
+          }`}
+          required
+        >
+          <option value="">Select a status</option>
+          {gameStatuses.map((status) => (
+            <option key={status.id} value={status.id}>
+              {status.displayName}
+            </option>
+          ))}
+        </select>
+        {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-1">
+          Venue
+        </label>
+        <input
+          type="text"
+          id="venue"
+          value={formData.venue}
+          onChange={(e) => handleFieldChange('venue', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+          Notes
+        </label>
+        <textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => handleFieldChange('notes', e.target.value)}
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-3 pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting || clubsLoading}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Saving...' : isEditing ? 'Update Game' : 'Create Game'}
+        </button>
+      </div>
+    </form>
   );
 }

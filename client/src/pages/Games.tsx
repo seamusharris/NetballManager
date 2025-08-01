@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { CrudDialog } from '@/components/ui/crud-dialog';
-import NewGameForm from '@/components/games/NewGameForm';
+import GameForm from '@/components/games/GameForm';
 import SimplifiedGamesList from '@/components/ui/simplified-games-list';
 import { useSimplifiedGames } from '@/hooks/use-simplified-games';
 import { apiClient } from '@/lib/apiClient';
@@ -267,7 +267,7 @@ export default function Games() {
         setIsOpen={setIsDialogOpen}
         title="Add Game"
       >
-        <NewGameForm 
+        <GameForm 
           seasons={seasons}
           onSubmit={handleCreate}
           isSubmitting={false}
@@ -283,7 +283,7 @@ export default function Games() {
         title="Edit Game"
       >
         {editingGame && (
-          <NewGameForm 
+          <GameForm 
             game={editingGame} 
             seasons={seasons}
             onSubmit={handleUpdate}
