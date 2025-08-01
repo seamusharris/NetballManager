@@ -1,5 +1,3 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -19,20 +17,26 @@ import {
   PopoverContent, 
   PopoverTrigger 
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
+import { useStandardForm } from "@/hooks/useStandardForm";
 
-const seasonSchema = z.object({
+// Form schema using camelCase (frontend format)
+const seasonFormSchema = z.object({
   name: z.string().min(2, { message: "Season name must be at least 2 characters." }),
   type: z.string().optional(),
-  startDate: z.date({ required_error: "Start date is required." }),
-  endDate: z.date({ required_error: "End date is required." }),
-  year: z.number().int().min(2020, { message: "Year must be 2020 or later." }),
-  displayOrder: z.number().int().min(0, { message: "Display order must be 0 or higher." }),
+  startDate: z.coerce.date({ required_error: "Start date is required." }),
+  endDate: z.coerce.date({ required_error: "End date is required." }),
+  year: z.coerce.number().int().min(2020, { message: "Year must be 2020 or later." }),
+  displayOrder: z.coerce.number().int().min(0, { message: "Display order must be 0 or higher." }),
   isActive: z.boolean().default(false)
+}).refine((data) => data.endDate > data.startDate, {
+  message: "End date must be after start date",
+  path: ["endDate"]
 });
 
-type SeasonFormData = z.infer<typeof seasonSchema>;
+type SeasonFormData = z.infer<typeof seasonFormSchema>;
 
 interface Season {
   id: number;
@@ -47,33 +51,57 @@ interface Season {
 
 interface SeasonFormProps {
   season?: Season;
-  onSubmit: (data: SeasonFormData) => void;
+  onSuccess?: (data?: any) => void;
   onCancel?: () => void;
-  isSubmitting?: boolean;
 }
 
 export default function SeasonForm({ 
   season, 
-  onSubmit, 
-  onCancel, 
-  isSubmitting = false 
+  onSuccess, 
+  onCancel 
 }: SeasonFormProps) {
-  const form = useForm<SeasonFormData>({
-    resolver: zodResolver(seasonSchema),
-    defaultValues: {
-      name: season?.name || "",
-      type: season?.type || "Regular",
-      startDate: season ? new Date(season.startDate) : undefined,
-      endDate: season ? new Date(season.endDate) : undefined,
-      year: season?.year || new Date().getFullYear(),
-      displayOrder: season?.displayOrder || 0,
-      isActive: season?.isActive || false,
-    },
-  });
+  
+  // Prepare default values for the form
+  const getDefaultValues = (): Partial<SeasonFormData> => {
+    if (!season) {
+      return {
+        name: "",
+        type: "Regular",
+        year: new Date().getFullYear(),
+        displayOrder: 0,
+        isActive: false,
+      };
+    }
 
-  const handleSubmit = (data: SeasonFormData) => {
-    onSubmit(data);
+    return {
+      name: season.name || "",
+      type: season.type || "Regular",
+      startDate: season.startDate ? new Date(season.startDate) : undefined,
+      endDate: season.endDate ? new Date(season.endDate) : undefined,
+      year: season.year || new Date().getFullYear(),
+      displayOrder: season.displayOrder || 0,
+      isActive: season.isActive || false,
+    };
   };
+
+  const {
+    form,
+    handleSubmit,
+    handleCancel,
+    isLoading,
+    isEditing,
+  } = useStandardForm<SeasonFormData>({
+    schema: seasonFormSchema,
+    createEndpoint: '/api/seasons',
+    updateEndpoint: (id) => `/api/seasons/${id}`,
+    defaultValues: getDefaultValues(),
+    initialData: season,
+    onSuccess,
+    onCancel,
+    cacheKeys: ['/api/seasons', 'active-season'],
+    successMessage: season ? 'Season updated successfully' : 'Season created successfully',
+    errorMessage: season ? 'Failed to update season' : 'Failed to create season',
+  });
 
   return (
     <Form {...form}>
@@ -154,7 +182,7 @@ export default function SeasonForm({
             name="endDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>End Date</FormLabel>
+                <FormLabel required>End Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -199,8 +227,11 @@ export default function SeasonForm({
                 <FormControl>
                   <Input 
                     type="number" 
-                    {...field} 
-                    onChange={e => field.onChange(parseInt(e.target.value) || 2025)}
+                    value={field.value || ""}
+                    onChange={e => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? undefined : parseInt(value));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -217,10 +248,16 @@ export default function SeasonForm({
                 <FormControl>
                   <Input 
                     type="number" 
-                    {...field} 
-                    onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                    value={field.value || ""}
+                    onChange={e => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseInt(value));
+                    }}
                   />
                 </FormControl>
+                <FormDescription>
+                  Order in which seasons are displayed
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -231,31 +268,31 @@ export default function SeasonForm({
           control={form.control}
           name="isActive"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Active Season
+                </FormLabel>
+                <FormDescription>
+                  Set this season as the currently active season
+                </FormDescription>
+              </div>
               <FormControl>
-                <input
-                  type="checkbox"
+                <Switch
                   checked={field.value}
-                  onChange={field.onChange}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  onCheckedChange={field.onChange}
                 />
               </FormControl>
-              <FormLabel className="font-normal">
-                Set as active season
-              </FormLabel>
-              <FormMessage />
             </FormItem>
           )}
         />
 
         <div className="flex justify-end gap-2 pt-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (season ? "Updating..." : "Creating...") : (season ? "Update Season" : "Create Season")}
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update Season" : "Create Season")}
           </Button>
         </div>
       </form>

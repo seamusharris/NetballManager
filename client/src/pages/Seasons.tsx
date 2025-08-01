@@ -32,44 +32,7 @@ export default function Seasons() {
     endpoint: '/api/seasons/active'
   });
 
-  // Direct mutations like Teams - no useCrudMutations to avoid 404 handling issues
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/seasons', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-      toast({
-        title: "Success",
-        description: "Season created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create season",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/seasons/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-      toast({
-        title: "Success",
-        description: "Season updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update season",
-        variant: "destructive",
-      });
-    },
-  });
+  // Note: Create and update mutations are now handled by the standardized SeasonForm
 
   // Delete mutation handled separately like Teams to avoid 404 issues
   const deleteMutation = useMutation({
@@ -113,19 +76,7 @@ export default function Seasons() {
     }
   });
 
-  const handleCreate = (data: any) => {
-    createMutation.mutate(data, {
-      onSuccess: () => setIsDialogOpen(false)
-    });
-  };
-
-  const handleUpdate = (data: any) => {
-    if (editingSeason) {
-      updateMutation.mutate({ id: editingSeason.id, ...data }, {
-        onSuccess: () => setEditingSeason(null)
-      });
-    }
-  };
+  // Note: handleCreate and handleUpdate are now handled by the standardized SeasonForm
 
   const handleDelete = (seasonId: number) => {
     if (deleteMutation.isPending) return; // Prevent duplicate calls
@@ -265,9 +216,8 @@ export default function Seasons() {
         title="Create Season"
       >
         <SeasonForm
-          onSubmit={handleCreate}
+          onSuccess={() => setIsDialogOpen(false)}
           onCancel={() => setIsDialogOpen(false)}
-          isSubmitting={createMutation.isPending}
         />
       </CrudDialog>
 
@@ -278,9 +228,8 @@ export default function Seasons() {
       >
         <SeasonForm
           season={editingSeason || undefined}
-          onSubmit={handleUpdate}
+          onSuccess={() => setEditingSeason(null)}
           onCancel={() => setEditingSeason(null)}
-          isSubmitting={updateMutation.isPending}
         />
       </CrudDialog>
     </>
