@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow 
 } from '@/components/ui/table';
-import { Edit, Trash2, Search } from 'lucide-react';
+import { Edit, Trash2, Search, Eye } from 'lucide-react';
 import { Player, Position } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
@@ -25,9 +26,14 @@ interface PlayersListProps {
 }
 
 export default function PlayersList({ players, onEdit, onDelete, isLoading = false }: PlayersListProps) {
+  const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [positionFilter, setPositionFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const handlePlayerClick = (player: Player) => {
+    navigate(`/player/${player.id}`);
+  };
 
   // Filter players based on search and filters
   const filteredPlayers = players.filter(player => {
@@ -141,7 +147,12 @@ export default function PlayersList({ players, onEdit, onDelete, isLoading = fal
                           {getInitials(player.displayName)}
                         </div>
                         <div>
-                          <div className="font-medium">{player.displayName}</div>
+                          <button
+                            onClick={() => handlePlayerClick(player)}
+                            className="font-medium text-left hover:text-blue-600 transition-colors"
+                          >
+                            {player.displayName}
+                          </button>
                           <div className="text-sm text-muted-foreground">
                             {player.firstName} {player.lastName}
                           </div>
@@ -180,6 +191,14 @@ export default function PlayersList({ players, onEdit, onDelete, isLoading = fal
                     
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handlePlayerClick(player)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

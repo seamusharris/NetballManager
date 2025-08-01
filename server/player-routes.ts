@@ -552,6 +552,86 @@ export function registerPlayerRoutes(app: Express) {
     }
   });
 
+  // GET /api/players/:id/games - Get games for a player
+  app.get('/api/players/:id/games', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'Invalid player ID'));
+      }
+      
+      // Verify player exists
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json(createErrorResponse(ErrorCodes.RESOURCE_NOT_FOUND, 'Player not found'));
+      }
+      
+      // Get games where player was in roster
+      const result = await pool.query(`
+        SELECT DISTINCT 
+          g.id,
+          g.date,
+          g.time,
+          ht.name as home_team_name,
+          at.name as away_team_name,
+          CASE 
+            WHEN tp.team_id = g.home_team_id THEN ht.name 
+            ELSE at.name 
+          END as team_name,
+          CASE 
+            WHEN tp.team_id = g.home_team_id THEN at.name 
+            ELSE ht.name 
+          END as opponent_name,
+          COALESCE(gs_home.score, 0) as home_score,
+          COALESCE(gs_away.score, 0) as away_score,
+          CASE 
+            WHEN tp.team_id = g.home_team_id THEN COALESCE(gs_home.score, 0)
+            ELSE COALESCE(gs_away.score, 0)
+          END as team_score,
+          CASE 
+            WHEN tp.team_id = g.home_team_id THEN COALESCE(gs_away.score, 0)
+            ELSE COALESCE(gs_home.score, 0)
+          END as opponent_score,
+          s.name as season_name,
+          c.name as club_name
+        FROM rosters r
+        JOIN games g ON r.game_id = g.id
+        JOIN team_players tp ON tp.player_id = r.player_id
+        JOIN teams ht ON g.home_team_id = ht.id
+        JOIN teams at ON g.away_team_id = at.id
+        JOIN seasons s ON ht.season_id = s.id
+        JOIN clubs c ON ht.club_id = c.id
+        LEFT JOIN game_scores gs_home ON g.id = gs_home.game_id AND g.home_team_id = gs_home.team_id
+        LEFT JOIN game_scores gs_away ON g.id = gs_away.game_id AND g.away_team_id = gs_away.team_id
+        WHERE r.player_id = $1
+          AND (tp.team_id = g.home_team_id OR tp.team_id = g.away_team_id)
+        ORDER BY g.date DESC, g.time DESC
+      `, [playerId]);
+      
+      const games = result.rows.map(row => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        teamName: row.team_name,
+        opponentName: row.opponent_name,
+        teamScore: row.team_score,
+        opponentScore: row.opponent_score,
+        homeScore: row.home_score,
+        awayScore: row.away_score,
+        seasonName: row.season_name,
+        clubName: row.club_name,
+        result: row.team_score > row.opponent_score ? 'Win' : 
+                row.team_score < row.opponent_score ? 'Loss' : 'Draw'
+      }));
+      
+      return res.json(createSuccessResponse(transformToApiFormat(games)));
+    } catch (error) {
+      console.error('Error fetching player games:', error);
+      return res.status(500).json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, 'Failed to fetch player games'));
+    }
+  });
+
   // POST /api/players/:playerId/clubs - Update clubs for a player
   app.post('/api/players/:playerId/clubs', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     console.log('🔥 POST /api/players/:playerId/clubs endpoint hit!', {
