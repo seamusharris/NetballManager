@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Game, Opponent } from '@shared/schema';
+import { Game, GameStats, GameScore, Season } from '@shared/types';
 import { formatShortDate } from '@/lib/utils';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { GameBadge } from '@/components/ui/game-badge';
@@ -10,12 +10,12 @@ import { useClub } from '@/contexts/ClubContext';
 
 interface UpcomingGamesProps {
   games: Game[];
-  centralizedScoresMap?: { [gameId: number]: any[] };
-  opponents: Opponent[];
+  centralizedScoresMap?: Record<number, GameScore[]>;
+  opponents: any[]; // Keep as any for now - complex opponent structure
   className?: string;
   seasonFilter?: string;
-  activeSeason?: any;
-  batchStats?: Record<number, any[]>;
+  activeSeason?: Season;
+  batchStats?: Record<number, GameStats[]>;
 }
 
 function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {

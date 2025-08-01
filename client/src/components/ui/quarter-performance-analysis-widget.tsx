@@ -1,13 +1,14 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Game, GameStats, GameScore } from '@shared/types';
 import { calculateQuarterPositionBreakdowns, GameWithPositionStats, OfficialQuarterScore as BaseOfficialQuarterScore, getConsistentStatsBreakdown } from '@/lib/quarterBreakdownUtils';
 
 export interface QuarterPerformanceAnalysisWidgetProps {
-  games: any[];
+  games: Game[];
   currentTeamId: number;
-  batchScores?: Record<number, any[]>;
-  batchStats?: Record<number, any[]>;
+  batchScores?: Record<number, GameScore[]>;
+  batchStats?: Record<number, GameStats[]>;
   className?: string;
   excludeSpecialGames?: boolean;
 }

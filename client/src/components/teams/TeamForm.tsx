@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Team, Season } from '@shared/schema';
+import { Team, Season, TeamFormData } from '@shared/types';
 import { useStandardForm } from '@/hooks/useStandardForm';
 import { invalidateTeamFormCaches } from '@/lib/cacheInvalidation';
 import { useQuery } from '@tanstack/react-query';
@@ -27,13 +27,13 @@ const teamFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-type TeamFormData = z.infer<typeof teamFormSchema>;
+// Use TeamFormData from shared types
 
 interface TeamFormProps {
   team?: Team;
   seasons: Season[];
   clubId: number;
-  onSuccess?: (data?: any) => void;
+  onSuccess?: (data?: TeamFormData) => void;
   onCancel?: () => void;
 }
 
@@ -43,7 +43,7 @@ interface DivisionSelectProps {
   onValueChange: (value: number | undefined) => void;
   divisions: DivisionOption[] | undefined;
   isLoading: boolean;
-  error: any;
+  error: Error | null;
   onRetry: () => void;
 }
 

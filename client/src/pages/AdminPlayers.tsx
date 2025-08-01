@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
+import { AppError } from '@shared/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,7 +77,7 @@ export default function AdminPlayers() {
       setPlayerToDelete(null);
       setShowDeleteDialog(false);
     },
-    onError: (error: any) => {
+    onError: (error: AppError | Error) => {
       toast({ 
         title: 'Error deleting player', 
         description: error.message || 'Failed to delete player',
@@ -95,7 +96,7 @@ export default function AdminPlayers() {
       setSelectedPlayers([]);
       setShowBulkDeleteDialog(false);
     },
-    onError: (error: any) => {
+    onError: (error: AppError | Error) => {
       toast({ 
         title: 'Error deleting players', 
         description: error.message || 'Failed to delete some players',

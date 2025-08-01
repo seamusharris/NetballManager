@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Club, Team } from '@shared/types';
 
 interface ClubTeamSelectorProps {
-  clubs: any[];
+  clubs: Club[];
   selectedClubId: string;
   selectedTeamId: string;
   seasonId: string;
@@ -42,7 +43,7 @@ export default function ClubTeamSelector({
   useEffect(() => {
     if (teams && selectedTeamId) {
       // Check if currently selected team is still in the list
-      const teamStillExists = teams.some((team: any) => team.id.toString() === selectedTeamId);
+      const teamStillExists = teams.some((team: Team) => team.id.toString() === selectedTeamId);
       if (!teamStillExists) {
         onTeamChange('');
       }

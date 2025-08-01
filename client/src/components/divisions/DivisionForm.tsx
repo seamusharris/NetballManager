@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { useStandardForm } from '@/hooks/useStandardForm';
+import { Division, AgeGroup, Section, DivisionFormData } from '@shared/types';
 
 // Form schema using camelCase (frontend format)
 const divisionFormSchema = z.object({
@@ -18,35 +19,12 @@ const divisionFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-type DivisionFormData = z.infer<typeof divisionFormSchema>;
-
-interface Division {
-  id: number;
-  ageGroupId: number;
-  sectionId: number;
-  seasonId: number;
-  displayName: string;
-  isActive: boolean;
-}
-
-interface AgeGroup {
-  id: number;
-  name: string;
-  displayName: string;
-  isActive: boolean;
-}
-
-interface Section {
-  id: number;
-  name: string;
-  displayName: string;
-  isActive: boolean;
-}
+// Use types from shared types - remove local interfaces
 
 interface DivisionFormProps {
   division?: Division;
   seasonId?: number; // Optional context from parent
-  onSuccess?: (data?: any) => void;
+  onSuccess?: (data?: DivisionFormData) => void;
   onCancel?: () => void;
 }
 

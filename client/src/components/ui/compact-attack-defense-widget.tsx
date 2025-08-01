@@ -1,12 +1,13 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Game, GameStats, GameScore } from '@shared/types';
 import { calculateQuarterPositionBreakdowns, GameWithPositionStats, OfficialQuarterScore as BaseOfficialQuarterScore, getConsistentStatsBreakdown } from '@/lib/quarterBreakdownUtils';
 
 interface CompactAttackDefenseWidgetProps {
-  games: any[];
-  batchScores: Record<number, any[]>;
-  batchStats: Record<number, any[]>;
+  games: Game[];
+  batchScores: Record<number, GameScore[]>;
+  batchStats: Record<number, GameStats[]>;
   teamId: number;
   className?: string;
 }

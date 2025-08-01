@@ -2,31 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import ClubTeamSelector from './ClubTeamSelector';
+import { Game, Season, GameStatus, GameFormData } from '@shared/types';
 
 interface NewGameFormProps {
-  game?: any;
-  seasons: any[];
-  gameStatuses: any[];
-  activeSeason: any;
-  onSubmit: (data: any) => void;
+  game?: Game;
+  seasons: Season[];
+  gameStatuses: GameStatus[];
+  activeSeason: Season;
+  onSubmit: (data: GameFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   isEditing?: boolean;
 }
 
-interface GameFormData {
-  date: string;
-  time: string;
-  round?: string;
-  seasonId: string;
-  homeClubId: string;
-  homeTeamId: string;
-  awayClubId?: string;
-  awayTeamId?: string;
-  statusId: string;
-  venue?: string;
-  notes?: string;
-}
+// Use GameFormData from shared types - remove local interface
 
 export default function NewGameForm({
   game,

@@ -2,11 +2,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
+import { Game, GameStats, GameScore } from '@shared/types';
 
 interface StatsDebugTableProps {
-  games: any[];
-  batchScores: Record<number, any[]>;
-  batchStats: Record<number, any[]>;
+  games: Game[];
+  batchScores: Record<number, GameScore[]>;
+  batchStats: Record<number, GameStats[]>;
   teamId: number;
   className?: string;
 }
