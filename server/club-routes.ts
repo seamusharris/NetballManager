@@ -3,10 +3,11 @@
 import { Express } from 'express';
 import { db, pool } from './db';
 import { createSuccessResponse, createErrorResponse, ErrorCodes } from './api-response-standards';
+import { AuthenticatedRequest, standardAuth } from './auth-middleware';
 
 export function registerClubRoutes(app: Express) {
   // Get all clubs with statistics
-  app.get('/api/clubs', async (req, res) => {
+  app.get('/api/clubs', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const result = await pool.query(
         `SELECT 
@@ -43,7 +44,7 @@ export function registerClubRoutes(app: Express) {
   });
 
   // Club details endpoint
-  app.get('/api/clubs/:clubId', async (req, res) => {
+  app.get('/api/clubs/:clubId', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       if (isNaN(clubId)) {
@@ -76,7 +77,7 @@ export function registerClubRoutes(app: Express) {
   });
 
   // Create club
-  app.post('/api/clubs', async (req, res) => {
+  app.post('/api/clubs', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const { name, code, address, contact_email, contact_phone, primary_color = '#1f2937', secondary_color = '#ffffff' } = req.body;
       if (!name || !code) {
@@ -115,7 +116,7 @@ export function registerClubRoutes(app: Express) {
   });
 
   // Update club
-  app.patch('/api/clubs/:id', async (req, res) => {
+  app.patch('/api/clubs/:id', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
       const { name, code, address, contact_email, contact_phone, primary_color, secondary_color } = req.body;
@@ -164,7 +165,7 @@ export function registerClubRoutes(app: Express) {
   });
 
   // GET /api/clubs/:clubId/players - Get players in a club
-  app.get('/api/clubs/:clubId/players', async (req, res) => {
+  app.get('/api/clubs/:clubId/players', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       
@@ -208,7 +209,7 @@ export function registerClubRoutes(app: Express) {
   });
 
   // POST /api/clubs/:clubId/players/assign - Add existing players to a club
-  app.post('/api/clubs/:clubId/players/assign', async (req, res) => {
+  app.post('/api/clubs/:clubId/players/assign', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const { player_ids } = req.body; // Expect snake_case after middleware conversion
@@ -291,7 +292,7 @@ export function registerClubRoutes(app: Express) {
   });
 
   // Delete club
-  app.delete('/api/clubs/:id', async (req, res) => {
+  app.delete('/api/clubs/:id', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
       if (isNaN(clubId)) {

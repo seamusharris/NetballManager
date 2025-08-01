@@ -8,6 +8,7 @@ import { registerGamePermissionsRoutes } from './game-permissions-routes';
 import { registerPlayerBorrowingRoutes } from './player-borrowing-routes';
 import { registerUserManagementRoutes } from './user-management-routes';
 import { registerAgeGroupsSectionsRoutes } from './age-groups-sections-routes';
+import { registerClubRoutes } from './club-routes';
 import { registerDebugRoutes } from './debug-routes';
 import { enhancedHealthCheck } from './db-wrapper';
 import { setupVite, serveStatic } from './vite';
@@ -99,6 +100,7 @@ registerGamePermissionsRoutes(app);
 registerPlayerBorrowingRoutes(app);
 registerUserManagementRoutes(app);
 registerAgeGroupsSectionsRoutes(app);
+registerClubRoutes(app);
 registerDebugRoutes(app);
 
 // Database health check endpoint
