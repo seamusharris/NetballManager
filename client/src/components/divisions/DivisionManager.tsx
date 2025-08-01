@@ -122,21 +122,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     }
   });
 
-  const createDivisionMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post(`/api/seasons/${seasonId}/divisions`, snakecaseKeys(data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['divisions', seasonId] });
-      setIsCreateDialogOpen(false);
-      toast({ title: "Division created successfully" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error creating division",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Division create mutation now handled by standardized DivisionForm
 
   // Update mutations
   const updateAgeGroupMutation = useMutation({
@@ -175,22 +161,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     }
   });
 
-  const updateDivisionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => apiClient.patch(`/api/divisions/${id}`, snakecaseKeys(data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['divisions', seasonId] });
-      setEditingItem(null);
-      setIsCreateDialogOpen(false);
-      toast({ title: "Division updated successfully" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error updating division",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Division update mutation now handled by standardized DivisionForm
 
   // Delete mutations
   const deleteAgeGroupMutation = useMutation({
@@ -247,7 +218,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
         createSectionMutation.mutate(data);
         break;
       case 'division':
-        createDivisionMutation.mutate(data);
+        // Note: Division creation now handled by standardized DivisionForm
         break;
     }
   };
@@ -263,7 +234,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
         updateSectionMutation.mutate({ id: editingItem.id, data });
         break;
       case 'division':
-        updateDivisionMutation.mutate({ id: editingItem.id, data });
+        // Note: Division updates now handled by standardized DivisionForm
         break;
     }
   };
@@ -559,9 +530,14 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
             <DivisionForm
               division={editingItem}
               seasonId={seasonId}
-              onSubmit={editingItem ? handleUpdate : handleCreate}
-              onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={createDivisionMutation.isPending || updateDivisionMutation.isPending}
+              onSuccess={() => {
+                setIsCreateDialogOpen(false);
+                setEditingItem(null);
+              }}
+              onCancel={() => {
+                setIsCreateDialogOpen(false);
+                setEditingItem(null);
+              }}
             />
           )}
         </DialogContent>
