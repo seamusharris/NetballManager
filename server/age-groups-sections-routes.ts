@@ -15,11 +15,6 @@ import { createSuccessResponse, createErrorResponse } from "./api-utils";
 export function registerAgeGroupsSectionsRoutes(app: Express) {
   console.log("🔧 Registering age groups sections routes...");
   
-  // Test endpoint
-  app.get("/api/test-divisions", (req, res) => {
-    console.log("🎯 Test divisions endpoint hit!");
-    res.json({ message: "Test divisions endpoint working" });
-  });
   
   // ===== AGE GROUPS ENDPOINTS =====
   
@@ -179,7 +174,6 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
 
   // Create a new division
   app.post("/api/seasons/:seasonId/divisions", async (req: AuthenticatedRequest, res) => {
-    console.log("🎯 Division creation endpoint hit!");
     try {
       const seasonId = parseInt(req.params.seasonId);
 
@@ -209,11 +203,8 @@ export function registerAgeGroupsSectionsRoutes(app: Express) {
 
       const parsedData = insertDivisionSchema.safeParse(divisionData);
       if (!parsedData.success) {
-        console.log("Schema validation failed:", parsedData.error.errors);
         return res.status(400).json(createErrorResponse("invalid_input", "Invalid division data", parsedData.error.errors));
       }
-
-      console.log("Schema validation passed, inserting data:", parsedData.data);
 
       const result = await db.insert(divisions).values(parsedData.data as any).returning();
       res.status(201).json(createSuccessResponse(result[0], { count: 1 }));

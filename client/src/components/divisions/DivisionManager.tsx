@@ -87,7 +87,6 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     },
   });
   const divisions: Division[] = rawDivisions;
-  console.log('Divisions after camelcaseKeys:', divisions);
 
   // Note: Age group create mutation now handled by standardized AgeGroupForm
 
@@ -216,9 +215,6 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     setDialogType(type);
     // For divisions, ensure editingItem is camelCase
     const editing = type === 'division' ? camelcaseKeys(item, { deep: true }) : item;
-    if (type === 'division') {
-      console.log('Editing division object:', editing);
-    }
     setEditingItem(editing);
     setIsCreateDialogOpen(true);
   };
