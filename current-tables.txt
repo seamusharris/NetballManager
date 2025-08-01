@@ -1,0 +1,24 @@
+                  List of relations
+ Schema |        Name         | Type  |     Owner     
+--------+---------------------+-------+---------------
+ public | age_groups          | table | neballmanager
+ public | club_players        | table | neondb_owner
+ public | club_users          | table | neondb_owner
+ public | clubs               | table | neondb_owner
+ public | divisions           | table | neballmanager
+ public | game_permissions    | table | neondb_owner
+ public | game_scores         | table | neondb_owner
+ public | game_stats          | table | neondb_owner
+ public | game_statuses       | table | neondb_owner
+ public | games               | table | neondb_owner
+ public | opponents           | table | neondb_owner
+ public | player_availability | table | neondb_owner
+ public | player_borrowing    | table | neondb_owner
+ public | player_seasons      | table | neondb_owner
+ public | players             | table | neondb_owner
+ public | rosters             | table | neondb_owner
+ public | seasons             | table | neballmanager
+ public | sections            | table | neballmanager
+ public | team_game_awards    | table | neondb_owner
+ public | team_game_notes     | table | neondb_owner
+--More-- 

@@ -203,23 +203,11 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY s.start_date DESC, t.name
       `);
 
-      const teams = clubTeams.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        divisionId: row.division_id,
-        divisionName: row.division_name,
-        isActive: row.is_active,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        seasonId: row.season_id,
-        seasonName: row.season_name,
-        seasonYear: row.season_year,
-        seasonStartDate: row.season_start_date,
-        seasonEndDate: row.season_end_date,
-      }));
+      // Let smart case conversion middleware handle snake_case -> camelCase conversion
+      const teams = clubTeams.rows;
       
       const { createSuccessResponse } = await import('./api-response-standards');
-      res.json(createSuccessResponse(transformToApiFormat(teams)));
+      res.json(createSuccessResponse(teams));
     } catch (error) {
       console.error("Error fetching teams:", error);
       const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
@@ -230,7 +218,97 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Create a new team
+  // Create a new team in club (STANDARDIZED)
+  app.post("/api/clubs/:clubId/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+
+      if (isNaN(clubId) || clubId <= 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
+      }
+
+      console.log(`🆕 Creating team for club ${clubId}:`, req.body);
+
+      // Extract team data from request body (already converted to snake_case by middleware)
+      const { name, season_id, division_id, is_active = true } = req.body;
+
+      // Validate required fields
+      if (!name || !season_id) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.MISSING_REQUIRED_FIELD,
+          'Team name and season ID are required'
+        ));
+      }
+
+      // Validate season ID is a number
+      const validSeasonId = parseInt(season_id);
+      if (isNaN(validSeasonId)) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid season ID'
+        ));
+      }
+
+      // Validate division ID if provided
+      let validDivisionId = null;
+      if (division_id !== undefined && division_id !== null) {
+        validDivisionId = parseInt(division_id);
+        if (isNaN(validDivisionId)) {
+          const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+          return res.status(400).json(createErrorResponse(
+            ErrorCodes.INVALID_PARAMETER,
+            'Invalid division ID'
+          ));
+        }
+      }
+
+      // Create team using SQL
+      const result = await db.execute(sql`
+        INSERT INTO teams (club_id, season_id, name, division_id, is_active)
+        VALUES (${clubId}, ${validSeasonId}, ${name.trim()}, ${validDivisionId}, ${Boolean(is_active)})
+        RETURNING *
+      `);
+
+      if (result.rows.length === 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(500).json(createErrorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          'Failed to create team'
+        ));
+      }
+
+      const newTeam = result.rows[0];
+      console.log(`✅ Created team: ${newTeam.name} (ID: ${newTeam.id}) for club ${clubId}`);
+
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.status(201).json(createSuccessResponse(newTeam));
+    } catch (error) {
+      console.error('Error creating team:', error);
+
+      // Handle unique constraint violations
+      if (error instanceof Error && error.message.includes('unique')) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(409).json(createErrorResponse(
+          ErrorCodes.RESOURCE_CONFLICT,
+          'A team with this name already exists in this club and season'
+        ));
+      }
+
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to create team'
+      ));
+    }
+  });
+
+  // Create a new team (LEGACY - use club-scoped endpoint above)
   app.post("/api/teams", async (req, res) => {
     try {
       const { club_id: clubId, season_id: seasonId, name, division_id: divisionId, is_active: isActive } = req.body;
@@ -254,6 +332,210 @@ export function registerTeamRoutes(app: Express) {
         console.error("Error creating team:", error);
         res.status(500).json({ message: "Failed to create team" });
       }
+    }
+  });
+
+  // Update team (club-scoped PATCH method)
+  app.patch("/api/clubs/:clubId/teams/:teamId", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const teamId = parseInt(req.params.teamId);
+
+      if (isNaN(clubId) || clubId <= 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
+      }
+
+      if (isNaN(teamId) || teamId <= 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
+      }
+
+      console.log(`🔄 Updating team ${teamId} for club ${clubId}:`, req.body);
+
+      // Extract team data from request body (already converted to snake_case by middleware)
+      const { name, season_id, division_id, is_active } = req.body;
+
+      // Build update data dynamically (only include provided fields)
+      const updateData: any = { updated_at: new Date() };
+      if (name !== undefined) updateData.name = name;
+      if (season_id !== undefined) {
+        const seasonIdNum = typeof season_id === 'number' ? season_id : parseInt(season_id);
+        if (isNaN(seasonIdNum)) {
+          const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+          return res.status(400).json(createErrorResponse(
+            ErrorCodes.INVALID_PARAMETER,
+            'Invalid season ID'
+          ));
+        }
+        updateData.season_id = seasonIdNum;
+      }
+      if (division_id !== undefined) {
+        if (division_id) {
+          const divisionIdNum = typeof division_id === 'number' ? division_id : parseInt(division_id);
+          if (isNaN(divisionIdNum)) {
+            const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+            return res.status(400).json(createErrorResponse(
+              ErrorCodes.INVALID_PARAMETER,
+              'Invalid division ID'
+            ));
+          }
+          updateData.division_id = divisionIdNum;
+        } else {
+          updateData.division_id = null;
+        }
+      }
+      if (is_active !== undefined) updateData.is_active = Boolean(is_active);
+
+      // Verify team belongs to the specified club
+      const existingTeam = await db.execute(sql`
+        SELECT id, club_id FROM teams WHERE id = ${teamId} AND club_id = ${clubId}
+      `);
+
+      if (existingTeam.rows.length === 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Team not found or does not belong to this club'
+        ));
+      }
+
+      // Update team
+      const result = await db.update(teams)
+        .set(updateData)
+        .where(eq(teams.id, teamId))
+        .returning();
+
+      if (result.length === 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(500).json(createErrorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          'Failed to update team'
+        ));
+      }
+
+      const updatedTeam = result[0];
+      console.log(`✅ Updated team: ${updatedTeam.name} (ID: ${updatedTeam.id}) for club ${clubId}`);
+
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse(updatedTeam));
+    } catch (error) {
+      console.error('Error updating team:', error);
+
+      // Handle unique constraint violations
+      if (error instanceof Error && error.message.includes('unique')) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(409).json(createErrorResponse(
+          ErrorCodes.RESOURCE_CONFLICT,
+          'A team with this name already exists in this club and season'
+        ));
+      }
+
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to update team'
+      ));
+    }
+  });
+
+  // Delete team (club-scoped DELETE method)
+  app.delete("/api/clubs/:clubId/teams/:teamId", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const teamId = parseInt(req.params.teamId);
+
+      if (isNaN(clubId) || clubId <= 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
+      }
+
+      if (isNaN(teamId) || teamId <= 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid team ID format'
+        ));
+      }
+
+      // Verify team belongs to the specified club
+      const existingTeam = await db.execute(sql`
+        SELECT id, name, club_id FROM teams WHERE id = ${teamId} AND club_id = ${clubId}
+      `);
+
+      if (existingTeam.rows.length === 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Team not found or does not belong to this club'
+        ));
+      }
+
+      const team = existingTeam.rows[0];
+
+      // Check if team has any games
+      const games = await db.execute(sql`
+        SELECT COUNT(*) as count FROM games 
+        WHERE home_team_id = ${teamId} OR away_team_id = ${teamId}
+      `);
+      
+      const gameCount = games.rows[0]?.count || 0;
+      if (gameCount > 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(409).json(createErrorResponse(
+          ErrorCodes.RESOURCE_CONFLICT,
+          `Cannot delete team. It has ${gameCount} associated games. Please remove the games first.`
+        ));
+      }
+
+      // Check if team has any players
+      const players = await db.execute(sql`
+        SELECT COUNT(*) as count FROM team_players WHERE team_id = ${teamId}
+      `);
+      
+      const playerCount = players.rows[0]?.count || 0;
+      if (playerCount > 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(409).json(createErrorResponse(
+          ErrorCodes.RESOURCE_CONFLICT,
+          `Cannot delete team. It has ${playerCount} associated players. Please remove the players first.`
+        ));
+      }
+
+      // Delete the team
+      const result = await db.delete(teams).where(eq(teams.id, teamId)).returning();
+
+      if (result.length === 0) {
+        const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+        return res.status(500).json(createErrorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          'Failed to delete team'
+        ));
+      }
+
+      console.log(`🗑️ Deleted team: ${team.name} (ID: ${teamId}) from club ${clubId}`);
+
+      const { createSuccessResponse } = await import('./api-response-standards');
+      res.json(createSuccessResponse({ 
+        message: `Team "${team.name}" deleted successfully`,
+        deletedTeam: result[0]
+      }));
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      const { createErrorResponse, ErrorCodes } = await import('./api-response-standards');
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to delete team'
+      ));
     }
   });
 

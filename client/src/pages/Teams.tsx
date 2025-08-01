@@ -95,7 +95,7 @@ export default function Teams() {
   });
 
   const deleteTeamMutation = useMutation({
-    mutationFn: (teamId: number) => apiClient.delete(`/api/teams/${teamId}`),
+    mutationFn: (teamId: number) => apiClient.delete(`/api/clubs/${effectiveClubId}/teams/${teamId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
     },

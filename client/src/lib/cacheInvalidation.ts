@@ -291,3 +291,152 @@ export function invalidateAvailability(queryClient: any, gameId: number) {
     }
   });
 }
+
+// Enhanced cache invalidation for form operations
+export interface FormCacheContext {
+  clubId?: number;
+  seasonId?: number;
+  teamId?: number;
+  playerId?: number;
+  gameId?: number;
+}
+
+export class FormCacheInvalidator {
+  private static instance: FormCacheInvalidator;
+
+  static getInstance(): FormCacheInvalidator {
+    if (!FormCacheInvalidator.instance) {
+      FormCacheInvalidator.instance = new FormCacheInvalidator();
+    }
+    return FormCacheInvalidator.instance;
+  }
+
+  // Team form operations
+  async invalidateTeamCaches(context: FormCacheContext) {
+    const patterns = [
+      'teams',
+      '/api/teams',
+    ];
+    
+    if (context.clubId) {
+      patterns.push(`/api/clubs/${context.clubId}/teams`);
+    }
+    
+    if (context.seasonId) {
+      patterns.push(`/api/seasons/${context.seasonId}/teams`);
+      patterns.push(`/api/seasons/${context.seasonId}/divisions`); // Team count affects divisions
+    }
+
+    await this.invalidatePatterns(patterns);
+  }
+
+  // Player form operations
+  async invalidatePlayerCaches(context: FormCacheContext) {
+    const patterns = [
+      'players',
+      '/api/players',
+    ];
+    
+    if (context.clubId) {
+      patterns.push(`/api/clubs/${context.clubId}/players`);
+    }
+    
+    if (context.teamId) {
+      patterns.push(`/api/teams/${context.teamId}/players`);
+    }
+
+    await this.invalidatePatterns(patterns);
+  }
+
+  // Club form operations
+  async invalidateClubCaches(context: FormCacheContext) {
+    const patterns = [
+      'clubs',
+      '/api/clubs',
+    ];
+    
+    if (context.clubId) {
+      patterns.push(`/api/clubs/${context.clubId}`);
+    }
+
+    await this.invalidatePatterns(patterns);
+  }
+
+  // Game form operations
+  async invalidateGameCaches(context: FormCacheContext) {
+    const patterns = [
+      'games',
+      '/api/games',
+    ];
+    
+    if (context.clubId) {
+      patterns.push(`/api/clubs/${context.clubId}/games`);
+    }
+    
+    if (context.teamId) {
+      patterns.push(`/api/teams/${context.teamId}/games`);
+    }
+    
+    if (context.seasonId) {
+      patterns.push(`/api/seasons/${context.seasonId}/games`);
+    }
+
+    await this.invalidatePatterns(patterns);
+  }
+
+  // Season form operations
+  async invalidateSeasonCaches(context: FormCacheContext) {
+    const patterns = [
+      'seasons',
+      '/api/seasons',
+    ];
+    
+    if (context.seasonId) {
+      patterns.push(`/api/seasons/${context.seasonId}`);
+      patterns.push(`/api/seasons/${context.seasonId}/divisions`);
+    }
+
+    await this.invalidatePatterns(patterns);
+  }
+
+  // Helper to execute pattern invalidations
+  private async invalidatePatterns(patterns: string[]) {
+    for (const pattern of patterns) {
+      await queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (
+            key === pattern || 
+            key.includes(pattern)
+          );
+        }
+      });
+    }
+  }
+}
+
+// Convenience functions for form cache invalidation
+export async function invalidateTeamFormCaches(context: FormCacheContext) {
+  const invalidator = FormCacheInvalidator.getInstance();
+  await invalidator.invalidateTeamCaches(context);
+}
+
+export async function invalidatePlayerFormCaches(context: FormCacheContext) {
+  const invalidator = FormCacheInvalidator.getInstance();
+  await invalidator.invalidatePlayerCaches(context);
+}
+
+export async function invalidateClubFormCaches(context: FormCacheContext) {
+  const invalidator = FormCacheInvalidator.getInstance();
+  await invalidator.invalidateClubCaches(context);
+}
+
+export async function invalidateGameFormCaches(context: FormCacheContext) {
+  const invalidator = FormCacheInvalidator.getInstance();
+  await invalidator.invalidateGameCaches(context);
+}
+
+export async function invalidateSeasonFormCaches(context: FormCacheContext) {
+  const invalidator = FormCacheInvalidator.getInstance();
+  await invalidator.invalidateSeasonCaches(context);
+}

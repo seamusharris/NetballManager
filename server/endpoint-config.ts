@@ -175,6 +175,12 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     description: 'Club players management'
   },
 
+  '/api/clubs/*/teams': {
+    convertRequest: true,
+    convertResponse: true,
+    description: 'Club-scoped team CRUD operations'
+  },
+
   // ==========================================================================
   // AVAILABILITY ENDPOINTS
   // ==========================================================================

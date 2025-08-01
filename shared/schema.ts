@@ -286,6 +286,47 @@ export const insertDivisionSchema = createInsertSchema(divisions).omit({ id: tru
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true });
 export type Team = typeof teams.$inferSelect;
 
+// Team lineages table
+export const teamLineages = pgTable("team_lineages", {
+  id: serial("id").primaryKey(),
+  club_id: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // e.g., "Emeralds A"
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  is_active: boolean("is_active").notNull().default(true),
+}, (table) => {
+  return {
+    club_name_unique: unique().on(table.club_id, table.name)
+  };
+});
+
+// Junction table for team-lineage relationships
+export const teamLineageMembers = pgTable("team_lineage_members", {
+  id: serial("id").primaryKey(),
+  team_lineage_id: integer("team_lineage_id").notNull().references(() => teamLineages.id, { onDelete: "cascade" }),
+  team_id: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  joined_at: timestamp("joined_at").defaultNow().notNull(),
+  notes: text("notes"), // e.g., "Cloned from 2023 team"
+}, (table) => {
+  return {
+    team_lineage_unique: unique().on(table.team_lineage_id, table.team_id)
+  };
+});
+
+// Team cloning history
+export const teamClones = pgTable("team_clones", {
+  id: serial("id").primaryKey(),
+  source_team_id: integer("source_team_id").notNull().references(() => teams.id),
+  cloned_team_id: integer("cloned_team_id").notNull().references(() => teams.id),
+  clone_type: text("clone_type").notNull(), // 'full', 'players_only', 'structure_only'
+  cloned_at: timestamp("cloned_at").defaultNow().notNull(),
+  notes: text("notes"),
+}, (table) => {
+  return {
+    cloned_team_unique: unique().on(table.cloned_team_id)
+  };
+});
+
 // Team-player relationships (replaces player_seasons)
 export const teamPlayers = pgTable("team_players", {
   id: serial("id").primaryKey(),
