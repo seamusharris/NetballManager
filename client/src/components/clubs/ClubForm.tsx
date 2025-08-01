@@ -1,70 +1,101 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import React from 'react';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { useStandardForm } from '@/hooks/useStandardForm';
+import { useQueryClient } from '@tanstack/react-query';
 
-const clubSchema = z.object({
-  name: z.string().min(1, "Club name is required").max(100, "Name must be 100 characters or less"),
-  code: z.string().min(1, "Club code is required").max(10, "Code must be 10 characters or less").regex(/^[A-Z0-9]+$/, "Code must contain only uppercase letters and numbers"),
-  description: z.string().max(500, "Description must be 500 characters or less").optional(),
-  address: z.string().max(200, "Address must be 200 characters or less").optional(),
-  contactEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
-  contactPhone: z.string().max(20, "Phone must be 20 characters or less").optional(),
-  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format").default("#1f2937"),
-  secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format").default("#ffffff"),
+// Form schema using camelCase (frontend format)
+const clubFormSchema = z.object({
+  name: z.string().min(1, 'Club name is required').max(100, 'Name must be 100 characters or less'),
+  code: z.string().min(1, 'Club code is required').max(10, 'Code must be 10 characters or less').regex(/^[A-Z0-9]+$/, 'Code must contain only uppercase letters and numbers'),
+  address: z.string().max(200, 'Address must be 200 characters or less').nullable().transform(val => val || ''),
+  contactEmail: z.string().email('Invalid email address').or(z.literal('')).nullable().transform(val => val || ''),
+  contactPhone: z.string().max(20, 'Phone must be 20 characters or less').nullable().transform(val => val || ''),
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid color format').default('#1f2937'),
+  secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid color format').default('#ffffff'),
 });
 
-type ClubFormData = z.infer<typeof clubSchema>;
+type ClubFormData = z.infer<typeof clubFormSchema>;
 
 interface Club {
   id: number;
   name: string;
   code: string;
-  description?: string;
   address?: string;
   contactEmail?: string;
   contactPhone?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ClubFormProps {
   club?: Club;
-  onSubmit: (data: ClubFormData) => void;
+  onSuccess?: (data?: any) => void;
   onCancel?: () => void;
-  isSubmitting?: boolean;
 }
 
-export default function ClubForm({ 
-  club, 
-  onSubmit, 
-  onCancel, 
-  isSubmitting = false 
-}: ClubFormProps) {
-  const form = useForm<ClubFormData>({
-    resolver: zodResolver(clubSchema),
-    defaultValues: {
-      name: club?.name || "",
-      code: club?.code || "",
-      description: club?.description || "",
-      address: club?.address || "",
-      contactEmail: club?.contactEmail || "",
-      contactPhone: club?.contactPhone || "",
-      primaryColor: club?.primaryColor || "#1f2937",
-      secondaryColor: club?.secondaryColor || "#ffffff",
-    },
-  });
+export default function ClubForm({ club, onSuccess, onCancel }: ClubFormProps) {
+  const queryClient = useQueryClient();
 
-  const handleSubmit = (data: ClubFormData) => {
-    console.log("Submitting club data:", data);
-    onSubmit(data);
+  // Prepare default values
+  const getDefaultValues = (): Partial<ClubFormData> => {
+    if (!club) {
+      return {
+        name: '',
+        code: '',
+        address: '',
+        contactEmail: '',
+        contactPhone: '',
+        primaryColor: '#1f2937',
+        secondaryColor: '#ffffff',
+      };
+    }
+
+    return {
+      name: club.name,
+      code: club.code,
+      address: club.address || '',
+      contactEmail: club.contactEmail || '',
+      contactPhone: club.contactPhone || '',
+      primaryColor: club.primaryColor || '#1f2937',
+      secondaryColor: club.secondaryColor || '#ffffff',
+    };
   };
+
+  // Custom success handler to invalidate the correct caches
+  const handleSuccess = (data?: any) => {
+    // Invalidate all relevant caches
+    queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+    queryClient.invalidateQueries({ queryKey: ['clubs'] });
+    
+    // Call the original onSuccess callback
+    onSuccess?.(data);
+  };
+
+  const {
+    form,
+    handleSubmit,
+    handleCancel,
+    isLoading,
+    isEditing,
+  } = useStandardForm<ClubFormData>({
+    schema: clubFormSchema,
+    createEndpoint: '/api/clubs',
+    updateEndpoint: (id) => `/api/clubs/${id}`,
+    defaultValues: getDefaultValues(),
+    initialData: club,
+    onSuccess: handleSuccess,
+    onCancel,
+    successMessage: club ? 'Club updated successfully' : 'Club created successfully',
+    errorMessage: club ? 'Failed to update club' : 'Failed to create club',
+  });
 
   return (
     <Form {...form}>
@@ -102,30 +133,13 @@ export default function ClubForm({
                 />
               </FormControl>
               <FormMessage />
-              <p className="text-xs text-gray-500">
+              <FormDescription>
                 A short code to identify the club (uppercase letters and numbers only)
-              </p>
+              </FormDescription>
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Optional description of the club..."
-                  rows={3}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <FormField
           control={form.control}
@@ -238,13 +252,11 @@ export default function ClubForm({
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (club ? "Updating..." : "Creating...") : (club ? "Update Club" : "Create Club")}
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Club' : 'Create Club')}
           </Button>
         </div>
       </form>

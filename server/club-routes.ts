@@ -78,7 +78,7 @@ export function registerClubRoutes(app: Express) {
   // Create club
   app.post('/api/clubs', async (req, res) => {
     try {
-      const { name, code, description, address, contactEmail, contactPhone, primaryColor = '#1f2937', secondaryColor = '#ffffff' } = req.body;
+      const { name, code, address, contact_email, contact_phone, primary_color = '#1f2937', secondary_color = '#ffffff' } = req.body;
       if (!name || !code) {
         return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'Name and code are required'));
       }
@@ -90,16 +90,15 @@ export function registerClubRoutes(app: Express) {
         return res.status(409).json(createErrorResponse(ErrorCodes.INVALID_REQUEST, 'Club code already exists'));
       }
       const result = await pool.query(`
-        INSERT INTO clubs (name, code, description, address, contact_email, contact_phone, primary_color, secondary_color)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color, is_active, created_at, updated_at
-      `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
+        INSERT INTO clubs (name, code, address, contact_email, contact_phone, primary_color, secondary_color)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, name, code, address, contact_email, contact_phone, primary_color, secondary_color, is_active, created_at, updated_at
+      `, [name, code.toUpperCase(), address, contact_email, contact_phone, primary_color, secondary_color]);
       const club = result.rows[0];
       res.status(201).json(createSuccessResponse({
         id: club.id,
         name: club.name,
         code: club.code,
-        description: club.description,
         address: club.address,
         contactEmail: club.contact_email,
         contactPhone: club.contact_phone,
@@ -119,7 +118,7 @@ export function registerClubRoutes(app: Express) {
   app.patch('/api/clubs/:id', async (req, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
-      const { name, code, description, address, contactEmail, contactPhone, primaryColor, secondaryColor } = req.body;
+      const { name, code, address, contact_email, contact_phone, primary_color, secondary_color } = req.body;
       if (isNaN(clubId)) {
         return res.status(400).json(createErrorResponse(ErrorCodes.INVALID_PARAMETER, 'Invalid club ID'));
       }
@@ -139,17 +138,16 @@ export function registerClubRoutes(app: Express) {
       }
       const result = await pool.query(`
         UPDATE clubs 
-        SET name = $1, code = $2, description = $3, address = $4, 
-            contact_email = $5, contact_phone = $6, primary_color = $7, secondary_color = $8
-        WHERE id = $9
-        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color, is_active, created_at, updated_at
-      `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor, clubId]);
+        SET name = $1, code = $2, address = $3, 
+            contact_email = $4, contact_phone = $5, primary_color = $6, secondary_color = $7
+        WHERE id = $8
+        RETURNING id, name, code, address, contact_email, contact_phone, primary_color, secondary_color, is_active, created_at, updated_at
+      `, [name, code.toUpperCase(), address, contact_email, contact_phone, primary_color, secondary_color, clubId]);
       const club = result.rows[0];
       res.json(createSuccessResponse({
         id: club.id,
         name: club.name,
         code: club.code,
-        description: club.description,
         address: club.address,
         contactEmail: club.contact_email,
         contactPhone: club.contact_phone,

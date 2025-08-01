@@ -87,71 +87,9 @@ export default function ClubManagement() {
     }
   });
 
-  // Create club mutation
-  const createMutation = useMutation({
-    mutationFn: async (clubData: any) => {
-      const response = await fetch('/api/clubs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clubData)
-      });
+  // Note: Club create mutation now handled by standardized ClubForm
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clubs'] });
-      setIsCreateDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Club created successfully"
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create club",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Update club mutation
-  const updateMutation = useMutation({
-    mutationFn: async (clubData: any) => {
-      const response = await fetch(`/api/clubs/${clubData.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clubData)
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clubs'] });
-      setEditingClub(null);
-      toast({
-        title: "Success",
-        description: "Club updated successfully"
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update club",
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Club update mutation now handled by standardized ClubForm
 
   // Delete club mutation
   const deleteMutation = useMutation({
@@ -184,15 +122,7 @@ export default function ClubManagement() {
     }
   });
 
-  const handleCreateClub = (clubData: any) => {
-    createMutation.mutate(clubData);
-  };
-
-  const handleUpdateClub = (clubData: any) => {
-    if (editingClub) {
-      updateMutation.mutate({ ...clubData, id: editingClub.id });
-    }
-  };
+  // Note: Club creation and updates now handled by standardized ClubForm
 
   const handleDeleteClub = () => {
     if (deletingClub) {
@@ -387,9 +317,8 @@ export default function ClubManagement() {
             </p>
 
             <ClubForm 
-              onSubmit={handleCreateClub}
+              onSuccess={() => setIsCreateDialogOpen(false)}
               onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={createMutation.isPending}
             />
           </div>
         </div>
@@ -414,9 +343,8 @@ export default function ClubManagement() {
 
             <ClubForm 
               club={editingClub}
-              onSubmit={handleUpdateClub}
+              onSuccess={() => setEditingClub(null)}
               onCancel={() => setEditingClub(null)}
-              isSubmitting={updateMutation.isPending}
             />
           </div>
         </div>
