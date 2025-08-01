@@ -89,45 +89,13 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   const divisions: Division[] = rawDivisions;
   console.log('Divisions after camelcaseKeys:', divisions);
 
-  // Create mutations
-  const createAgeGroupMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/age-groups', snakecaseKeys(data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['age-groups'] });
-      setIsCreateDialogOpen(false);
-      toast({ title: "Age group created successfully" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error creating age group",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Age group create mutation now handled by standardized AgeGroupForm
 
   // Note: Section create mutation now handled by standardized SectionForm
 
   // Note: Division create mutation now handled by standardized DivisionForm
 
-  // Update mutations
-  const updateAgeGroupMutation = useMutation({
-    mutationFn: (args: { id: number; data: any }) => 
-      apiClient.patch(`/api/age-groups/${args.id}`, snakecaseKeys(args.data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['age-groups'] });
-      setEditingItem(null);
-      setIsCreateDialogOpen(false);
-      toast({ title: "Age group updated successfully" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error updating age group",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Age group update mutation now handled by standardized AgeGroupForm
 
   // Note: Section update mutation now handled by standardized SectionForm
 
@@ -182,7 +150,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
   const handleCreate = async (data: any) => {
     switch (dialogType) {
       case 'ageGroup':
-        createAgeGroupMutation.mutate(data);
+        // Note: Age group creation now handled by standardized AgeGroupForm
         break;
       case 'section':
         // Note: Section creation now handled by standardized SectionForm  
@@ -198,7 +166,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     
     switch (dialogType) {
       case 'ageGroup':
-        updateAgeGroupMutation.mutate({ id: editingItem.id, data });
+        // Note: Age group updates now handled by standardized AgeGroupForm
         break;
       case 'section':
         // Note: Section updates now handled by standardized SectionForm
@@ -483,9 +451,14 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
           {dialogType === 'ageGroup' && (
             <AgeGroupForm
               ageGroup={editingItem}
-              onSubmit={editingItem ? handleUpdate : handleCreate}
-              onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={createAgeGroupMutation.isPending || updateAgeGroupMutation.isPending}
+              onSuccess={() => {
+                setIsCreateDialogOpen(false);
+                setEditingItem(null);
+              }}
+              onCancel={() => {
+                setIsCreateDialogOpen(false);
+                setEditingItem(null);
+              }}
             />
           )}
           {dialogType === 'section' && (

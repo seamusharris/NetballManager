@@ -1,13 +1,13 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { useStandardForm } from '@/hooks/useStandardForm';
+import { useQueryClient } from '@tanstack/react-query';
 
+// Form schema using camelCase (frontend format)
 const ageGroupFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   displayName: z.string().min(1, 'Display name is required'),
@@ -25,24 +25,57 @@ interface AgeGroup {
 
 interface AgeGroupFormProps {
   ageGroup?: AgeGroup;
-  onSubmit: (data: AgeGroupFormData) => void;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+  onSuccess?: (data?: any) => void;
+  onCancel?: () => void;
 }
 
-export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmitting }: AgeGroupFormProps) {
-  const form = useForm<AgeGroupFormData>({
-    resolver: zodResolver(ageGroupFormSchema),
-    defaultValues: {
-      name: ageGroup?.name || '',
-      displayName: ageGroup?.displayName || '',
-      isActive: ageGroup?.isActive ?? true,
-    },
-  });
+export default function AgeGroupForm({ ageGroup, onSuccess, onCancel }: AgeGroupFormProps) {
+  const queryClient = useQueryClient();
 
-  const handleSubmit = (data: AgeGroupFormData) => {
-    onSubmit(data);
+  // Prepare default values
+  const getDefaultValues = (): Partial<AgeGroupFormData> => {
+    if (!ageGroup) {
+      return {
+        name: '',
+        displayName: '',
+        isActive: true,
+      };
+    }
+
+    return {
+      name: ageGroup.name,
+      displayName: ageGroup.displayName,
+      isActive: ageGroup.isActive,
+    };
   };
+
+  // Custom success handler to invalidate the correct caches
+  const handleSuccess = (data?: any) => {
+    // Invalidate all relevant caches
+    queryClient.invalidateQueries({ queryKey: ['/api/age-groups'] });
+    queryClient.invalidateQueries({ queryKey: ['age-groups'] });
+    
+    // Call the original onSuccess callback
+    onSuccess?.(data);
+  };
+
+  const {
+    form,
+    handleSubmit,
+    handleCancel,
+    isLoading,
+    isEditing,
+  } = useStandardForm<AgeGroupFormData>({
+    schema: ageGroupFormSchema,
+    createEndpoint: '/api/age-groups',
+    updateEndpoint: (id) => `/api/age-groups/${id}`,
+    defaultValues: getDefaultValues(),
+    initialData: ageGroup,
+    onSuccess: handleSuccess,
+    onCancel,
+    successMessage: ageGroup ? 'Age group updated successfully' : 'Age group created successfully',
+    errorMessage: ageGroup ? 'Failed to update age group' : 'Failed to create age group',
+  });
 
   return (
     <Form {...form}>
@@ -56,6 +89,9 @@ export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmittin
               <FormControl>
                 <Input placeholder="e.g., 15U" {...field} />
               </FormControl>
+              <FormDescription>
+                Short name used for division naming (e.g., "15U", "17U", "Open")
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -70,6 +106,9 @@ export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmittin
               <FormControl>
                 <Input placeholder="e.g., Under 15" {...field} />
               </FormControl>
+              <FormDescription>
+                Full name displayed to users
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -81,10 +120,10 @@ export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmittin
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Active</FormLabel>
-                <div className="text-sm text-muted-foreground">
+                <FormLabel className="text-base">Active Age Group</FormLabel>
+                <FormDescription>
                   This age group is currently active and can be used in divisions
-                </div>
+                </FormDescription>
               </div>
               <FormControl>
                 <Switch
@@ -97,14 +136,14 @@ export default function AgeGroupForm({ ageGroup, onSubmit, onCancel, isSubmittin
         />
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (ageGroup ? 'Updating...' : 'Creating...') : ageGroup ? 'Update Age Group' : 'Create Age Group'}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Age Group' : 'Create Age Group')}
           </Button>
         </div>
       </form>
     </Form>
   );
-} 
+}
