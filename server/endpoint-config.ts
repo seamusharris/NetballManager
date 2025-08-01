@@ -106,15 +106,6 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
   '/api/players': {
     convertRequest: true,
     convertResponse: true,
-    fieldMappings: {
-      'firstName': 'first_name',
-      'lastName': 'last_name',
-      'displayName': 'display_name',
-      'dateOfBirth': 'date_of_birth',
-      'positionPreferences': 'position_preferences',
-      'avatarColor': 'avatar_color',
-      'isActive': 'active'
-    },
     description: 'Player CRUD operations'
   },
 
@@ -172,7 +163,13 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
   '/api/clubs/*/players': {
     convertRequest: true,
     convertResponse: true,
-    description: 'Club players management'
+    description: 'Club players management - GET, POST, DELETE'
+  },
+
+  '/api/clubs/*/players/*': {
+    convertRequest: true,
+    convertResponse: true,
+    description: 'Club player individual operations - GET, PATCH, DELETE'
   },
 
   '/api/clubs/*/teams': {

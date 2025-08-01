@@ -1,35 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { z } from 'zod';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Player, Position, allPositions } from '@shared/schema';
-import { useStandardForm } from '@/hooks/useStandardForm';
-import { apiClient } from '@/lib/apiClient';
-import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/apiClient";
 
-// Form schema using camelCase (frontend format)
-const playerFormSchema = z.object({
-  displayName: z.string().min(1, 'Display name is required'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().optional(),
+// Create custom form schema for player creation
+const formSchema = z.object({
+  display_name: z.string().min(1, "Display name is required"),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  date_of_birth: z.string().optional(),
   active: z.boolean().default(true),
-  avatarColor: z.string().default('bg-blue-600'),
+  avatar_color: z.string().default('bg-blue-600'),
   position1: z.string().refine((val) => allPositions.includes(val as Position), {
-    message: 'Please select a valid position',
+    message: "Please select a valid position",
   }),
-  position2: z.string().default('none'),
-  position3: z.string().default('none'),
-  position4: z.string().default('none'),
+  position2: z.string().default("none"),
+  position3: z.string().default("none"),
+  position4: z.string().default("none"),
 });
 
-type PlayerFormData = z.infer<typeof playerFormSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 interface PlayerFormProps {
   player?: Player;
@@ -41,52 +55,139 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel }: PlayerFormProps) {
   const isEditing = !!player;
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Extract position preferences for default values
-  const getPositionDefaults = (playerData?: Player) => {
-    if (!playerData) return { position1: '', position2: 'none', position3: 'none', position4: 'none' };
+  const getPositionDefaults = () => {
+    if (!player) return { position1: "", position2: "none", position3: "none", position4: "none" };
 
-    const preferences = playerData.positionPreferences as Position[];
-    console.log('PlayerForm: Getting position defaults for player:', playerData.displayName, 'preferences:', preferences);
-    
-    const result = {
-      position1: preferences[0] || '',
-      position2: preferences[1] || 'none',
-      position3: preferences[2] || 'none',
-      position4: preferences[3] || 'none',
+    const preferences = player.positionPreferences as Position[];
+    return {
+      position1: preferences[0] || "",
+      position2: preferences[1] || "none",
+      position3: preferences[2] || "none",
+      position4: preferences[3] || "none",
     };
-    
-    console.log('PlayerForm: Position defaults:', result);
-    return result;
   };
 
-  const positionDefaults = getPositionDefaults(player);
+  const positionDefaults = getPositionDefaults();
 
-  // Default values - these will be used for both create and edit modes
-  const defaultValues: PlayerFormData = {
-    displayName: player?.displayName || '',
-    firstName: player?.firstName || '',
-    lastName: player?.lastName || '',
-    dateOfBirth: player?.dateOfBirth || '',
-    position1: positionDefaults.position1,
-    position2: positionDefaults.position2,
-    position3: positionDefaults.position3,
-    position4: positionDefaults.position4,
-    active: player?.active !== undefined ? player.active : true,
-    avatarColor: player?.avatarColor || 'bg-blue-600',
-  };
+  const createPlayer = useMutation({
+    mutationFn: (data: any) => {
+      if (!clubId) {
+        throw new Error('Club context is required for player creation');
+      }
 
-  // Use react-hook-form directly for simpler control
-  const form = useForm<PlayerFormData>({
-    resolver: zodResolver(playerFormSchema),
-    defaultValues,
+      const playerData = {
+        ...data,
+        clubId, // Always include club ID in payload
+        teamId: teamId || undefined // Include team ID if in team context
+      };
+
+      return apiClient.post('/api/players', playerData, {
+        headers: {
+          'x-current-club-id': clubId.toString(),
+          ...(teamId && { 'x-current-team-id': teamId.toString() })
+        } as any
+      });
+    },
+    onSuccess: () => {
+      // Invalidate all player-related queries - simplified like working forms
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+
+      // Team-specific invalidations if in team context
+      if (teamId) {
+        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+        queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+      }
+
+      toast({ title: "Player created successfully" });
+      form.reset(); // Reset form on success
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      console.error('PlayerForm: Player creation failed:', error);
+      toast({
+        title: "Error creating player",
+        description: error.message || "Failed to create player",
+        variant: "destructive"
+      });
+    }
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => apiClient.patch(`/api/players/${player?.id}`, data),
+    onSuccess: () => {
+      // Invalidate all player-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${player?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.includes('/api/players');
+        }
+      });
 
-  // Position management state
+      toast({ title: "Player updated successfully" });
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating player",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const isSubmitting = createPlayer.isPending || updateMutation.isPending;
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      display_name: player?.displayName || "",
+      first_name: player?.firstName || "",
+      last_name: player?.lastName || "",
+      date_of_birth: player?.dateOfBirth || "",
+      position1: positionDefaults.position1,
+      position2: positionDefaults.position2,
+      position3: positionDefaults.position3,
+      position4: positionDefaults.position4,
+      active: player?.active !== undefined ? player.active : true,
+      avatar_color: player?.avatarColor || 'bg-blue-600',
+    },
+  });
+
+  // Reset form when player data changes (for edit mode)
+  useEffect(() => {
+    if (player) {
+      const newPositionDefaults = getPositionDefaults();
+      form.reset({
+        display_name: player.displayName || "",
+        first_name: player.firstName || "",
+        last_name: player.lastName || "",
+        date_of_birth: player.dateOfBirth || "",
+        position1: newPositionDefaults.position1,
+        position2: newPositionDefaults.position2,
+        position3: newPositionDefaults.position3,
+        position4: newPositionDefaults.position4,
+        active: player.active !== undefined ? player.active : true,
+        avatar_color: player.avatarColor || 'bg-blue-600',
+      });
+    }
+  }, [player, form]);
+
+  // Watch position selections to filter out duplicates
+  const position1 = useWatch({ control: form.control, name: "position1" });
+  const position2 = useWatch({ control: form.control, name: "position2" });
+  const position3 = useWatch({ control: form.control, name: "position3" });
+  const position4 = useWatch({ control: form.control, name: "position4" });
+
+  // Manage available positions for each dropdown
   const [availablePositions, setAvailablePositions] = useState({
     position1: [...allPositions],
     position2: [...allPositions],
@@ -94,16 +195,10 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     position4: [...allPositions],
   });
 
-  // Watch position selections
-  const position1 = useWatch({ control: form.control, name: 'position1' });
-  const position2 = useWatch({ control: form.control, name: 'position2' });
-  const position3 = useWatch({ control: form.control, name: 'position3' });
-  const position4 = useWatch({ control: form.control, name: 'position4' });
-
   // Update available positions when selections change
   useEffect(() => {
     const selectedPositions = [position1, position2, position3, position4].filter(
-      pos => pos && pos !== 'none'
+      pos => pos && pos !== "none"
     );
 
     const newAvailablePositions = {
@@ -121,6 +216,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       newAvailablePositions[fieldName] = allPositions.filter(pos => {
         // Always include the currently selected value in the options
         if (pos === currentValue) return true;
+
         // Exclude positions selected in other dropdowns
         return !selectedPositions.includes(pos) || pos === currentValue;
       });
@@ -129,113 +225,87 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     setAvailablePositions(newAvailablePositions);
 
     // Check for duplicates and reset if any are found
-    if (position2 !== 'none' && position2 === position1) {
-      form.setValue('position2', 'none');
+    if (position2 !== "none" && position2 === position1) {
+      form.setValue("position2", "none");
     }
-    if (position3 !== 'none' && (position3 === position1 || position3 === position2)) {
-      form.setValue('position3', 'none');
+
+    if (position3 !== "none" && (position3 === position1 || position3 === position2)) {
+      form.setValue("position3", "none");
     }
-    if (position4 !== 'none' && (position4 === position1 || position4 === position2 || position4 === position3)) {
-      form.setValue('position4', 'none');
+
+    if (position4 !== "none" && (position4 === position1 || position4 === position2 || position4 === position3)) {
+      form.setValue("position4", "none");
     }
+
   }, [position1, position2, position3, position4, form]);
 
-  // Reset form when player data changes (for edit mode)
-  useEffect(() => {
-    if (player) {
-      const newPositionDefaults = getPositionDefaults(player);
-      form.reset({
-        displayName: player.displayName || '',
-        firstName: player.firstName || '',
-        lastName: player.lastName || '',
-        dateOfBirth: player.dateOfBirth || '',
-        position1: newPositionDefaults.position1,
-        position2: newPositionDefaults.position2,
-        position3: newPositionDefaults.position3,
-        position4: newPositionDefaults.position4,
-        active: player.active !== undefined ? player.active : true,
-        avatarColor: player.avatarColor || 'bg-blue-600',
-      });
-    }
-  }, [player, form]);
-
-  const onSubmit = async (values: PlayerFormData) => {
+  const handleSubmit = (values: FormValues) => {
     // Validate at least one position is selected
     if (!values.position1) {
-      form.setError('position1', { 
-        type: 'required', 
-        message: 'Primary position is required' 
+      form.setError("position1", { 
+        type: "required", 
+        message: "Primary position is required" 
       });
       return;
     }
 
-    setIsSubmitting(true);
+    // Construct position preferences array from individual selections
+    const positionPreferences: Position[] = [
+      values.position1 as Position,
+    ];
+
+    // Only add secondary positions if they're not "none"
+    if (values.position2 !== "none") {
+      positionPreferences.push(values.position2 as Position);
+    }
+
+    if (values.position3 !== "none") {
+      positionPreferences.push(values.position3 as Position);
+    }
+
+    if (values.position4 !== "none") {
+      positionPreferences.push(values.position4 as Position);
+    }
+
+    // Remove position fields from the data object
+    const { position1, position2, position3, position4, ...rest } = values;
+
+    // Create the player data
+    const playerData = {
+      ...rest,
+      positionPreferences,
+    };
 
     try {
-      // Transform position fields into positionPreferences array
-      const positionPreferences: Position[] = [values.position1 as Position];
-      
-      if (values.position2 !== 'none') {
-        positionPreferences.push(values.position2 as Position);
-      }
-      if (values.position3 !== 'none') {
-        positionPreferences.push(values.position3 as Position);
-      }
-      if (values.position4 !== 'none') {
-        positionPreferences.push(values.position4 as Position);
-      }
-
-      // Remove position fields and add positionPreferences
-      const { position1, position2, position3, position4, ...rest } = values;
-      const transformedData = {
-        ...rest,
-        positionPreferences,
-        ...(teamId && { teamId }), // Include team ID if in team context
-      };
-
-      // Call the appropriate API based on edit mode
       if (player) {
-        // Update mode - players are standalone entities
-        await apiClient.patch(`/api/players/${player.id}`, transformedData);
-        toast({ title: 'Player updated successfully' });
+        updateMutation.mutate(playerData, {
+          onSuccess: () => {
+            form.reset();
+            onSuccess?.();
+          }
+        });
       } else {
-        // Create mode - include club context in request body
-        const createData = {
-          ...transformedData,
-          clubId, // Associate with current club from URL
-        };
-        await apiClient.post('/api/players', createData);
-        toast({ title: 'Player created successfully' });
+        createPlayer.mutate(playerData);
       }
-
-      // Invalidate caches to refresh UI
-      queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
-      
-      form.reset();
-      onSuccess?.();
-    } catch (error: any) {
-      toast({
-        title: `Error ${player ? 'updating' : 'creating'} player`,
-        description: error.message || `Failed to ${player ? 'update' : 'create'} player`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('PlayerForm: Exception during mutation call:', error);
     }
   };
 
+  // Season management is now handled on the player details page
+
+  // Remove games fetch since it's not needed for player creation and was causing opponent API calls
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="displayName"
+            name="display_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Display Name *</FormLabel>
+                <FormLabel required>Display Name</FormLabel>
                 <FormControl>
                   <Input placeholder="J. Smith" {...field} />
                 </FormControl>
@@ -273,10 +343,10 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="firstName"
+            name="first_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name *</FormLabel>
+                <FormLabel required>First Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Jane" {...field} />
                 </FormControl>
@@ -287,10 +357,10 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
           <FormField
             control={form.control}
-            name="lastName"
+            name="last_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name *</FormLabel>
+                <FormLabel required>Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Smith" {...field} />
                 </FormControl>
@@ -302,7 +372,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
         <FormField
           control={form.control}
-          name="dateOfBirth"
+          name="date_of_birth"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>
@@ -321,6 +391,8 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
           )}
         />
 
+        {/* Seasons are now managed on the player details page */}
+
         <div>
           <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -329,7 +401,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
               name="position1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Primary Position *</FormLabel>
+                  <FormLabel required>Primary Position</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -429,6 +501,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
             type="submit" 
             className="bg-primary text-white" 
             disabled={isSubmitting}
+
           >
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Player' : 'Add Player'}
           </Button>

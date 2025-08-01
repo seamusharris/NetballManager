@@ -5,9 +5,21 @@ import type { AuthenticatedRequest } from './unified-auth';
 import { pool } from './db';
 import { storage } from './storage';
 import { createSuccessResponse, createErrorResponse, ErrorCodes } from './api-response-standards';
-import { insertPlayerSchema, importPlayerSchema } from '@shared/schema';
+import { insertPlayerSchema, importPlayerSchema, POSITIONS, Position, players } from '@shared/schema';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 import { transformToApiFormat } from './api-utils';
 import { calculatePlayerStats } from './utils/playerStatsService';
+
+// Frontend-compatible schema (camelCase) for club player creation
+const camelCasePlayerSchema = z.object({
+  displayName: z.string().min(1, 'Display name is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  dateOfBirth: z.string().optional(),
+  positionPreferences: z.array(z.enum(POSITIONS)).min(1, 'At least one position is required'),
+  active: z.boolean().default(true),
+});
 
 export function registerPlayerRoutes(app: Express) {
   console.log('🚀 Registering player routes...');
@@ -52,10 +64,184 @@ export function registerPlayerRoutes(app: Express) {
     }
   });
 
+  // POST /api/clubs/:clubId/players (NEW - club-scoped player creation)
+  app.post('/api/clubs/:clubId/players', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+    try {
+      console.log('🎯 POST /api/clubs/:clubId/players - Request body:', JSON.stringify(req.body, null, 2));
+      
+      const clubId = parseInt(req.params.clubId);
+      if (!clubId || isNaN(clubId)) {
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
+      }
+
+      // Middleware converts camelCase to snake_case, so we validate with snake_case schema
+      const parsedData = insertPlayerSchema.safeParse(req.body);
+      if (!parsedData.success) {
+        console.log('🚨 Validation failed:', JSON.stringify(parsedData.error.errors, null, 2));
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          'Invalid player data',
+          parsedData.error.errors
+        ));
+      }
+
+      // Data is already in snake_case format for storage layer
+      const playerData = parsedData.data;
+
+      // Create the player using storage layer
+      const player = await storage.createPlayer(playerData);
+      
+      // Associate with club
+      if (player.id) {
+        try {
+          await storage.addPlayerToClub(player.id, clubId);
+          console.log(`Associated player ${player.id} with club ${clubId}`);
+        } catch (clubError) {
+          console.error(`Club association failed:`, clubError);
+          // Don't fail the player creation if club association fails
+        }
+      }
+
+      const responseData = transformToApiFormat(player, `/api/clubs/${clubId}/players`);
+      res.status(201).json(createSuccessResponse(responseData));
+    } catch (error) {
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to create player',
+        error instanceof Error ? error.message : String(error)
+      ));
+    }
+  });
+
+  // PATCH /api/clubs/:clubId/players/:id (NEW - club-scoped player update)
+  app.patch('/api/clubs/:clubId/players/:id', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+    try {
+      console.log('🔄 CLUB PATCH ENDPOINT HIT!', { clubId: req.params.clubId, playerId: req.params.id, body: req.body });
+      
+      const clubId = parseInt(req.params.clubId);
+      const playerId = parseInt(req.params.id);
+      
+      if (!clubId || isNaN(clubId)) {
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
+      }
+      
+      if (!playerId || isNaN(playerId)) {
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid player ID format'
+        ));
+      }
+
+      // Middleware converts camelCase to snake_case, so we validate with snake_case schema
+      // Create base schema from table for partial updates
+      const basePlayerSchema = createInsertSchema(players).omit({ id: true });
+      const parsedData = basePlayerSchema.partial().safeParse(req.body);
+      if (!parsedData.success) {
+        console.log('🚨 Update validation failed:', JSON.stringify(parsedData.error.errors, null, 2));
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          'Invalid player data',
+          parsedData.error.errors
+        ));
+      }
+
+      // Data is already in snake_case format for storage layer
+      const playerData: any = {};
+      if (parsedData.data.display_name !== undefined) playerData.display_name = parsedData.data.display_name;
+      if (parsedData.data.first_name !== undefined) playerData.first_name = parsedData.data.first_name;
+      if (parsedData.data.last_name !== undefined) playerData.last_name = parsedData.data.last_name;
+      if (parsedData.data.date_of_birth !== undefined) playerData.date_of_birth = parsedData.data.date_of_birth;
+      if (parsedData.data.position_preferences !== undefined) playerData.position_preferences = parsedData.data.position_preferences;
+      if (parsedData.data.active !== undefined) playerData.active = parsedData.data.active;
+
+      // Update the player using storage layer
+      const updatedPlayer = await storage.updatePlayer(playerId, playerData);
+      if (!updatedPlayer) {
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Player not found'
+        ));
+      }
+
+      const responseData = transformToApiFormat(updatedPlayer, `/api/clubs/${clubId}/players`);
+      res.json(createSuccessResponse(responseData));
+    } catch (error) {
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to update player',
+        error instanceof Error ? error.message : String(error)
+      ));
+    }
+  });
+
+  // DELETE /api/clubs/:clubId/players/:id (NEW - club-scoped player deletion)
+  app.delete('/api/clubs/:clubId/players/:id', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
+    try {
+      console.log('🗑️ DELETE /api/clubs/:clubId/players/:id - Request:', { clubId: req.params.clubId, playerId: req.params.id });
+      
+      const clubId = parseInt(req.params.clubId);
+      const playerId = parseInt(req.params.id);
+      
+      if (!clubId || isNaN(clubId)) {
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid club ID format'
+        ));
+      }
+      
+      if (!playerId || isNaN(playerId)) {
+        return res.status(400).json(createErrorResponse(
+          ErrorCodes.INVALID_PARAMETER,
+          'Invalid player ID format'
+        ));
+      }
+
+      // Verify player exists and belongs to this club
+      const players = await storage.getPlayersByClub(clubId);
+      const playerExists = players.some(p => p.id === playerId);
+      
+      if (!playerExists) {
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Player not found in this club'
+        ));
+      }
+
+      // Delete the player
+      const success = await storage.deletePlayer(playerId);
+      if (!success) {
+        return res.status(404).json(createErrorResponse(
+          ErrorCodes.RESOURCE_NOT_FOUND,
+          'Player not found'
+        ));
+      }
+
+      const responseData = { success: true, message: 'Player deleted successfully' };
+      res.json(createSuccessResponse(responseData));
+    } catch (error) {
+      res.status(500).json(createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to delete player',
+        error instanceof Error ? error.message : String(error)
+      ));
+    }
+  });
+
   // POST /api/players
   app.post('/api/players', async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     try {
+      console.log('🔍 POST /api/players - Request body:', JSON.stringify(req.body, null, 2));
+      console.log('🔍 POST /api/players - Headers club-id:', req.headers['x-current-club-id']);
+      
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
+      console.log('🔍 POST /api/players - Resolved clubId:', clubId);
+      
       if (!clubId) {
         return res.status(400).json(createErrorResponse(
           ErrorCodes.INVALID_PARAMETER,
@@ -139,15 +325,16 @@ export function registerPlayerRoutes(app: Express) {
       const id = Number(req.params.id);
       const updateData = { ...req.body };
       delete updateData.seasonIds;
-      // Avatar color logic omitted for brevity
+      
+      // Middleware has converted camelCase to snake_case, use converted fields directly
       const validPlayerData = {
-        displayName: updateData.display_name,
-        firstName: updateData.first_name,
-        lastName: updateData.last_name,
-        dateOfBirth: updateData.date_of_birth,
-        positionPreferences: updateData.position_preferences,
+        display_name: updateData.display_name,
+        first_name: updateData.first_name,
+        last_name: updateData.last_name,
+        date_of_birth: updateData.date_of_birth,
+        position_preferences: updateData.position_preferences,
         active: updateData.active,
-        avatarColor: updateData.avatar_color
+        avatar_color: updateData.avatar_color
       };
       const updatedPlayer = await storage.updatePlayer(id, validPlayerData);
       if (!updatedPlayer) {

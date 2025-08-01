@@ -119,18 +119,9 @@ class ApiClient {
 
     let requestBody: any = undefined;
     if (data) {
-      // Bypass snakecaseKeys for batch scores/stats endpoints that require camelCase
-      const isCamelCaseBatchEndpoint =
-        endpoint.includes('/games/scores/batch') ||
-        endpoint.includes('/games/stats/batch');
-      if (isCamelCaseBatchEndpoint) {
-        requestBody = JSON.stringify(data);
-        console.log('API Client: Request data (camelCase, no snakecaseKeys):', JSON.stringify(data, null, 2));
-      } else {
-        const snakeData = snakecaseKeys(data, { deep: true });
-        requestBody = JSON.stringify(snakeData);
-        console.log('API Client: Request data (snake_case):', JSON.stringify(snakeData, null, 2));
-      }
+      // Send camelCase data - let backend middleware handle case conversion
+      requestBody = JSON.stringify(data);
+      console.log('API Client: Request data (camelCase):', JSON.stringify(data, null, 2));
       console.log('API Client: Request data size:', requestBody.length + ' bytes');
     } else {
       console.log('API Client: No request data.');

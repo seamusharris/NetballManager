@@ -12,6 +12,9 @@ import { shouldConvertEndpoint, applyFieldMappings } from './endpoint-config';
 /**
  * Smart case conversion middleware that applies conversion based on endpoint configuration
  */
+const instanceId = Math.random().toString(36).substr(2, 9);
+console.log(`🔧 Smart case conversion middleware created with ID: ${instanceId}`);
+
 export function smartCaseConversion() {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -19,10 +22,25 @@ export function smartCaseConversion() {
       const fullPath = `/api${req.path}`;
       
       const { convertRequest, convertResponse, config } = shouldConvertEndpoint(fullPath);
+      
+      // Debug logging for ALL requests to see what's happening
+      if (req.method === 'PATCH' || fullPath.includes('/clubs/')) {
+        console.log('🔍 MIDDLEWARE DEBUG:', { 
+          originalPath: req.path,
+          originalUrl: req.originalUrl,
+          fullPath, 
+          convertRequest, 
+          convertResponse, 
+          method: req.method,
+          hasBody: !!req.body,
+          config: config?.description || 'no config found'
+        });
+      }
 
       // Handle request body conversion with error handling
       if (convertRequest && req.body && typeof req.body === 'object') {
         try {
+          console.log(`🔄 CONVERTING REQUEST BODY from camelCase to snake_case [Instance: ${instanceId}]`);
           // Always use automatic snake_case conversion for requests
           // This converts camelCase from client to snake_case for server/database
           req.body = snakecaseKeys(req.body, { deep: true });
@@ -30,6 +48,9 @@ export function smartCaseConversion() {
           console.error('Request case conversion error:', conversionError);
           // Continue without conversion rather than crash
         }
+      } else if (req.method === 'PATCH' && fullPath.includes('/clubs/')) {
+        console.log('🚫 SKIPPING REQUEST CONVERSION (convertRequest=false)');
+        console.log('🔍 Request body BEFORE/AFTER (unchanged):', JSON.stringify(req.body, null, 2));
       }
 
       // Handle response conversion with error handling

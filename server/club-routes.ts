@@ -209,8 +209,8 @@ export function registerClubRoutes(app: Express) {
     }
   });
 
-  // POST /api/clubs/:clubId/players - Add players to a club
-  app.post('/api/clubs/:clubId/players', async (req, res) => {
+  // POST /api/clubs/:clubId/players/assign - Add existing players to a club
+  app.post('/api/clubs/:clubId/players/assign', async (req, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const { player_ids } = req.body; // Expect snake_case after middleware conversion

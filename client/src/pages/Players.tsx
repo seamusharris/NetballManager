@@ -1,123 +1,87 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useLocation } from "wouter";
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'wouter';
 import { Helmet } from 'react-helmet';
-import PlayersList from '@/components/players/PlayersList';
-import { useURLClub } from '@/hooks/use-url-club';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Loader2, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PageTemplate from '@/components/layout/PageTemplate';
 import PlayerForm from '@/components/players/PlayerForm';
-import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
+import PlayersList from '@/components/players/PlayersList';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 import { apiClient } from '@/lib/apiClient';
-import { usePerformanceMonitor } from '@/hooks/use-performance-monitor';
-import { useOptimizedPlayers, useOptimizedSeasons } from '@/hooks/use-optimized-queries';
-import { useApiErrorHandler } from '@/hooks/use-api-error-handler';
+import { useURLClub } from '@/hooks/use-url-club';
+import { useOptimizedPlayers } from '@/hooks/use-optimized-queries';
+import { Player } from '@shared/schema';
 
 export default function Players() {
-  const params = useParams<{ clubId?: string; teamId?: string }>();
-  const [location, setLocation] = useLocation();
-
-  // Performance monitoring
-  const performanceMetrics = usePerformanceMonitor('Players', {
-    trackApiCalls: true,
-    trackRenderTime: true,
-    logToConsole: true
-  });
-
-  // Error handling
-  const { handleError, handleValidationError } = useApiErrorHandler({
-    showToast: true,
-    logToConsole: true
-  });
-
-  // ALL HOOKS MUST BE DECLARED AT THE TOP LEVEL
-  const {
-    clubId,
-    club,
-    clubTeams,
-    userClubs,
-    hasPermission,
-    isLoading: clubLoading
-  } = useURLClub();
-
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  // Determine if this is team-specific or club-wide players
-  const teamId = params.teamId ? parseInt(params.teamId) : null;
-
-  // ALL STATE HOOKS
-  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
-  const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
-  const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
-  const [optimisticallyRemovedPlayerIds, setOptimisticallyRemovedPlayerIds] = useState<Set<number>>(new Set());
-  const [optimisticallyAddedPlayerIds, setOptimisticallyAddedPlayerIds] = useState<Set<number>>(new Set());
-  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
-  const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
-
-  // ALL QUERY HOOKS - Using optimized hooks
-  const { data: activeSeason } = useOptimizedSeasons();
+  const params = useParams<{ clubId?: string }>();
+  const clubId = params.clubId ? parseInt(params.clubId) : null;
   
-  // Get club players using optimized hook
-  const { data: players = [], isLoading: isPlayersLoading, error: playersError } = useOptimizedPlayers(clubId);
+  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
 
-  // ALL MUTATION HOOKS
-  const createPlayer = useMutation({
-    mutationFn: async (playerData: any) => {
-      if (!clubId) {
-        throw new Error('No club selected');
-      }
-      const response = await apiClient.post('/api/players', playerData);
-      return response;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Get club context
+  const { club, isLoading: clubLoading } = useURLClub();
+  
+  // Get players data
+  const { data: players = [], isLoading: isPlayersLoading } = useOptimizedPlayers(clubId);
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (playerId: number) => {
+      return apiClient.delete(`/api/players/${playerId}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-      queryClient.invalidateQueries({ queryKey: ['team-players'] });
-      toast({ title: 'Success', description: 'Player created successfully' });
-      setIsAddPlayerDialogOpen(false);
+      toast({ title: 'Player deleted successfully' });
+      setPlayerToDelete(null);
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create player';
-      toast({ 
-        title: 'Error', 
-        description: errorMessage, 
-        variant: 'destructive' 
+      toast({
+        title: 'Error deleting player',
+        description: error.message || 'Failed to delete player',
+        variant: 'destructive',
       });
+      setPlayerToDelete(null);
     },
   });
 
-  // ALL MEMO/COMPUTED VALUES
-  const allTeams = clubTeams;
+  const handleEdit = (player: Player) => {
+    setEditingPlayer(player);
+  };
 
-  const filteredPlayers = useMemo(() => {
-    if (!players || selectedTeamFilter === 'all') return players;
-    return players.filter(player => {
-      const hasTeamAssignment = player.teamAssignments?.some(
-        assignment => assignment.teamId === parseInt(selectedTeamFilter)
-      );
-      return hasTeamAssignment;
-    });
-  }, [players, selectedTeamFilter]);
+  const handleDelete = (playerId: number) => {
+    setPlayerToDelete(playerId);
+  };
 
-  // ALL EFFECTS
-  useEffect(() => {
-    if (location === '/players' && userClubs.length > 0) {
-      const defaultClub = userClubs.find(c => c.clubId === 54) || userClubs[0];
-      setLocation(`/club/${defaultClub.clubId}/players`);
-      return;
+  const confirmDelete = () => {
+    if (playerToDelete) {
+      deleteMutation.mutate(playerToDelete);
     }
-  }, [location, userClubs, setLocation]);
+  };
 
-  // NOW EARLY RETURNS ARE SAFE
-  if (clubLoading || !club) {
+  const handleFormSuccess = () => {
+    setIsAddPlayerDialogOpen(false);
+    setEditingPlayer(null);
+  };
+
+  const handleFormCancel = () => {
+    setIsAddPlayerDialogOpen(false);
+    setEditingPlayer(null);
+  };
+
+  if (clubLoading || !club || !clubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -128,10 +92,9 @@ export default function Players() {
     );
   }
 
-  // CLUB VIEW RENDERING
-  const pageTitle = club?.name ? `${club.name} Players` : 'Players';
-  const pageSubtitle = club?.name ? `Manage players for ${club.name}` : 'Manage club players';
-
+  const pageTitle = `${club.name} Players`;
+  const pageSubtitle = `Manage players for ${club.name}`;
+  const playerToDeleteName = players.find(p => p.id === playerToDelete)?.displayName;
 
   return (
     <>
@@ -142,7 +105,6 @@ export default function Players() {
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
-
         actions={
           <PageActions>
             <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
@@ -151,19 +113,14 @@ export default function Players() {
                   Add New Player
                 </ActionButton>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Add New Player</DialogTitle>
                 </DialogHeader>
                 <PlayerForm
                   clubId={clubId}
-                  teamId={undefined}
-                  onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ['players', clubId] });
-                    toast({ title: 'Success', description: 'Player created successfully' });
-                    setIsAddPlayerDialogOpen(false);
-                  }}
-                  onCancel={() => setIsAddPlayerDialogOpen(false)}
+                  onSuccess={handleFormSuccess}
+                  onCancel={handleFormCancel}
                 />
               </DialogContent>
             </Dialog>
@@ -171,58 +128,60 @@ export default function Players() {
         }
       >
         <ContentSection variant="elevated">
-          {/* Team Filter */}
-          {allTeams && allTeams.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium">Filter by team:</label>
-                <Select value={selectedTeamFilter} onValueChange={setSelectedTeamFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Players</SelectItem>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {allTeams
-                      .filter(team => team.name !== 'BYE')
-                      .map(team => (
-                        <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.name} {team.division && `(${team.division})`}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          {/* Players List */}
-          {isPlayersLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : playersError ? (
-            <div className="text-center py-12">
-              <p className="text-red-500 mb-4">Error loading players: {playersError.message}</p>
-            </div>
-          ) : filteredPlayers.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No players found for {club?.name || 'this club'}</p>
-              <p className="text-xs text-gray-500">Club: {club?.name || 'Loading...'} (ID: {clubId})</p>
-              <p className="text-xs text-gray-500">Players array length: {players.length}</p>
-              <p className="text-xs text-gray-500">Query enabled: {!!clubId && !teamId ? 'YES' : 'NO'}</p>
-            </div>
-          ) : (
-            <PlayersList
-              players={filteredPlayers}
-              selectedPlayerIds={selectedPlayers}
-              onSelectionChange={setSelectedPlayers}
-              showTeamAssignments={true}
-              clubTeams={allTeams}
-            />
-          )}
+          <PlayersList
+            players={players}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isLoading={isPlayersLoading}
+          />
         </ContentSection>
       </PageTemplate>
+
+      {/* Edit Player Dialog */}
+      <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Player</DialogTitle>
+          </DialogHeader>
+          {editingPlayer && (
+            <PlayerForm
+              player={editingPlayer}
+              clubId={clubId}
+              onSuccess={handleFormSuccess}
+              onCancel={handleFormCancel}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Player</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {playerToDeleteName}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Player'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

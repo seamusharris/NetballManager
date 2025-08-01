@@ -54,6 +54,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+
 // Smart Response Middleware - Wraps legacy responses automatically
 import { smartResponseMiddleware, registerUsageStatsEndpoint } from './smart-response-middleware';
 
@@ -80,10 +81,25 @@ app.use('/api', smartResponseMiddleware({
 // API Standardization Middleware (order matters!)
 app.use('/api', standardizeUrls()); // URL redirects first
 app.use('/api', extractRequestContext()); // Extract context
+
+
 app.use('/api', standardCaseConversion()); // Smart case conversion for requests
+
 
 // Apply user context middleware only to API routes
 app.use('/api', loadUserContext);
+
+// Register all API routes AFTER middleware setup
+registerRoutes(app);
+registerTeamRoutes(app);
+registerGameScoresRoutes(app);
+registerGameStatsRoutes(app);
+app.use('/api/game-statuses', gameStatusRoutes);
+registerGamePermissionsRoutes(app);
+registerPlayerBorrowingRoutes(app);
+registerUserManagementRoutes(app);
+registerAgeGroupsSectionsRoutes(app);
+registerDebugRoutes(app);
 
 // Database health check endpoint
 app.get('/api/health', async (req, res) => {
@@ -121,18 +137,6 @@ async function checkDatabaseHealth() {
     console.error('❌ Database health check failed:', error);
   }
 }
-
-// Register all API routes
-registerRoutes(app);
-registerTeamRoutes(app);
-registerGameScoresRoutes(app);
-registerGameStatsRoutes(app);
-app.use('/api/game-statuses', gameStatusRoutes);
-registerGamePermissionsRoutes(app);
-registerPlayerBorrowingRoutes(app);
-registerUserManagementRoutes(app);
-registerAgeGroupsSectionsRoutes(app);
-registerDebugRoutes(app);
 
 // Register new standardized routes (additive, non-breaking)
 import { registerStandardizedRoutes } from './standardized-routes';
