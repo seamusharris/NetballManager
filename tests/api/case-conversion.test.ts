@@ -302,7 +302,6 @@ describe('Case Conversion System Tests', () => {
         expect(response.body).not.toHaveProperty('away_team_id');
         expect(response.body).not.toHaveProperty('season_id');
         expect(response.body).not.toHaveProperty('status_id');
-        expect(response.body).not.toHaveProperty('is_inter_club');
 
         testDataManager.track('games', response.body.id);
       });
@@ -312,8 +311,7 @@ describe('Case Conversion System Tests', () => {
 
         const updateData = {
           venue: 'Updated Case Test Venue',
-          statusId: 2,
-          isInterClub: true
+          statusId: 2
         };
 
         const response = await request(app)
@@ -325,7 +323,6 @@ describe('Case Conversion System Tests', () => {
         expect(response.body).toHaveProperty('data');
         expect(response.body.data.venue).toBe(updateData.venue);
         expect(response.body.data.statusId).toBe(2);
-        expect(response.body.data.isInterClub).toBe(true);
       });
     });
   });

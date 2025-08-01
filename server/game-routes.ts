@@ -14,7 +14,6 @@ function transformGameRow(row: any) {
     homeTeamId: row.home_team_id,
     awayTeamId: row.away_team_id,
     venue: row.venue,
-    isInterClub: row.is_inter_club,
     statusId: row.status_id,
     round: row.round,
     seasonId: row.season_id,
@@ -381,7 +380,6 @@ export function registerGameRoutes(app: Express) {
         homeTeamId: row.home_team_id,
         awayTeamId: row.away_team_id,
         venue: row.venue,
-        isInterClub: row.is_inter_club,
         statusId: row.status_id,
         round: row.round,
         seasonId: row.season_id,
@@ -445,7 +443,6 @@ export function registerGameRoutes(app: Express) {
           seasonId: season_id,
           round: req.body.round || null,
           venue: req.body.venue || null,
-          isInterClub: false,
           notes: req.body.notes || 'BYE round'
         };
         const game = await storage.createGame(gameData);
@@ -471,7 +468,6 @@ export function registerGameRoutes(app: Express) {
           seasonId: req.body.season_id,
           round: req.body.round || null,
           venue: req.body.venue || null,
-          isInterClub: req.body.is_inter_club || false,
           notes: req.body.notes || null
         };
         console.log("Creating regular game:", gameData);

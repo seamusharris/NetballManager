@@ -116,7 +116,6 @@ The custom test runner (`scripts/test-case-conversion.sh`) provides:
 - ✅ `awayTeamId` ↔ `away_team_id`
 - ✅ `seasonId` ↔ `season_id`
 - ✅ `statusId` ↔ `status_id`
-- ✅ `isInterClub` ↔ `is_inter_club`
 - ✅ `availablePlayerIds` ↔ `available_player_ids`
 - ✅ `explicitlyEmpty` ↔ `explicitly_empty`
 - ✅ `isRegular` ↔ `is_regular`

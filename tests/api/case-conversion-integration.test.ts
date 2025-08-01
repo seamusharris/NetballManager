@@ -253,7 +253,6 @@ describe('Case Conversion Integration Tests', () => {
       expect(response.body).not.toHaveProperty('away_team_id');
       expect(response.body).not.toHaveProperty('season_id');
       expect(response.body).not.toHaveProperty('status_id');
-      expect(response.body).not.toHaveProperty('is_inter_club');
 
       testData.games.push(response.body.id);
       console.log(`✅ Created test game ${response.body.id}`);

@@ -88,8 +88,7 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
       'homeTeamId': 'home_team_id',
       'awayTeamId': 'away_team_id',
       'statusId': 'status_id',
-      'seasonId': 'season_id',
-      'isInterClub': 'is_inter_club'
+      'seasonId': 'season_id'
     },
     description: 'Game CRUD operations'
   },

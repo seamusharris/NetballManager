@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { CrudDialog } from '@/components/ui/crud-dialog';
-import GameForm from '@/components/games/GameForm';
+import NewGameForm from '@/components/games/NewGameForm';
 import SimplifiedGamesList from '@/components/ui/simplified-games-list';
 import { useSimplifiedGames } from '@/hooks/use-simplified-games';
 import { apiClient } from '@/lib/apiClient';
@@ -65,6 +65,13 @@ export default function Games() {
   const { data: gameStatuses = [] } = useQuery({
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: activeSeason } = useQuery({
+    queryKey: ['active-season'],
+    queryFn: () => apiClient.get('/api/seasons/active'),
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
   });
@@ -147,7 +154,18 @@ export default function Games() {
       return await apiClient.patch(`/api/games/${editingGame.id}`, game);
     },
     onSuccess: () => {
+      // Invalidate all game-related queries
       queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ['simplified-games'] });
+      queryClient.invalidateQueries({ queryKey: ['team-games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      
+      // Invalidate specific game queries
+      if (editingGame?.id) {
+        queryClient.invalidateQueries({ queryKey: ['/api/games', editingGame.id] });
+        queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'games', editingGame.id] });
+      }
+      
       toast({
         title: "Success",
         description: "Game updated successfully",
@@ -171,7 +189,13 @@ export default function Games() {
   const handleDelete = async (id: number) => {
     try {
       await apiClient.delete(`/api/games/${id}`);
+      
+      // Invalidate all game-related queries
       queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ['simplified-games'] });
+      queryClient.invalidateQueries({ queryKey: ['team-games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      
       toast({
         title: 'Success',
         description: 'Game deleted successfully.',
@@ -243,12 +267,13 @@ export default function Games() {
         setIsOpen={setIsDialogOpen}
         title="Add Game"
       >
-        <GameForm 
+        <NewGameForm 
           seasons={seasons}
           onSubmit={handleCreate}
           isSubmitting={false}
           onCancel={() => setIsDialogOpen(false)}
           gameStatuses={gameStatuses}
+          activeSeason={activeSeason}
         />
       </CrudDialog>
 
@@ -258,13 +283,14 @@ export default function Games() {
         title="Edit Game"
       >
         {editingGame && (
-          <GameForm 
+          <NewGameForm 
             game={editingGame} 
             seasons={seasons}
             onSubmit={handleUpdate}
             isSubmitting={updateMutation.isPending}
             onCancel={() => setEditingGame(null)}
             gameStatuses={gameStatuses}
+            activeSeason={activeSeason}
             isEditing={true}
           />
         )}

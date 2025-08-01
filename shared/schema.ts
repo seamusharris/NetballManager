@@ -141,7 +141,6 @@ export const games = pgTable("games", {
   home_team_id: integer("home_team_id").references(() => teams.id),
   away_team_id: integer("away_team_id").references(() => teams.id),
   venue: text("venue"),
-  is_inter_club: boolean("is_inter_club").notNull().default(false), // Cross-club games
   status_id: integer("status_id").references(() => gameStatuses.id), // References game_statuses table
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
   season_id: integer("season_id").references(() => seasons.id), // Reference to season

@@ -16,7 +16,7 @@ import { PositionStatsBox } from '@/components/games/PositionStatsBox';
 import { PositionBox } from '@/components/games/PositionBox';
 import { GamePositionStatsBox } from '@/components/games/GamePositionStatsBox';
 import AwardWinnerDisplay from '@/components/awards/AwardWinnerDisplay';
-import GameForm from '@/components/games/GameForm';
+import NewGameForm from '@/components/games/NewGameForm';
 import PrintableRosterSummary from '@/components/roster/PrintableRosterSummary';
 import PrintableStatsSheet from '@/components/stats/PrintableStatsSheet';
 import { 
@@ -1759,12 +1759,10 @@ export default function GameDetails() {
                 <DialogTitle>Edit Game Details</DialogTitle>
                 {Array.isArray(seasons) ? ( //Removed opponents
                   <>
-                    <GameForm
+                    <NewGameForm
                       game={game}
                       seasons={seasons}
                       gameStatuses={gameStatuses}
-                      teams={teams}
-                      allTeams={allTeams}
                       activeSeason={activeSeason}
                       isSubmitting={false}
                       isEditing={true}
@@ -1772,12 +1770,37 @@ export default function GameDetails() {
                         try {
                           await apiClient.patch(`/api/games/${gameId}`, formData);
 
-                          // Invalidate queries to refresh data
+                          // Invalidate all possible query keys for this game
                           queryClient.invalidateQueries({
                             queryKey: ['/api/games', gameId],
                           });
                           queryClient.invalidateQueries({
                             queryKey: ['/api/games'],
+                          });
+                          
+                          // Invalidate team-specific game queries
+                          if (effectiveTeamId) {
+                            queryClient.invalidateQueries({
+                              queryKey: ['teams', effectiveTeamId, 'games', gameId],
+                            });
+                          }
+                          
+                          // Invalidate simplified games lists
+                          queryClient.invalidateQueries({
+                            queryKey: ['simplified-games'],
+                          });
+                          
+                          // Invalidate team games lists
+                          queryClient.invalidateQueries({
+                            queryKey: ['team-games'],
+                          });
+                          
+                          // Invalidate games stats and scores
+                          queryClient.invalidateQueries({
+                            queryKey: ['/api/games', gameId, 'stats'],
+                          });
+                          queryClient.invalidateQueries({
+                            queryKey: ['/api/games', gameId, 'scores'],
                           });
 
                           toast({
