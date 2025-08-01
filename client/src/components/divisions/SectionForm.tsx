@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { useStandardForm } from '@/hooks/useStandardForm';
+import { useQueryClient } from '@tanstack/react-query';
 
+// Form schema using camelCase (frontend format)
 const sectionFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   displayName: z.string().min(1, 'Display name is required'),
@@ -21,44 +21,63 @@ interface Section {
   name: string;
   displayName: string;
   isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SectionFormProps {
-  section?: {
-    id: number;
-    name: string;
-    displayName: string;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
+  section?: Section;
+  onSuccess?: (data?: any) => void;
+  onCancel?: () => void;
 }
 
-export default function SectionForm({ section, onSubmit, onCancel, isSubmitting }: SectionFormProps) {
-  const form = useForm<SectionFormData>({
-    resolver: zodResolver(sectionFormSchema),
-    defaultValues: {
-      name: section?.name || '',
-      displayName: section?.displayName || '',
-      isActive: section?.isActive ?? true,
-    },
-  });
+export default function SectionForm({ section, onSuccess, onCancel }: SectionFormProps) {
+  const queryClient = useQueryClient();
 
-  // Reset form values when section changes (edit vs create)
-  useEffect(() => {
-    form.reset({
-      name: section?.name || '',
-      displayName: section?.displayName || '',
-      isActive: section?.isActive ?? true,
-    });
-  }, [section, form]);
+  // Prepare default values
+  const getDefaultValues = (): Partial<SectionFormData> => {
+    if (!section) {
+      return {
+        name: '',
+        displayName: '',
+        isActive: true,
+      };
+    }
 
-  const handleSubmit = (data: SectionFormData) => {
-    onSubmit(data);
+    return {
+      name: section.name,
+      displayName: section.displayName,
+      isActive: section.isActive,
+    };
   };
+
+  // Custom success handler to invalidate the correct caches
+  const handleSuccess = (data?: any) => {
+    // Invalidate all relevant caches
+    queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
+    queryClient.invalidateQueries({ queryKey: ['sections'] });
+    
+    // Call the original onSuccess callback
+    onSuccess?.(data);
+  };
+
+  const {
+    form,
+    handleSubmit,
+    handleCancel,
+    isLoading,
+    isEditing,
+  } = useStandardForm<SectionFormData>({
+    schema: sectionFormSchema,
+    createEndpoint: '/api/sections',
+    updateEndpoint: (id) => `/api/sections/${id}`,
+    defaultValues: getDefaultValues(),
+    initialData: section,
+    onSuccess: handleSuccess,
+    onCancel,
+    successMessage: section ? 'Section updated successfully' : 'Section created successfully',
+    errorMessage: section ? 'Failed to update section' : 'Failed to create section',
+  });
 
   return (
     <Form {...form}>
@@ -72,6 +91,9 @@ export default function SectionForm({ section, onSubmit, onCancel, isSubmitting 
               <FormControl>
                 <Input placeholder="e.g., 1" {...field} />
               </FormControl>
+              <FormDescription>
+                Short name used for division naming (e.g., "1", "2", "A", "B")
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -86,6 +108,9 @@ export default function SectionForm({ section, onSubmit, onCancel, isSubmitting 
               <FormControl>
                 <Input placeholder="e.g., Division 1" {...field} />
               </FormControl>
+              <FormDescription>
+                Full name displayed to users
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -97,10 +122,10 @@ export default function SectionForm({ section, onSubmit, onCancel, isSubmitting 
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Active</FormLabel>
-                <div className="text-sm text-muted-foreground">
+                <FormLabel className="text-base">Active Section</FormLabel>
+                <FormDescription>
                   This section is currently active and can be used in divisions
-                </div>
+                </FormDescription>
               </div>
               <FormControl>
                 <Switch
@@ -113,14 +138,14 @@ export default function SectionForm({ section, onSubmit, onCancel, isSubmitting 
         />
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (section ? 'Updating...' : 'Creating...') : section ? 'Update Section' : 'Create Section'}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Section' : 'Create Section')}
           </Button>
         </div>
       </form>
     </Form>
   );
-} 
+}

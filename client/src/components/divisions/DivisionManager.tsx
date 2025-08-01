@@ -106,21 +106,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     }
   });
 
-  const createSectionMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/sections', snakecaseKeys(data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections'] });
-      setIsCreateDialogOpen(false);
-      toast({ title: "Section created successfully" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error creating section",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Section create mutation now handled by standardized SectionForm
 
   // Note: Division create mutation now handled by standardized DivisionForm
 
@@ -143,23 +129,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
     }
   });
 
-  const updateSectionMutation = useMutation({
-    mutationFn: (args: { id: number; data: any }) => 
-      apiClient.patch(`/api/sections/${args.id}`, snakecaseKeys(args.data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections'] });
-      setEditingItem(null);
-      setIsCreateDialogOpen(false);
-      toast({ title: "Section updated successfully" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error updating section",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Note: Section update mutation now handled by standardized SectionForm
 
   // Note: Division update mutation now handled by standardized DivisionForm
 
@@ -215,7 +185,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
         createAgeGroupMutation.mutate(data);
         break;
       case 'section':
-        createSectionMutation.mutate(data);
+        // Note: Section creation now handled by standardized SectionForm  
         break;
       case 'division':
         // Note: Division creation now handled by standardized DivisionForm
@@ -231,7 +201,7 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
         updateAgeGroupMutation.mutate({ id: editingItem.id, data });
         break;
       case 'section':
-        updateSectionMutation.mutate({ id: editingItem.id, data });
+        // Note: Section updates now handled by standardized SectionForm
         break;
       case 'division':
         // Note: Division updates now handled by standardized DivisionForm
@@ -521,9 +491,14 @@ export default function DivisionManager({ seasonId, seasonName }: DivisionManage
           {dialogType === 'section' && (
             <SectionForm
               section={editingItem}
-              onSubmit={editingItem ? handleUpdate : handleCreate}
-              onCancel={() => setIsCreateDialogOpen(false)}
-              isSubmitting={createSectionMutation.isPending || updateSectionMutation.isPending}
+              onSuccess={() => {
+                setIsCreateDialogOpen(false);
+                setEditingItem(null);
+              }}
+              onCancel={() => {
+                setIsCreateDialogOpen(false);
+                setEditingItem(null);
+              }}
             />
           )}
           {dialogType === 'division' && (

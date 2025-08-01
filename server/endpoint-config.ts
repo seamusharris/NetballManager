@@ -319,6 +319,12 @@ export const endpointConfigs: Record<string, EndpointConfig> = {
     description: 'Age group CRUD operations'
   },
 
+  '/api/sections': {
+    convertRequest: true,
+    convertResponse: true,
+    description: 'Section CRUD operations'
+  },
+
   // ==========================================================================
   // PLAYER SEASONS & CLUBS
   // ==========================================================================
